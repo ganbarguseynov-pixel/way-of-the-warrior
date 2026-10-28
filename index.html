@@ -31,7 +31,6 @@
             background-color: var(--secondary-bg); color: var(--text-color); font-size: 16px;
             box-sizing: border-box; outline: none;
         }
-        input:focus, select:focus { border-color: var(--button-color); }
         .row { display: flex; gap: 15px; }
         .row .form-group { flex: 1; }
         .btn {
@@ -42,9 +41,7 @@
         .btn:active { opacity: 0.8; }
         .hidden { display: none !important; }
         
-        .dashboard-card {
-            background-color: var(--secondary-bg); border-radius: 16px; padding: 20px; margin-bottom: 15px;
-        }
+        .dashboard-card { background-color: var(--secondary-bg); border-radius: 16px; padding: 20px; margin-bottom: 15px; }
         .dashboard-card h2 { font-size: 18px; margin: 0 0 10px 0; }
         .dashboard-card .big-number { font-size: 36px; font-weight: bold; color: var(--button-color); margin: 0; }
         .dashboard-card p { color: var(--hint-color); margin: 5px 0 0 0; font-size: 14px; }
@@ -58,7 +55,6 @@
         .action-btn p { margin: 0; color: var(--hint-color); font-size: 12px; }
         .action-btn:active { opacity: 0.7; }
 
-        /* Стили для экрана тренировок */
         .back-btn {
             background: none; border: none; color: var(--button-color); font-size: 16px;
             padding: 0; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center;
@@ -70,6 +66,13 @@
         .exercise-info h4 { margin: 0 0 5px 0; font-size: 16px; }
         .exercise-info p { margin: 0; color: var(--hint-color); font-size: 13px; }
         .play-icon { font-size: 24px; }
+
+        /* Стили для таймера */
+        .timer-container { text-align: center; display: flex; flex-direction: column; justify-content: center; flex: 1; }
+        .timer-display {
+            font-size: 80px; font-weight: bold; margin: 40px 0; font-variant-numeric: tabular-nums;
+        }
+        .timer-buttons { display: flex; gap: 15px; }
     </style>
 </head>
 <body>
@@ -135,7 +138,7 @@
                 <h3>💪 Тренировка</h3>
                 <p>Комплекс на сегодня</p>
             </button>
-            <button class="action-btn" onclick="alert('Скоро здесь появится таймер!')">
+            <button class="action-btn" onclick="showScreen('timer-screen')">
                 <h3>⏱ Таймер</h3>
                 <p>Начать упражнение</p>
             </button>
@@ -156,35 +159,38 @@
         </div>
 
         <div class="exercise-item">
-            <div class="exercise-info">
-                <h4>Приседания</h4>
-                <p>3 подхода • 15 повторений</p>
-            </div>
+            <div class="exercise-info"><h4>Приседания</h4><p>3 подхода • 15 повторений</p></div>
             <div class="play-icon">▶️</div>
         </div>
         <div class="exercise-item">
-            <div class="exercise-info">
-                <h4>Отжимания от пола</h4>
-                <p>3 подхода • 10 повторений</p>
-            </div>
+            <div class="exercise-info"><h4>Отжимания от пола</h4><p>3 подхода • 10 повторений</p></div>
             <div class="play-icon">▶️</div>
         </div>
         <div class="exercise-item">
-            <div class="exercise-info">
-                <h4>Планка</h4>
-                <p>3 подхода • 45 секунд</p>
-            </div>
+            <div class="exercise-info"><h4>Планка</h4><p>3 подхода • 45 секунд</p></div>
             <div class="play-icon">▶️</div>
         </div>
         <div class="exercise-item">
-            <div class="exercise-info">
-                <h4>Выпады</h4>
-                <p>3 подхода • 12 повторений</p>
-            </div>
+            <div class="exercise-info"><h4>Выпады</h4><p>3 подхода • 12 повторений</p></div>
             <div class="play-icon">▶️</div>
         </div>
-
         <button class="btn" style="margin-top: 20px;" onclick="alert('Тренировка началась!')">Начать тренировку</button>
+    </div>
+
+    <!-- ЭКРАН 4: Таймер -->
+    <div id="timer-screen" class="hidden">
+        <button class="back-btn" onclick="showScreen('dashboard-screen')">← Назад</button>
+        <div class="timer-container">
+            <h1>Таймер</h1>
+            <p style="color: var(--hint-color);">Отдых между подходами</p>
+            
+            <div class="timer-display" id="timer-display">00:45</div>
+            
+            <div class="timer-buttons">
+                <button class="btn" onclick="toggleTimer()" id="timer-btn">Старт</button>
+                <button class="btn" style="background-color: var(--secondary-bg); color: var(--text-color);" onclick="resetTimer()">Сброс</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -192,16 +198,76 @@
         tg.ready();
         tg.expand();
 
+        // --- ЛОГИКА ТАЙМЕРА ---
+        let timerInterval;
+        let timeLeft = 45;
+        let isRunning = false;
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer-display').innerText = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('timer-btn');
+            if (isRunning) {
+                clearInterval(timerInterval);
+                btn.innerText = "Старт";
+                btn.style.backgroundColor = "var(--button-color)";
+            } else {
+                if (timeLeft <= 0) timeLeft = 45; // Сброс, если время вышло
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        isRunning = false;
+                        btn.innerText = "Старт";
+                        btn.style.backgroundColor = "var(--button-color)";
+                        tg.showAlert("Время вышло! Отдых окончен.");
+                    }
+                }, 1000);
+                btn.innerText = "Пауза";
+                btn.style.backgroundColor = "#ff3b30"; // Красный цвет для паузы
+            }
+            isRunning = !isRunning;
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            timeLeft = 45;
+            updateTimerDisplay();
+            const btn = document.getElementById('timer-btn');
+            btn.innerText = "Старт";
+            btn.style.backgroundColor = "var(--button-color)";
+        }
+
+        // --- ЛОГИКА ПРИЛОЖЕНИЯ ---
         let tgUserName = "друг";
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             tgUserName = tg.initDataUnsafe.user.first_name;
             document.getElementById('user-name').innerText = tgUserName;
         }
 
-        // Функция переключения экранов
         function showScreen(screenId) {
             document.querySelectorAll('body > div').forEach(el => el.classList.add('hidden'));
             document.getElementById(screenId).classList.remove('hidden');
+            
+            // Если уходим с экрана таймера, ставим его на паузу
+            if (screenId !== 'timer-screen') {
+                clearInterval(timerInterval);
+                isRunning = false;
+                timeLeft = 45;
+                updateTimerDisplay();
+                const btn = document.getElementById('timer-btn');
+                if(btn) {
+                    btn.innerText = "Старт";
+                    btn.style.backgroundColor = "var(--button-color)";
+                }
+            }
         }
 
         function calculateCalories(weight, height, age, gender, goal) {
@@ -242,11 +308,8 @@
 
             const userProfile = { age, gender, weight, height, goal };
             tg.CloudStorage.setItem('profile', JSON.stringify(userProfile), (err, success) => {
-                if (success) {
-                    loadProfile();
-                } else {
-                    tg.showAlert("Ошибка сохранения");
-                }
+                if (success) loadProfile();
+                else tg.showAlert("Ошибка сохранения");
             });
         }
 
