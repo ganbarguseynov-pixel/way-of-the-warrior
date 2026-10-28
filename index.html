@@ -34,7 +34,15 @@
             z-index: 2; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 15px; box-sizing: border-box;
         }
 
-        .top-info { text-align: center; margin-top: 10px; }
+        /* Кнопка звука */
+        .sound-toggle {
+            position: absolute; top: 20px; right: 20px; z-index: 20;
+            background-color: rgba(0,0,0,0.5); border: none; border-radius: 50%;
+            width: 40px; height: 40px; color: white; font-size: 20px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .top-info { text-align: center; margin-top: 40px; }
         .character-level { 
             font-size: 16px; font-weight: 600; color: var(--hint-color); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 5px;
         }
@@ -86,7 +94,14 @@
 </head>
 <body class="male-theme">
 
+    <!-- Аудио элементы -->
+    <audio id="audio-bg" loop></audio>
+    <audio id="audio-workout" loop></audio>
+    <audio id="audio-win"></audio>
+    <audio id="audio-lose"></audio>
+
     <div id="dashboard-screen" class="screen active">
+        <button class="sound-toggle" onclick="toggleSound()" id="sound-btn">🔊</button>
         <video id="character-video" class="video-background" autoplay loop muted playsinline></video>
         <div class="overlay">
             <div class="top-info">
@@ -191,6 +206,73 @@
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
+        // --- ПЛЕЙЛИСТЫ (ТВОИ ФАЙЛЫ) ---
+        const bgTracks = [
+            "01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3", 
+            "05 - The Vengeance.mp3", "06 - The Forest of Death.mp3", "07 - The Ninja in the Night.mp3", 
+            "10 - The Final Boss.mp3", "11 - The Master of the Skills.mp3", "13 - Ronin.mp3", 
+            "14 - The Deadly Smoke.mp3", "15 - Old Sensei.mp3", "16 - The Battle Ship.mp3", 
+            "17 - The Shadow Lady.mp3", "18 - The Flower Battlefield.mp3", "22 - Bridge to the Other Side.mp3", 
+            "25 - Burning Town.mp3", "27 - The Hive.mp3", "29 - The Factory.mp3", "30 - The Flying Rocks.mp3"
+        ];
+
+        const workoutTracks = [
+            "03. TECHNO-SYNDROME 12' MI...", "09 - The Fat Boss.mp3", "24. 2min Loop Battle 03.mp3", 
+            "21. secs Training Arena 01.mp3", "18. min Loop Battle 03.mp3", "17. min Loop Battle 02.mp3", 
+            "20. Sec Music Loop 01.mp3"
+        ];
+
+        let currentBgIndex = 0;
+        let currentWorkoutIndex = 0;
+        let isSoundOn = true;
+        let isWorkoutMode = false;
+
+        const audioBg = document.getElementById('audio-bg');
+        const audioWorkout = document.getElementById('audio-workout');
+        const audioWin = document.getElementById('audio-win');
+        const audioLose = document.getElementById('audio-lose');
+
+        audioWin.src = "12. Scroll Win 02.mp3";
+        audioLose.src = "09. Scroll Lose 01.mp3"; // Звук поражения (пока не активен)
+        const audioLevelUp = "07. Scroll Draw 01.mp3"; // Звук повышения уровня
+
+        // --- ЛОГИКА МУЗЫКИ ---
+        function playNextBg() {
+            if (!isSoundOn) return;
+            if (isWorkoutMode) return; // Если тренировка, фон не играет
+            
+            audioBg.src = bgTracks[currentBgIndex];
+            audioBg.play().catch(e => console.log("Autoplay blocked"));
+            currentBgIndex = (currentBgIndex + 1) % bgTracks.length;
+        }
+
+        audioBg.onended = playNextBg;
+
+        function playNextWorkout() {
+            if (!isSoundOn) return;
+            
+            audioBg.pause(); // Останавливаем фон
+            audioWorkout.src = workoutTracks[currentWorkoutIndex];
+            audioWorkout.play().catch(e => console.log("Autoplay blocked"));
+            currentWorkoutIndex = (currentWorkoutIndex + 1) % workoutTracks.length;
+        }
+
+        audioWorkout.onended = playNextWorkout;
+
+        function toggleSound() {
+            isSoundOn = !isSoundOn;
+            const btn = document.getElementById('sound-btn');
+            if (isSoundOn) {
+                btn.innerText = "🔊";
+                if (isWorkoutMode) audioWorkout.play(); else playNextBg();
+            } else {
+                btn.innerText = "🔇";
+                audioBg.pause();
+                audioWorkout.pause();
+            }
+        }
+
+        // --- БАЗА УРОВНЕЙ ---
         const levelsData = {
             male: [
                 { xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" },
@@ -218,7 +300,7 @@
             ]
         };
 
-        let currentXP = 0, totalBurnedCalories = 0, userGender = 'male', tgUserName = "друг";
+        let currentXP = 0, totalBurnedCalories = 0, userGender = 'male', tgUserName = "друг", currentLevelIndexGlobal = 0;
         
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             tgUserName = tg.initDataUnsafe.user.first_name;
@@ -231,12 +313,26 @@
 
         function updateCharacterUI() {
             const levels = levelsData[userGender];
-            let currentLevelIndex = 0;
+            let newLevelIndex = 0;
             for (let i = 0; i < levels.length; i++) {
-                if (currentXP >= levels[i].xp) currentLevelIndex = i;
+                if (currentXP >= levels[i].xp) newLevelIndex = i;
             }
-            const currentLevel = levels[currentLevelIndex];
-            const nextLevel = levels[currentLevelIndex + 1] || levels[levels.length - 1];
+
+            // Проверка на повышение уровня (звук)
+            if (newLevelIndex > currentLevelIndexGlobal) {
+                const audioUp = new Audio(audioLevelUp);
+                if (isSoundOn) audioUp.play().catch(e => console.log(e));
+                tg.showAlert(`🎉 Поздравляем! Ты достиг нового уровня: ${levels[newLevelIndex].title}!`);
+            }
+            // Проверка на понижение уровня (звук проигрыша)
+            if (newLevelIndex < currentLevelIndexGlobal) {
+                const audioDown = new Audio(audioLose);
+                if (isSoundOn) audioDown.play().catch(e => console.log(e));
+            }
+            currentLevelIndexGlobal = newLevelIndex;
+
+            const currentLevel = levels[newLevelIndex];
+            const nextLevel = levels[newLevelIndex + 1] || levels[levels.length - 1];
 
             const videoElement = document.getElementById('character-video');
             if (videoElement.src.indexOf(currentLevel.video) === -1) {
@@ -245,7 +341,7 @@
                 videoElement.play().catch(e => console.log("Autoplay blocked"));
             }
 
-            document.getElementById('char-level').innerText = `Уровень ${currentLevelIndex + 1}`;
+            document.getElementById('char-level').innerText = `Уровень ${newLevelIndex + 1}`;
             document.getElementById('char-title').innerText = currentLevel.title;
 
             let progressPercent = 100;
@@ -264,8 +360,22 @@
             updateCharacterUI();
         }
 
-        function openScreen(screenId) { document.getElementById(screenId).classList.add('active'); }
-        function closeScreen(screenId) { document.getElementById(screenId).classList.remove('active'); }
+        function openScreen(screenId) { 
+            document.getElementById(screenId).classList.add('active'); 
+            if (screenId === 'timer-screen') {
+                isWorkoutMode = true;
+                playNextWorkout();
+            }
+        }
+        
+        function closeScreen(screenId) { 
+            document.getElementById(screenId).classList.remove('active'); 
+            if (screenId === 'timer-screen') {
+                isWorkoutMode = false;
+                audioWorkout.pause();
+                playNextBg();
+            }
+        }
 
         let timeLeft = 45, isRunning = false, timerInterval, sessionCalories = 0;
         function updateTimerDisplay() { document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`; }
@@ -293,6 +403,7 @@
             addXP(15); tg.CloudStorage.setItem('totalBurned', totalBurnedCalories.toString());
             document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`;
         }
+        
         function finishWorkout() {
             document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
             const quotes = [
@@ -303,6 +414,10 @@
             const q = quotes[Math.floor(Math.random() * quotes.length)];
             document.getElementById('finish-quote').innerText = `«${q.text}»`;
             document.getElementById('finish-author').innerText = `— ${q.author}`;
+            
+            // Включаем звук победы
+            if (isSoundOn) audioWin.play().catch(e => console.log(e));
+            
             closeScreen('timer-screen'); openScreen('finish-screen');
         }
 
@@ -351,33 +466,7 @@
                         if (burned) { totalBurnedCalories = parseInt(burned); document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`; }
                         tg.CloudStorage.getItem('xp', (err, xp) => {
                             if (xp) currentXP = parseInt(xp);
-                            updateCharacterUI();
-                            closeScreen('onboarding-screen');
-                        });
-                    });
-                } else {
-                    openScreen('onboarding-screen');
-                }
-            });
-        }
-
-        function saveProfile() {
-            const age = document.getElementById('age').value;
-            const gender = document.getElementById('gender').value;
-            const weight = document.getElementById('weight').value;
-            const height = document.getElementById('height').value;
-            const goal = document.getElementById('goal').value;
-            if (!age || !weight || !height) { tg.showAlert("Заполни все поля!"); return; }
-            tg.CloudStorage.setItem('profile', JSON.stringify({ age, gender, weight, height, goal }), (err, success) => {
-                if (success) loadProfile();
-            });
-        }
-
-        function resetProfile() {
-            tg.CloudStorage.removeItem('profile', () => tg.CloudStorage.removeItem('totalBurned', () => tg.CloudStorage.removeItem('xp', () => location.reload())));
-        }
-
-        loadProfile();
-    </script>
-</body>
-</html>
+                            
+                            // Инициализация уровня при старте
+                            const levels = levelsData[userGender];
+                            for (let i = 0; i <
