@@ -172,10 +172,18 @@
 
             <!-- ВКЛАДКА ФОТО -->
             <div id="tab-photo" class="tab-content">
+                <!-- capture="camera" заставляет открывать камеру сразу -->
                 <input type="file" id="camera-input" accept="image/*" capture="camera" style="display: none;" onchange="handleImage(event)">
+                
                 <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
-                <button class="btn" id="take-photo-btn" onclick="resetCameraScreen(); document.getElementById('camera-input').click();" style="padding: 40px 20px; font-size: 20px;">📷 Сделать фото</button>
+                
+                <!-- Кнопка удаления фото -->
+                <button class="btn" id="remove-photo-btn" style="display: none; background-color: #ff3b30; color: white; margin-bottom: 10px;" onclick="resetCameraScreen()">❌ Удалить фото</button>
+
+                <button class="btn" id="take-photo-btn" onclick="document.getElementById('camera-input').click()" style="padding: 40px 20px; font-size: 20px;">📷 Сделать фото</button>
+                
                 <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px; font-size: 18px;">🤖 ИИ анализирует фото (может занять до 30 секунд)...</div>
+                
                 <div id="food-result" style="display: none; background: #1c1c1e; padding: 20px; border-radius: 16px; margin-top: 20px;">
                     <h2 id="food-name" style="margin-top: 0; color: var(--accent-color);">Название</h2>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;"><span>Калории:</span> <b id="food-calories">0 ккал</b></div>
@@ -183,6 +191,7 @@
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
                     <div style="display: flex; justify-content: space-between;"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
                     <button class="btn" style="background-color: #34c759; color: white; margin-top: 15px;" onclick="addXP(20); resetCameraScreen(); closeScreen('food-screen');">Добавить в дневник (+20 XP)</button>
+                    <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 10px;" onclick="resetCameraScreen()">Отмена / Переснять</button>
                 </div>
             </div>
         </div>
@@ -313,9 +322,10 @@
         // --- ФОТО (LogMeal / Gemini) ---
         function resetCameraScreen() {
             document.getElementById('photo-preview').style.display = 'none';
+            document.getElementById('photo-preview').src = "";
             document.getElementById('food-result').style.display = 'none';
             document.getElementById('take-photo-btn').style.display = 'block';
-            document.getElementById('take-photo-btn').innerText = "📷 Сделать фото";
+            document.getElementById('remove-photo-btn').style.display = 'none';
             document.getElementById('camera-input').value = "";
         }
 
@@ -328,6 +338,7 @@
             preview.style.display = 'block';
             
             document.getElementById('take-photo-btn').style.display = 'none';
+            document.getElementById('remove-photo-btn').style.display = 'block';
             document.getElementById('loading-spinner').style.display = 'block';
             document.getElementById('food-result').style.display = 'none';
 
@@ -365,7 +376,7 @@
             }
         }
 
-        // --- МУЗЫКА (СОХРАНЕНИЕ ИНДЕКСА) ---
+        // --- МУЗЫКА ---
         const bgTracks = [
             "01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3", 
             "05 - The Vengeance.mp3", "06 - The Forest of Death.mp3", "07 - The Ninja in the Night.mp3", 
@@ -374,7 +385,11 @@
             "17 - The Shadow Lady.mp3", "18 - The Flower Battlefield.mp3", "22 - Bridge to the Other Side.mp3", 
             "25 - Burning Town.mp3", "27 - The Hive.mp3", "29 - The Factory.mp3", "30 - The Flying Rocks.mp3"
         ];
-        const workoutTracks = ["03. TECHNO-SYNDROME 12' MI...", "09 - The Fat Boss.mp3", "24. 2min Loop Battle 03.mp3"];
+        const workoutTracks = [
+            "03. TECHNO-SYNDROME 12' MI...", "09 - The Fat Boss.mp3", "24. 2min Loop Battle 03.mp3", 
+            "21. secs Training Arena 01.mp3", "18. min Loop Battle 03.mp3", "17. min Loop Battle 02.mp3", 
+            "20. Sec Music Loop 01.mp3"
+        ];
         
         let currentBgIndex = 0;
         let currentWorkoutIndex = 0;
@@ -392,18 +407,16 @@
 
         function playNextBg() {
             if (!isSoundOn || isWorkoutMode) return;
-            // Загружаем индекс из памяти Telegram, чтобы не начинать с 0
+            
             tg.CloudStorage.getItem('bgIndex', (err, res) => {
                 if (res && !err) {
                     currentBgIndex = parseInt(res);
                 }
-                // Если дошли до конца плейлиста - начинаем сначала
                 if (currentBgIndex >= bgTracks.length) currentBgIndex = 0;
                 
                 audioBg.src = bgTracks[currentBgIndex];
                 audioBg.play().catch(e => console.log("Autoplay blocked"));
                 
-                // Сохраняем следующий индекс
                 tg.CloudStorage.setItem('bgIndex', ((currentBgIndex + 1) % bgTracks.length).toString());
                 currentBgIndex = (currentBgIndex + 1) % bgTracks.length;
             });
@@ -432,7 +445,7 @@
             }
         }
 
-        // --- ОСТАЛЬНАЯ ЛОГИКА (без изменений) ---
+        // --- ОСТАЛЬНАЯ ЛОГИКА ---
         const levelsData = {
             male: [
                 { xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" },
