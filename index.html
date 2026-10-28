@@ -36,7 +36,7 @@
         .btn {
             background-color: var(--button-color); color: var(--button-text-color); border: none;
             padding: 16px; border-radius: 12px; font-size: 18px; font-weight: 600; width: 100%;
-            margin-top: auto; cursor: pointer; transition: opacity 0.2s;
+            margin-top: 15px; cursor: pointer; transition: opacity 0.2s;
         }
         .btn:active { opacity: 0.8; }
         .hidden { display: none !important; }
@@ -69,10 +69,14 @@
 
         /* Стили для таймера */
         .timer-container { text-align: center; display: flex; flex-direction: column; justify-content: center; flex: 1; }
-        .timer-display {
-            font-size: 80px; font-weight: bold; margin: 40px 0; font-variant-numeric: tabular-nums;
+        .current-exercise-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: var(--text-color); }
+        .timer-display { font-size: 80px; font-weight: bold; margin: 20px 0; font-variant-numeric: tabular-nums; }
+        .timer-buttons { display: flex; gap: 15px; margin-top: 20px; }
+        
+        /* Блок сожженных калорий */
+        .burned-calories { 
+            font-size: 18px; color: #ff9500; margin-top: 15px; font-weight: bold;
         }
-        .timer-buttons { display: flex; gap: 15px; }
     </style>
 </head>
 <body>
@@ -128,6 +132,12 @@
             <p class="big-number" id="calories-norm">0 <span style="font-size: 16px; color: var(--hint-color);">ккал</span></p>
             <p>Рассчитано на основе твоих данных</p>
         </div>
+        
+        <!-- Блок прогресса -->
+        <div class="dashboard-card" style="background: linear-gradient(135deg, #ff9500, #ff2d55);">
+            <h2 style="color: white;">Сожжено за тренировки</h2>
+            <p class="big-number" id="burned-total" style="color: white;">0 <span style="font-size: 16px; opacity: 0.8;">ккал</span></p>
+        </div>
 
         <div class="action-grid">
             <button class="action-btn" onclick="alert('Скоро здесь появится ИИ!')">
@@ -174,22 +184,29 @@
             <div class="exercise-info"><h4>Выпады</h4><p>3 подхода • 12 повторений</p></div>
             <div class="play-icon">▶️</div>
         </div>
-        <button class="btn" style="margin-top: 20px;" onclick="alert('Тренировка началась!')">Начать тренировку</button>
+        <button class="btn" style="margin-top: 20px;" onclick="startWorkoutFromList()">Начать тренировку</button>
     </div>
 
     <!-- ЭКРАН 4: Таймер -->
     <div id="timer-screen" class="hidden">
         <button class="back-btn" onclick="showScreen('dashboard-screen')">← Назад</button>
         <div class="timer-container">
-            <h1>Таймер</h1>
-            <p style="color: var(--hint-color);">Отдых между подходами</p>
+            <p style="color: var(--hint-color); margin-bottom: 5px;">Текущее упражнение:</p>
+            <div class="current-exercise-title" id="exercise-title">Приседания</div>
             
             <div class="timer-display" id="timer-display">00:45</div>
             
             <div class="timer-buttons">
-                <button class="btn" onclick="toggleTimer()" id="timer-btn">Старт</button>
-                <button class="btn" style="background-color: var(--secondary-bg); color: var(--text-color);" onclick="resetTimer()">Сброс</button>
+                <button class="btn" onclick="toggleTimer()" id="timer-btn" style="margin-top: 0;">Старт</button>
+                <button class="btn" style="background-color: var(--secondary-bg); color: var(--text-color); margin-top: 0;" onclick="resetTimer()">Сброс</button>
             </div>
+            
+            <!-- Кнопка завершения подхода -->
+            <button class="btn" style="background-color: #34c759; margin-top: 20px;" onclick="completeSet()">Подход выполнен ✅</button>
+            
+            <button class="btn" style="background-color: transparent; color: var(--button-color); margin-top: 10px;" onclick="nextExercise()">Следующее упражнение →</button>
+            
+            <div class="burned-calories" id="session-calories">Сожжено за эту сессию: 0 ккал</div>
         </div>
     </div>
 
@@ -198,11 +215,27 @@
         tg.ready();
         tg.expand();
 
-        // --- ЛОГИКА ТАЙМЕРА ---
+        // --- БАЗА ДАННЫХ ---
+        const exercises = ["Приседания", "Отжимания от пола", "Планка", "Выпады"];
+        
+        // Мотивационные цитаты бойцов
+        const quotes = [
+            "«Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион». — Мухаммед Али",
+            "«Дисциплина — это мост между целями и их достижением». — Джим Рон",
+            "«Не молитесь о легкой жизни, молитесь о силах, чтобы вынести тяжелую». — Брюс Ли",
+            "«Каждый бой я выхожу как будто это мой последний бой». — Майк Тайсон",
+            "«Тот, кто хочет — ищет возможности, тот, кто не хочет — ищет причины». — Сократ",
+            "«Я не проигрываю. Я либо побеждаю, либо учусь». — Нельсон Мандела"
+        ];
+
+        let currentExerciseIndex = 0;
         let timerInterval;
         let timeLeft = 45;
         let isRunning = false;
+        let sessionCalories = 0; // За текущую тренировку
+        let totalBurnedCalories = 0; // За все время
 
+        // --- ЛОГИКА ТАЙМЕРА ---
         function updateTimerDisplay() {
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
@@ -217,7 +250,7 @@
                 btn.innerText = "Старт";
                 btn.style.backgroundColor = "var(--button-color)";
             } else {
-                if (timeLeft <= 0) timeLeft = 45; // Сброс, если время вышло
+                if (timeLeft <= 0) timeLeft = 45; 
                 timerInterval = setInterval(() => {
                     timeLeft--;
                     updateTimerDisplay();
@@ -226,11 +259,10 @@
                         isRunning = false;
                         btn.innerText = "Старт";
                         btn.style.backgroundColor = "var(--button-color)";
-                        tg.showAlert("Время вышло! Отдых окончен.");
                     }
                 }, 1000);
                 btn.innerText = "Пауза";
-                btn.style.backgroundColor = "#ff3b30"; // Красный цвет для паузы
+                btn.style.backgroundColor = "#ff3b30";
             }
             isRunning = !isRunning;
         }
@@ -245,6 +277,43 @@
             btn.style.backgroundColor = "var(--button-color)";
         }
 
+        function nextExercise() {
+            currentExerciseIndex = (currentExerciseIndex + 1) % exercises.length;
+            document.getElementById('exercise-title').innerText = exercises[currentExerciseIndex];
+            resetTimer();
+        }
+
+        function startWorkoutFromList() {
+            currentExerciseIndex = 0;
+            sessionCalories = 0;
+            document.getElementById('exercise-title').innerText = exercises[currentExerciseIndex];
+            document.getElementById('session-calories').innerText = "Сожжено за эту сессию: 0 ккал";
+            resetTimer();
+            showScreen('timer-screen');
+        }
+
+        // --- ЗАВЕРШЕНИЕ ПОДХОДА (КАЛОРИИ И ЦИТАТЫ) ---
+        function completeSet() {
+            // Начисляем калории (например, 15 ккал за подход)
+            const kcalBurned = 15;
+            sessionCalories += kcalBurned;
+            totalBurnedCalories += kcalBurned;
+            
+            // Сохраняем в память
+            tg.CloudStorage.setItem('totalBurned', totalBurnedCalories.toString());
+            
+            // Обновляем интерфейс
+            document.getElementById('session-calories').innerText = `Сожжено за эту сессию: ${sessionCalories} ккал`;
+            document.getElementById('burned-total').innerHTML = `${totalBurnedCalories} <span style="font-size: 16px; opacity: 0.8;">ккал</span>`;
+            
+            // Показываем мотивационную цитату
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            tg.showAlert(`🔥 Подход выполнен! +${kcalBurned} ккал\n\n"${randomQuote}"`);
+            
+            // Переключаем на следующее упражнение (опционально)
+            nextExercise();
+        }
+
         // --- ЛОГИКА ПРИЛОЖЕНИЯ ---
         let tgUserName = "друг";
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
@@ -256,7 +325,6 @@
             document.querySelectorAll('body > div').forEach(el => el.classList.add('hidden'));
             document.getElementById(screenId).classList.remove('hidden');
             
-            // Если уходим с экрана таймера, ставим его на паузу
             if (screenId !== 'timer-screen') {
                 clearInterval(timerInterval);
                 isRunning = false;
@@ -281,13 +349,22 @@
         }
 
         function loadProfile() {
+            // Загружаем профиль
             tg.CloudStorage.getItem('profile', (err, result) => {
                 if (result) {
                     const profile = JSON.parse(result);
                     const calories = calculateCalories(profile.weight, profile.height, profile.age, profile.gender, profile.goal);
                     document.getElementById('calories-norm').innerHTML = `${calories} <span style="font-size: 16px; color: var(--hint-color);">ккал</span>`;
                     document.getElementById('goal-text').innerText = profile.goal === 'lose' ? 'Твоя цель: Похудеть' : 'Твоя цель: Набрать массу';
-                    showScreen('dashboard-screen');
+                    
+                    // Загружаем сожженные калории за все время
+                    tg.CloudStorage.getItem('totalBurned', (err, burnedResult) => {
+                        if (burnedResult) {
+                            totalBurnedCalories = parseInt(burnedResult);
+                            document.getElementById('burned-total').innerHTML = `${totalBurnedCalories} <span style="font-size: 16px; opacity: 0.8;">ккал</span>`;
+                        }
+                        showScreen('dashboard-screen');
+                    });
                 } else {
                     showScreen('onboarding-screen');
                 }
@@ -315,7 +392,9 @@
 
         function resetProfile() {
             tg.CloudStorage.removeItem('profile', () => {
-                location.reload();
+                tg.CloudStorage.removeItem('totalBurned', () => {
+                    location.reload();
+                });
             });
         }
 
