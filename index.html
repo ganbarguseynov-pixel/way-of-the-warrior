@@ -6,6 +6,7 @@
     <title>Sport App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         :root {
             --bg-color: #000000;
@@ -92,7 +93,7 @@
         .rank { font-size: 20px; font-weight: bold; width: 40px; color: var(--hint-color); }
         .user-info { flex: 1; margin-left: 10px; }
 
-        /* ЭКРАН ВХОДА С КАРТИНКОЙ */
+        /* ЭКРАН ВХОДА */
         .auth-screen { 
             background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop');
             background-size: cover;
@@ -243,7 +244,7 @@
         </div>
     </div>
 
-    <!-- ЭКРАН НАСТРОЕК ПРОФИЛЯ (Привязка Email и 2FA) -->
+    <!-- ЭКРАН НАСТРОЕК ПРОФИЛЯ -->
     <div id="profile-settings-screen" class="screen">
         <div class="inner-screen">
             <button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
@@ -251,14 +252,28 @@
             
             <div style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-bottom: 20px;">
                 <h3 style="margin-top: 0;">Привязка аккаунтов</h3>
-                <p style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;">Привяжите Email, чтобы не потерять прогресс при смене устройства.</p>
+                <p style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;">Привяжите Email и пароль, чтобы не потерять прогресс при смене устройства.</p>
+                <div class="form-group">
+                    <input type="email" id="link-email" placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)">
+                </div>
                 <button class="btn" onclick="linkEmail()">Привязать Email</button>
             </div>
 
             <div style="background: #1c1c1e; padding: 20px; border-radius: 16px;">
                 <h3 style="margin-top: 0;">Безопасность</h3>
                 <p style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;">Двухэтапная аутентификация (2FA) защитит ваш аккаунт.</p>
-                <button class="btn" style="background-color: #34c759; color: white;" onclick="enable2FA()">Включить 2FA</button>
+                <button class="btn" style="background-color: #34c759; color: white;" onclick="enable2FA()" id="2fa-btn">Включить 2FA</button>
+                <div id="qr-container" style="margin-top: 20px; display: none; text-align: center;">
+                    <canvas id="qr-canvas"></canvas>
+                    <p style="font-size: 12px; color: #8e8e93; margin-top: 10px;">Отсканируйте в Google Authenticator</p>
+                </div>
+                <div id="verify-container" style="margin-top: 15px; display: none;">
+                    <input type="text" id="2fa-code" placeholder="Введите 6-значный код" style="text-align: center;">
+                    <button class="btn" onclick="verify2FA()">Подтвердить</button>
+                </div>
             </div>
         </div>
     </div>
@@ -366,6 +381,7 @@
         let isSoundOn = true;
         let isWorkoutMode = false;
         let musicStarted = false;
+        let currentUser = null;
 
         const audioBg = document.getElementById('audio-bg');
         const audioWorkout = document.getElementById('audio-workout');
@@ -459,6 +475,7 @@
             if (error) { tg.showAlert("Ошибка входа: " + error.message); } 
             else {
                 tg.showAlert("Успешный вход!");
+                currentUser = data.user;
                 tgUserName = email.split('@')[0];
                 checkProfile();
             }
@@ -484,14 +501,65 @@
             openScreen('profile-settings-screen');
         }
 
-        function linkEmail() {
-            // Заглушка, так как для реальной привязки нужен сервер
-            tg.showAlert("Привязка Email откроется в следующем обновлении!");
+        async function linkEmail() {
+            const email = document.getElementById('link-email').value;
+            const password = document.getElementById('link-password').value;
+            if (!email || !password) { tg.showAlert("Заполните Email и пароль!"); return; }
+
+            const { data, error } = await supabaseClient.auth.updateUser({ email: email, password: password });
+            
+            if (error) {
+                tg.showAlert("Ошибка привязки: " + error.message);
+            } else {
+                tg.showAlert("Email успешно привязан!");
+            }
         }
 
-        function enable2FA() {
-            // Заглушка для 2FA
-            tg.showAlert("Генерация QR-кода для 2FA появится в следующем обновлении!");
+        let pendingFactorId = null;
+
+        async function enable2FA() {
+            // 1. Создаем фактор (получаем QR и секрет)
+            const { data, error } = await supabaseClient.auth.mfa.enroll({ factorType: 'totp' });
+            
+            if (error) {
+                tg.showAlert("Ошибка 2FA: " + error.message);
+                return;
+            }
+
+            pendingFactorId = data.id;
+            
+            // Показываем QR-код
+            document.getElementById('qr-container').style.display = 'block';
+            document.getElementById('verify-container').style.display = 'block';
+            document.getElementById('2fa-btn').style.display = 'none';
+
+            const qrUri = data.totp.uri;
+            QRCode.toCanvas(document.getElementById('qr-canvas'), qrUri, function (error) {
+                if (error) console.error(error);
+            });
+        }
+
+        async function verify2FA() {
+            const code = document.getElementById('2fa-code').value;
+            if (!code) return;
+
+            // 2. Создаем челлендж
+            const { data: challenge, error: challengeError } = await supabaseClient.auth.mfa.challenge({ factorId: pendingFactorId });
+            if (challengeError) { tg.showAlert("Ошибка: " + challengeError.message); return; }
+
+            // 3. Проверяем код
+            const { data, error } = await supabaseClient.auth.mfa.verify({
+                factorId: pendingFactorId,
+                challengeId: challenge.id,
+                code: code
+            });
+
+            if (error) {
+                tg.showAlert("Неверный код. Попробуйте еще раз.");
+            } else {
+                tg.showAlert("2FA успешно включена!");
+                closeScreen('profile-settings-screen');
+            }
         }
 
         // --- ЛОГИКА ПРИЛОЖЕНИЯ ---
