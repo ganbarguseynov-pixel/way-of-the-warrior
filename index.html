@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sport App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Подключаем Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-color: #000000;
@@ -73,7 +75,7 @@
         .screen.active { display: flex; }
         
         .inner-screen { padding: 20px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow-y: auto; width: 100%; background-color: #0d0d0d; }
-        .form-group { margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--hint-color); }
         input, select { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #3a3a3c; background-color: #2c2c2e; color: var(--text-color); font-size: 16px; box-sizing: border-box; outline: none; }
         .row { display: flex; gap: 15px; }
@@ -81,6 +83,7 @@
         
         .btn { background-color: var(--accent-color); color: #000; border: none; padding: 16px; border-radius: 16px; font-size: 18px; font-weight: bold; width: 100%; margin-top: 15px; cursor: pointer; transition: opacity 0.2s; }
         .btn:active { opacity: 0.8; }
+        .btn-secondary { background-color: #2c2c2e; color: #fff; }
         .back-btn { background: none; border: none; color: var(--accent-color); font-size: 16px; padding: 0; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center; font-weight: bold;}
         
         .timer-display { font-size: 80px; font-weight: bold; text-align: center; margin: 20px 0; font-variant-numeric: tabular-nums; }
@@ -89,6 +92,17 @@
         .my-row { border: 2px solid var(--accent-color); background-color: rgba(255, 204, 0, 0.1); }
         .rank { font-size: 20px; font-weight: bold; width: 40px; color: var(--hint-color); }
         .user-info { flex: 1; margin-left: 10px; }
+        
+        /* Стили для экрана входа */
+        .auth-container { display: flex; flex-direction: column; justify-content: center; height: 100%; padding: 20px; }
+        .auth-title { font-size: 32px; font-weight: bold; text-align: center; margin-bottom: 10px; }
+        .auth-subtitle { color: var(--hint-color); text-align: center; margin-bottom: 30px; }
+        .auth-buttons { display: flex; flex-direction: column; gap: 10px; }
+        .auth-btn { padding: 15px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .tg-btn { background-color: #229ED9; color: white; }
+        .google-btn { background-color: #ffffff; color: #000000; }
+        .email-btn { background-color: #2c2c2e; color: white; }
+        .auth-divider { text-align: center; color: var(--hint-color); margin: 15px 0; font-size: 14px; }
     </style>
 </head>
 <body class="male-theme">
@@ -98,7 +112,52 @@
     <audio id="audio-win"></audio>
     <audio id="audio-lose"></audio>
 
-    <div id="dashboard-screen" class="screen active">
+    <!-- ЭКРАН ВХОДА -->
+    <div id="auth-screen" class="screen active">
+        <div class="auth-container">
+            <div class="auth-title">Добро пожаловать!</div>
+            <div class="auth-subtitle">Войдите, чтобы сохранять прогресс</div>
+            
+            <div class="auth-buttons">
+                <button class="auth-btn tg-btn" onclick="loginWithTelegram()">
+                    ✈️ Продолжить через Telegram
+                </button>
+                
+                <div class="auth-divider">или</div>
+                
+                <button class="auth-btn google-btn" onclick="loginWithGoogle()">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20">
+                    Войти через Google
+                </button>
+                
+                <button class="auth-btn email-btn" onclick="showEmailForm()">
+                    ✉️ Войти по Email
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ЭКРАН ВХОДА ПО EMAIL -->
+    <div id="email-screen" class="screen">
+        <div class="inner-screen">
+            <button class="back-btn" onclick="closeScreen('email-screen')">← Назад</button>
+            <h1 style="text-align: center; margin-bottom: 30px;">Вход по Email</h1>
+            
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="auth-email" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="auth-password" placeholder="Минимум 6 символов">
+            </div>
+            
+            <button class="btn" onclick="signInWithEmail()">Войти</button>
+            <button class="btn btn-secondary" onclick="signUpWithEmail()">Зарегистрироваться</button>
+        </div>
+    </div>
+
+    <div id="dashboard-screen" class="screen">
         <button class="sound-toggle" onclick="toggleSound()" id="sound-btn">🔊</button>
         <video id="character-video" class="video-background" autoplay loop muted playsinline></video>
         <div class="overlay">
@@ -122,7 +181,7 @@
                     <button class="action-btn" onclick="openScreen('leaderboard-screen')"><h3>🏆</h3><p>Рейтинг</p></button>
                 </div>
                 
-                <button class="btn" style="background-color: transparent; color: #8e8e93; margin-top: 5px; font-size: 14px; font-weight: normal;" onclick="resetProfile()">Сбросить профиль</button>
+                <button class="btn" style="background-color: transparent; color: #8e8e93; margin-top: 5px; font-size: 14px; font-weight: normal;" onclick="logout()">Выйти</button>
             </div>
         </div>
     </div>
@@ -201,6 +260,11 @@
     </div>
 
     <script>
+        // --- ИНИЦИАЛИЗАЦИЯ SUPABASE ---
+        const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
+        const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
@@ -234,18 +298,6 @@
         audioWin.src = "12. Scroll Win 02.mp3";
         audioLose.src = "09. Scroll Lose 01.mp3"; 
         const audioLevelUp = "07. Scroll Draw 01.mp3"; 
-
-        // --- ПРЕДЗАГРУЗКА АУДИО (Чтобы не было задержки) ---
-        function preloadAudio() {
-            // Создаем невидимые аудио-объекты, чтобы браузер их скачал
-            const preload1 = new Audio(bgTracks[0]);
-            preload1.load();
-            const preload2 = new Audio(workoutTracks[0]);
-            preload2.load();
-            const preload3 = new Audio(audioWin.src);
-            preload3.load();
-        }
-        preloadAudio(); // Запускаем скачивание в фоне
 
         // --- ЛОГИКА МУЗЫКИ ---
         function playNextBg() {
@@ -309,9 +361,120 @@
         };
 
         let currentXP = 0, totalBurnedCalories = 0, userGender = 'male', tgUserName = "друг", currentLevelIndexGlobal = 0;
+        let currentUser = null;
+
+        // --- АВТОРИЗАЦИЯ ---
         
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            tgUserName = tg.initDataUnsafe.user.first_name;
+        // Вход через Telegram
+        function loginWithTelegram() {
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                tgUserName = tg.initDataUnsafe.user.first_name;
+                checkProfile();
+            } else {
+                tg.showAlert("Пожалуйста, откройте приложение через Telegram!");
+            }
+        }
+
+        // Вход через Google
+        async function loginWithGoogle() {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.href
+                }
+            });
+            if (error) tg.showAlert("Ошибка входа через Google: " + error.message);
+        }
+
+        // Показ формы Email
+        function showEmailForm() {
+            openScreen('email-screen');
+        }
+
+        // Вход по Email
+        async function signInWithEmail() {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            
+            if (error) {
+                tg.showAlert("Ошибка входа: " + error.message);
+            } else {
+                tg.showAlert("Успешный вход!");
+                currentUser = data.user;
+                tgUserName = email.split('@')[0];
+                checkProfile();
+            }
+        }
+
+        // Регистрация по Email
+        async function signUpWithEmail() {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            
+            const { data, error } = await supabase.auth.signUp({ email, password });
+            
+            if (error) {
+                tg.showAlert("Ошибка регистрации: " + error.message);
+            } else {
+                tg.showAlert("Регистрация успешна! Проверьте почту для подтверждения.");
+            }
+        }
+
+        // Выход
+        async function logout() {
+            await supabase.auth.signOut();
+            closeScreen('dashboard-screen');
+            openScreen('auth-screen');
+        }
+
+        // Проверка сессии при загрузке (для Google и Email)
+        async function checkSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                tgUserName = session.user.email.split('@')[0];
+                checkProfile();
+            }
+        }
+
+        // --- ЛОГИКА ПРИЛОЖЕНИЯ ---
+
+        function checkProfile() {
+            tg.CloudStorage.getItem('profile', (err, result) => {
+                if (result) {
+                    const profile = JSON.parse(result);
+                    userGender = profile.gender;
+                    document.body.className = userGender === 'female' ? 'female-theme' : 'male-theme';
+                    
+                    let bmr = userGender === 'male' ? (10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) : (10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161);
+                    let tdee = bmr * 1.375;
+                    let cals = profile.goal === 'lose' ? (tdee - 500) : (tdee + 500);
+                    document.getElementById('calories-norm').innerText = `${Math.round(cals)} ккал`;
+
+                    tg.CloudStorage.getItem('totalBurned', (err, burned) => {
+                        if (burned) { totalBurnedCalories = parseInt(burned); document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`; }
+                        tg.CloudStorage.getItem('xp', (err, xp) => {
+                            if (xp) currentXP = parseInt(xp);
+                            
+                            const levels = levelsData[userGender];
+                            for (let i = 0; i < levels.length; i++) {
+                                if (currentXP >= levels[i].xp) currentLevelIndexGlobal = i;
+                            }
+                            
+                            updateCharacterUI();
+                            closeScreen('auth-screen');
+                            closeScreen('onboarding-screen');
+                            openScreen('dashboard-screen');
+                            playNextBg();
+                        });
+                    });
+                } else {
+                    closeScreen('auth-screen');
+                    openScreen('onboarding-screen');
+                }
+            });
         }
 
         function changeTheme() {
@@ -455,40 +618,6 @@
             }
         }
 
-        function loadProfile() {
-            tg.CloudStorage.getItem('profile', (err, result) => {
-                if (result) {
-                    const profile = JSON.parse(result);
-                    userGender = profile.gender;
-                    document.body.className = userGender === 'female' ? 'female-theme' : 'male-theme';
-                    
-                    let bmr = userGender === 'male' ? (10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) : (10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161);
-                    let tdee = bmr * 1.375;
-                    let cals = profile.goal === 'lose' ? (tdee - 500) : (tdee + 500);
-                    document.getElementById('calories-norm').innerText = `${Math.round(cals)} ккал`;
-
-                    tg.CloudStorage.getItem('totalBurned', (err, burned) => {
-                        if (burned) { totalBurnedCalories = parseInt(burned); document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`; }
-                        tg.CloudStorage.getItem('xp', (err, xp) => {
-                            if (xp) currentXP = parseInt(xp);
-                            
-                            const levels = levelsData[userGender];
-                            for (let i = 0; i < levels.length; i++) {
-                                if (currentXP >= levels[i].xp) currentLevelIndexGlobal = i;
-                            }
-                            
-                            updateCharacterUI();
-                            closeScreen('onboarding-screen');
-                            
-                            playNextBg();
-                        });
-                    });
-                } else {
-                    openScreen('onboarding-screen');
-                }
-            });
-        }
-
         function saveProfile() {
             const age = document.getElementById('age').value;
             const gender = document.getElementById('gender').value;
@@ -497,12 +626,8 @@
             const goal = document.getElementById('goal').value;
             if (!age || !weight || !height) { tg.showAlert("Заполни все поля!"); return; }
             tg.CloudStorage.setItem('profile', JSON.stringify({ age, gender, weight, height, goal }), (err, success) => {
-                if (success) loadProfile();
+                if (success) checkProfile();
             });
-        }
-
-        function resetProfile() {
-            tg.CloudStorage.removeItem('profile', () => tg.CloudStorage.removeItem('totalBurned', () => tg.CloudStorage.removeItem('xp', () => location.reload())));
         }
 
         // --- ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК КЛИКОВ ДЛЯ ЗАПУСКА МУЗЫКИ ---
@@ -513,9 +638,10 @@
                     if (isWorkoutMode) playNextWorkout(); else playNextBg();
                 }
             }
-        }, { once: true }); // Сработает только один раз
+        }, { once: true });
 
-        loadProfile();
+        // Запускаем проверку сессии при старте
+        checkSession();
     </script>
 </body>
 </html>
