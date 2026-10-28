@@ -235,12 +235,23 @@
         audioLose.src = "09. Scroll Lose 01.mp3"; 
         const audioLevelUp = "07. Scroll Draw 01.mp3"; 
 
+        // --- ПРЕДЗАГРУЗКА АУДИО (Чтобы не было задержки) ---
+        function preloadAudio() {
+            // Создаем невидимые аудио-объекты, чтобы браузер их скачал
+            const preload1 = new Audio(bgTracks[0]);
+            preload1.load();
+            const preload2 = new Audio(workoutTracks[0]);
+            preload2.load();
+            const preload3 = new Audio(audioWin.src);
+            preload3.load();
+        }
+        preloadAudio(); // Запускаем скачивание в фоне
+
         // --- ЛОГИКА МУЗЫКИ ---
         function playNextBg() {
             if (!isSoundOn || isWorkoutMode) return;
             audioBg.src = bgTracks[currentBgIndex];
-            // Пытаемся включить. Если браузер блокирует - это нормально, включится при первом клике.
-            audioBg.play().catch(e => console.log("Autoplay blocked, waiting for user interaction"));
+            audioBg.play().catch(e => console.log("Autoplay blocked"));
             currentBgIndex = (currentBgIndex + 1) % bgTracks.length;
         }
 
@@ -469,7 +480,6 @@
                             updateCharacterUI();
                             closeScreen('onboarding-screen');
                             
-                            // Попытка включить музыку сразу
                             playNextBg();
                         });
                     });
@@ -496,7 +506,6 @@
         }
 
         // --- ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК КЛИКОВ ДЛЯ ЗАПУСКА МУЗЫКИ ---
-        // Это сработает при самом первом касании экрана где угодно
         document.body.addEventListener('click', function() {
             if (!musicStarted) {
                 musicStarted = true;
