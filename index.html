@@ -92,52 +92,39 @@
         .rank { font-size: 20px; font-weight: bold; width: 40px; color: var(--hint-color); }
         .user-info { flex: 1; margin-left: 10px; }
 
-        /* НОВЫЙ ДИЗАЙН ДЛЯ ВХОДА С КАРТИНКОЙ */
+        /* НОВЫЙ ДИЗАЙН ДЛЯ ВХОДА (ГРАДИЕНТ) */
         .auth-screen { 
-            background-color: #000;
-            background-image: url('https://sun9-22.userapi.com/s/v1/ig2/8N2n2X44v4P9c1Lq9n2n2X44v4P9c1Lq9n2n2X44v4P9c1Lq9n2n2X44v4P9c1Lq.jpg'); /* ЭТО ЗАГЛУШКА, СЮДА ВСТАВИМ ТВОЮ ССЫЛКУ */
-            background-size: cover;
-            background-position: center;
-            position: relative;
-        }
-        
-        /* Затемнение поверх картинки, чтобы текст читался */
-        .auth-screen::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,0.95) 100%);
-            z-index: 1;
+            background: radial-gradient(circle at top, #2c2c2e 0%, #000000 70%);
         }
 
         .auth-container { 
             display: flex; 
             flex-direction: column; 
-            justify-content: flex-end; /* Кнопки внизу */
+            justify-content: center; 
             height: 100%; 
             padding: 30px; 
             text-align: center;
             position: relative;
-            z-index: 2; /* Чтобы было поверх затемнения */
+            z-index: 2;
         }
         
         .auth-title { 
             font-size: 40px; 
             font-weight: 900; 
-            margin-bottom: 5px; 
+            margin-bottom: 10px; 
             text-transform: uppercase; 
             letter-spacing: 2px; 
-            color: #fff;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            background: -webkit-linear-gradient(45deg, #ffcc00, #ff9500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         
         .inspiration-text {
-            font-size: 16px;
-            color: #ddd;
-            font-style: italic;
-            margin-bottom: 30px;
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 40px;
             line-height: 1.4;
-            text-shadow: 0 1px 5px rgba(0,0,0,0.8);
+            font-weight: 500;
         }
         
         .auth-buttons { display: flex; flex-direction: column; gap: 15px; }
@@ -150,8 +137,8 @@
         .google-btn { background-color: #ffffff; color: #333333; border: 1px solid #ddd; }
         .email-btn { background-color: rgba(44, 44, 46, 0.8); color: white; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
         
-        .auth-divider { display: flex; align-items: center; text-align: center; color: #ccc; margin: 10px 0; }
-        .auth-divider::before, .auth-divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255,255,255,0.2); }
+        .auth-divider { display: flex; align-items: center; text-align: center; color: #8e8e93; margin: 10px 0; }
+        .auth-divider::before, .auth-divider::after { content: ''; flex: 1; border-bottom: 1px solid #3a3a3c; }
         .auth-divider span { padding: 0 15px; font-size: 14px; }
     </style>
 </head>
@@ -162,11 +149,10 @@
     <audio id="audio-win"></audio>
     <audio id="audio-lose"></audio>
 
-    <!-- НОВЫЙ ЭКРАН ВХОДА С КАРТИНКОЙ -->
     <div id="auth-screen" class="screen active auth-screen">
         <div class="auth-container">
             <div class="auth-title">Sport App</div>
-            <div class="inspiration-text">"Твое тело может все. Это твой разум нужно убедить."</div>
+            <div class="inspiration-text">Стань лучшей версией себя.<br>Начни прямо сейчас.</div>
             
             <div class="auth-buttons">
                 <button class="auth-btn tg-btn" onclick="loginWithTelegram()">
