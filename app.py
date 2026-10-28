@@ -41,13 +41,16 @@ def analyze_photo():
     image.save(img_byte_arr, format='JPEG')
     img_byte_arr = img_byte_arr.getvalue()
 
-    # 1. Пытаемся использовать LogMeal
+    # --- ПРОВЕРКА LOGMEAL (с выводом ошибки в логи) ---
     if LOGMEAL_TOKEN:
         try:
             files = {'image': ('food.jpg', img_byte_arr, 'image/jpeg')}
             headers = {'Authorization': f'Bearer {LOGMEAL_TOKEN}'}
             lm_response = requests.post('https://api.logmeal.es/v2/image/recognition/complete', headers=headers, files=files, timeout=30)
             
+            # ВОТ ЭТА СТРОЧКА ВЫВЕДЕТ ОТВЕТ LOGMEAL В ЛОГИ RENDER
+            print(f"LOGMEAL RAW RESPONSE: {lm_response.status_code} - {lm_response.text}")
+
             if lm_response.status_code == 200:
                 lm_data = lm_response.json()
                 if 'recognition_results' in lm_data and len(lm_data['recognition_results']) > 0:
@@ -60,34 +63,15 @@ def analyze_photo():
                         "carbs": 30
                     })
         except Exception as e:
-            print(f"LogMeal error: {e}")
+            print(f"LogMeal exception: {e}")
 
-    # 2. Если LogMeal не сработал, пробуем Hugging Face
-    if HF_TOKEN:
-        try:
-            headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-            hf_response = requests.post("https://api-inference.huggingface.co/models/nateraw/food", headers=headers, data=img_byte_arr, timeout=30)
-            if hf_response.status_code == 200:
-                result = hf_response.json()
-                if isinstance(result, list) and len(result) > 0:
-                    best_guess = result[0]['label']
-                    return jsonify({
-                        "food": best_guess.capitalize(),
-                        "calories": 300,
-                        "protein": 20,
-                        "fat": 15,
-                        "carbs": 40
-                    })
-        except Exception as e:
-            print(f"HF error: {e}")
-
-    # 3. Если ничего не сработало, возвращаем тестовые данные, чтобы приложение не висело
+    # --- ЗАГЛУШКА, ЕСЛИ НИЧЕГО НЕ СРАБОТАЛО ---
     return jsonify({
-        "food": "Не удалось распознать (тест)",
-        "calories": 200,
-        "protein": 10,
-        "fat": 5,
-        "carbs": 20
+        "food": "Не удалось распознать",
+        "calories": 0,
+        "protein": 0,
+        "fat": 0,
+        "carbs": 0
     })
 
 if __name__ == '__main__':
