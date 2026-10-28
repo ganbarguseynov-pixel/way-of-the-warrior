@@ -67,31 +67,34 @@
         .exercise-info p { margin: 0; color: var(--hint-color); font-size: 13px; }
         .play-icon { font-size: 24px; }
 
-        /* Стили для таймера */
         .timer-container { text-align: center; display: flex; flex-direction: column; justify-content: center; flex: 1; }
         .current-exercise-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: var(--text-color); }
-        
-        .exercise-animation {
-            width: 100%; max-height: 200px; object-fit: contain;
-            border-radius: 12px; background-color: #000; margin-bottom: 15px;
-        }
-
+        .exercise-animation { width: 100%; max-height: 200px; object-fit: contain; border-radius: 12px; background-color: #000; margin-bottom: 15px; }
         .timer-display { font-size: 80px; font-weight: bold; margin: 10px 0; font-variant-numeric: tabular-nums; }
         .timer-buttons { display: flex; gap: 15px; margin-top: 20px; }
-        
         .burned-calories { font-size: 18px; color: #ff9500; margin-top: 15px; font-weight: bold; }
 
-        /* Стили для экрана завершения */
         .finish-container { text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; flex: 1; padding: 20px; }
         .finish-icon { font-size: 80px; margin-bottom: 20px; }
         .finish-title { font-size: 28px; font-weight: bold; margin: 0 0 10px 0; }
         .finish-subtitle { color: var(--hint-color); font-size: 16px; margin: 0 0 30px 0; }
-        .quote-box { 
-            background-color: var(--secondary-bg); border-left: 4px solid var(--button-color); 
-            padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: left;
-        }
+        .quote-box { background-color: var(--secondary-bg); border-left: 4px solid var(--button-color); padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: left; }
         .quote-text { font-size: 18px; font-style: italic; margin: 0 0 10px 0; line-height: 1.4; }
         .quote-author { font-size: 14px; font-weight: bold; color: var(--hint-color); margin: 0; text-align: right; }
+
+        /* Стили для рейтинга */
+        .leaderboard-item {
+            display: flex; align-items: center; background-color: var(--secondary-bg);
+            padding: 15px; border-radius: 12px; margin-bottom: 10px;
+        }
+        .leaderboard-item.my-row { border: 2px solid var(--button-color); background-color: rgba(0, 122, 255, 0.1); }
+        .rank { font-size: 18px; font-weight: bold; width: 40px; color: var(--hint-color); }
+        .rank.top-1 { color: #ffd700; } /* Золото */
+        .rank.top-2 { color: #c0c0c0; } /* Серебро */
+        .rank.top-3 { color: #cd7f32; } /* Бронза */
+        .user-info { flex: 1; margin-left: 10px; }
+        .user-name { font-size: 16px; font-weight: bold; margin: 0; }
+        .user-calories { font-size: 13px; color: var(--hint-color); margin: 0; }
     </style>
 </head>
 <body>
@@ -166,7 +169,7 @@
                 <h3>⏱ Таймер</h3>
                 <p>Начать упражнение</p>
             </button>
-            <button class="action-btn" onclick="alert('Скоро здесь появится рейтинг!')">
+            <button class="action-btn" onclick="showScreen('leaderboard-screen')">
                 <h3>🏆 Рейтинг</h3>
                 <p>Место в топе</p>
             </button>
@@ -244,6 +247,18 @@
         </div>
     </div>
 
+    <!-- ЭКРАН 6: Рейтинг -->
+    <div id="leaderboard-screen" class="hidden">
+        <button class="back-btn" onclick="showScreen('dashboard-screen')">← Назад</button>
+        <div class="header" style="text-align: left; margin-bottom: 20px;">
+            <h1 style="font-size: 24px;">🏆 Мировой рейтинг</h1>
+            <p>Топ спортсменов по сожженным калориям</p>
+        </div>
+
+        <!-- Сюда JS будет вставлять строки рейтинга -->
+        <div id="leaderboard-list"></div>
+    </div>
+
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -257,7 +272,6 @@
             { name: "Выпады", gif: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3c2Z2Z6eW14MnA0Znd2Znd6eW14MnA0Znd2Znd6eW14MnA0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKuX1Q4d27gK1u/giphy.gif" }
         ];
         
-        // Мотивационные цитаты (объекты: текст + автор)
         const quotes = [
             { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион.", author: "Мухаммед Али" },
             { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
@@ -266,6 +280,16 @@
             { text: "Тот, кто хочет — ищет возможности, тот, кто не хочет — ищет причины.", author: "Сократ" },
             { text: "Я не проигрываю. Я либо побеждаю, либо учусь.", author: "Нельсон Мандела" },
             { text: "Тяжело в учении — легко в бою.", author: "Александр Суворов" }
+        ];
+
+        // Фейковые пользователи для рейтинга
+        const fakeUsers = [
+            { name: "Александр", kcal: 4500 },
+            { name: "Дмитрий", kcal: 3800 },
+            { name: "Елена", kcal: 3200 },
+            { name: "Максим", kcal: 2900 },
+            { name: "Ольга", kcal: 2100 },
+            { name: "Иван", kcal: 1500 }
         ];
 
         let currentExerciseIndex = 0;
@@ -351,18 +375,49 @@
             nextExercise();
         }
 
-        // --- ЗАВЕРШЕНИЕ ТРЕНИРОВКИ (КРАСИВЫЙ ЭКРАН) ---
         function finishWorkout() {
-            // Обновляем статистику на экране завершения
             document.getElementById('finish-stats').innerText = `Отличная работа. За эту тренировку ты сжег ${sessionCalories} ккал.`;
             
-            // Выбираем случайную цитату
             const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
             document.getElementById('finish-quote').innerText = `«${randomQuote.text}»`;
             document.getElementById('finish-author').innerText = `— ${randomQuote.author}`;
             
-            // Переключаем экран
             showScreen('finish-screen');
+        }
+
+        // --- ЛОГИКА РЕЙТИНГА ---
+        function loadLeaderboard() {
+            // Берем всех фейковых + себя
+            let allUsers = [...fakeUsers];
+            
+            // Добавляем себя
+            allUsers.push({ name: tgUserName + " (Вы)", kcal: totalBurnedCalories, isMe: true });
+            
+            // Сортируем по убыванию калорий
+            allUsers.sort((a, b) => b.kcal - a.kcal);
+            
+            // Отрисовываем список
+            const listContainer = document.getElementById('leaderboard-list');
+            listContainer.innerHTML = '';
+            
+            allUsers.forEach((user, index) => {
+                const rank = index + 1;
+                let rankClass = '';
+                if (rank === 1) rankClass = 'top-1';
+                if (rank === 2) rankClass = 'top-2';
+                if (rank === 3) rankClass = 'top-3';
+                
+                const item = document.createElement('div');
+                item.className = `leaderboard-item ${user.isMe ? 'my-row' : ''}`;
+                item.innerHTML = `
+                    <div class="rank ${rankClass}">${rank}</div>
+                    <div class="user-info">
+                        <p class="user-name">${user.name}</p>
+                        <p class="user-calories">${user.kcal} ккал</p>
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
         }
 
         // --- ЛОГИКА ПРИЛОЖЕНИЯ ---
@@ -386,6 +441,11 @@
                     btn.innerText = "Старт";
                     btn.style.backgroundColor = "var(--button-color)";
                 }
+            }
+
+            // Обновляем рейтинг при переходе на него
+            if (screenId === 'leaderboard-screen') {
+                loadLeaderboard();
             }
         }
 
