@@ -4,25 +4,27 @@ from PIL import Image
 import io
 import os
 import requests
+import google.generativeai as genai
 
 app = Flask(__name__)
 CORS(app)
 
 HF_TOKEN = os.environ.get("HF_TOKEN")
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+# Настраиваем Gemini
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
 
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q')
     if not query:
         return jsonify({"error": "No query provided"}), 400
-    
     try:
         response = requests.get(f"https://www.getdietly.com/api/search?q={query}", timeout=10)
-        if response.status_code == 200:
-            return jsonify(response.json())
-        else:
-            return jsonify({"error": "DietlyAPI error"}), 500
+        return jsonify(response.json()) if response.status_code == 200 else jsonify({"error": "DietlyAPI error"}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -41,38 +43,41 @@ def analyze_photo():
     image.save(img_byte_arr, format='JPEG')
     img_byte_arr = img_byte_arr.getvalue()
 
-    # --- ПРОВЕРКА LOGMEAL (с выводом ошибки в логи) ---
+    # 1. Пытаемся использовать LogMeal
     if LOGMEAL_TOKEN:
         try:
             files = {'image': ('food.jpg', img_byte_arr, 'image/jpeg')}
             headers = {'Authorization': f'Bearer {LOGMEAL_TOKEN}'}
             lm_response = requests.post('https://api.logmeal.es/v2/image/recognition/complete', headers=headers, files=files, timeout=30)
-            
-            # ВОТ ЭТА СТРОЧКА ВЫВЕДЕТ ОТВЕТ LOGMEAL В ЛОГИ RENDER
-            print(f"LOGMEAL RAW RESPONSE: {lm_response.status_code} - {lm_response.text}")
-
             if lm_response.status_code == 200:
                 lm_data = lm_response.json()
                 if 'recognition_results' in lm_data and len(lm_data['recognition_results']) > 0:
-                    food_name = lm_data['recognition_results'][0]['name']
-                    return jsonify({
-                        "food": food_name,
-                        "calories": 250,
-                        "protein": 15,
-                        "fat": 10,
-                        "carbs": 30
-                    })
+                    return jsonify({"food": lm_data['recognition_results'][0]['name'], "calories": 250, "protein": 15, "fat": 10, "carbs": 30})
         except Exception as e:
-            print(f"LogMeal exception: {e}")
+            print(f"LogMeal error: {e}")
 
-    # --- ЗАГЛУШКА, ЕСЛИ НИЧЕГО НЕ СРАБОТАЛО ---
-    return jsonify({
-        "food": "Не удалось распознать",
-        "calories": 0,
-        "protein": 0,
-        "fat": 0,
-        "carbs": 0
-    })
+    # 2. Если LogMeal не сработал, пробуем Gemini
+    if GEMINI_API_KEY:
+        try:
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            prompt = "What food is in this image? Answer in one short phrase in Russian. Also estimate calories, protein, fat, and carbs. Format: Food name | Calories | Protein | Fat | Carbs"
+            response = model.generate_content([prompt, image])
+            text = response.text.strip()
+            
+            # Простой парсинг ответа
+            parts = [p.strip() for p in text.split('|')]
+            if len(parts) >= 5:
+                return jsonify({
+                    "food": parts[0],
+                    "calories": int(''.join(filter(str.isdigit, parts[1]))) if any(c.isdigit() for c in parts[1]) else 250,
+                    "protein": int(''.join(filter(str.isdigit, parts[2]))) if any(c.isdigit() for c in parts[2]) else 15,
+                    "fat": int(''.join(filter(str.isdigit, parts[3]))) if any(c.isdigit() for c in parts[3]) else 10,
+                    "carbs": int(''.join(filter(str.isdigit, parts[4]))) if any(c.isdigit() for c in parts[4]) else 30
+                })
+        except Exception as e:
+            print(f"Gemini error: {e}")
+
+    return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
