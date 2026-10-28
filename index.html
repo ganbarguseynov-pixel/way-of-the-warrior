@@ -7,153 +7,117 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: var(--tg-theme-bg-color, #000000); /* Черный фон для видео */
-            --text-color: var(--tg-theme-text-color, #ffffff);
-            --hint-color: var(--tg-theme-hint-color, #8e8e93);
-            --button-color: var(--tg-theme-button-color, #007aff);
-            --secondary-bg: rgba(44, 44, 46, 0.7); /* Полупрозрачный для кнопок */
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --hint-color: #8e8e93;
+            --secondary-bg: rgba(30, 30, 30, 0.6);
             --xp-color: #34c759; 
             --accent-color: #ffcc00;
         }
+        .female-theme { --accent-color: #ff3b30; }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: #000; color: var(--text-color);
             margin: 0; padding: 0; display: flex; flex-direction: column;
-            height: 100vh; width: 100vw; box-sizing: border-box; overflow: hidden; /* Запрет скролла */
+            height: 100vh; width: 100vw; box-sizing: border-box; overflow: hidden;
         }
-        .female-theme { --accent-color: #ff3b30; }
         
-        /* Видео на весь экран */
         .video-background {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover; /* Заполняет весь экран */
-            z-index: 1;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: 1;
         }
         
-        /* Оверлей для затемнения низа, чтобы читались кнопки */
         .overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.9) 100%);
-            z-index: 2;
-            display: flex; flex-direction: column; justify-content: space-between; padding: 20px; box-sizing: border-box;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 25%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.85) 100%);
+            z-index: 2; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 15px; box-sizing: border-box;
         }
 
-        /* Верхняя часть с уровнем */
         .top-info { text-align: center; margin-top: 10px; }
-        .character-level { font-size: 28px; font-weight: bold; color: var(--accent-color); margin: 0 0 5px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        .character-title { font-size: 16px; color: #fff; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        .xp-bar-container { background-color: rgba(58, 58, 60, 0.8); border-radius: 10px; height: 14px; width: 60%; margin: 0 auto 5px auto; overflow: hidden; border: 1px solid #000; }
-        .xp-bar { background-color: var(--xp-color); height: 100%; width: 0%; transition: width 0.5s ease-in-out; }
-        .xp-text { font-size: 12px; color: #ccc; text-align: center; margin: 0; font-weight: bold; text-shadow: 0 1px 2px #000; }
-
-        /* Нижняя панель с кнопками */
-        .bottom-panel {
-            display: flex; flex-direction: column; gap: 10px;
+        .character-level { 
+            font-size: 16px; font-weight: 600; color: var(--hint-color); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 5px;
         }
+        .character-title { 
+            font-size: 34px; font-weight: 900; color: var(--accent-color); margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(255, 204, 0, 0.5), 0 4px 10px rgba(0,0,0,0.8);
+        }
+        .female-theme .character-title { text-shadow: 0 0 20px rgba(255, 59, 48, 0.5), 0 4px 10px rgba(0,0,0,0.8); }
         
-        .stats-row {
-            display: flex; justify-content: space-between; gap: 10px; margin-bottom: 5px;
+        .xp-bar-container { 
+            background-color: rgba(0, 0, 0, 0.5); border-radius: 20px; height: 16px; width: 80%; margin: 0 auto; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
         }
-        .stat-box {
-            flex: 1; background-color: var(--secondary-bg); backdrop-filter: blur(10px);
-            border-radius: 12px; padding: 10px; text-align: center;
-        }
-        .stat-box p { margin: 0; font-size: 12px; color: var(--hint-color); }
-        .stat-box h3 { margin: 5px 0 0 0; font-size: 18px; color: var(--text-color); }
+        .xp-bar { background: linear-gradient(90deg, #34c759, #a8e063); height: 100%; width: 0%; transition: width 0.5s ease-in-out; border-radius: 20px; }
+        .xp-text { font-size: 12px; color: #fff; text-align: center; margin: 5px 0 0 0; font-weight: bold; text-shadow: 0 1px 3px #000; }
 
-        .action-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-        }
-        .action-btn {
-            background-color: var(--secondary-bg); backdrop-filter: blur(10px); border: none; border-radius: 16px;
-            padding: 12px 5px; text-align: center; color: var(--text-color); cursor: pointer;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .action-btn h3 { margin: 0 0 5px 0; font-size: 20px; }
-        .action-btn p { margin: 0; color: var(--hint-color); font-size: 10px; }
-        .action-btn:active { opacity: 0.7; }
+        .bottom-panel { display: flex; flex-direction: column; gap: 15px; }
+        .stats-row { display: flex; justify-content: space-between; gap: 10px; }
+        .stat-box { flex: 1; background-color: var(--secondary-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-radius: 16px; padding: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .stat-box p { margin: 0; font-size: 12px; color: var(--hint-color); text-transform: uppercase; letter-spacing: 1px;}
+        .stat-box h3 { margin: 5px 0 0 0; font-size: 20px; color: var(--text-color); font-weight: bold; }
 
-        /* Скрываем все экраны кроме главного */
-        .screen { display: none; width: 100%; height: 100%; position: relative; }
+        .action-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .action-btn { background-color: var(--secondary-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px 5px; text-align: center; color: var(--text-color); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.1s; }
+        .action-btn:active { transform: scale(0.95); background-color: rgba(255,255,255,0.1); }
+        .action-btn h3 { margin: 0 0 8px 0; font-size: 24px; }
+        .action-btn p { margin: 0; color: var(--hint-color); font-size: 11px; font-weight: 600; }
+
+        .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background-color: var(--bg-color); z-index: 10; }
         .screen.active { display: flex; }
         
-        /* Стили для модальных окон и остальных экранов */
-        .inner-screen { padding: 20px; background-color: var(--bg-color); height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow-y: auto; }
+        .inner-screen { padding: 20px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow-y: auto; width: 100%; background-color: #0d0d0d; }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--hint-color); }
         input, select { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #3a3a3c; background-color: #2c2c2e; color: var(--text-color); font-size: 16px; box-sizing: border-box; outline: none; }
         .row { display: flex; gap: 15px; }
         .row .form-group { flex: 1; }
-        .btn { background-color: var(--accent-color); color: #000; border: none; padding: 16px; border-radius: 12px; font-size: 18px; font-weight: 600; width: 100%; margin-top: 15px; cursor: pointer; }
+        
+        .btn { background-color: var(--accent-color); color: #000; border: none; padding: 16px; border-radius: 16px; font-size: 18px; font-weight: bold; width: 100%; margin-top: 15px; cursor: pointer; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.8; }
         .back-btn { background: none; border: none; color: var(--accent-color); font-size: 16px; padding: 0; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center; font-weight: bold;}
         
-        /* Вспомогательные классы */
-        .hidden { display: none !important; }
-        
-        /* Стили для таймера и прочего */
-        .timer-display { font-size: 80px; font-weight: bold; text-align: center; margin: 20px 0; }
-        .quote-box { background-color: #2c2c2e; border-left: 4px solid var(--accent-color); padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .leaderboard-item { display: flex; align-items: center; background-color: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 10px; }
-        .my-row { border: 2px solid var(--accent-color); }
-        .rank { font-size: 18px; font-weight: bold; width: 40px; color: #8e8e93; }
+        .timer-display { font-size: 80px; font-weight: bold; text-align: center; margin: 20px 0; font-variant-numeric: tabular-nums; }
+        .quote-box { background-color: #1c1c1e; border-left: 4px solid var(--accent-color); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .leaderboard-item { display: flex; align-items: center; background-color: #1c1c1e; padding: 15px; border-radius: 16px; margin-bottom: 10px; border: 1px solid #2c2c2e;}
+        .my-row { border: 2px solid var(--accent-color); background-color: rgba(255, 204, 0, 0.1); }
+        .rank { font-size: 20px; font-weight: bold; width: 40px; color: var(--hint-color); }
         .user-info { flex: 1; margin-left: 10px; }
     </style>
 </head>
 <body class="male-theme">
 
-    <!-- Главный экран с видео на весь фон -->
     <div id="dashboard-screen" class="screen active">
-        <!-- Видео на весь экран -->
         <video id="character-video" class="video-background" autoplay loop muted playsinline></video>
-        
-        <!-- Оверлей с интерфейсом -->
         <div class="overlay">
             <div class="top-info">
                 <div class="character-level" id="char-level">Уровень 1</div>
-                <div class="character-title" id="char-title">Новичок</div>
+                <div class="character-title" id="char-title">Странник</div>
                 <div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
                 <p class="xp-text" id="xp-text">0 / 100 XP</p>
             </div>
             
             <div class="bottom-panel">
                 <div class="stats-row">
-                    <div class="stat-box">
-                        <p>Норма</p>
-                        <h3 id="calories-norm">0 ккал</h3>
-                    </div>
-                    <div class="stat-box">
-                        <p>Сожжено</p>
-                        <h3 id="burned-total">0 ккал</h3>
-                    </div>
+                    <div class="stat-box"><p>Норма</p><h3 id="calories-norm">0 ккал</h3></div>
+                    <div class="stat-box"><p>Сожжено</p><h3 id="burned-total">0 ккал</h3></div>
                 </div>
 
                 <div class="action-grid">
-                    <button class="action-btn" onclick="openScreen('camera-screen')">
-                        <h3>📸</h3><p>Еда</p>
-                    </button>
-                    <button class="action-btn" onclick="openScreen('workout-screen')">
-                        <h3>💪</h3><p>Треня</p>
-                    </button>
-                    <button class="action-btn" onclick="openScreen('timer-screen')">
-                        <h3>⏱</h3><p>Таймер</p>
-                    </button>
-                    <button class="action-btn" onclick="openScreen('leaderboard-screen')">
-                        <h3>🏆</h3><p>Рейтинг</p>
-                    </button>
+                    <button class="action-btn" onclick="openScreen('camera-screen')"><h3>📸</h3><p>Еда</p></button>
+                    <button class="action-btn" onclick="openScreen('workout-screen')"><h3>💪</h3><p>Треня</p></button>
+                    <button class="action-btn" onclick="openScreen('timer-screen')"><h3>⏱</h3><p>Таймер</p></button>
+                    <button class="action-btn" onclick="openScreen('leaderboard-screen')"><h3>🏆</h3><p>Рейтинг</p></button>
                 </div>
                 
-                <button class="btn" style="background-color: transparent; color: #8e8e93; margin-top: 5px; font-size: 14px;" onclick="resetProfile()">Сбросить профиль</button>
+                <button class="btn" style="background-color: transparent; color: #8e8e93; margin-top: 5px; font-size: 14px; font-weight: normal;" onclick="resetProfile()">Сбросить профиль</button>
             </div>
         </div>
     </div>
 
-    <!-- ОСТАЛЬНЫЕ ЭКРАНЫ (всплывают поверх) -->
     <div id="onboarding-screen" class="screen">
         <div class="inner-screen">
-            <h1 style="text-align: center; margin-bottom: 20px;">Добро пожаловать!</h1>
-            <div class="form-group"><label>Цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
+            <h1 style="text-align: center; margin-bottom: 30px;">Добро пожаловать!</h1>
+            <div class="form-group"><label>Твоя цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
             <div class="row">
                 <div class="form-group"><label>Возраст</label><input type="number" id="age" placeholder="25"></div>
                 <div class="form-group"><label>Пол</label><select id="gender" onchange="changeTheme()"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
@@ -162,7 +126,7 @@
                 <div class="form-group"><label>Вес (кг)</label><input type="number" id="weight" placeholder="70"></div>
                 <div class="form-group"><label>Рост (см)</label><input type="number" id="height" placeholder="175"></div>
             </div>
-            <button class="btn" onclick="saveProfile()">Продолжить</button>
+            <button class="btn" onclick="saveProfile()">Начать путь</button>
         </div>
     </div>
 
@@ -170,8 +134,9 @@
         <div class="inner-screen">
             <button class="back-btn" onclick="closeScreen('workout-screen')">← Назад</button>
             <h1>Тренировка</h1>
-            <div style="background: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 10px;"><h4>Приседания</h4><p style="color: #8e8e93; font-size: 13px;">3 подхода • 15 повторений</p></div>
-            <div style="background: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 10px;"><h4>Отжимания</h4><p style="color: #8e8e93; font-size: 13px;">3 подхода • 10 повторений</p></div>
+            <p style="color: var(--hint-color); margin-bottom: 20px;">Комплекс на сегодня</p>
+            <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #2c2c2e;"><h4>Приседания</h4><p style="color: #8e8e93; font-size: 13px;">3 подхода • 15 повторений</p></div>
+            <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #2c2c2e;"><h4>Отжимания</h4><p style="color: #8e8e93; font-size: 13px;">3 подхода • 10 повторений</p></div>
             <button class="btn" style="margin-top: auto;" onclick="startWorkoutFromList()">Начать тренировку</button>
         </div>
     </div>
@@ -180,6 +145,7 @@
         <div class="inner-screen">
             <button class="back-btn" onclick="closeScreen('timer-screen')">← Назад</button>
             <h1 style="text-align: center;">Таймер</h1>
+            <p style="text-align: center; color: var(--hint-color);">Отдых между подходами</p>
             <div class="timer-display" id="timer-display">00:45</div>
             <div style="display: flex; gap: 15px;">
                 <button class="btn" onclick="toggleTimer()" id="timer-btn">Старт</button>
@@ -192,18 +158,19 @@
 
     <div id="finish-screen" class="screen">
         <div class="inner-screen" style="text-align: center; justify-content: center;">
-            <h1 style="font-size: 80px;">🏆</h1>
+            <h1 style="font-size: 80px; margin-bottom: 10px;">🏆</h1>
             <h2>Тренировка завершена!</h2>
-            <p id="finish-stats" style="color: #8e8e93; margin-bottom: 20px;">Ты сжег 0 ккал.</p>
-            <div class="quote-box"><p id="finish-quote" style="font-style: italic;">"Цитата"</p><p id="finish-author" style="text-align: right; font-weight: bold; font-size: 12px; color: #8e8e93;">— Автор</p></div>
-            <button class="btn" onclick="closeScreen('finish-screen')">Вернуться</button>
+            <p id="finish-stats" style="color: #8e8e93; margin-bottom: 30px;">Ты сжег 0 ккал.</p>
+            <div class="quote-box"><p id="finish-quote" style="font-style: italic; font-size: 18px; margin-bottom: 10px;">"Цитата"</p><p id="finish-author" style="text-align: right; font-weight: bold; font-size: 14px; color: var(--hint-color);">— Автор</p></div>
+            <button class="btn" onclick="closeScreen('finish-screen')">Вернуться на главную</button>
         </div>
     </div>
 
     <div id="leaderboard-screen" class="screen">
         <div class="inner-screen">
             <button class="back-btn" onclick="closeScreen('leaderboard-screen')">← Назад</button>
-            <h1>🏆 Рейтинг</h1>
+            <h1>🏆 Мировой рейтинг</h1>
+            <p style="color: var(--hint-color); margin-bottom: 20px;">Топ атлетов по сожженным калориям</p>
             <div id="leaderboard-list"></div>
         </div>
     </div>
@@ -212,10 +179,11 @@
         <div class="inner-screen">
             <button class="back-btn" onclick="closeScreen('camera-screen')">← Назад</button>
             <h1>Анализ еды</h1>
+            <p style="color: var(--hint-color); margin-bottom: 20px;">Сфоткай блюдо, и ИИ посчитает калории</p>
             <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;" onchange="handleImage(event)">
-            <img id="photo-preview" style="width: 100%; border-radius: 12px; margin-bottom: 20px; display: none;">
+            <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
             <button class="btn" id="take-photo-btn" onclick="document.getElementById('camera-input').click()" style="padding: 40px 20px; font-size: 20px;">📷 Сделать фото</button>
-            <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px; font-size: 18px;">🤖 ИИ анализирует...</div>
+            <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px; font-size: 18px;">🤖 ИИ анализирует фото...</div>
         </div>
     </div>
 
@@ -223,31 +191,30 @@
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
-        // --- ВСТАВЛЕННЫЕ ССЫЛКИ НА ВИДЕО ---
         const levelsData = {
             male: [
-                { xp: 0, title: "Слабак", video: "VID_20261028_162626_544.mp4" },
-                { xp: 100, title: "Новичок", video: "VID_20261028_173134_198.mp4" },
-                { xp: 250, title: "Любитель", video: "VID_20261028_173215_440.mp4" },
-                { xp: 500, title: "Спортсмен", video: "VID_20261028_173219_295.mp4" },
-                { xp: 1000, title: "Атлет", video: "VID_20261028_173227_311.mp4" },
-                { xp: 2000, title: "Воин", video: "VID_20261028_173233_432.mp4" },
-                { xp: 3500, title: "Гладиатор", video: "VID_20261028_173238_313.mp4" },
-                { xp: 5000, title: "Элита", video: "VID_20261028_173251_027.mp4" },
-                { xp: 7500, title: "Легенда", video: "VID_20261028_173803_138.mp4" },
-                { xp: 10000, title: "Бог спорта", video: "VID_20261028_173808_318.mp4" }
+                { xp: 0, title: "Странник", video: "VID_20261028_162626_544.mp4" },
+                { xp: 100, title: "Берсерк", video: "VID_20261028_173134_198.mp4" },
+                { xp: 250, title: "Легионер", video: "VID_20261028_173215_440.mp4" },
+                { xp: 500, title: "Титан", video: "VID_20261028_173219_295.mp4" },
+                { xp: 1000, title: "Дух", video: "VID_20261028_173227_311.mp4" },
+                { xp: 2000, title: "Гладиатор", video: "VID_20261028_173233_432.mp4" },
+                { xp: 3500, title: "Демон", video: "VID_20261028_173238_313.mp4" },
+                { xp: 5000, title: "Охотник", video: "VID_20261028_173251_027.mp4" },
+                { xp: 7500, title: "Мастер", video: "VID_20261028_173803_138.mp4" },
+                { xp: 10000, title: "Чемпион", video: "VID_20261028_173808_318.mp4" }
             ],
             female: [
-                { xp: 0, title: "Слабый новичок", video: "VID_20261028_175618_746.mp4" },
-                { xp: 100, title: "Первые шаги", video: "VID_20261028_175631_701.mp4" },
-                { xp: 250, title: "Начало пути", video: "VID_20261028_175641_349.mp4" },
-                { xp: 500, title: "Легкий рельеф", video: "VID_20261028_175649_029.mp4" },
-                { xp: 1000, title: "Спортивная форма", video: "VID_20261028_175659_208.mp4" },
-                { xp: 2000, title: "Сила и мощь", video: "VID_20261028_175708_920.mp4" },
-                { xp: 3500, title: "Максимальная масса", video: "VID_20261028_175726_660.mp4" },
-                { xp: 5000, title: "Успех", video: "VID_20261028_175732_350.mp4" },
-                { xp: 7500, title: "Супергерой", video: "VID_20261028_175744_681.mp4" },
-                { xp: 10000, title: "Богиня спорта", video: "VID_20261028_175750_651.mp4" }
+                { xp: 0, title: "Новичок", video: "VID_20261028_175618_746.mp4" },
+                { xp: 100, title: "Фурия", video: "VID_20261028_175631_701.mp4" },
+                { xp: 250, title: "Амазонка", video: "VID_20261028_175641_349.mp4" },
+                { xp: 500, title: "Гарпия", video: "VID_20261028_175649_029.mp4" },
+                { xp: 1000, title: "Валькирия", video: "VID_20261028_175659_208.mp4" },
+                { xp: 2000, title: "Львица", video: "VID_20261028_175708_920.mp4" },
+                { xp: 3500, title: "Жар-птица", video: "VID_20261028_175726_660.mp4" },
+                { xp: 5000, title: "Горгона", video: "VID_20261028_175732_350.mp4" },
+                { xp: 7500, title: "Богиня", video: "VID_20261028_175744_681.mp4" },
+                { xp: 10000, title: "Химера", video: "VID_20261028_175750_651.mp4" }
             ]
         };
 
@@ -297,19 +264,11 @@
             updateCharacterUI();
         }
 
-        // Открытие/Закрытие экранов (без скрытия видео фона)
-        function openScreen(screenId) {
-            document.getElementById(screenId).classList.add('active');
-        }
-        function closeScreen(screenId) {
-            document.getElementById(screenId).classList.remove('active');
-        }
+        function openScreen(screenId) { document.getElementById(screenId).classList.add('active'); }
+        function closeScreen(screenId) { document.getElementById(screenId).classList.remove('active'); }
 
-        // ТАЙМЕР
         let timeLeft = 45, isRunning = false, timerInterval, sessionCalories = 0;
-        function updateTimerDisplay() {
-            document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`;
-        }
+        function updateTimerDisplay() { document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`; }
         function toggleTimer() {
             const btn = document.getElementById('timer-btn');
             if (isRunning) { clearInterval(timerInterval); btn.innerText = "Старт"; btn.style.backgroundColor = "var(--accent-color)"; }
@@ -328,9 +287,7 @@
             const btn = document.getElementById('timer-btn');
             if(btn) { btn.innerText = "Старт"; btn.style.backgroundColor = "var(--accent-color)"; }
         }
-        function startWorkoutFromList() {
-            sessionCalories = 0; resetTimer(); closeScreen('workout-screen'); openScreen('timer-screen');
-        }
+        function startWorkoutFromList() { sessionCalories = 0; resetTimer(); closeScreen('workout-screen'); openScreen('timer-screen'); }
         function completeSet() {
             const kcal = 15; sessionCalories += kcal; totalBurnedCalories += kcal;
             addXP(15); tg.CloudStorage.setItem('totalBurned', totalBurnedCalories.toString());
@@ -338,21 +295,24 @@
         }
         function finishWorkout() {
             document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
-            const quotes = [{ text: "Не сдавайся.", author: "Мухаммед Али" }, { text: "Дисциплина — это мост.", author: "Джим Рон" }];
+            const quotes = [
+                { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион.", author: "Мухаммед Али" },
+                { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
+                { text: "Не молитесь о легкой жизни, молитесь о силах, чтобы вынести тяжелую.", author: "Брюс Ли" }
+            ];
             const q = quotes[Math.floor(Math.random() * quotes.length)];
             document.getElementById('finish-quote').innerText = `«${q.text}»`;
             document.getElementById('finish-author').innerText = `— ${q.author}`;
             closeScreen('timer-screen'); openScreen('finish-screen');
         }
 
-        // ОСТАЛЬНОЕ
         function loadLeaderboard() {
             const fake = [{ name: "Александр", kcal: 4500 }, { name: "Елена", kcal: 3200 }];
             let all = [...fake, { name: tgUserName + " (Вы)", kcal: totalBurnedCalories, isMe: true }].sort((a, b) => b.kcal - a.kcal);
             document.getElementById('leaderboard-list').innerHTML = all.map((u, i) => `
                 <div class="leaderboard-item ${u.isMe ? 'my-row' : ''}">
                     <div class="rank">${i + 1}</div>
-                    <div class="user-info"><p style="margin:0;font-weight:bold;">${u.name}</p><p style="margin:0;font-size:12px;color:#8e8e93;">${u.kcal} ккал</p></div>
+                    <div class="user-info"><p style="margin:0;font-weight:bold;font-size:16px;">${u.name}</p><p style="margin:0;font-size:13px;color:#8e8e93;">${u.kcal} ккал</p></div>
                 </div>`).join('');
         }
         function handleImage(event) {
@@ -375,7 +335,6 @@
             }
         }
 
-        // ЛОГИКА ЗАГРУЗКИ
         function loadProfile() {
             tg.CloudStorage.getItem('profile', (err, result) => {
                 if (result) {
