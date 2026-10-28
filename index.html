@@ -13,17 +13,21 @@
             --button-color: var(--tg-theme-button-color, #007aff);
             --button-text-color: var(--tg-theme-button-text-color, #ffffff);
             --secondary-bg: var(--tg-theme-secondary-bg-color, #2c2c2e);
-            --xp-color: #34c759; /* Зеленый для опыта */
+            --xp-color: #34c759; 
+            --accent-color: #007aff;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color); color: var(--text-color);
             margin: 0; padding: 20px; display: flex; flex-direction: column;
-            min-height: 100vh; box-sizing: border-box;
+            min-height: 100vh; box-sizing: border-box; overflow-x: hidden;
         }
-        .header { text-align: center; margin-bottom: 30px; margin-top: 20px; }
-        .header h1 { font-size: 28px; margin: 0 0 10px 0; font-weight: bold; }
-        .header p { color: var(--hint-color); font-size: 15px; margin: 0; }
+        .male-theme { --accent-color: #ffcc00; }
+        .female-theme { --accent-color: #ff3b30; }
+
+        .header { text-align: center; margin-bottom: 20px; margin-top: 10px; }
+        .header h1 { font-size: 24px; margin: 0 0 5px 0; font-weight: bold; }
+        .header p { color: var(--hint-color); font-size: 14px; margin: 0; }
         
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--hint-color); }
@@ -35,47 +39,49 @@
         .row { display: flex; gap: 15px; }
         .row .form-group { flex: 1; }
         .btn {
-            background-color: var(--button-color); color: var(--button-text-color); border: none;
+            background-color: var(--accent-color); color: #000; border: none;
             padding: 16px; border-radius: 12px; font-size: 18px; font-weight: 600; width: 100%;
             margin-top: 15px; cursor: pointer; transition: opacity 0.2s;
         }
+        .female-theme .btn { color: #fff; }
         .btn:active { opacity: 0.8; }
         .hidden { display: none !important; }
         
-        /* Стили для персонажа и уровней */
         .character-card {
-            background: linear-gradient(135deg, #2c2c2e, #1c1c1e);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: center;
-            border: 1px solid #3a3a3c;
+            background: linear-gradient(180deg, #2c2c2e 0%, #1c1c1e 100%);
+            border-radius: 20px; padding: 15px; margin-bottom: 15px; text-align: center;
+            border: 1px solid #3a3a3c; position: relative; overflow: hidden;
+            flex: 1; display: flex; flex-direction: column; justify-content: flex-end;
         }
-        .character-avatar { font-size: 70px; margin-bottom: 10px; line-height: 1; }
-        .character-level { font-size: 20px; font-weight: bold; color: #ffd700; margin: 0 0 5px 0; }
-        .character-title { font-size: 14px; color: var(--hint-color); margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .xp-bar-container {
-            background-color: #3a3a3c; border-radius: 10px; height: 12px; width: 100%; overflow: hidden; margin-bottom: 5px;
+        .character-video {
+            width: 100%; height: 100%; object-fit: cover; position: absolute;
+            top: 0; left: 0; z-index: 1; border-radius: 20px;
         }
+        .character-info-overlay {
+            position: relative; z-index: 2;
+            background: linear-gradient(0deg, rgba(28,28,30,1) 0%, rgba(28,28,30,0.7) 60%, rgba(28,28,30,0) 100%);
+            padding-top: 40px; margin: 0 -15px -15px -15px; padding-bottom: 15px;
+        }
+        .character-level { font-size: 22px; font-weight: bold; color: var(--accent-color); margin: 0 0 5px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .character-title { font-size: 14px; color: #fff; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        .xp-bar-container { background-color: rgba(58, 58, 60, 0.8); border-radius: 10px; height: 12px; width: 80%; margin: 0 auto 5px auto; overflow: hidden; border: 1px solid #000; }
         .xp-bar { background-color: var(--xp-color); height: 100%; width: 0%; transition: width 0.5s ease-in-out; }
-        .xp-text { font-size: 12px; color: var(--hint-color); text-align: right; margin: 0; }
+        .xp-text { font-size: 12px; color: #ccc; text-align: center; margin: 0; font-weight: bold; }
 
-        .dashboard-card { background-color: var(--secondary-bg); border-radius: 16px; padding: 20px; margin-bottom: 15px; }
-        .dashboard-card h2 { font-size: 18px; margin: 0 0 10px 0; }
-        .dashboard-card .big-number { font-size: 36px; font-weight: bold; color: var(--button-color); margin: 0; }
-        .dashboard-card p { color: var(--hint-color); margin: 5px 0 0 0; font-size: 14px; }
+        .dashboard-card { background-color: var(--secondary-bg); border-radius: 16px; padding: 15px; margin-bottom: 10px; }
+        .dashboard-card h2 { font-size: 16px; margin: 0 0 5px 0; }
+        .dashboard-card .big-number { font-size: 28px; font-weight: bold; color: var(--accent-color); margin: 0; }
         
-        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .action-btn {
             background-color: var(--secondary-bg); border: none; border-radius: 16px;
-            padding: 20px; text-align: left; color: var(--text-color); cursor: pointer;
+            padding: 15px; text-align: left; color: var(--text-color); cursor: pointer;
         }
-        .action-btn h3 { margin: 0 0 5px 0; font-size: 16px; }
-        .action-btn p { margin: 0; color: var(--hint-color); font-size: 12px; }
+        .action-btn h3 { margin: 0 0 5px 0; font-size: 15px; }
+        .action-btn p { margin: 0; color: var(--hint-color); font-size: 11px; }
         .action-btn:active { opacity: 0.7; }
 
-        .back-btn { background: none; border: none; color: var(--button-color); font-size: 16px; padding: 0; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center; }
+        .back-btn { background: none; border: none; color: var(--accent-color); font-size: 16px; padding: 0; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center; font-weight: bold;}
         .exercise-item { background-color: var(--secondary-bg); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .exercise-info h4 { margin: 0 0 5px 0; font-size: 16px; }
         .exercise-info p { margin: 0; color: var(--hint-color); font-size: 13px; }
@@ -86,18 +92,18 @@
         .exercise-animation { width: 100%; max-height: 200px; object-fit: contain; border-radius: 12px; background-color: #000; margin-bottom: 15px; }
         .timer-display { font-size: 80px; font-weight: bold; margin: 10px 0; font-variant-numeric: tabular-nums; }
         .timer-buttons { display: flex; gap: 15px; margin-top: 20px; }
-        .burned-calories { font-size: 18px; color: #ff9500; margin-top: 15px; font-weight: bold; }
+        .burned-calories { font-size: 18px; color: var(--accent-color); margin-top: 15px; font-weight: bold; }
 
         .finish-container { text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; flex: 1; padding: 20px; }
         .finish-icon { font-size: 80px; margin-bottom: 20px; }
-        .finish-title { font-size: 28px; font-weight: bold; margin: 0 0 10px 0; }
+        .finish-title { font-size: 28px; font-weight: bold; margin: 0 0 10px 0; color: var(--accent-color); }
         .finish-subtitle { color: var(--hint-color); font-size: 16px; margin: 0 0 30px 0; }
-        .quote-box { background-color: var(--secondary-bg); border-left: 4px solid var(--button-color); padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: left; }
+        .quote-box { background-color: var(--secondary-bg); border-left: 4px solid var(--accent-color); padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: left; }
         .quote-text { font-size: 18px; font-style: italic; margin: 0 0 10px 0; line-height: 1.4; }
         .quote-author { font-size: 14px; font-weight: bold; color: var(--hint-color); margin: 0; text-align: right; }
 
         .leaderboard-item { display: flex; align-items: center; background-color: var(--secondary-bg); padding: 15px; border-radius: 12px; margin-bottom: 10px; }
-        .leaderboard-item.my-row { border: 2px solid var(--button-color); background-color: rgba(0, 122, 255, 0.1); }
+        .leaderboard-item.my-row { border: 2px solid var(--accent-color); background-color: rgba(255, 255, 255, 0.05); }
         .rank { font-size: 18px; font-weight: bold; width: 40px; color: var(--hint-color); }
         .rank.top-1 { color: #ffd700; } .rank.top-2 { color: #c0c0c0; } .rank.top-3 { color: #cd7f32; }
         .user-info { flex: 1; margin-left: 10px; }
@@ -109,7 +115,7 @@
         .loading-spinner { font-size: 18px; color: var(--hint-color); display: none; margin-top: 20px; }
     </style>
 </head>
-<body>
+<body class="male-theme">
 
     <!-- ЭКРАН 1: Знакомство -->
     <div id="onboarding-screen">
@@ -117,7 +123,7 @@
         <div class="form-group"><label>Ваша цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать мышечную массу</option></select></div>
         <div class="row">
             <div class="form-group"><label>Возраст</label><input type="number" id="age" placeholder="Например: 25" min="10" max="100"></div>
-            <div class="form-group"><label>Пол</label><select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
+            <div class="form-group"><label>Пол</label><select id="gender" onchange="changeTheme()"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
         </div>
         <div class="row">
             <div class="form-group"><label>Вес (кг)</label><input type="number" id="weight" placeholder="70" min="30" max="250"></div>
@@ -128,25 +134,23 @@
 
     <!-- ЭКРАН 2: Главный экран (Дашборд) -->
     <div id="dashboard-screen" class="hidden">
-        <div class="header" style="text-align: left; margin-bottom: 20px;">
-            <h1 style="font-size: 24px;">Привет, <span id="user-name">друг</span>!</h1>
+        <div class="header" style="text-align: left; margin-bottom: 10px;">
+            <h1 style="font-size: 20px;">Привет, <span id="user-name">друг</span>!</h1>
             <p id="goal-text">Твоя цель: Похудеть</p>
         </div>
 
-        <!-- Блок с персонажем -->
         <div class="character-card">
-            <div class="character-avatar" id="avatar">🧍‍♂️</div>
-            <div class="character-level" id="char-level">Уровень 1</div>
-            <div class="character-title" id="char-title">Новичок</div>
-            
-            <div class="xp-bar-container">
-                <div class="xp-bar" id="xp-bar"></div>
+            <video id="character-video" class="character-video" autoplay loop muted playsinline></video>
+            <div class="character-info-overlay">
+                <div class="character-level" id="char-level">Уровень 1</div>
+                <div class="character-title" id="char-title">Новичок</div>
+                <div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
+                <p class="xp-text" id="xp-text">0 / 100 XP</p>
             </div>
-            <p class="xp-text" id="xp-text">0 / 100 XP</p>
         </div>
 
-        <div class="dashboard-card"><h2>Твоя дневная норма</h2><p class="big-number" id="calories-norm">0 <span style="font-size: 16px; color: var(--hint-color);">ккал</span></p><p>Рассчитано на основе твоих данных</p></div>
-        <div class="dashboard-card" style="background: linear-gradient(135deg, #ff9500, #ff2d55);"><h2 style="color: white;">Сожжено за тренировки</h2><p class="big-number" id="burned-total" style="color: white;">0 <span style="font-size: 16px; opacity: 0.8;">ккал</span></p></div>
+        <div class="dashboard-card"><h2>Норма калорий</h2><p class="big-number" id="calories-norm">0 <span style="font-size: 14px; color: var(--hint-color);">ккал</span></p></div>
+        <div class="dashboard-card"><h2>Сожжено за всё время</h2><p class="big-number" id="burned-total">0 <span style="font-size: 14px; color: var(--hint-color);">ккал</span></p></div>
 
         <div class="action-grid">
             <button class="action-btn" onclick="showScreen('camera-screen')"><h3>📸 Сфоткать еду</h3><p>Узнать калории</p></button>
@@ -162,9 +166,8 @@
         <button class="back-btn" onclick="showScreen('dashboard-screen')">← Назад</button>
         <div class="header" style="text-align: left; margin-bottom: 20px;"><h1 style="font-size: 24px;">Тренировка</h1><p>Комплекс для достижения цели</p></div>
         <div class="exercise-item"><div class="exercise-info"><h4>Приседания</h4><p>3 подхода • 15 повторений</p></div><div class="play-icon">▶️</div></div>
-        <div class="exercise-item"><div class="exercise-info"><h4>Отжимания от пола</h4><p>3 подхода • 10 повторений</p></div><div class="play-icon">▶️</div></div>
+        <div class="exercise-item"><div class="exercise-info"><h4>Отжимания</h4><p>3 подхода • 10 повторений</p></div><div class="play-icon">▶️</div></div>
         <div class="exercise-item"><div class="exercise-info"><h4>Планка</h4><p>3 подхода • 45 секунд</p></div><div class="play-icon">▶️</div></div>
-        <div class="exercise-item"><div class="exercise-info"><h4>Выпады</h4><p>3 подхода • 12 повторений</p></div><div class="play-icon">▶️</div></div>
         <button class="btn" style="margin-top: 20px;" onclick="startWorkoutFromList()">Начать тренировку</button>
     </div>
 
@@ -174,16 +177,14 @@
         <div class="timer-container">
             <p style="color: var(--hint-color); margin-bottom: 5px;">Текущее упражнение:</p>
             <div class="current-exercise-title" id="exercise-title">Приседания</div>
-            <img id="exercise-gif" class="exercise-animation" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3c2Z2Z6eW14MnA0Znd2Znd6eW14MnA0Znd2Znd6eW14MnA0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKuX1Q4d27gK1u/giphy.gif" alt="Техника упражнения">
             <div class="timer-display" id="timer-display">00:45</div>
             <div class="timer-buttons">
                 <button class="btn" onclick="toggleTimer()" id="timer-btn" style="margin-top: 0;">Старт</button>
                 <button class="btn" style="background-color: var(--secondary-bg); color: var(--text-color); margin-top: 0;" onclick="resetTimer()">Сброс</button>
             </div>
-            <button class="btn" style="background-color: #34c759; margin-top: 20px;" onclick="completeSet()">Подход выполнен ✅ (+15 XP)</button>
+            <button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="completeSet()">Подход выполнен ✅ (+15 XP)</button>
             <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button class="btn" style="background-color: transparent; color: var(--button-color); margin-top: 0; font-size: 14px;" onclick="nextExercise()">Пропустить →</button>
-                <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 0; font-size: 14px;" onclick="finishWorkout()">Завершить 🏁</button>
+                <button class="btn" style="background-color: transparent; color: var(--accent-color); margin-top: 0; font-size: 14px;" onclick="finishWorkout()">Завершить 🏁</button>
             </div>
             <div class="burned-calories" id="session-calories">Сожжено за эту сессию: 0 ккал</div>
         </div>
@@ -195,10 +196,7 @@
             <div class="finish-icon">🏆</div>
             <h1 class="finish-title">Тренировка завершена!</h1>
             <p class="finish-subtitle" id="finish-stats">Отличная работа. Ты сжег 0 ккал.</p>
-            <div class="quote-box">
-                <p class="quote-text" id="finish-quote">"Цитата"</p>
-                <p class="quote-author" id="finish-author">— Автор</p>
-            </div>
+            <div class="quote-box"><p class="quote-text" id="finish-quote">"Цитата"</p><p class="quote-author" id="finish-author">— Автор</p></div>
             <button class="btn" onclick="showScreen('dashboard-screen')">Вернуться на главную</button>
         </div>
     </div>
@@ -213,10 +211,7 @@
     <!-- ЭКРАН 7: Камера (ИИ) -->
     <div id="camera-screen" class="hidden">
         <button class="back-btn" onclick="showScreen('dashboard-screen')">← Назад</button>
-        <div class="header" style="text-align: left; margin-bottom: 20px;">
-            <h1 style="font-size: 24px;">Анализ еды</h1>
-            <p>Сфоткай блюдо, и ИИ посчитает калории</p>
-        </div>
+        <div class="header" style="text-align: left; margin-bottom: 20px;"><h1 style="font-size: 24px;">Анализ еды</h1><p>Сфоткай блюдо, и ИИ посчитает калории</p></div>
         <div class="camera-container">
             <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;" onchange="handleImage(event)">
             <img id="photo-preview" class="photo-preview">
@@ -230,50 +225,57 @@
         tg.ready();
         tg.expand();
 
-        // --- БАЗА ДАННЫХ ---
-        const exercises = [
-            { name: "Приседания", gif: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3c2Z2Z6eW14MnA0Znd2Znd6eW14MnA0Znd2Znd6eW14MnA0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKuX1Q4d27gK1u/giphy.gif" },
-            { name: "Отжимания от пола", gif: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3c2Z2Z6eW14MnA0Znd2Znd6eW14MnA0Znd2Znd6eW14MnA0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKuX1Q4d27gK1u/giphy.gif" },
-            { name: "Планка", gif: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3c2Z2Z6eW14MnA0Znd2Znd6eW14MnA0Znd2Znd6eW14MnA0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKuX1Q4d27gK1u/giphy.gif" },
-            { name: "Выпады", gif: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3c2Z2Z6eW14MnA0Znd2Znd6eW14MnA0Znd2Znd6eW14MnA0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKuX1Q4d27gK1u/giphy.gif" }
-        ];
-        
-        const quotes = [
-            { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион.", author: "Мухаммед Али" },
-            { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
-            { text: "Не молитесь о легкой жизни, молитесь о силах, чтобы вынести тяжелую.", author: "Брюс Ли" },
-            { text: "Каждый бой я выхожу как будто это мой последний бой.", author: "Майк Тайсон" },
-            { text: "Тот, кто хочет — ищет возможности, тот, кто не хочет — ищет причины.", author: "Сократ" },
-            { text: "Я не проигрываю. Я либо побеждаю, либо учусь.", author: "Нельсон Мандела" },
-            { text: "Тяжело в учении — легко в бою.", author: "Александр Суворов" }
-        ];
+        let userGender = 'male'; 
+        let tgUserName = "друг";
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            tgUserName = tg.initDataUnsafe.user.first_name;
+            document.getElementById('user-name').innerText = tgUserName;
+        }
 
-        const fakeUsers = [
-            { name: "Александр", kcal: 4500 }, { name: "Дмитрий", kcal: 3800 }, { name: "Елена", kcal: 3200 },
-            { name: "Максим", kcal: 2900 }, { name: "Ольга", kcal: 2100 }, { name: "Иван", kcal: 1500 }
-        ];
+        function changeTheme() {
+            const gender = document.getElementById('gender').value;
+            if (gender === 'female') {
+                document.body.classList.remove('male-theme');
+                document.body.classList.add('female-theme');
+            } else {
+                document.body.classList.remove('female-theme');
+                document.body.classList.add('male-theme');
+            }
+        }
 
-        // Уровни персонажа
-        const levels = [
-            { xp: 0, title: "Новичок", avatar: "🧍‍♂️" },
-            { xp: 100, title: "Любитель", avatar: "🏃‍♂️" },
-            { xp: 250, title: "Спортсмен", avatar: "🏋️‍♂️" },
-            { xp: 500, title: "Воин", avatar: "🥊" },
-            { xp: 1000, title: "Чемпион", avatar: "🏆" },
-            { xp: 2000, title: "Легенда", avatar: "🦸‍♂️" }
-        ];
+        // --- ВСТАВЛЕННЫЕ ПРЯМЫЕ ССЫЛКИ НА ТВОИ ВИДЕО ---
+        const levelsData = {
+            male: [
+                { xp: 0, title: "Слабак", video: "VID_20261028_162626_544.mp4" },
+                { xp: 100, title: "Новичок", video: "VID_20261028_173134_198.mp4" },
+                { xp: 250, title: "Любитель", video: "VID_20261028_173215_440.mp4" },
+                { xp: 500, title: "Спортсмен", video: "VID_20261028_173219_295.mp4" },
+                { xp: 1000, title: "Атлет", video: "VID_20261028_173227_311.mp4" },
+                { xp: 2000, title: "Воин", video: "VID_20261028_173233_432.mp4" },
+                { xp: 3500, title: "Гладиатор", video: "VID_20261028_173238_313.mp4" },
+                { xp: 5000, title: "Элита", video: "VID_20261028_173251_027.mp4" },
+                { xp: 7500, title: "Легенда", video: "VID_20261028_173803_138.mp4" },
+                { xp: 10000, title: "Бог спорта", video: "VID_20261028_173808_318.mp4" }
+            ],
+            female: [
+                { xp: 0, title: "Слабый новичок", video: "VID_20261028_175618_746.mp4" },
+                { xp: 100, title: "Первые шаги", video: "VID_20261028_175631_701.mp4" },
+                { xp: 250, title: "Начало пути", video: "VID_20261028_175641_349.mp4" },
+                { xp: 500, title: "Легкий рельеф", video: "VID_20261028_175649_029.mp4" },
+                { xp: 1000, title: "Спортивная форма", video: "VID_20261028_175659_208.mp4" },
+                { xp: 2000, title: "Сила и мощь", video: "VID_20261028_175708_920.mp4" },
+                { xp: 3500, title: "Максимальная масса", video: "VID_20261028_175726_660.mp4" },
+                { xp: 5000, title: "Успех", video: "VID_20261028_175732_350.mp4" },
+                { xp: 7500, title: "Супергерой", video: "VID_20261028_175744_681.mp4" },
+                { xp: 10000, title: "Богиня спорта", video: "VID_20261028_175750_651.mp4" }
+            ]
+        };
 
-        let currentExerciseIndex = 0;
-        let timerInterval;
-        let timeLeft = 45;
-        let isRunning = false;
-        let sessionCalories = 0; 
-        let totalBurnedCalories = 0; 
         let currentXP = 0;
+        let totalBurnedCalories = 0;
 
-        // --- ЛОГИКА ОПЫТА И УРОВНЕЙ ---
         function updateCharacterUI() {
-            // Ищем текущий уровень
+            const levels = levelsData[userGender];
             let currentLevelIndex = 0;
             for (let i = 0; i < levels.length; i++) {
                 if (currentXP >= levels[i].xp) {
@@ -284,12 +286,13 @@
             const currentLevel = levels[currentLevelIndex];
             const nextLevel = levels[currentLevelIndex + 1] || levels[levels.length - 1];
 
-            // Обновляем аватар и титул
-            document.getElementById('avatar').innerText = currentLevel.avatar;
+            const videoElement = document.getElementById('character-video');
+            videoElement.src = currentLevel.video;
+            videoElement.play().catch(e => console.log("Ошибка автовоспроизведения:", e));
+
             document.getElementById('char-level').innerText = `Уровень ${currentLevelIndex + 1}`;
             document.getElementById('char-title').innerText = currentLevel.title;
 
-            // Обновляем шкалу XP
             let progressPercent = 100;
             let xpText = `${currentXP} XP (MAX)`;
             
@@ -310,7 +313,11 @@
             updateCharacterUI();
         }
 
-        // --- ЛОГИКА ТАЙМЕРА ---
+        let timeLeft = 45;
+        let isRunning = false;
+        let timerInterval;
+        let sessionCalories = 0;
+
         function updateTimerDisplay() {
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
@@ -320,13 +327,13 @@
         function toggleTimer() {
             const btn = document.getElementById('timer-btn');
             if (isRunning) {
-                clearInterval(timerInterval); btn.innerText = "Старт"; btn.style.backgroundColor = "var(--button-color)";
+                clearInterval(timerInterval); btn.innerText = "Старт"; btn.style.backgroundColor = "var(--accent-color)";
             } else {
                 if (timeLeft <= 0) timeLeft = 45; 
                 timerInterval = setInterval(() => {
                     timeLeft--; updateTimerDisplay();
                     if (timeLeft <= 0) {
-                        clearInterval(timerInterval); isRunning = false; btn.innerText = "Старт"; btn.style.backgroundColor = "var(--button-color)";
+                        clearInterval(timerInterval); isRunning = false; btn.innerText = "Старт"; btn.style.backgroundColor = "var(--accent-color)";
                     }
                 }, 1000);
                 btn.innerText = "Пауза"; btn.style.backgroundColor = "#ff3b30";
@@ -337,50 +344,39 @@
         function resetTimer() {
             clearInterval(timerInterval); isRunning = false; timeLeft = 45; updateTimerDisplay();
             const btn = document.getElementById('timer-btn');
-            if(btn) { btn.innerText = "Старт"; btn.style.backgroundColor = "var(--button-color)"; }
-        }
-
-        function updateExerciseView() {
-            const ex = exercises[currentExerciseIndex];
-            document.getElementById('exercise-title').innerText = ex.name;
-            document.getElementById('exercise-gif').src = ex.gif;
-        }
-
-        function nextExercise() {
-            currentExerciseIndex = (currentExerciseIndex + 1) % exercises.length;
-            updateExerciseView(); resetTimer();
+            if(btn) { btn.innerText = "Старт"; btn.style.backgroundColor = "var(--accent-color)"; }
         }
 
         function startWorkoutFromList() {
-            currentExerciseIndex = 0; sessionCalories = 0;
-            updateExerciseView();
-            document.getElementById('session-calories').innerText = "Сожжено за эту сессию: 0 ккал";
+            sessionCalories = 0;
             resetTimer(); showScreen('timer-screen');
         }
 
         function completeSet() {
             const kcalBurned = 15;
             sessionCalories += kcalBurned; totalBurnedCalories += kcalBurned;
-            
-            // Добавляем опыт и калории
             addXP(15);
             tg.CloudStorage.setItem('totalBurned', totalBurnedCalories.toString());
-            
             document.getElementById('session-calories').innerText = `Сожжено за эту сессию: ${sessionCalories} ккал`;
-            document.getElementById('burned-total').innerHTML = `${totalBurnedCalories} <span style="font-size: 16px; opacity: 0.8;">ккал</span>`;
-            nextExercise();
+            document.getElementById('burned-total').innerHTML = `${totalBurnedCalories} <span style="font-size: 14px; color: var(--hint-color);">ккал</span>`;
         }
 
+        const quotes = [
+            { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся.", author: "Мухаммед Али" },
+            { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
+            { text: "Не молитесь о легкой жизни, молитесь о силах, чтобы вынести тяжелую.", author: "Брюс Ли" }
+        ];
+
         function finishWorkout() {
-            document.getElementById('finish-stats').innerText = `Отличная работа. За эту тренировку ты сжег ${sessionCalories} ккал и получил опыт.`;
+            document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал и получил опыт.`;
             const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
             document.getElementById('finish-quote').innerText = `«${randomQuote.text}»`;
             document.getElementById('finish-author').innerText = `— ${randomQuote.author}`;
             showScreen('finish-screen');
         }
 
-        // --- ЛОГИКА РЕЙТИНГА ---
         function loadLeaderboard() {
+            const fakeUsers = [{ name: "Александр", kcal: 4500 }, { name: "Елена", kcal: 3200 }, { name: "Максим", kcal: 2900 }];
             let allUsers = [...fakeUsers];
             allUsers.push({ name: tgUserName + " (Вы)", kcal: totalBurnedCalories, isMe: true });
             allUsers.sort((a, b) => b.kcal - a.kcal);
@@ -388,8 +384,7 @@
             listContainer.innerHTML = '';
             allUsers.forEach((user, index) => {
                 const rank = index + 1;
-                let rankClass = '';
-                if (rank === 1) rankClass = 'top-1'; if (rank === 2) rankClass = 'top-2'; if (rank === 3) rankClass = 'top-3';
+                let rankClass = rank === 1 ? 'top-1' : rank === 2 ? 'top-2' : rank === 3 ? 'top-3' : '';
                 const item = document.createElement('div');
                 item.className = `leaderboard-item ${user.isMe ? 'my-row' : ''}`;
                 item.innerHTML = `<div class="rank ${rankClass}">${rank}</div><div class="user-info"><p class="user-name">${user.name}</p><p class="user-calories">${user.kcal} ккал</p></div>`;
@@ -397,7 +392,6 @@
             });
         }
 
-        // --- ЛОГИКА КАМЕРЫ (ИИ) ---
         function handleImage(event) {
             const file = event.target.files[0];
             if (file) {
@@ -411,36 +405,23 @@
 
                     setTimeout(() => {
                         document.getElementById('loading-spinner').style.display = 'none';
-                        // Начисляем опыт за анализ еды
                         addXP(20);
-                        tg.showAlert("🤖 ИИ распознал блюдо:\n\n🍗 Куриная грудка с рисом\n🔥 Калории: ~450 ккал\n\n+20 XP за ведение дневника питания!");
-                        
+                        tg.showAlert("🤖 ИИ распознал блюдо:\n\n🍗 Куриная грудка с рисом\n🔥 Калории: ~450 ккал\n\n+20 XP за ведение дневника!");
                         document.getElementById('take-photo-btn').style.display = 'block';
                         document.getElementById('take-photo-btn').innerText = "📷 Сделать новое фото";
-                    }, 2500);
+                    }, 2000);
                 };
                 reader.readAsDataURL(file);
             }
-        }
-
-        // --- ЛОГИКА ПРИЛОЖЕНИЯ ---
-        let tgUserName = "друг";
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            tgUserName = tg.initDataUnsafe.user.first_name;
-            document.getElementById('user-name').innerText = tgUserName;
         }
 
         function showScreen(screenId) {
             document.querySelectorAll('body > div').forEach(el => el.classList.add('hidden'));
             document.getElementById(screenId).classList.remove('hidden');
             
-            if (screenId !== 'timer-screen') {
-                clearInterval(timerInterval); isRunning = false; timeLeft = 45; updateTimerDisplay();
-                const btn = document.getElementById('timer-btn');
-                if(btn) { btn.innerText = "Старт"; btn.style.backgroundColor = "var(--button-color)"; }
-            }
-            if (screenId === 'leaderboard-screen') { loadLeaderboard(); }
-            if (screenId === 'dashboard-screen') { updateCharacterUI(); }
+            if (screenId !== 'timer-screen') resetTimer();
+            if (screenId === 'leaderboard-screen') loadLeaderboard();
+            if (screenId === 'dashboard-screen') updateCharacterUI();
         }
 
         function calculateCalories(weight, height, age, gender, goal) {
@@ -457,22 +438,24 @@
             tg.CloudStorage.getItem('profile', (err, result) => {
                 if (result) {
                     const profile = JSON.parse(result);
+                    userGender = profile.gender;
+                    
+                    if (userGender === 'female') {
+                        document.body.classList.remove('male-theme');
+                        document.body.classList.add('female-theme');
+                    }
+
                     const calories = calculateCalories(profile.weight, profile.height, profile.age, profile.gender, profile.goal);
-                    document.getElementById('calories-norm').innerHTML = `${calories} <span style="font-size: 16px; color: var(--hint-color);">ккал</span>`;
+                    document.getElementById('calories-norm').innerHTML = `${calories} <span style="font-size: 14px; color: var(--hint-color);">ккал</span>`;
                     document.getElementById('goal-text').innerText = profile.goal === 'lose' ? 'Твоя цель: Похудеть' : 'Твоя цель: Набрать массу';
                     
-                    // Загружаем калории
                     tg.CloudStorage.getItem('totalBurned', (err, burnedResult) => {
                         if (burnedResult) {
                             totalBurnedCalories = parseInt(burnedResult);
-                            document.getElementById('burned-total').innerHTML = `${totalBurnedCalories} <span style="font-size: 16px; opacity: 0.8;">ккал</span>`;
+                            document.getElementById('burned-total').innerHTML = `${totalBurnedCalories} <span style="font-size: 14px; color: var(--hint-color);">ккал</span>`;
                         }
-                        
-                        // Загружаем опыт
                         tg.CloudStorage.getItem('xp', (err, xpResult) => {
-                            if (xpResult) {
-                                currentXP = parseInt(xpResult);
-                            }
+                            if (xpResult) currentXP = parseInt(xpResult);
                             updateCharacterUI();
                             showScreen('dashboard-screen');
                         });
