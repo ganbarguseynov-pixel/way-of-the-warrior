@@ -92,7 +92,7 @@
         .rank { font-size: 20px; font-weight: bold; width: 40px; color: var(--hint-color); }
         .user-info { flex: 1; margin-left: 10px; }
 
-        /* ЭКРАН ВХОДА С КАРТИНКОЙ (ИДЕАЛЬНО ПО ЦЕНТРУ) */
+        /* ЭКРАН ВХОДА (БЕЗ GOOGLE) */
         .auth-screen { 
             background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop');
             background-size: cover;
@@ -112,7 +112,7 @@
             display: flex; 
             flex-direction: column; 
             justify-content: center;
-            align-items: center; /* Выравниваем по центру */
+            align-items: center;
             height: 100%; 
             padding: 20px; 
             text-align: center;
@@ -122,10 +122,9 @@
             box-sizing: border-box;
         }
         
-        /* Обертка для текста и кнопок, чтобы они не растягивались */
         .auth-content {
             width: 100%;
-            max-width: 350px; /* Ограничиваем ширину для красоты */
+            max-width: 350px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -158,7 +157,6 @@
         .auth-btn:active { transform: scale(0.96); }
         
         .tg-btn { background: linear-gradient(90deg, #229ED9, #1E88C7); color: white; }
-        .google-btn { background-color: #ffffff; color: #333333; border: 1px solid #ddd; }
         .email-btn { background-color: rgba(44, 44, 46, 0.8); color: white; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
         
         .auth-divider { display: flex; align-items: center; text-align: center; color: #ccc; margin: 10px 0; width: 100%; }
@@ -185,11 +183,6 @@
                     </button>
                     
                     <div class="auth-divider"><span>или</span></div>
-                    
-                    <button class="auth-btn google-btn" onclick="loginWithGoogle()">
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" height="22">
-                        Войти через Google
-                    </button>
                     
                     <button class="auth-btn email-btn" onclick="showEmailForm()">
                         ✉️ Войти по Email
@@ -431,16 +424,6 @@
                 checkProfile();
             } else {
                 tg.showAlert("Пожалуйста, откройте приложение через Telegram!");
-            }
-        }
-
-        async function loginWithGoogle() {
-            const { data, error } = await supabaseClient.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: window.location.href }
-            });
-            if (error) {
-                tg.showAlert("ОШИБКА GOOGLE:\n" + error.message + "\n\nПроверьте Redirect URI в Google Cloud (должен быть точно: https://qnpriwfxzuoymoumdtrl.supabase.co/auth/v1/callback)");
             }
         }
 
