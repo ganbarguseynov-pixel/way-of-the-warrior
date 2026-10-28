@@ -177,7 +177,6 @@
                 
                 <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
                 
-                <!-- Кнопка удаления фото -->
                 <button class="btn" id="remove-photo-btn" style="display: none; background-color: #ff3b30; color: white; margin-bottom: 10px;" onclick="resetCameraScreen()">❌ Удалить фото</button>
 
                 <button class="btn" id="take-photo-btn" onclick="document.getElementById('camera-input').click()" style="padding: 40px 20px; font-size: 20px;">📷 Сделать фото</button>
@@ -670,7 +669,6 @@
             document.getElementById('finish-quote').innerText = `«${q.text}»`;
             document.getElementById('finish-author').innerText = `— ${q.author}`;
             
-            // ОСТАНАВЛИВАЕМ МУЗЫКУ И ВКЛЮЧАЕМ ЗВУК ПОБЕДЫ
             audioWorkout.pause();
             if (isSoundOn) audioWin.play().catch(e => console.log(e));
             
