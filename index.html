@@ -469,4 +469,38 @@
                             
                             // Инициализация уровня при старте
                             const levels = levelsData[userGender];
-                            for (let i = 0; i <
+                            for (let i = 0; i < levels.length; i++) {
+                                if (currentXP >= levels[i].xp) currentLevelIndexGlobal = i;
+                            }
+                            
+                            updateCharacterUI();
+                            closeScreen('onboarding-screen');
+                            playNextBg(); // Запуск фоновой музыки
+                        });
+                    });
+                } else {
+                    openScreen('onboarding-screen');
+                }
+            });
+        }
+
+        function saveProfile() {
+            const age = document.getElementById('age').value;
+            const gender = document.getElementById('gender').value;
+            const weight = document.getElementById('weight').value;
+            const height = document.getElementById('height').value;
+            const goal = document.getElementById('goal').value;
+            if (!age || !weight || !height) { tg.showAlert("Заполни все поля!"); return; }
+            tg.CloudStorage.setItem('profile', JSON.stringify({ age, gender, weight, height, goal }), (err, success) => {
+                if (success) loadProfile();
+            });
+        }
+
+        function resetProfile() {
+            tg.CloudStorage.removeItem('profile', () => tg.CloudStorage.removeItem('totalBurned', () => tg.CloudStorage.removeItem('xp', () => location.reload())));
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>
