@@ -32,50 +32,56 @@
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--hint-color); }
         input, select {
-            width: 100%;
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid var(--secondary-bg);
-            background-color: var(--secondary-bg);
-            color: var(--text-color);
-            font-size: 16px;
-            box-sizing: border-box;
-            outline: none;
+            width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--secondary-bg);
+            background-color: var(--secondary-bg); color: var(--text-color); font-size: 16px;
+            box-sizing: border-box; outline: none;
         }
         input:focus, select:focus { border-color: var(--button-color); }
-
         .row { display: flex; gap: 15px; }
         .row .form-group { flex: 1; }
 
         .btn {
-            background-color: var(--button-color);
-            color: var(--button-text-color);
-            border: none;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 600;
-            width: 100%;
-            margin-top: auto;
-            cursor: pointer;
-            transition: opacity 0.2s;
+            background-color: var(--button-color); color: var(--button-text-color); border: none;
+            padding: 16px; border-radius: 12px; font-size: 18px; font-weight: 600; width: 100%;
+            margin-top: auto; cursor: pointer; transition: opacity 0.2s;
         }
         .btn:active { opacity: 0.8; }
-        
         .hidden { display: none !important; }
         
-        #success-screen {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 100vh;
+        /* Стили для Главного экрана */
+        .dashboard-card {
+            background-color: var(--secondary-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
         }
-        .emoji-big { font-size: 60px; margin-bottom: 20px; }
+        .dashboard-card h2 { font-size: 18px; margin: 0 0 10px 0; }
+        .dashboard-card .big-number { font-size: 36px; font-weight: bold; color: var(--button-color); margin: 0; }
+        .dashboard-card p { color: var(--hint-color); margin: 5px 0 0 0; font-size: 14px; }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .action-btn {
+            background-color: var(--secondary-bg);
+            border: none;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: left;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+        .action-btn h3 { margin: 0 0 5px 0; font-size: 16px; }
+        .action-btn p { margin: 0; color: var(--hint-color); font-size: 12px; }
+        .action-btn:active { opacity: 0.7; }
     </style>
 </head>
 <body>
 
+    <!-- ЭКРАН 1: Знакомство -->
     <div id="onboarding-screen">
         <div class="header">
             <h1>Добро пожаловать!</h1>
@@ -118,11 +124,39 @@
         <button class="btn" onclick="saveProfile()">Продолжить</button>
     </div>
 
-    <div id="success-screen" class="hidden">
-        <div class="emoji-big">🔥</div>
-        <h1>Отлично, <span id="user-name">друг</span>!</h1>
-        <p style="color: var(--hint-color); margin-bottom: 30px;">Твой профиль создан. Теперь мы сможем рассчитать твою норму калорий.</p>
-        <button class="btn" onclick="Telegram.WebApp.close()">Закрыть</button>
+    <!-- ЭКРАН 2: Главный экран (Дашборд) -->
+    <div id="dashboard-screen" class="hidden">
+        <div class="header" style="text-align: left; margin-bottom: 20px;">
+            <h1 style="font-size: 24px;">Привет, <span id="user-name">друг</span>!</h1>
+            <p id="goal-text">Твоя цель: Похудеть</p>
+        </div>
+
+        <div class="dashboard-card">
+            <h2>Твоя дневная норма</h2>
+            <p class="big-number" id="calories-norm">0 <span style="font-size: 16px; color: var(--hint-color);">ккал</span></p>
+            <p>Рассчитано на основе твоих данных</p>
+        </div>
+
+        <div class="action-grid">
+            <button class="action-btn" onclick="alert('Скоро здесь появится ИИ!')">
+                <h3>📸 Сфоткать еду</h3>
+                <p>Узнать калории</p>
+            </button>
+            <button class="action-btn" onclick="alert('Скоро здесь появятся тренировки!')">
+                <h3>💪 Тренировка</h3>
+                <p>Комплекс на сегодня</p>
+            </button>
+            <button class="action-btn" onclick="alert('Скоро здесь появится таймер!')">
+                <h3>⏱ Таймер</h3>
+                <p>Начать упражнение</p>
+            </button>
+            <button class="action-btn" onclick="alert('Скоро здесь появится рейтинг!')">
+                <h3>🏆 Рейтинг</h3>
+                <p>Место в топе</p>
+            </button>
+        </div>
+        
+        <button class="btn" style="background-color: transparent; color: var(--hint-color); margin-top: 0;" onclick="resetProfile()">Сбросить профиль</button>
     </div>
 
     <script>
@@ -130,10 +164,50 @@
         tg.ready();
         tg.expand();
 
+        // Имя пользователя
+        let tgUserName = "друг";
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
+            tgUserName = tg.initDataUnsafe.user.first_name;
+            document.getElementById('user-name').innerText = tgUserName;
         }
 
+        // Функция расчета калорий (Mifflin-St Jeor)
+        function calculateCalories(weight, height, age, gender, goal) {
+            let bmr;
+            if (gender === 'male') {
+                bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+            } else {
+                bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+            }
+            // Умножаем на коэффициент активности (возьмем средний 1.375)
+            let tdee = bmr * 1.375; 
+            
+            if (goal === 'lose') return Math.round(tdee - 500); // Дефицит
+            if (goal === 'gain') return Math.round(tdee + 500); // Профицит
+            return Math.round(tdee);
+        }
+
+        // Загрузка профиля при старте
+        function loadProfile() {
+            tg.CloudStorage.getItem('profile', (err, result) => {
+                if (result) {
+                    const profile = JSON.parse(result);
+                    
+                    // Считаем калории
+                    const calories = calculateCalories(profile.weight, profile.height, profile.age, profile.gender, profile.goal);
+                    
+                    // Обновляем UI
+                    document.getElementById('calories-norm').innerHTML = `${calories} <span style="font-size: 16px; color: var(--hint-color);">ккал</span>`;
+                    document.getElementById('goal-text').innerText = profile.goal === 'lose' ? 'Твоя цель: Похудеть' : 'Твоя цель: Набрать массу';
+                    
+                    // Переключаем экраны
+                    document.getElementById('onboarding-screen').classList.add('hidden');
+                    document.getElementById('dashboard-screen').classList.remove('hidden');
+                }
+            });
+        }
+
+        // Сохранение профиля
         function saveProfile() {
             const age = document.getElementById('age').value;
             const gender = document.getElementById('gender').value;
@@ -150,13 +224,22 @@
 
             tg.CloudStorage.setItem('profile', JSON.stringify(userProfile), (err, success) => {
                 if (success) {
-                    document.getElementById('onboarding-screen').classList.add('hidden');
-                    document.getElementById('success-screen').classList.remove('hidden');
+                    loadProfile(); // Сразу перезагружаем и показываем дашборд
                 } else {
                     tg.showAlert("Ошибка сохранения");
                 }
             });
         }
+
+        // Сброс профиля для теста
+        function resetProfile() {
+            tg.CloudStorage.removeItem('profile', () => {
+                location.reload();
+            });
+        }
+
+        // Запускаем проверку при открытии
+        loadProfile();
     </script>
 </body>
 </html>
