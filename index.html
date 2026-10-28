@@ -70,13 +70,28 @@
         /* Стили для таймера */
         .timer-container { text-align: center; display: flex; flex-direction: column; justify-content: center; flex: 1; }
         .current-exercise-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: var(--text-color); }
-        .timer-display { font-size: 80px; font-weight: bold; margin: 20px 0; font-variant-numeric: tabular-nums; }
+        
+        .exercise-animation {
+            width: 100%; max-height: 200px; object-fit: contain;
+            border-radius: 12px; background-color: #000; margin-bottom: 15px;
+        }
+
+        .timer-display { font-size: 80px; font-weight: bold; margin: 10px 0; font-variant-numeric: tabular-nums; }
         .timer-buttons { display: flex; gap: 15px; margin-top: 20px; }
         
-        /* Блок сожженных калорий */
-        .burned-calories { 
-            font-size: 18px; color: #ff9500; margin-top: 15px; font-weight: bold;
+        .burned-calories { font-size: 18px; color: #ff9500; margin-top: 15px; font-weight: bold; }
+
+        /* Стили для экрана завершения */
+        .finish-container { text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; flex: 1; padding: 20px; }
+        .finish-icon { font-size: 80px; margin-bottom: 20px; }
+        .finish-title { font-size: 28px; font-weight: bold; margin: 0 0 10px 0; }
+        .finish-subtitle { color: var(--hint-color); font-size: 16px; margin: 0 0 30px 0; }
+        .quote-box { 
+            background-color: var(--secondary-bg); border-left: 4px solid var(--button-color); 
+            padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: left;
         }
+        .quote-text { font-size: 18px; font-style: italic; margin: 0 0 10px 0; line-height: 1.4; }
+        .quote-author { font-size: 14px; font-weight: bold; color: var(--hint-color); margin: 0; text-align: right; }
     </style>
 </head>
 <body>
@@ -133,7 +148,6 @@
             <p>Рассчитано на основе твоих данных</p>
         </div>
         
-        <!-- Блок прогресса -->
         <div class="dashboard-card" style="background: linear-gradient(135deg, #ff9500, #ff2d55);">
             <h2 style="color: white;">Сожжено за тренировки</h2>
             <p class="big-number" id="burned-total" style="color: white;">0 <span style="font-size: 16px; opacity: 0.8;">ккал</span></p>
@@ -194,6 +208,8 @@
             <p style="color: var(--hint-color); margin-bottom: 5px;">Текущее упражнение:</p>
             <div class="current-exercise-title" id="exercise-title">Приседания</div>
             
+            <img id="exercise-gif" class="exercise-animation" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3c2Z2Z6eW14MnA0Znd2Znd6eW14MnA0Znd2Znd6eW14MnA0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKuX1Q4d27gK1u/giphy.gif" alt="Техника упражнения">
+            
             <div class="timer-display" id="timer-display">00:45</div>
             
             <div class="timer-buttons">
@@ -201,12 +217,30 @@
                 <button class="btn" style="background-color: var(--secondary-bg); color: var(--text-color); margin-top: 0;" onclick="resetTimer()">Сброс</button>
             </div>
             
-            <!-- Кнопка завершения подхода -->
             <button class="btn" style="background-color: #34c759; margin-top: 20px;" onclick="completeSet()">Подход выполнен ✅</button>
             
-            <button class="btn" style="background-color: transparent; color: var(--button-color); margin-top: 10px;" onclick="nextExercise()">Следующее упражнение →</button>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn" style="background-color: transparent; color: var(--button-color); margin-top: 0; font-size: 14px;" onclick="nextExercise()">Пропустить →</button>
+                <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 0; font-size: 14px;" onclick="finishWorkout()">Завершить 🏁</button>
+            </div>
             
             <div class="burned-calories" id="session-calories">Сожжено за эту сессию: 0 ккал</div>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 5: Завершение тренировки -->
+    <div id="finish-screen" class="hidden">
+        <div class="finish-container">
+            <div class="finish-icon">🏆</div>
+            <h1 class="finish-title">Тренировка завершена!</h1>
+            <p class="finish-subtitle" id="finish-stats">Отличная работа. Ты сжег 0 ккал.</p>
+            
+            <div class="quote-box">
+                <p class="quote-text" id="finish-quote">"Цитата"</p>
+                <p class="quote-author" id="finish-author">— Автор</p>
+            </div>
+            
+            <button class="btn" onclick="showScreen('dashboard-screen')">Вернуться на главную</button>
         </div>
     </div>
 
@@ -216,24 +250,30 @@
         tg.expand();
 
         // --- БАЗА ДАННЫХ ---
-        const exercises = ["Приседания", "Отжимания от пола", "Планка", "Выпады"];
+        const exercises = [
+            { name: "Приседания", gif: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3c2Z2Z6eW14MnA0Znd2Znd6eW14MnA0Znd2Znd6eW14MnA0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKuX1Q4d27gK1u/giphy.gif" },
+            { name: "Отжимания от пола", gif: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3c2Z2Z6eW14MnA0Znd2Znd6eW14MnA0Znd2Znd6eW14MnA0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKuX1Q4d27gK1u/giphy.gif" },
+            { name: "Планка", gif: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3c2Z2Z6eW14MnA0Znd2Znd6eW14MnA0Znd2Znd6eW14MnA0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKuX1Q4d27gK1u/giphy.gif" },
+            { name: "Выпады", gif: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3c2Z2Z6eW14MnA0Znd2Znd6eW14MnA0Znd2Znd6eW14MnA0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKuX1Q4d27gK1u/giphy.gif" }
+        ];
         
-        // Мотивационные цитаты бойцов
+        // Мотивационные цитаты (объекты: текст + автор)
         const quotes = [
-            "«Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион». — Мухаммед Али",
-            "«Дисциплина — это мост между целями и их достижением». — Джим Рон",
-            "«Не молитесь о легкой жизни, молитесь о силах, чтобы вынести тяжелую». — Брюс Ли",
-            "«Каждый бой я выхожу как будто это мой последний бой». — Майк Тайсон",
-            "«Тот, кто хочет — ищет возможности, тот, кто не хочет — ищет причины». — Сократ",
-            "«Я не проигрываю. Я либо побеждаю, либо учусь». — Нельсон Мандела"
+            { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион.", author: "Мухаммед Али" },
+            { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
+            { text: "Не молитесь о легкой жизни, молитесь о силах, чтобы вынести тяжелую.", author: "Брюс Ли" },
+            { text: "Каждый бой я выхожу как будто это мой последний бой.", author: "Майк Тайсон" },
+            { text: "Тот, кто хочет — ищет возможности, тот, кто не хочет — ищет причины.", author: "Сократ" },
+            { text: "Я не проигрываю. Я либо побеждаю, либо учусь.", author: "Нельсон Мандела" },
+            { text: "Тяжело в учении — легко в бою.", author: "Александр Суворов" }
         ];
 
         let currentExerciseIndex = 0;
         let timerInterval;
         let timeLeft = 45;
         let isRunning = false;
-        let sessionCalories = 0; // За текущую тренировку
-        let totalBurnedCalories = 0; // За все время
+        let sessionCalories = 0; 
+        let totalBurnedCalories = 0; 
 
         // --- ЛОГИКА ТАЙМЕРА ---
         function updateTimerDisplay() {
@@ -277,41 +317,52 @@
             btn.style.backgroundColor = "var(--button-color)";
         }
 
+        function updateExerciseView() {
+            const ex = exercises[currentExerciseIndex];
+            document.getElementById('exercise-title').innerText = ex.name;
+            document.getElementById('exercise-gif').src = ex.gif;
+        }
+
         function nextExercise() {
             currentExerciseIndex = (currentExerciseIndex + 1) % exercises.length;
-            document.getElementById('exercise-title').innerText = exercises[currentExerciseIndex];
+            updateExerciseView();
             resetTimer();
         }
 
         function startWorkoutFromList() {
             currentExerciseIndex = 0;
             sessionCalories = 0;
-            document.getElementById('exercise-title').innerText = exercises[currentExerciseIndex];
+            updateExerciseView();
             document.getElementById('session-calories').innerText = "Сожжено за эту сессию: 0 ккал";
             resetTimer();
             showScreen('timer-screen');
         }
 
-        // --- ЗАВЕРШЕНИЕ ПОДХОДА (КАЛОРИИ И ЦИТАТЫ) ---
         function completeSet() {
-            // Начисляем калории (например, 15 ккал за подход)
             const kcalBurned = 15;
             sessionCalories += kcalBurned;
             totalBurnedCalories += kcalBurned;
             
-            // Сохраняем в память
             tg.CloudStorage.setItem('totalBurned', totalBurnedCalories.toString());
             
-            // Обновляем интерфейс
             document.getElementById('session-calories').innerText = `Сожжено за эту сессию: ${sessionCalories} ккал`;
             document.getElementById('burned-total').innerHTML = `${totalBurnedCalories} <span style="font-size: 16px; opacity: 0.8;">ккал</span>`;
             
-            // Показываем мотивационную цитату
-            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-            tg.showAlert(`🔥 Подход выполнен! +${kcalBurned} ккал\n\n"${randomQuote}"`);
-            
-            // Переключаем на следующее упражнение (опционально)
             nextExercise();
+        }
+
+        // --- ЗАВЕРШЕНИЕ ТРЕНИРОВКИ (КРАСИВЫЙ ЭКРАН) ---
+        function finishWorkout() {
+            // Обновляем статистику на экране завершения
+            document.getElementById('finish-stats').innerText = `Отличная работа. За эту тренировку ты сжег ${sessionCalories} ккал.`;
+            
+            // Выбираем случайную цитату
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            document.getElementById('finish-quote').innerText = `«${randomQuote.text}»`;
+            document.getElementById('finish-author').innerText = `— ${randomQuote.author}`;
+            
+            // Переключаем экран
+            showScreen('finish-screen');
         }
 
         // --- ЛОГИКА ПРИЛОЖЕНИЯ ---
@@ -349,7 +400,6 @@
         }
 
         function loadProfile() {
-            // Загружаем профиль
             tg.CloudStorage.getItem('profile', (err, result) => {
                 if (result) {
                     const profile = JSON.parse(result);
@@ -357,7 +407,6 @@
                     document.getElementById('calories-norm').innerHTML = `${calories} <span style="font-size: 16px; color: var(--hint-color);">ккал</span>`;
                     document.getElementById('goal-text').innerText = profile.goal === 'lose' ? 'Твоя цель: Похудеть' : 'Твоя цель: Набрать массу';
                     
-                    // Загружаем сожженные калории за все время
                     tg.CloudStorage.getItem('totalBurned', (err, burnedResult) => {
                         if (burnedResult) {
                             totalBurnedCalories = parseInt(burnedResult);
