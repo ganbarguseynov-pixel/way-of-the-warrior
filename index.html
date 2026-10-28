@@ -16,14 +16,9 @@
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            box-sizing: border-box;
+            background-color: var(--bg-color); color: var(--text-color);
+            margin: 0; padding: 20px; display: flex; flex-direction: column;
+            min-height: 100vh; box-sizing: border-box;
         }
         .header { text-align: center; margin-bottom: 30px; margin-top: 20px; }
         .header h1 { font-size: 28px; margin: 0 0 10px 0; font-weight: bold; }
@@ -39,7 +34,6 @@
         input:focus, select:focus { border-color: var(--button-color); }
         .row { display: flex; gap: 15px; }
         .row .form-group { flex: 1; }
-
         .btn {
             background-color: var(--button-color); color: var(--button-text-color); border: none;
             padding: 16px; border-radius: 12px; font-size: 18px; font-weight: 600; width: 100%;
@@ -48,35 +42,34 @@
         .btn:active { opacity: 0.8; }
         .hidden { display: none !important; }
         
-        /* Стили для Главного экрана */
         .dashboard-card {
-            background-color: var(--secondary-bg);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 15px;
+            background-color: var(--secondary-bg); border-radius: 16px; padding: 20px; margin-bottom: 15px;
         }
         .dashboard-card h2 { font-size: 18px; margin: 0 0 10px 0; }
         .dashboard-card .big-number { font-size: 36px; font-weight: bold; color: var(--button-color); margin: 0; }
         .dashboard-card p { color: var(--hint-color); margin: 5px 0 0 0; font-size: 14px; }
         
-        .action-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .action-btn {
-            background-color: var(--secondary-bg);
-            border: none;
-            border-radius: 16px;
-            padding: 20px;
-            text-align: left;
-            color: var(--text-color);
-            cursor: pointer;
+            background-color: var(--secondary-bg); border: none; border-radius: 16px;
+            padding: 20px; text-align: left; color: var(--text-color); cursor: pointer;
         }
         .action-btn h3 { margin: 0 0 5px 0; font-size: 16px; }
         .action-btn p { margin: 0; color: var(--hint-color); font-size: 12px; }
         .action-btn:active { opacity: 0.7; }
+
+        /* Стили для экрана тренировок */
+        .back-btn {
+            background: none; border: none; color: var(--button-color); font-size: 16px;
+            padding: 0; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center;
+        }
+        .exercise-item {
+            background-color: var(--secondary-bg); border-radius: 12px; padding: 15px;
+            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .exercise-info h4 { margin: 0 0 5px 0; font-size: 16px; }
+        .exercise-info p { margin: 0; color: var(--hint-color); font-size: 13px; }
+        .play-icon { font-size: 24px; }
     </style>
 </head>
 <body>
@@ -87,7 +80,6 @@
             <h1>Добро пожаловать!</h1>
             <p>Давай настроим твой профиль для достижения цели</p>
         </div>
-
         <div class="form-group">
             <label>Ваша цель</label>
             <select id="goal">
@@ -95,7 +87,6 @@
                 <option value="gain">Набрать мышечную массу</option>
             </select>
         </div>
-
         <div class="row">
             <div class="form-group">
                 <label>Возраст</label>
@@ -109,7 +100,6 @@
                 </select>
             </div>
         </div>
-
         <div class="row">
             <div class="form-group">
                 <label>Вес (кг)</label>
@@ -120,7 +110,6 @@
                 <input type="number" id="height" placeholder="175" min="100" max="250">
             </div>
         </div>
-
         <button class="btn" onclick="saveProfile()">Продолжить</button>
     </div>
 
@@ -142,7 +131,7 @@
                 <h3>📸 Сфоткать еду</h3>
                 <p>Узнать калории</p>
             </button>
-            <button class="action-btn" onclick="alert('Скоро здесь появятся тренировки!')">
+            <button class="action-btn" onclick="showScreen('workout-screen')">
                 <h3>💪 Тренировка</h3>
                 <p>Комплекс на сегодня</p>
             </button>
@@ -155,8 +144,47 @@
                 <p>Место в топе</p>
             </button>
         </div>
-        
         <button class="btn" style="background-color: transparent; color: var(--hint-color); margin-top: 0;" onclick="resetProfile()">Сбросить профиль</button>
+    </div>
+
+    <!-- ЭКРАН 3: Тренировка -->
+    <div id="workout-screen" class="hidden">
+        <button class="back-btn" onclick="showScreen('dashboard-screen')">← Назад</button>
+        <div class="header" style="text-align: left; margin-bottom: 20px;">
+            <h1 style="font-size: 24px;">Тренировка</h1>
+            <p>Комплекс для достижения цели</p>
+        </div>
+
+        <div class="exercise-item">
+            <div class="exercise-info">
+                <h4>Приседания</h4>
+                <p>3 подхода • 15 повторений</p>
+            </div>
+            <div class="play-icon">▶️</div>
+        </div>
+        <div class="exercise-item">
+            <div class="exercise-info">
+                <h4>Отжимания от пола</h4>
+                <p>3 подхода • 10 повторений</p>
+            </div>
+            <div class="play-icon">▶️</div>
+        </div>
+        <div class="exercise-item">
+            <div class="exercise-info">
+                <h4>Планка</h4>
+                <p>3 подхода • 45 секунд</p>
+            </div>
+            <div class="play-icon">▶️</div>
+        </div>
+        <div class="exercise-item">
+            <div class="exercise-info">
+                <h4>Выпады</h4>
+                <p>3 подхода • 12 повторений</p>
+            </div>
+            <div class="play-icon">▶️</div>
+        </div>
+
+        <button class="btn" style="margin-top: 20px;" onclick="alert('Тренировка началась!')">Начать тренировку</button>
     </div>
 
     <script>
@@ -164,50 +192,42 @@
         tg.ready();
         tg.expand();
 
-        // Имя пользователя
         let tgUserName = "друг";
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             tgUserName = tg.initDataUnsafe.user.first_name;
             document.getElementById('user-name').innerText = tgUserName;
         }
 
-        // Функция расчета калорий (Mifflin-St Jeor)
+        // Функция переключения экранов
+        function showScreen(screenId) {
+            document.querySelectorAll('body > div').forEach(el => el.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
         function calculateCalories(weight, height, age, gender, goal) {
             let bmr;
-            if (gender === 'male') {
-                bmr = 10 * weight + 6.25 * height - 5 * age + 5;
-            } else {
-                bmr = 10 * weight + 6.25 * height - 5 * age - 161;
-            }
-            // Умножаем на коэффициент активности (возьмем средний 1.375)
+            if (gender === 'male') { bmr = 10 * weight + 6.25 * height - 5 * age + 5; } 
+            else { bmr = 10 * weight + 6.25 * height - 5 * age - 161; }
             let tdee = bmr * 1.375; 
-            
-            if (goal === 'lose') return Math.round(tdee - 500); // Дефицит
-            if (goal === 'gain') return Math.round(tdee + 500); // Профицит
+            if (goal === 'lose') return Math.round(tdee - 500);
+            if (goal === 'gain') return Math.round(tdee + 500);
             return Math.round(tdee);
         }
 
-        // Загрузка профиля при старте
         function loadProfile() {
             tg.CloudStorage.getItem('profile', (err, result) => {
                 if (result) {
                     const profile = JSON.parse(result);
-                    
-                    // Считаем калории
                     const calories = calculateCalories(profile.weight, profile.height, profile.age, profile.gender, profile.goal);
-                    
-                    // Обновляем UI
                     document.getElementById('calories-norm').innerHTML = `${calories} <span style="font-size: 16px; color: var(--hint-color);">ккал</span>`;
                     document.getElementById('goal-text').innerText = profile.goal === 'lose' ? 'Твоя цель: Похудеть' : 'Твоя цель: Набрать массу';
-                    
-                    // Переключаем экраны
-                    document.getElementById('onboarding-screen').classList.add('hidden');
-                    document.getElementById('dashboard-screen').classList.remove('hidden');
+                    showScreen('dashboard-screen');
+                } else {
+                    showScreen('onboarding-screen');
                 }
             });
         }
 
-        // Сохранение профиля
         function saveProfile() {
             const age = document.getElementById('age').value;
             const gender = document.getElementById('gender').value;
@@ -221,24 +241,21 @@
             }
 
             const userProfile = { age, gender, weight, height, goal };
-
             tg.CloudStorage.setItem('profile', JSON.stringify(userProfile), (err, success) => {
                 if (success) {
-                    loadProfile(); // Сразу перезагружаем и показываем дашборд
+                    loadProfile();
                 } else {
                     tg.showAlert("Ошибка сохранения");
                 }
             });
         }
 
-        // Сброс профиля для теста
         function resetProfile() {
             tg.CloudStorage.removeItem('profile', () => {
                 location.reload();
             });
         }
 
-        // Запускаем проверку при открытии
         loadProfile();
     </script>
 </body>
