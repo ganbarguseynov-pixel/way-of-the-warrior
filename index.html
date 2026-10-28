@@ -92,9 +92,9 @@
         .rank { font-size: 20px; font-weight: bold; width: 40px; color: var(--hint-color); }
         .user-info { flex: 1; margin-left: 10px; }
 
-        /* ЭКРАН ВХОДА С КАРТИНКОЙ */
+        /* ЭКРАН ВХОДА С НОВОЙ КАРТИНКОЙ */
         .auth-screen { 
-            background-image: url('https://i.ibb.co/3s6yH1Z/login-bg.jpg'); /* Ссылка на картинку */
+            background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
             position: relative;
@@ -104,14 +104,14 @@
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,0.95) 100%);
+            background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,0.95) 100%);
             z-index: 1;
         }
 
         .auth-container { 
             display: flex; 
             flex-direction: column; 
-            justify-content: flex-end; /* Кнопки внизу */
+            justify-content: flex-end;
             height: 100%; 
             padding: 30px; 
             text-align: center;
@@ -160,7 +160,6 @@
     <audio id="audio-win"></audio>
     <audio id="audio-lose"></audio>
 
-    <!-- ЭКРАН ВХОДА С КАРТИНКОЙ -->
     <div id="auth-screen" class="screen active auth-screen">
         <div class="auth-container">
             <div class="auth-title">Sport App</div>
