@@ -92,7 +92,7 @@
         .rank { font-size: 20px; font-weight: bold; width: 40px; color: var(--hint-color); }
         .user-info { flex: 1; margin-left: 10px; }
 
-        /* ЭКРАН ВХОДА (БЕЗ GOOGLE) */
+        /* ЭКРАН ВХОДА С КАРТИНКОЙ */
         .auth-screen { 
             background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop');
             background-size: cover;
@@ -235,7 +235,30 @@
                     <button class="action-btn" onclick="openScreen('leaderboard-screen')"><h3>🏆</h3><p>Рейтинг</p></button>
                 </div>
                 
-                <button class="btn" style="background-color: transparent; color: #8e8e93; margin-top: 5px; font-size: 14px; font-weight: normal;" onclick="logout()">Выйти</button>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn" style="background-color: #2c2c2e; color: white; margin-top: 0; font-size: 14px;" onclick="openProfileSettings()">Настройки профиля</button>
+                    <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 0; font-size: 14px; border: 1px solid #ff3b30;" onclick="logout()">Выйти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ЭКРАН НАСТРОЕК ПРОФИЛЯ (Привязка Email и 2FA) -->
+    <div id="profile-settings-screen" class="screen">
+        <div class="inner-screen">
+            <button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
+            <h1 style="text-align: center; margin-bottom: 30px;">Настройки профиля</h1>
+            
+            <div style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-bottom: 20px;">
+                <h3 style="margin-top: 0;">Привязка аккаунтов</h3>
+                <p style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;">Привяжите Email, чтобы не потерять прогресс при смене устройства.</p>
+                <button class="btn" onclick="linkEmail()">Привязать Email</button>
+            </div>
+
+            <div style="background: #1c1c1e; padding: 20px; border-radius: 16px;">
+                <h3 style="margin-top: 0;">Безопасность</h3>
+                <p style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;">Двухэтапная аутентификация (2FA) защитит ваш аккаунт.</p>
+                <button class="btn" style="background-color: #34c759; color: white;" onclick="enable2FA()">Включить 2FA</button>
             </div>
         </div>
     </div>
@@ -453,6 +476,22 @@
             await supabaseClient.auth.signOut();
             closeScreen('dashboard-screen');
             openScreen('auth-screen');
+        }
+
+        // --- НАСТРОЙКИ ПРОФИЛЯ ---
+        
+        function openProfileSettings() {
+            openScreen('profile-settings-screen');
+        }
+
+        function linkEmail() {
+            // Заглушка, так как для реальной привязки нужен сервер
+            tg.showAlert("Привязка Email откроется в следующем обновлении!");
+        }
+
+        function enable2FA() {
+            // Заглушка для 2FA
+            tg.showAlert("Генерация QR-кода для 2FA появится в следующем обновлении!");
         }
 
         // --- ЛОГИКА ПРИЛОЖЕНИЯ ---
