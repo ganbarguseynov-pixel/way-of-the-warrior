@@ -3,12 +3,34 @@ from flask_cors import CORS
 from PIL import Image
 import io
 import os
+import requests
 
 app = Flask(__name__)
-CORS(app)  # Вот эта строчка разрешает Telegram общаться с сервером
+CORS(app)
 
+HF_TOKEN = os.environ.get("HF_TOKEN")
+LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
+
+# --- РЕЖИМ 1: Поиск по названию (DietlyAPI) ---
+@app.route('/search', methods=['GET'])
+def search_food():
+    query = request.args.get('q')
+    if not query:
+        return jsonify({"error": "No query provided"}), 400
+    
+    try:
+        # DietlyAPI
+        response = requests.get(f"https://www.getdietly.com/api/search?q={query}", timeout=10)
+        if response.status_code == 200:
+            return jsonify(response.json())
+        else:
+            return jsonify({"error": "DietlyAPI error"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# --- РЕЖИМ 2: Распознавание по фото (LogMeal -> HuggingFace) ---
 @app.route('/analyze', methods=['POST'])
-def analyze():
+def analyze_photo():
     if 'image' not in request.files:
         return jsonify({"error": "No image provided"}), 400
     
@@ -18,14 +40,52 @@ def analyze():
     except:
         return jsonify({"error": "Invalid image"}), 400
     
-    # Пока это тестовые данные (ИИ-модель добавим позже)
-    return jsonify({
-        "food": "Куриная грудка с рисом",
-        "calories": 450,
-        "protein": 35,
-        "fat": 12,
-        "carbs": 45
-    })
+    # Конвертируем картинку в байты
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='JPEG')
+    img_byte_arr = img_byte_arr.getvalue()
+
+    # 1. Пытаемся использовать LogMeal (самый точный для еды)
+    if LOGMEAL_TOKEN:
+        try:
+            files = {'image': ('food.jpg', img_byte_arr, 'image/jpeg')}
+            headers = {'Authorization': f'Bearer {LOGMEAL_TOKEN}'}
+            lm_response = requests.post('https://api.logmeal.es/v2/image/recognition/complete', headers=headers, files=files, timeout=30)
+            
+            if lm_response.status_code == 200:
+                lm_data = lm_response.json()
+                if 'recognition_results' in lm_data and len(lm_data['recognition_results']) > 0:
+                    food_name = lm_data['recognition_results'][0]['name']
+                    return jsonify({
+                        "food": food_name,
+                        "calories": 250, # Заглушка, так как LogMeal не дает калории в базовом API
+                        "protein": 15,
+                        "fat": 10,
+                        "carbs": 30
+                    })
+        except Exception as e:
+            print(f"LogMeal error: {e}")
+
+    # 2. Если LogMeal не сработал, пробуем Hugging Face
+    if HF_TOKEN:
+        try:
+            headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+            hf_response = requests.post("https://api-inference.huggingface.co/models/nateraw/food", headers=headers, data=img_byte_arr, timeout=30)
+            if hf_response.status_code == 200:
+                result = hf_response.json()
+                if isinstance(result, list) and len(result) > 0:
+                    best_guess = result[0]['label']
+                    return jsonify({
+                        "food": best_guess.capitalize(),
+                        "calories": 300, # Заглушка
+                        "protein": 20,
+                        "fat": 15,
+                        "carbs": 40
+                    })
+        except Exception as e:
+            print(f"HF error: {e}")
+
+    return jsonify({"error": "AI could not recognize food. Please try again."}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
