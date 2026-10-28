@@ -669,7 +669,11 @@
             const q = quotes[Math.floor(Math.random() * quotes.length)];
             document.getElementById('finish-quote').innerText = `«${q.text}»`;
             document.getElementById('finish-author').innerText = `— ${q.author}`;
+            
+            // ОСТАНАВЛИВАЕМ МУЗЫКУ И ВКЛЮЧАЕМ ЗВУК ПОБЕДЫ
+            audioWorkout.pause();
             if (isSoundOn) audioWin.play().catch(e => console.log(e));
+            
             closeScreen('timer-screen'); openScreen('finish-screen');
         }
 
