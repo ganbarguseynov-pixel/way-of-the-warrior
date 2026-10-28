@@ -92,7 +92,7 @@
         .rank { font-size: 20px; font-weight: bold; width: 40px; color: var(--hint-color); }
         .user-info { flex: 1; margin-left: 10px; }
 
-        /* ЭКРАН ВХОДА С КАРТИНКОЙ (ЦЕНТРИРОВАННЫЙ) */
+        /* ЭКРАН ВХОДА С КАРТИНКОЙ (ИДЕАЛЬНО ПО ЦЕНТРУ) */
         .auth-screen { 
             background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop');
             background-size: cover;
@@ -111,14 +111,26 @@
         .auth-container { 
             display: flex; 
             flex-direction: column; 
-            justify-content: center; /* Центрируем по вертикали */
+            justify-content: center;
+            align-items: center; /* Выравниваем по центру */
             height: 100%; 
-            padding: 30px; 
+            padding: 20px; 
             text-align: center;
             position: relative;
             z-index: 2;
+            width: 100%;
+            box-sizing: border-box;
         }
         
+        /* Обертка для текста и кнопок, чтобы они не растягивались */
+        .auth-content {
+            width: 100%;
+            max-width: 350px; /* Ограничиваем ширину для красоты */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
         .auth-title { 
             font-size: 40px; 
             font-weight: 900; 
@@ -138,9 +150,10 @@
             text-shadow: 0 1px 5px rgba(0,0,0,0.8);
         }
         
-        .auth-buttons { display: flex; flex-direction: column; gap: 15px; }
+        .auth-buttons { width: 100%; display: flex; flex-direction: column; gap: 15px; }
         .auth-btn { 
             padding: 18px; border-radius: 16px; border: none; font-size: 17px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            width: 100%;
         }
         .auth-btn:active { transform: scale(0.96); }
         
@@ -148,7 +161,7 @@
         .google-btn { background-color: #ffffff; color: #333333; border: 1px solid #ddd; }
         .email-btn { background-color: rgba(44, 44, 46, 0.8); color: white; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
         
-        .auth-divider { display: flex; align-items: center; text-align: center; color: #ccc; margin: 10px 0; }
+        .auth-divider { display: flex; align-items: center; text-align: center; color: #ccc; margin: 10px 0; width: 100%; }
         .auth-divider::before, .auth-divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255,255,255,0.2); }
         .auth-divider span { padding: 0 15px; font-size: 14px; }
     </style>
@@ -162,24 +175,26 @@
 
     <div id="auth-screen" class="screen active auth-screen">
         <div class="auth-container">
-            <div class="auth-title">Sport App</div>
-            <div class="inspiration-text">Стань лучшей версией себя.<br>Начни прямо сейчас.</div>
-            
-            <div class="auth-buttons">
-                <button class="auth-btn tg-btn" onclick="loginWithTelegram()">
-                    ✈️ Продолжить через Telegram
-                </button>
+            <div class="auth-content">
+                <div class="auth-title">Sport App</div>
+                <div class="inspiration-text">Стань лучшей версией себя.<br>Начни прямо сейчас.</div>
                 
-                <div class="auth-divider"><span>или</span></div>
-                
-                <button class="auth-btn google-btn" onclick="loginWithGoogle()">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" height="22">
-                    Войти через Google
-                </button>
-                
-                <button class="auth-btn email-btn" onclick="showEmailForm()">
-                    ✉️ Войти по Email
-                </button>
+                <div class="auth-buttons">
+                    <button class="auth-btn tg-btn" onclick="loginWithTelegram()">
+                        ✈️ Продолжить через Telegram
+                    </button>
+                    
+                    <div class="auth-divider"><span>или</span></div>
+                    
+                    <button class="auth-btn google-btn" onclick="loginWithGoogle()">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" height="22">
+                        Войти через Google
+                    </button>
+                    
+                    <button class="auth-btn email-btn" onclick="showEmailForm()">
+                        ✉️ Войти по Email
+                    </button>
+                </div>
             </div>
         </div>
     </div>
