@@ -446,4 +446,65 @@
         function calculateCalories(weight, height, age, gender, goal) {
             let bmr;
             if (gender === 'male') { bmr = 10 * weight + 6.25 * height - 5 * age + 5; } 
-            else { bmr =
+            else { bmr = 10 * weight + 6.25 * height - 5 * age - 161; }
+            let tdee = bmr * 1.375; 
+            if (goal === 'lose') return Math.round(tdee - 500);
+            if (goal === 'gain') return Math.round(tdee + 500);
+            return Math.round(tdee);
+        }
+
+        function loadProfile() {
+            tg.CloudStorage.getItem('profile', (err, result) => {
+                if (result) {
+                    const profile = JSON.parse(result);
+                    const calories = calculateCalories(profile.weight, profile.height, profile.age, profile.gender, profile.goal);
+                    document.getElementById('calories-norm').innerHTML = `${calories} <span style="font-size: 16px; color: var(--hint-color);">ккал</span>`;
+                    document.getElementById('goal-text').innerText = profile.goal === 'lose' ? 'Твоя цель: Похудеть' : 'Твоя цель: Набрать массу';
+                    
+                    // Загружаем калории
+                    tg.CloudStorage.getItem('totalBurned', (err, burnedResult) => {
+                        if (burnedResult) {
+                            totalBurnedCalories = parseInt(burnedResult);
+                            document.getElementById('burned-total').innerHTML = `${totalBurnedCalories} <span style="font-size: 16px; opacity: 0.8;">ккал</span>`;
+                        }
+                        
+                        // Загружаем опыт
+                        tg.CloudStorage.getItem('xp', (err, xpResult) => {
+                            if (xpResult) {
+                                currentXP = parseInt(xpResult);
+                            }
+                            updateCharacterUI();
+                            showScreen('dashboard-screen');
+                        });
+                    });
+                } else {
+                    showScreen('onboarding-screen');
+                }
+            });
+        }
+
+        function saveProfile() {
+            const age = document.getElementById('age').value;
+            const gender = document.getElementById('gender').value;
+            const weight = document.getElementById('weight').value;
+            const height = document.getElementById('height').value;
+            const goal = document.getElementById('goal').value;
+            if (!age || !weight || !height) { tg.showAlert("Пожалуйста, заполни все поля!"); return; }
+            const userProfile = { age, gender, weight, height, goal };
+            tg.CloudStorage.setItem('profile', JSON.stringify(userProfile), (err, success) => {
+                if (success) loadProfile(); else tg.showAlert("Ошибка сохранения");
+            });
+        }
+
+        function resetProfile() {
+            tg.CloudStorage.removeItem('profile', () => { 
+                tg.CloudStorage.removeItem('totalBurned', () => { 
+                    tg.CloudStorage.removeItem('xp', () => { location.reload(); });
+                }); 
+            });
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>
