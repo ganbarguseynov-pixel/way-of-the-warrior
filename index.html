@@ -34,7 +34,6 @@
             z-index: 2; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 15px; box-sizing: border-box;
         }
 
-        /* Кнопка звука */
         .sound-toggle {
             position: absolute; top: 20px; right: 20px; z-index: 20;
             background-color: rgba(0,0,0,0.5); border: none; border-radius: 50%;
@@ -94,7 +93,6 @@
 </head>
 <body class="male-theme">
 
-    <!-- Аудио элементы -->
     <audio id="audio-bg" loop></audio>
     <audio id="audio-workout" loop></audio>
     <audio id="audio-win"></audio>
@@ -206,7 +204,7 @@
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
-        // --- ПЛЕЙЛИСТЫ (ТВОИ ФАЙЛЫ) ---
+        // --- ПЛЕЙЛИСТЫ ---
         const bgTracks = [
             "01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3", 
             "05 - The Vengeance.mp3", "06 - The Forest of Death.mp3", "07 - The Ninja in the Night.mp3", 
@@ -226,6 +224,7 @@
         let currentWorkoutIndex = 0;
         let isSoundOn = true;
         let isWorkoutMode = false;
+        let musicStarted = false; // Флаг, чтобы музыка не запускалась дважды
 
         const audioBg = document.getElementById('audio-bg');
         const audioWorkout = document.getElementById('audio-workout');
@@ -233,14 +232,12 @@
         const audioLose = document.getElementById('audio-lose');
 
         audioWin.src = "12. Scroll Win 02.mp3";
-        audioLose.src = "09. Scroll Lose 01.mp3"; // Звук поражения (пока не активен)
-        const audioLevelUp = "07. Scroll Draw 01.mp3"; // Звук повышения уровня
+        audioLose.src = "09. Scroll Lose 01.mp3"; 
+        const audioLevelUp = "07. Scroll Draw 01.mp3"; 
 
         // --- ЛОГИКА МУЗЫКИ ---
         function playNextBg() {
-            if (!isSoundOn) return;
-            if (isWorkoutMode) return; // Если тренировка, фон не играет
-            
+            if (!isSoundOn || isWorkoutMode) return;
             audioBg.src = bgTracks[currentBgIndex];
             audioBg.play().catch(e => console.log("Autoplay blocked"));
             currentBgIndex = (currentBgIndex + 1) % bgTracks.length;
@@ -250,8 +247,7 @@
 
         function playNextWorkout() {
             if (!isSoundOn) return;
-            
-            audioBg.pause(); // Останавливаем фон
+            audioBg.pause(); 
             audioWorkout.src = workoutTracks[currentWorkoutIndex];
             audioWorkout.play().catch(e => console.log("Autoplay blocked"));
             currentWorkoutIndex = (currentWorkoutIndex + 1) % workoutTracks.length;
@@ -318,13 +314,11 @@
                 if (currentXP >= levels[i].xp) newLevelIndex = i;
             }
 
-            // Проверка на повышение уровня (звук)
             if (newLevelIndex > currentLevelIndexGlobal) {
                 const audioUp = new Audio(audioLevelUp);
                 if (isSoundOn) audioUp.play().catch(e => console.log(e));
                 tg.showAlert(`🎉 Поздравляем! Ты достиг нового уровня: ${levels[newLevelIndex].title}!`);
             }
-            // Проверка на понижение уровня (звук проигрыша)
             if (newLevelIndex < currentLevelIndexGlobal) {
                 const audioDown = new Audio(audioLose);
                 if (isSoundOn) audioDown.play().catch(e => console.log(e));
@@ -415,7 +409,6 @@
             document.getElementById('finish-quote').innerText = `«${q.text}»`;
             document.getElementById('finish-author').innerText = `— ${q.author}`;
             
-            // Включаем звук победы
             if (isSoundOn) audioWin.play().catch(e => console.log(e));
             
             closeScreen('timer-screen'); openScreen('finish-screen');
@@ -467,7 +460,6 @@
                         tg.CloudStorage.getItem('xp', (err, xp) => {
                             if (xp) currentXP = parseInt(xp);
                             
-                            // Инициализация уровня при старте
                             const levels = levelsData[userGender];
                             for (let i = 0; i < levels.length; i++) {
                                 if (currentXP >= levels[i].xp) currentLevelIndexGlobal = i;
@@ -475,7 +467,19 @@
                             
                             updateCharacterUI();
                             closeScreen('onboarding-screen');
-                            playNextBg(); // Запуск фоновой музыки
+                            
+                            // Включаем музыку при первом касании экрана
+                            const startMusicOnTouch = () => {
+                                if (!musicStarted) {
+                                    playNextBg();
+                                    musicStarted = true;
+                                }
+                                document.removeEventListener('click', startMusicOnTouch);
+                                document.removeEventListener('touchstart', startMusicOnTouch);
+                            };
+                            document.addEventListener('click', startMusicOnTouch);
+                            document.addEventListener('touchstart', startMusicOnTouch);
+                            
                         });
                     });
                 } else {
