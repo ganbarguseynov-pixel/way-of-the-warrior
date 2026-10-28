@@ -96,25 +96,23 @@
         .auth-screen { background: linear-gradient(135deg, #1c1c1e 0%, #000000 100%); }
         .auth-container { display: flex; flex-direction: column; justify-content: center; height: 100%; padding: 30px; text-align: center; }
         
-        .app-logo { font-size: 60px; margin-bottom: 20px; text-shadow: 0 0 30px rgba(255, 204, 0, 0.5); }
+        .app-logo { font-size: 80px; margin-bottom: 20px; text-shadow: 0 0 30px rgba(255, 204, 0, 0.5); }
         
         .auth-title { font-size: 36px; font-weight: 900; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; background: -webkit-linear-gradient(45deg, #ffcc00, #ff9500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .auth-subtitle { color: var(--hint-color); font-size: 16px; margin-bottom: 40px; }
+        
+        /* Вдохновляющая фраза */
+        .inspiration-text {
+            font-size: 16px;
+            color: #fff;
+            font-style: italic;
+            margin-bottom: 30px;
+            line-height: 1.4;
+            opacity: 0.9;
+        }
         
         .auth-buttons { display: flex; flex-direction: column; gap: 15px; }
         .auth-btn { 
-            padding: 18px; 
-            border-radius: 16px; 
-            border: none; 
-            font-size: 17px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 12px; 
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            padding: 18px; border-radius: 16px; border: none; font-size: 17px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .auth-btn:active { transform: scale(0.96); }
         
@@ -137,9 +135,9 @@
     <!-- НОВЫЙ ЭКРАН ВХОДА -->
     <div id="auth-screen" class="screen active auth-screen">
         <div class="auth-container">
-            <div class="app-logo">⚔️</div>
-            <div class="auth-title">Way of the Warrior</div>
-            <div class="auth-subtitle">Войдите, чтобы начать свой путь</div>
+            <div class="app-logo">🏋️‍♀️🏋️‍♂️</div>
+            <div class="auth-title">Sport App</div>
+            <div class="inspiration-text">"Твое тело может все. Это твой разум нужно убедить."</div>
             
             <div class="auth-buttons">
                 <button class="auth-btn tg-btn" onclick="loginWithTelegram()">
@@ -396,7 +394,6 @@
         }
 
         async function loginWithGoogle() {
-            // Пытаемся войти, если ошибка - показываем ее полностью
             const { data, error } = await supabaseClient.auth.signInWithOAuth({
                 provider: 'google',
                 options: { redirectTo: window.location.href }
