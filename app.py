@@ -34,8 +34,8 @@ def check_gemini():
     if not GEMINI_API_KEY:
         return "ОШИБКА: Ключ Gemini не найден в настройках сервера", 500
     try:
-        # Используем актуальную модель 2.5-flash
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        # Используем модель, которую рекомендует сам Google
+        model = genai.GenerativeModel('gemini-3.8-flash')
         response = model.generate_content("Напиши ровно одно слово: РАБОТАЕТ")
         return f"УСПЕХ! Gemini ответил: {response.text}"
     except Exception as e:
@@ -73,8 +73,7 @@ def analyze_photo():
     # 2. Если LogMeal не сработал, пробуем Gemini
     if GEMINI_API_KEY:
         try:
-            # Используем актуальную модель 2.5-flash
-            model = genai.GenerativeModel('gemini-2.5-flash')
+            model = genai.GenerativeModel('gemini-3.8-flash')
             prompt = "What food is in this image? Answer in one short phrase in Russian. Also estimate calories, protein, fat, and carbs. Format: Food name | Calories | Protein | Fat | Carbs"
             response = model.generate_content([prompt, image])
             text = response.text.strip()
