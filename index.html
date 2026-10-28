@@ -13,6 +13,7 @@
             --button-color: var(--tg-theme-button-color, #007aff);
             --button-text-color: var(--tg-theme-button-text-color, #ffffff);
             --secondary-bg: var(--tg-theme-secondary-bg-color, #2c2c2e);
+            --xp-color: #34c759; /* Зеленый для опыта */
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -41,6 +42,25 @@
         .btn:active { opacity: 0.8; }
         .hidden { display: none !important; }
         
+        /* Стили для персонажа и уровней */
+        .character-card {
+            background: linear-gradient(135deg, #2c2c2e, #1c1c1e);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #3a3a3c;
+        }
+        .character-avatar { font-size: 70px; margin-bottom: 10px; line-height: 1; }
+        .character-level { font-size: 20px; font-weight: bold; color: #ffd700; margin: 0 0 5px 0; }
+        .character-title { font-size: 14px; color: var(--hint-color); margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .xp-bar-container {
+            background-color: #3a3a3c; border-radius: 10px; height: 12px; width: 100%; overflow: hidden; margin-bottom: 5px;
+        }
+        .xp-bar { background-color: var(--xp-color); height: 100%; width: 0%; transition: width 0.5s ease-in-out; }
+        .xp-text { font-size: 12px; color: var(--hint-color); text-align: right; margin: 0; }
+
         .dashboard-card { background-color: var(--secondary-bg); border-radius: 16px; padding: 20px; margin-bottom: 15px; }
         .dashboard-card h2 { font-size: 18px; margin: 0 0 10px 0; }
         .dashboard-card .big-number { font-size: 36px; font-weight: bold; color: var(--button-color); margin: 0; }
@@ -55,14 +75,8 @@
         .action-btn p { margin: 0; color: var(--hint-color); font-size: 12px; }
         .action-btn:active { opacity: 0.7; }
 
-        .back-btn {
-            background: none; border: none; color: var(--button-color); font-size: 16px;
-            padding: 0; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center;
-        }
-        .exercise-item {
-            background-color: var(--secondary-bg); border-radius: 12px; padding: 15px;
-            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
-        }
+        .back-btn { background: none; border: none; color: var(--button-color); font-size: 16px; padding: 0; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center; }
+        .exercise-item { background-color: var(--secondary-bg); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .exercise-info h4 { margin: 0 0 5px 0; font-size: 16px; }
         .exercise-info p { margin: 0; color: var(--hint-color); font-size: 13px; }
         .play-icon { font-size: 24px; }
@@ -90,7 +104,6 @@
         .user-name { font-size: 16px; font-weight: bold; margin: 0; }
         .user-calories { font-size: 13px; color: var(--hint-color); margin: 0; }
 
-        /* Стили для камеры */
         .camera-container { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
         .photo-preview { width: 100%; max-height: 300px; object-fit: cover; border-radius: 12px; margin-bottom: 20px; display: none; }
         .loading-spinner { font-size: 18px; color: var(--hint-color); display: none; margin-top: 20px; }
@@ -119,8 +132,22 @@
             <h1 style="font-size: 24px;">Привет, <span id="user-name">друг</span>!</h1>
             <p id="goal-text">Твоя цель: Похудеть</p>
         </div>
+
+        <!-- Блок с персонажем -->
+        <div class="character-card">
+            <div class="character-avatar" id="avatar">🧍‍♂️</div>
+            <div class="character-level" id="char-level">Уровень 1</div>
+            <div class="character-title" id="char-title">Новичок</div>
+            
+            <div class="xp-bar-container">
+                <div class="xp-bar" id="xp-bar"></div>
+            </div>
+            <p class="xp-text" id="xp-text">0 / 100 XP</p>
+        </div>
+
         <div class="dashboard-card"><h2>Твоя дневная норма</h2><p class="big-number" id="calories-norm">0 <span style="font-size: 16px; color: var(--hint-color);">ккал</span></p><p>Рассчитано на основе твоих данных</p></div>
         <div class="dashboard-card" style="background: linear-gradient(135deg, #ff9500, #ff2d55);"><h2 style="color: white;">Сожжено за тренировки</h2><p class="big-number" id="burned-total" style="color: white;">0 <span style="font-size: 16px; opacity: 0.8;">ккал</span></p></div>
+
         <div class="action-grid">
             <button class="action-btn" onclick="showScreen('camera-screen')"><h3>📸 Сфоткать еду</h3><p>Узнать калории</p></button>
             <button class="action-btn" onclick="showScreen('workout-screen')"><h3>💪 Тренировка</h3><p>Комплекс на сегодня</p></button>
@@ -153,7 +180,7 @@
                 <button class="btn" onclick="toggleTimer()" id="timer-btn" style="margin-top: 0;">Старт</button>
                 <button class="btn" style="background-color: var(--secondary-bg); color: var(--text-color); margin-top: 0;" onclick="resetTimer()">Сброс</button>
             </div>
-            <button class="btn" style="background-color: #34c759; margin-top: 20px;" onclick="completeSet()">Подход выполнен ✅</button>
+            <button class="btn" style="background-color: #34c759; margin-top: 20px;" onclick="completeSet()">Подход выполнен ✅ (+15 XP)</button>
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button class="btn" style="background-color: transparent; color: var(--button-color); margin-top: 0; font-size: 14px;" onclick="nextExercise()">Пропустить →</button>
                 <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 0; font-size: 14px;" onclick="finishWorkout()">Завершить 🏁</button>
@@ -190,18 +217,10 @@
             <h1 style="font-size: 24px;">Анализ еды</h1>
             <p>Сфоткай блюдо, и ИИ посчитает калории</p>
         </div>
-        
         <div class="camera-container">
-            <!-- Скрытый инпут для вызова камеры -->
             <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;" onchange="handleImage(event)">
-            
-            <!-- Превью фото -->
             <img id="photo-preview" class="photo-preview">
-            
-            <button class="btn" id="take-photo-btn" onclick="document.getElementById('camera-input').click()" style="font-size: 24px; padding: 30px;">
-                📷 Сделать фото
-            </button>
-            
+            <button class="btn" id="take-photo-btn" onclick="document.getElementById('camera-input').click()" style="font-size: 24px; padding: 30px;">📷 Сделать фото</button>
             <div class="loading-spinner" id="loading-spinner">🤖 ИИ анализирует фото...</div>
         </div>
     </div>
@@ -234,12 +253,62 @@
             { name: "Максим", kcal: 2900 }, { name: "Ольга", kcal: 2100 }, { name: "Иван", kcal: 1500 }
         ];
 
+        // Уровни персонажа
+        const levels = [
+            { xp: 0, title: "Новичок", avatar: "🧍‍♂️" },
+            { xp: 100, title: "Любитель", avatar: "🏃‍♂️" },
+            { xp: 250, title: "Спортсмен", avatar: "🏋️‍♂️" },
+            { xp: 500, title: "Воин", avatar: "🥊" },
+            { xp: 1000, title: "Чемпион", avatar: "🏆" },
+            { xp: 2000, title: "Легенда", avatar: "🦸‍♂️" }
+        ];
+
         let currentExerciseIndex = 0;
         let timerInterval;
         let timeLeft = 45;
         let isRunning = false;
         let sessionCalories = 0; 
         let totalBurnedCalories = 0; 
+        let currentXP = 0;
+
+        // --- ЛОГИКА ОПЫТА И УРОВНЕЙ ---
+        function updateCharacterUI() {
+            // Ищем текущий уровень
+            let currentLevelIndex = 0;
+            for (let i = 0; i < levels.length; i++) {
+                if (currentXP >= levels[i].xp) {
+                    currentLevelIndex = i;
+                }
+            }
+
+            const currentLevel = levels[currentLevelIndex];
+            const nextLevel = levels[currentLevelIndex + 1] || levels[levels.length - 1];
+
+            // Обновляем аватар и титул
+            document.getElementById('avatar').innerText = currentLevel.avatar;
+            document.getElementById('char-level').innerText = `Уровень ${currentLevelIndex + 1}`;
+            document.getElementById('char-title').innerText = currentLevel.title;
+
+            // Обновляем шкалу XP
+            let progressPercent = 100;
+            let xpText = `${currentXP} XP (MAX)`;
+            
+            if (nextLevel.xp > currentLevel.xp) {
+                const xpForNextLevel = nextLevel.xp - currentLevel.xp;
+                const currentLevelProgress = currentXP - currentLevel.xp;
+                progressPercent = (currentLevelProgress / xpForNextLevel) * 100;
+                xpText = `${currentXP} / ${nextLevel.xp} XP`;
+            }
+            
+            document.getElementById('xp-bar').style.width = `${progressPercent}%`;
+            document.getElementById('xp-text').innerText = xpText;
+        }
+
+        function addXP(amount) {
+            currentXP += amount;
+            tg.CloudStorage.setItem('xp', currentXP.toString());
+            updateCharacterUI();
+        }
 
         // --- ЛОГИКА ТАЙМЕРА ---
         function updateTimerDisplay() {
@@ -292,14 +361,18 @@
         function completeSet() {
             const kcalBurned = 15;
             sessionCalories += kcalBurned; totalBurnedCalories += kcalBurned;
+            
+            // Добавляем опыт и калории
+            addXP(15);
             tg.CloudStorage.setItem('totalBurned', totalBurnedCalories.toString());
+            
             document.getElementById('session-calories').innerText = `Сожжено за эту сессию: ${sessionCalories} ккал`;
             document.getElementById('burned-total').innerHTML = `${totalBurnedCalories} <span style="font-size: 16px; opacity: 0.8;">ккал</span>`;
             nextExercise();
         }
 
         function finishWorkout() {
-            document.getElementById('finish-stats').innerText = `Отличная работа. За эту тренировку ты сжег ${sessionCalories} ккал.`;
+            document.getElementById('finish-stats').innerText = `Отличная работа. За эту тренировку ты сжег ${sessionCalories} ккал и получил опыт.`;
             const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
             document.getElementById('finish-quote').innerText = `«${randomQuote.text}»`;
             document.getElementById('finish-author').innerText = `— ${randomQuote.author}`;
@@ -330,21 +403,18 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    // Показываем превью
                     const preview = document.getElementById('photo-preview');
                     preview.src = e.target.result;
                     preview.style.display = 'block';
-                    
-                    // Скрываем кнопку и показываем загрузку
                     document.getElementById('take-photo-btn').style.display = 'none';
                     document.getElementById('loading-spinner').style.display = 'block';
 
-                    // Имитация запроса к ИИ (задержка 2.5 секунды)
                     setTimeout(() => {
                         document.getElementById('loading-spinner').style.display = 'none';
-                        tg.showAlert("🤖 ИИ распознал блюдо:\n\n🍗 Куриная грудка с рисом\n🔥 Калории: ~450 ккал\n\n(Это тестовый ответ. В будущем здесь будет реальный анализ)");
+                        // Начисляем опыт за анализ еды
+                        addXP(20);
+                        tg.showAlert("🤖 ИИ распознал блюдо:\n\n🍗 Куриная грудка с рисом\n🔥 Калории: ~450 ккал\n\n+20 XP за ведение дневника питания!");
                         
-                        // Возвращаем кнопку назад для нового фото
                         document.getElementById('take-photo-btn').style.display = 'block';
                         document.getElementById('take-photo-btn').innerText = "📷 Сделать новое фото";
                     }, 2500);
@@ -370,56 +440,10 @@
                 if(btn) { btn.innerText = "Старт"; btn.style.backgroundColor = "var(--button-color)"; }
             }
             if (screenId === 'leaderboard-screen') { loadLeaderboard(); }
+            if (screenId === 'dashboard-screen') { updateCharacterUI(); }
         }
 
         function calculateCalories(weight, height, age, gender, goal) {
             let bmr;
             if (gender === 'male') { bmr = 10 * weight + 6.25 * height - 5 * age + 5; } 
-            else { bmr = 10 * weight + 6.25 * height - 5 * age - 161; }
-            let tdee = bmr * 1.375; 
-            if (goal === 'lose') return Math.round(tdee - 500);
-            if (goal === 'gain') return Math.round(tdee + 500);
-            return Math.round(tdee);
-        }
-
-        function loadProfile() {
-            tg.CloudStorage.getItem('profile', (err, result) => {
-                if (result) {
-                    const profile = JSON.parse(result);
-                    const calories = calculateCalories(profile.weight, profile.height, profile.age, profile.gender, profile.goal);
-                    document.getElementById('calories-norm').innerHTML = `${calories} <span style="font-size: 16px; color: var(--hint-color);">ккал</span>`;
-                    document.getElementById('goal-text').innerText = profile.goal === 'lose' ? 'Твоя цель: Похудеть' : 'Твоя цель: Набрать массу';
-                    tg.CloudStorage.getItem('totalBurned', (err, burnedResult) => {
-                        if (burnedResult) {
-                            totalBurnedCalories = parseInt(burnedResult);
-                            document.getElementById('burned-total').innerHTML = `${totalBurnedCalories} <span style="font-size: 16px; opacity: 0.8;">ккал</span>`;
-                        }
-                        showScreen('dashboard-screen');
-                    });
-                } else {
-                    showScreen('onboarding-screen');
-                }
-            });
-        }
-
-        function saveProfile() {
-            const age = document.getElementById('age').value;
-            const gender = document.getElementById('gender').value;
-            const weight = document.getElementById('weight').value;
-            const height = document.getElementById('height').value;
-            const goal = document.getElementById('goal').value;
-            if (!age || !weight || !height) { tg.showAlert("Пожалуйста, заполни все поля!"); return; }
-            const userProfile = { age, gender, weight, height, goal };
-            tg.CloudStorage.setItem('profile', JSON.stringify(userProfile), (err, success) => {
-                if (success) loadProfile(); else tg.showAlert("Ошибка сохранения");
-            });
-        }
-
-        function resetProfile() {
-            tg.CloudStorage.removeItem('profile', () => { tg.CloudStorage.removeItem('totalBurned', () => { location.reload(); }); });
-        }
-
-        loadProfile();
-    </script>
-</body>
-</html>
+            else { bmr =
