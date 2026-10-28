@@ -259,7 +259,7 @@
         // --- ИНИЦИАЛИЗАЦИЯ SUPABASE ---
         const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
         const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
@@ -370,7 +370,7 @@
         }
 
         async function loginWithGoogle() {
-            const { data, error } = await supabase.auth.signInWithOAuth({
+            const { data, error } = await supabaseClient.auth.signInWithOAuth({
                 provider: 'google',
                 options: { redirectTo: window.location.href }
             });
@@ -382,7 +382,7 @@
         async function signInWithEmail() {
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) { tg.showAlert("Ошибка входа: " + error.message); } 
             else {
                 tg.showAlert("Успешный вход!");
@@ -394,13 +394,13 @@
         async function signUpWithEmail() {
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
-            const { data, error } = await supabase.auth.signUp({ email, password });
+            const { data, error } = await supabaseClient.auth.signUp({ email, password });
             if (error) { tg.showAlert("Ошибка регистрации: " + error.message); } 
             else { tg.showAlert("Регистрация успешна! Проверьте почту."); }
         }
 
         async function logout() {
-            await supabase.auth.signOut();
+            await supabaseClient.auth.signOut();
             closeScreen('dashboard-screen');
             openScreen('auth-screen');
         }
@@ -606,8 +606,8 @@
             }
         }, { once: true });
 
-        // При запуске проверяем, если мы в Telegram, показываем кнопку, иначе ждем нажатия
-        // Ничего не вызываем автоматически, чтобы не было ошибок
+        // При запуске ничего не делаем, чтобы не было ошибок
+        // Пользователь сам нажмет кнопку
     </script>
 </body>
 </html>
