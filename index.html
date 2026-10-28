@@ -224,7 +224,7 @@
         let currentWorkoutIndex = 0;
         let isSoundOn = true;
         let isWorkoutMode = false;
-        let musicStarted = false; // Флаг, чтобы музыка не запускалась дважды
+        let musicStarted = false;
 
         const audioBg = document.getElementById('audio-bg');
         const audioWorkout = document.getElementById('audio-workout');
@@ -239,7 +239,8 @@
         function playNextBg() {
             if (!isSoundOn || isWorkoutMode) return;
             audioBg.src = bgTracks[currentBgIndex];
-            audioBg.play().catch(e => console.log("Autoplay blocked"));
+            // Пытаемся включить. Если браузер блокирует - это нормально, включится при первом клике.
+            audioBg.play().catch(e => console.log("Autoplay blocked, waiting for user interaction"));
             currentBgIndex = (currentBgIndex + 1) % bgTracks.length;
         }
 
@@ -468,18 +469,8 @@
                             updateCharacterUI();
                             closeScreen('onboarding-screen');
                             
-                            // Включаем музыку при первом касании экрана
-                            const startMusicOnTouch = () => {
-                                if (!musicStarted) {
-                                    playNextBg();
-                                    musicStarted = true;
-                                }
-                                document.removeEventListener('click', startMusicOnTouch);
-                                document.removeEventListener('touchstart', startMusicOnTouch);
-                            };
-                            document.addEventListener('click', startMusicOnTouch);
-                            document.addEventListener('touchstart', startMusicOnTouch);
-                            
+                            // Попытка включить музыку сразу
+                            playNextBg();
                         });
                     });
                 } else {
@@ -503,6 +494,17 @@
         function resetProfile() {
             tg.CloudStorage.removeItem('profile', () => tg.CloudStorage.removeItem('totalBurned', () => tg.CloudStorage.removeItem('xp', () => location.reload())));
         }
+
+        // --- ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК КЛИКОВ ДЛЯ ЗАПУСКА МУЗЫКИ ---
+        // Это сработает при самом первом касании экрана где угодно
+        document.body.addEventListener('click', function() {
+            if (!musicStarted) {
+                musicStarted = true;
+                if (isSoundOn) {
+                    if (isWorkoutMode) playNextWorkout(); else playNextBg();
+                }
+            }
+        }, { once: true }); // Сработает только один раз
 
         loadProfile();
     </script>
