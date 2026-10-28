@@ -518,7 +518,6 @@
         let pendingFactorId = null;
 
         async function enable2FA() {
-            // 1. Создаем фактор (получаем QR и секрет)
             const { data, error } = await supabaseClient.auth.mfa.enroll({ factorType: 'totp' });
             
             if (error) {
@@ -528,7 +527,6 @@
 
             pendingFactorId = data.id;
             
-            // Показываем QR-код
             document.getElementById('qr-container').style.display = 'block';
             document.getElementById('verify-container').style.display = 'block';
             document.getElementById('2fa-btn').style.display = 'none';
@@ -543,11 +541,9 @@
             const code = document.getElementById('2fa-code').value;
             if (!code) return;
 
-            // 2. Создаем челлендж
             const { data: challenge, error: challengeError } = await supabaseClient.auth.mfa.challenge({ factorId: pendingFactorId });
             if (challengeError) { tg.showAlert("Ошибка: " + challengeError.message); return; }
 
-            // 3. Проверяем код
             const { data, error } = await supabaseClient.auth.mfa.verify({
                 factorId: pendingFactorId,
                 challengeId: challenge.id,
