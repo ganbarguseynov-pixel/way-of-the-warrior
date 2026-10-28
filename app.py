@@ -28,6 +28,19 @@ def search_food():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# --- НОВАЯ ПРОВЕРКА GEMINI ---
+@app.route('/check_gemini', methods=['GET'])
+def check_gemini():
+    if not GEMINI_API_KEY:
+        return "ОШИБКА: Ключ Gemini не найден в настройках сервера", 500
+    try:
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        response = model.generate_content("Напиши ровно одно слово: РАБОТАЕТ")
+        return f"УСПЕХ! Gemini ответил: {response.text}"
+    except Exception as e:
+        return f"ОШИБКА GEMINI: {str(e)}", 500
+# -----------------------------
+
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
     if 'image' not in request.files:
@@ -59,7 +72,8 @@ def analyze_photo():
     # 2. Если LogMeal не сработал, пробуем Gemini
     if GEMINI_API_KEY:
         try:
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            # Используем актуальную модель 2.0-flash вместо устаревшей 1.5-flash
+            model = genai.GenerativeModel('gemini-2.0-flash')
             prompt = "What food is in this image? Answer in one short phrase in Russian. Also estimate calories, protein, fat, and carbs. Format: Food name | Calories | Protein | Fat | Carbs"
             response = model.generate_content([prompt, image])
             text = response.text.strip()
@@ -82,13 +96,3 @@ def analyze_photo():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
-    @app.route('/check_gemini', methods=['GET'])
-def check_gemini():
-    if not GEMINI_API_KEY:
-        return "ОШИБКА: Ключ Gemini не найден в настройках сервера", 500
-    try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content("Напиши ровно одно слово: РАБОТАЕТ")
-        return f"УСПЕХ! Gemini ответил: {response.text}"
-    except Exception as e:
-        return f"ОШИБКА GEMINI: {str(e)}", 500
