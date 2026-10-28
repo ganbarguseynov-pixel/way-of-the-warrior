@@ -82,58 +82,33 @@
         .quote-text { font-size: 18px; font-style: italic; margin: 0 0 10px 0; line-height: 1.4; }
         .quote-author { font-size: 14px; font-weight: bold; color: var(--hint-color); margin: 0; text-align: right; }
 
-        /* Стили для рейтинга */
-        .leaderboard-item {
-            display: flex; align-items: center; background-color: var(--secondary-bg);
-            padding: 15px; border-radius: 12px; margin-bottom: 10px;
-        }
+        .leaderboard-item { display: flex; align-items: center; background-color: var(--secondary-bg); padding: 15px; border-radius: 12px; margin-bottom: 10px; }
         .leaderboard-item.my-row { border: 2px solid var(--button-color); background-color: rgba(0, 122, 255, 0.1); }
         .rank { font-size: 18px; font-weight: bold; width: 40px; color: var(--hint-color); }
-        .rank.top-1 { color: #ffd700; } /* Золото */
-        .rank.top-2 { color: #c0c0c0; } /* Серебро */
-        .rank.top-3 { color: #cd7f32; } /* Бронза */
+        .rank.top-1 { color: #ffd700; } .rank.top-2 { color: #c0c0c0; } .rank.top-3 { color: #cd7f32; }
         .user-info { flex: 1; margin-left: 10px; }
         .user-name { font-size: 16px; font-weight: bold; margin: 0; }
         .user-calories { font-size: 13px; color: var(--hint-color); margin: 0; }
+
+        /* Стили для камеры */
+        .camera-container { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
+        .photo-preview { width: 100%; max-height: 300px; object-fit: cover; border-radius: 12px; margin-bottom: 20px; display: none; }
+        .loading-spinner { font-size: 18px; color: var(--hint-color); display: none; margin-top: 20px; }
     </style>
 </head>
 <body>
 
     <!-- ЭКРАН 1: Знакомство -->
     <div id="onboarding-screen">
-        <div class="header">
-            <h1>Добро пожаловать!</h1>
-            <p>Давай настроим твой профиль для достижения цели</p>
-        </div>
-        <div class="form-group">
-            <label>Ваша цель</label>
-            <select id="goal">
-                <option value="lose">Похудеть</option>
-                <option value="gain">Набрать мышечную массу</option>
-            </select>
+        <div class="header"><h1>Добро пожаловать!</h1><p>Давай настроим твой профиль для достижения цели</p></div>
+        <div class="form-group"><label>Ваша цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать мышечную массу</option></select></div>
+        <div class="row">
+            <div class="form-group"><label>Возраст</label><input type="number" id="age" placeholder="Например: 25" min="10" max="100"></div>
+            <div class="form-group"><label>Пол</label><select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
         </div>
         <div class="row">
-            <div class="form-group">
-                <label>Возраст</label>
-                <input type="number" id="age" placeholder="Например: 25" min="10" max="100">
-            </div>
-            <div class="form-group">
-                <label>Пол</label>
-                <select id="gender">
-                    <option value="male">Мужской</option>
-                    <option value="female">Женский</option>
-                </select>
-            </div>
-        </div>
-        <div class="row">
-            <div class="form-group">
-                <label>Вес (кг)</label>
-                <input type="number" id="weight" placeholder="70" min="30" max="250">
-            </div>
-            <div class="form-group">
-                <label>Рост (см)</label>
-                <input type="number" id="height" placeholder="175" min="100" max="250">
-            </div>
+            <div class="form-group"><label>Вес (кг)</label><input type="number" id="weight" placeholder="70" min="30" max="250"></div>
+            <div class="form-group"><label>Рост (см)</label><input type="number" id="height" placeholder="175" min="100" max="250"></div>
         </div>
         <button class="btn" onclick="saveProfile()">Продолжить</button>
     </div>
@@ -144,35 +119,13 @@
             <h1 style="font-size: 24px;">Привет, <span id="user-name">друг</span>!</h1>
             <p id="goal-text">Твоя цель: Похудеть</p>
         </div>
-
-        <div class="dashboard-card">
-            <h2>Твоя дневная норма</h2>
-            <p class="big-number" id="calories-norm">0 <span style="font-size: 16px; color: var(--hint-color);">ккал</span></p>
-            <p>Рассчитано на основе твоих данных</p>
-        </div>
-        
-        <div class="dashboard-card" style="background: linear-gradient(135deg, #ff9500, #ff2d55);">
-            <h2 style="color: white;">Сожжено за тренировки</h2>
-            <p class="big-number" id="burned-total" style="color: white;">0 <span style="font-size: 16px; opacity: 0.8;">ккал</span></p>
-        </div>
-
+        <div class="dashboard-card"><h2>Твоя дневная норма</h2><p class="big-number" id="calories-norm">0 <span style="font-size: 16px; color: var(--hint-color);">ккал</span></p><p>Рассчитано на основе твоих данных</p></div>
+        <div class="dashboard-card" style="background: linear-gradient(135deg, #ff9500, #ff2d55);"><h2 style="color: white;">Сожжено за тренировки</h2><p class="big-number" id="burned-total" style="color: white;">0 <span style="font-size: 16px; opacity: 0.8;">ккал</span></p></div>
         <div class="action-grid">
-            <button class="action-btn" onclick="alert('Скоро здесь появится ИИ!')">
-                <h3>📸 Сфоткать еду</h3>
-                <p>Узнать калории</p>
-            </button>
-            <button class="action-btn" onclick="showScreen('workout-screen')">
-                <h3>💪 Тренировка</h3>
-                <p>Комплекс на сегодня</p>
-            </button>
-            <button class="action-btn" onclick="showScreen('timer-screen')">
-                <h3>⏱ Таймер</h3>
-                <p>Начать упражнение</p>
-            </button>
-            <button class="action-btn" onclick="showScreen('leaderboard-screen')">
-                <h3>🏆 Рейтинг</h3>
-                <p>Место в топе</p>
-            </button>
+            <button class="action-btn" onclick="showScreen('camera-screen')"><h3>📸 Сфоткать еду</h3><p>Узнать калории</p></button>
+            <button class="action-btn" onclick="showScreen('workout-screen')"><h3>💪 Тренировка</h3><p>Комплекс на сегодня</p></button>
+            <button class="action-btn" onclick="showScreen('timer-screen')"><h3>⏱ Таймер</h3><p>Начать упражнение</p></button>
+            <button class="action-btn" onclick="showScreen('leaderboard-screen')"><h3>🏆 Рейтинг</h3><p>Место в топе</p></button>
         </div>
         <button class="btn" style="background-color: transparent; color: var(--hint-color); margin-top: 0;" onclick="resetProfile()">Сбросить профиль</button>
     </div>
@@ -180,27 +133,11 @@
     <!-- ЭКРАН 3: Тренировка -->
     <div id="workout-screen" class="hidden">
         <button class="back-btn" onclick="showScreen('dashboard-screen')">← Назад</button>
-        <div class="header" style="text-align: left; margin-bottom: 20px;">
-            <h1 style="font-size: 24px;">Тренировка</h1>
-            <p>Комплекс для достижения цели</p>
-        </div>
-
-        <div class="exercise-item">
-            <div class="exercise-info"><h4>Приседания</h4><p>3 подхода • 15 повторений</p></div>
-            <div class="play-icon">▶️</div>
-        </div>
-        <div class="exercise-item">
-            <div class="exercise-info"><h4>Отжимания от пола</h4><p>3 подхода • 10 повторений</p></div>
-            <div class="play-icon">▶️</div>
-        </div>
-        <div class="exercise-item">
-            <div class="exercise-info"><h4>Планка</h4><p>3 подхода • 45 секунд</p></div>
-            <div class="play-icon">▶️</div>
-        </div>
-        <div class="exercise-item">
-            <div class="exercise-info"><h4>Выпады</h4><p>3 подхода • 12 повторений</p></div>
-            <div class="play-icon">▶️</div>
-        </div>
+        <div class="header" style="text-align: left; margin-bottom: 20px;"><h1 style="font-size: 24px;">Тренировка</h1><p>Комплекс для достижения цели</p></div>
+        <div class="exercise-item"><div class="exercise-info"><h4>Приседания</h4><p>3 подхода • 15 повторений</p></div><div class="play-icon">▶️</div></div>
+        <div class="exercise-item"><div class="exercise-info"><h4>Отжимания от пола</h4><p>3 подхода • 10 повторений</p></div><div class="play-icon">▶️</div></div>
+        <div class="exercise-item"><div class="exercise-info"><h4>Планка</h4><p>3 подхода • 45 секунд</p></div><div class="play-icon">▶️</div></div>
+        <div class="exercise-item"><div class="exercise-info"><h4>Выпады</h4><p>3 подхода • 12 повторений</p></div><div class="play-icon">▶️</div></div>
         <button class="btn" style="margin-top: 20px;" onclick="startWorkoutFromList()">Начать тренировку</button>
     </div>
 
@@ -210,23 +147,17 @@
         <div class="timer-container">
             <p style="color: var(--hint-color); margin-bottom: 5px;">Текущее упражнение:</p>
             <div class="current-exercise-title" id="exercise-title">Приседания</div>
-            
             <img id="exercise-gif" class="exercise-animation" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3c2Z2Z6eW14MnA0Znd2Znd6eW14MnA0Znd2Znd6eW14MnA0JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKuX1Q4d27gK1u/giphy.gif" alt="Техника упражнения">
-            
             <div class="timer-display" id="timer-display">00:45</div>
-            
             <div class="timer-buttons">
                 <button class="btn" onclick="toggleTimer()" id="timer-btn" style="margin-top: 0;">Старт</button>
                 <button class="btn" style="background-color: var(--secondary-bg); color: var(--text-color); margin-top: 0;" onclick="resetTimer()">Сброс</button>
             </div>
-            
             <button class="btn" style="background-color: #34c759; margin-top: 20px;" onclick="completeSet()">Подход выполнен ✅</button>
-            
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button class="btn" style="background-color: transparent; color: var(--button-color); margin-top: 0; font-size: 14px;" onclick="nextExercise()">Пропустить →</button>
                 <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 0; font-size: 14px;" onclick="finishWorkout()">Завершить 🏁</button>
             </div>
-            
             <div class="burned-calories" id="session-calories">Сожжено за эту сессию: 0 ккал</div>
         </div>
     </div>
@@ -237,12 +168,10 @@
             <div class="finish-icon">🏆</div>
             <h1 class="finish-title">Тренировка завершена!</h1>
             <p class="finish-subtitle" id="finish-stats">Отличная работа. Ты сжег 0 ккал.</p>
-            
             <div class="quote-box">
                 <p class="quote-text" id="finish-quote">"Цитата"</p>
                 <p class="quote-author" id="finish-author">— Автор</p>
             </div>
-            
             <button class="btn" onclick="showScreen('dashboard-screen')">Вернуться на главную</button>
         </div>
     </div>
@@ -250,13 +179,31 @@
     <!-- ЭКРАН 6: Рейтинг -->
     <div id="leaderboard-screen" class="hidden">
         <button class="back-btn" onclick="showScreen('dashboard-screen')">← Назад</button>
-        <div class="header" style="text-align: left; margin-bottom: 20px;">
-            <h1 style="font-size: 24px;">🏆 Мировой рейтинг</h1>
-            <p>Топ спортсменов по сожженным калориям</p>
-        </div>
-
-        <!-- Сюда JS будет вставлять строки рейтинга -->
+        <div class="header" style="text-align: left; margin-bottom: 20px;"><h1 style="font-size: 24px;">🏆 Мировой рейтинг</h1><p>Топ спортсменов по сожженным калориям</p></div>
         <div id="leaderboard-list"></div>
+    </div>
+
+    <!-- ЭКРАН 7: Камера (ИИ) -->
+    <div id="camera-screen" class="hidden">
+        <button class="back-btn" onclick="showScreen('dashboard-screen')">← Назад</button>
+        <div class="header" style="text-align: left; margin-bottom: 20px;">
+            <h1 style="font-size: 24px;">Анализ еды</h1>
+            <p>Сфоткай блюдо, и ИИ посчитает калории</p>
+        </div>
+        
+        <div class="camera-container">
+            <!-- Скрытый инпут для вызова камеры -->
+            <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;" onchange="handleImage(event)">
+            
+            <!-- Превью фото -->
+            <img id="photo-preview" class="photo-preview">
+            
+            <button class="btn" id="take-photo-btn" onclick="document.getElementById('camera-input').click()" style="font-size: 24px; padding: 30px;">
+                📷 Сделать фото
+            </button>
+            
+            <div class="loading-spinner" id="loading-spinner">🤖 ИИ анализирует фото...</div>
+        </div>
     </div>
 
     <script>
@@ -282,14 +229,9 @@
             { text: "Тяжело в учении — легко в бою.", author: "Александр Суворов" }
         ];
 
-        // Фейковые пользователи для рейтинга
         const fakeUsers = [
-            { name: "Александр", kcal: 4500 },
-            { name: "Дмитрий", kcal: 3800 },
-            { name: "Елена", kcal: 3200 },
-            { name: "Максим", kcal: 2900 },
-            { name: "Ольга", kcal: 2100 },
-            { name: "Иван", kcal: 1500 }
+            { name: "Александр", kcal: 4500 }, { name: "Дмитрий", kcal: 3800 }, { name: "Елена", kcal: 3200 },
+            { name: "Максим", kcal: 2900 }, { name: "Ольга", kcal: 2100 }, { name: "Иван", kcal: 1500 }
         ];
 
         let currentExerciseIndex = 0;
@@ -303,42 +245,30 @@
         function updateTimerDisplay() {
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
-            document.getElementById('timer-display').innerText = 
-                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('timer-display').innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
         function toggleTimer() {
             const btn = document.getElementById('timer-btn');
             if (isRunning) {
-                clearInterval(timerInterval);
-                btn.innerText = "Старт";
-                btn.style.backgroundColor = "var(--button-color)";
+                clearInterval(timerInterval); btn.innerText = "Старт"; btn.style.backgroundColor = "var(--button-color)";
             } else {
                 if (timeLeft <= 0) timeLeft = 45; 
                 timerInterval = setInterval(() => {
-                    timeLeft--;
-                    updateTimerDisplay();
+                    timeLeft--; updateTimerDisplay();
                     if (timeLeft <= 0) {
-                        clearInterval(timerInterval);
-                        isRunning = false;
-                        btn.innerText = "Старт";
-                        btn.style.backgroundColor = "var(--button-color)";
+                        clearInterval(timerInterval); isRunning = false; btn.innerText = "Старт"; btn.style.backgroundColor = "var(--button-color)";
                     }
                 }, 1000);
-                btn.innerText = "Пауза";
-                btn.style.backgroundColor = "#ff3b30";
+                btn.innerText = "Пауза"; btn.style.backgroundColor = "#ff3b30";
             }
             isRunning = !isRunning;
         }
 
         function resetTimer() {
-            clearInterval(timerInterval);
-            isRunning = false;
-            timeLeft = 45;
-            updateTimerDisplay();
+            clearInterval(timerInterval); isRunning = false; timeLeft = 45; updateTimerDisplay();
             const btn = document.getElementById('timer-btn');
-            btn.innerText = "Старт";
-            btn.style.backgroundColor = "var(--button-color)";
+            if(btn) { btn.innerText = "Старт"; btn.style.backgroundColor = "var(--button-color)"; }
         }
 
         function updateExerciseView() {
@@ -349,75 +279,78 @@
 
         function nextExercise() {
             currentExerciseIndex = (currentExerciseIndex + 1) % exercises.length;
-            updateExerciseView();
-            resetTimer();
+            updateExerciseView(); resetTimer();
         }
 
         function startWorkoutFromList() {
-            currentExerciseIndex = 0;
-            sessionCalories = 0;
+            currentExerciseIndex = 0; sessionCalories = 0;
             updateExerciseView();
             document.getElementById('session-calories').innerText = "Сожжено за эту сессию: 0 ккал";
-            resetTimer();
-            showScreen('timer-screen');
+            resetTimer(); showScreen('timer-screen');
         }
 
         function completeSet() {
             const kcalBurned = 15;
-            sessionCalories += kcalBurned;
-            totalBurnedCalories += kcalBurned;
-            
+            sessionCalories += kcalBurned; totalBurnedCalories += kcalBurned;
             tg.CloudStorage.setItem('totalBurned', totalBurnedCalories.toString());
-            
             document.getElementById('session-calories').innerText = `Сожжено за эту сессию: ${sessionCalories} ккал`;
             document.getElementById('burned-total').innerHTML = `${totalBurnedCalories} <span style="font-size: 16px; opacity: 0.8;">ккал</span>`;
-            
             nextExercise();
         }
 
         function finishWorkout() {
             document.getElementById('finish-stats').innerText = `Отличная работа. За эту тренировку ты сжег ${sessionCalories} ккал.`;
-            
             const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
             document.getElementById('finish-quote').innerText = `«${randomQuote.text}»`;
             document.getElementById('finish-author').innerText = `— ${randomQuote.author}`;
-            
             showScreen('finish-screen');
         }
 
         // --- ЛОГИКА РЕЙТИНГА ---
         function loadLeaderboard() {
-            // Берем всех фейковых + себя
             let allUsers = [...fakeUsers];
-            
-            // Добавляем себя
             allUsers.push({ name: tgUserName + " (Вы)", kcal: totalBurnedCalories, isMe: true });
-            
-            // Сортируем по убыванию калорий
             allUsers.sort((a, b) => b.kcal - a.kcal);
-            
-            // Отрисовываем список
             const listContainer = document.getElementById('leaderboard-list');
             listContainer.innerHTML = '';
-            
             allUsers.forEach((user, index) => {
                 const rank = index + 1;
                 let rankClass = '';
-                if (rank === 1) rankClass = 'top-1';
-                if (rank === 2) rankClass = 'top-2';
-                if (rank === 3) rankClass = 'top-3';
-                
+                if (rank === 1) rankClass = 'top-1'; if (rank === 2) rankClass = 'top-2'; if (rank === 3) rankClass = 'top-3';
                 const item = document.createElement('div');
                 item.className = `leaderboard-item ${user.isMe ? 'my-row' : ''}`;
-                item.innerHTML = `
-                    <div class="rank ${rankClass}">${rank}</div>
-                    <div class="user-info">
-                        <p class="user-name">${user.name}</p>
-                        <p class="user-calories">${user.kcal} ккал</p>
-                    </div>
-                `;
+                item.innerHTML = `<div class="rank ${rankClass}">${rank}</div><div class="user-info"><p class="user-name">${user.name}</p><p class="user-calories">${user.kcal} ккал</p></div>`;
                 listContainer.appendChild(item);
             });
+        }
+
+        // --- ЛОГИКА КАМЕРЫ (ИИ) ---
+        function handleImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Показываем превью
+                    const preview = document.getElementById('photo-preview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    
+                    // Скрываем кнопку и показываем загрузку
+                    document.getElementById('take-photo-btn').style.display = 'none';
+                    document.getElementById('loading-spinner').style.display = 'block';
+
+                    // Имитация запроса к ИИ (задержка 2.5 секунды)
+                    setTimeout(() => {
+                        document.getElementById('loading-spinner').style.display = 'none';
+                        tg.showAlert("🤖 ИИ распознал блюдо:\n\n🍗 Куриная грудка с рисом\n🔥 Калории: ~450 ккал\n\n(Это тестовый ответ. В будущем здесь будет реальный анализ)");
+                        
+                        // Возвращаем кнопку назад для нового фото
+                        document.getElementById('take-photo-btn').style.display = 'block';
+                        document.getElementById('take-photo-btn').innerText = "📷 Сделать новое фото";
+                    }, 2500);
+                };
+                reader.readAsDataURL(file);
+            }
         }
 
         // --- ЛОГИКА ПРИЛОЖЕНИЯ ---
@@ -432,21 +365,11 @@
             document.getElementById(screenId).classList.remove('hidden');
             
             if (screenId !== 'timer-screen') {
-                clearInterval(timerInterval);
-                isRunning = false;
-                timeLeft = 45;
-                updateTimerDisplay();
+                clearInterval(timerInterval); isRunning = false; timeLeft = 45; updateTimerDisplay();
                 const btn = document.getElementById('timer-btn');
-                if(btn) {
-                    btn.innerText = "Старт";
-                    btn.style.backgroundColor = "var(--button-color)";
-                }
+                if(btn) { btn.innerText = "Старт"; btn.style.backgroundColor = "var(--button-color)"; }
             }
-
-            // Обновляем рейтинг при переходе на него
-            if (screenId === 'leaderboard-screen') {
-                loadLeaderboard();
-            }
+            if (screenId === 'leaderboard-screen') { loadLeaderboard(); }
         }
 
         function calculateCalories(weight, height, age, gender, goal) {
@@ -466,7 +389,6 @@
                     const calories = calculateCalories(profile.weight, profile.height, profile.age, profile.gender, profile.goal);
                     document.getElementById('calories-norm').innerHTML = `${calories} <span style="font-size: 16px; color: var(--hint-color);">ккал</span>`;
                     document.getElementById('goal-text').innerText = profile.goal === 'lose' ? 'Твоя цель: Похудеть' : 'Твоя цель: Набрать массу';
-                    
                     tg.CloudStorage.getItem('totalBurned', (err, burnedResult) => {
                         if (burnedResult) {
                             totalBurnedCalories = parseInt(burnedResult);
@@ -486,25 +408,15 @@
             const weight = document.getElementById('weight').value;
             const height = document.getElementById('height').value;
             const goal = document.getElementById('goal').value;
-
-            if (!age || !weight || !height) {
-                tg.showAlert("Пожалуйста, заполни все поля!");
-                return;
-            }
-
+            if (!age || !weight || !height) { tg.showAlert("Пожалуйста, заполни все поля!"); return; }
             const userProfile = { age, gender, weight, height, goal };
             tg.CloudStorage.setItem('profile', JSON.stringify(userProfile), (err, success) => {
-                if (success) loadProfile();
-                else tg.showAlert("Ошибка сохранения");
+                if (success) loadProfile(); else tg.showAlert("Ошибка сохранения");
             });
         }
 
         function resetProfile() {
-            tg.CloudStorage.removeItem('profile', () => {
-                tg.CloudStorage.removeItem('totalBurned', () => {
-                    location.reload();
-                });
-            });
+            tg.CloudStorage.removeItem('profile', () => { tg.CloudStorage.removeItem('totalBurned', () => { location.reload(); }); });
         }
 
         loadProfile();
