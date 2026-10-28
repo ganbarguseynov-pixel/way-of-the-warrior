@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sport App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключаем Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -111,7 +110,6 @@
     <audio id="audio-win"></audio>
     <audio id="audio-lose"></audio>
 
-    <!-- ЭКРАН ВХОДА -->
     <div id="auth-screen" class="screen active">
         <div class="auth-container">
             <div class="auth-title">Добро пожаловать!</div>
@@ -136,7 +134,6 @@
         </div>
     </div>
 
-    <!-- ЭКРАН ВХОДА ПО EMAIL -->
     <div id="email-screen" class="screen">
         <div class="inner-screen">
             <button class="back-btn" onclick="closeScreen('email-screen')">← Назад</button>
@@ -360,11 +357,9 @@
         };
 
         let currentXP = 0, totalBurnedCalories = 0, userGender = 'male', tgUserName = "друг", currentLevelIndexGlobal = 0;
-        let currentUser = null;
 
         // --- АВТОРИЗАЦИЯ ---
         
-        // Вход через Telegram
         function loginWithTelegram() {
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 tgUserName = tg.initDataUnsafe.user.first_name;
@@ -374,68 +369,40 @@
             }
         }
 
-        // Вход через Google
         async function loginWithGoogle() {
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
-                options: {
-                    redirectTo: window.location.href
-                }
+                options: { redirectTo: window.location.href }
             });
             if (error) tg.showAlert("Ошибка входа через Google: " + error.message);
         }
 
-        // Показ формы Email
-        function showEmailForm() {
-            openScreen('email-screen');
-        }
+        function showEmailForm() { openScreen('email-screen'); }
 
-        // Вход по Email
         async function signInWithEmail() {
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
-            
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            
-            if (error) {
-                tg.showAlert("Ошибка входа: " + error.message);
-            } else {
+            if (error) { tg.showAlert("Ошибка входа: " + error.message); } 
+            else {
                 tg.showAlert("Успешный вход!");
-                currentUser = data.user;
                 tgUserName = email.split('@')[0];
                 checkProfile();
             }
         }
 
-        // Регистрация по Email
         async function signUpWithEmail() {
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
-            
             const { data, error } = await supabase.auth.signUp({ email, password });
-            
-            if (error) {
-                tg.showAlert("Ошибка регистрации: " + error.message);
-            } else {
-                tg.showAlert("Регистрация успешна! Проверьте почту для подтверждения.");
-            }
+            if (error) { tg.showAlert("Ошибка регистрации: " + error.message); } 
+            else { tg.showAlert("Регистрация успешна! Проверьте почту."); }
         }
 
-        // Выход
         async function logout() {
             await supabase.auth.signOut();
             closeScreen('dashboard-screen');
             openScreen('auth-screen');
-        }
-
-        // Проверка сессии при загрузке (для Google и Email)
-        async function checkSession() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                currentUser = session.user;
-                tgUserName = session.user.email.split('@')[0];
-                checkProfile();
-            }
         }
 
         // --- ЛОГИКА ПРИЛОЖЕНИЯ ---
@@ -639,8 +606,8 @@
             }
         }, { once: true });
 
-        // Запускаем проверку сессии при старте
-        checkSession();
+        // При запуске проверяем, если мы в Telegram, показываем кнопку, иначе ждем нажатия
+        // Ничего не вызываем автоматически, чтобы не было ошибок
     </script>
 </body>
 </html>
