@@ -4,19 +4,11 @@ from PIL import Image
 import io
 import os
 import requests
-from google import genai
-from google.genai import types
 
 app = Flask(__name__)
 CORS(app)
 
-HF_TOKEN = os.environ.get("HF_TOKEN")
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-
-# Инициализация клиента Gemini
-if GEMINI_API_KEY:
-    client = genai.Client(api_key=GEMINI_API_KEY)
 
 @app.route('/search', methods=['GET'])
 def search_food():
@@ -29,22 +21,6 @@ def search_food():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/check_gemini', methods=['GET'])
-def check_gemini():
-    if not GEMINI_API_KEY:
-        return "ОШИБКА: Ключ Gemini не найден", 500
-    try:
-        response = client.models.generate_content(
-            model='gemini-3.8-flash',
-            contents="Напиши ровно одно слово: РАБОТАЕТ"
-        )
-        return f"УСПЕХ! Gemini ответил: {response.text}"
-    except Exception as e:
-        # Красиво обрабатываем ошибку лимита
-        if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
-            return "ВНИМАНИЕ: Лимит бесплатных запросов Gemini на сегодня исчерпан. Попробуйте завтра!", 200
-        return f"ОШИБКА GEMINI: {str(e)}", 500
-
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
     if 'image' not in request.files:
@@ -52,15 +28,18 @@ def analyze_photo():
     
     file = request.files['image']
     try:
-        image_data = file.read()
-        image = Image.open(io.BytesIO(image_data)).convert("RGB")
+        image = Image.open(io.BytesIO(file.read())).convert("RGB")
     except:
         return jsonify({"error": "Invalid image"}), 400
+    
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='JPEG')
+    img_byte_arr = img_byte_arr.getvalue()
 
-    # 1. LogMeal
+    # Используем ТОЛЬКО LogMeal
     if LOGMEAL_TOKEN:
         try:
-            files = {'image': ('food.jpg', image_data, 'image/jpeg')}
+            files = {'image': ('food.jpg', img_byte_arr, 'image/jpeg')}
             headers = {'Authorization': f'Bearer {LOGMEAL_TOKEN}'}
             lm_response = requests.post('https://api.logmeal.es/v2/image/recognition/complete', headers=headers, files=files, timeout=30)
             if lm_response.status_code == 200:
@@ -69,31 +48,6 @@ def analyze_photo():
                     return jsonify({"food": lm_data['recognition_results'][0]['name'], "calories": 250, "protein": 15, "fat": 10, "carbs": 30})
         except Exception as e:
             print(f"LogMeal error: {e}")
-
-    # 2. Gemini
-    if GEMINI_API_KEY:
-        try:
-            prompt = "What food is in this image? Answer in one short phrase in Russian. Also estimate calories, protein, fat, and carbs. Format: Food name | Calories | Protein | Fat | Carbs"
-            response = client.models.generate_content(
-                model='gemini-3.8-flash',
-                contents=[
-                    types.Part.from_bytes(data=image_data, mime_type='image/jpeg'),
-                    prompt
-                ]
-            )
-            text = response.text.strip()
-            
-            parts = [p.strip() for p in text.split('|')]
-            if len(parts) >= 5:
-                return jsonify({
-                    "food": parts[0],
-                    "calories": int(''.join(filter(str.isdigit, parts[1]))) if any(c.isdigit() for c in parts[1]) else 250,
-                    "protein": int(''.join(filter(str.isdigit, parts[2]))) if any(c.isdigit() for c in parts[2]) else 15,
-                    "fat": int(''.join(filter(str.isdigit, parts[3]))) if any(c.isdigit() for c in parts[3]) else 10,
-                    "carbs": int(''.join(filter(str.isdigit, parts[4]))) if any(c.isdigit() for c in parts[4]) else 30
-                })
-        except Exception as e:
-            print(f"Gemini error: {e}")
 
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
