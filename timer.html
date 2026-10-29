@@ -12,11 +12,14 @@
         <button class="back-btn" onclick="finishAndGoBack()">← Назад в приложение</button>
         <h1 style="text-align: center;">Таймер</h1>
         <p style="text-align: center; color: var(--hint-color);">Отдых между подходами</p>
+        
         <div class="timer-display" id="timer-display">00:45</div>
+        
         <div style="display: flex; gap: 15px;">
             <button class="btn" onclick="toggleTimer()" id="timer-btn">Старт</button>
             <button class="btn" style="background-color: #2c2c2e; color: white;" onclick="resetTimer()">Сброс</button>
         </div>
+        
         <button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="completeSet()">Подход выполнен (+15 XP)</button>
         <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: auto;" onclick="finishAndGoBack()">Завершить 🏁</button>
     </div>
@@ -25,14 +28,17 @@
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
         
+        // Создаем аудио-объект для музыки
         let audioWorkout = new Audio();
         let isRunning = false;
         let timeLeft = 45;
         let timerInterval;
 
         function playMusic() {
-            audioWorkout.src = "03. TECHNO-SYNDROME 12' MI..."; // Первый трек
-            audioWorkout.play().catch(e => console.log("Ошибка музыки"));
+            // Используем один из треков, которые есть в вашей папке
+            audioWorkout.src = "03. TECHNO-SYNDROME 12' MI..."; 
+            audioWorkout.load();
+            audioWorkout.play().catch(e => console.log("Ошибка музыки:", e));
         }
 
         function stopMusic() {
@@ -52,7 +58,7 @@
                 btn.innerText = "Старт";
                 isRunning = false;
             } else {
-                playMusic();
+                playMusic(); // Включаем музыку по клику
                 btn.innerText = "Пауза";
                 isRunning = true;
                 timerInterval = setInterval(() => {
@@ -79,10 +85,9 @@
         }
 
         function completeSet() {
-            // Сохраняем 15 XP в память, чтобы они добавились на главном экране
             let pending = localStorage.getItem('pendingXP') || 0;
             localStorage.setItem('pendingXP', parseInt(pending) + 15);
-            tg.showAlert("+15 XP добавлено! (Увидите на главном экране)");
+            tg.showAlert("+15 XP добавлено!");
         }
 
         function finishAndGoBack() {
