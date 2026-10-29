@@ -18,12 +18,14 @@
             --accent-color: #ffcc00;
         }
         .female-theme { --accent-color: #ff3b30; }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: #000; color: var(--text-color);
             margin: 0; padding: 0; display: flex; flex-direction: column;
             height: 100vh; width: 100vw; box-sizing: border-box; overflow: hidden;
         }
+        
         .video-background { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -379,6 +381,7 @@
             await sendPhotoToServer(file);
         }
 
+        // --- ОТПРАВКА (ИСПРАВЛЕННАЯ) ---
         async function sendPhotoToServer(file) {
             document.getElementById('loading-spinner').style.display = 'block';
             document.getElementById('food-result').style.display = 'none';
