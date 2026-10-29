@@ -4,26 +4,41 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, { auth: {
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
-window.addEventListener('load', () => {
+// --- ЗАГРУЗКА ПРИ СТАРТЕ ---
+window.addEventListener('load', async () => {
     const cachedProfile = localStorage.getItem('cachedProfile');
     if (cachedProfile) {
-        renderProfile(JSON.parse(cachedProfile));
+        renderProfile(JSON.parse(cachedProfile), localStorage.getItem('loginType'));
+    } else {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+            const emailProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
+            localStorage.setItem('cachedProfile', JSON.stringify(emailProfile));
+            localStorage.setItem('loginType', 'email');
+            renderProfile(emailProfile, 'email');
+        }
     }
 });
 
+// --- ВХОД ЧЕРЕЗ TELEGRAM ---
 function loginWithTelegram() {
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         localStorage.setItem('loginType', 'telegram');
-        if (localStorage.getItem('cachedProfile')) {
-            renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
-        } else {
-            openScreen('profile-settings-screen');
+        
+        // Создаем профиль по умолчанию, если его нет
+        if (!localStorage.getItem('cachedProfile')) {
+            const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
+            localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
         }
+        
+        // Всегда показываем главный экран
+        renderProfile(JSON.parse(localStorage.getItem('cachedProfile')), 'telegram');
     } else {
         tg.showAlert("Откройте через Telegram!");
     }
 }
 
+// --- ВХОД ЧЕРЕЗ EMAIL ---
 function showEmailForm() { openScreen('email-screen'); }
 
 async function handleEmailAuth() {
@@ -40,18 +55,23 @@ async function handleEmailAuth() {
         
         if (error) {
             const { error: signUpError } = await supabaseClient.auth.signUp({ email, password });
-            if (signUpError) { tg.showAlert("Ошибка: " + signUpError.message); } 
-            else { tg.showAlert("Регистрация успешна!"); }
+            if (signUpError) { 
+                tg.showAlert("Ошибка: " + signUpError.message); 
+            } else { 
+                tg.showAlert("Регистрация успешна! Теперь войдите."); 
+            }
         } else {
             tg.showAlert("Успешный вход!");
             localStorage.setItem('loginType', 'email');
+            
+            // Создаем профиль, если его нет
             if (!localStorage.getItem('cachedProfile')) {
                 const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
                 localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
-                renderProfile(defaultProfile);
-            } else {
-                renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
             }
+            
+            // Переключаем на главный экран
+            renderProfile(JSON.parse(localStorage.getItem('cachedProfile')), 'email');
         }
     } catch (e) {
         tg.showAlert("Ошибка сети.");
@@ -61,6 +81,7 @@ async function handleEmailAuth() {
     }
 }
 
+// --- НАСТРОЙКИ И ПРИВЯЗКА ---
 function openProfileSettings() { 
     const loginType = localStorage.getItem('loginType') || 'telegram';
     
@@ -79,6 +100,18 @@ function openProfileSettings() {
             document.getElementById('current-tg-id').innerText = tg.initDataUnsafe.user.id;
         }
     }
+    
+    // Заполняем поля текущими данными
+    const cachedProfile = localStorage.getItem('cachedProfile');
+    if (cachedProfile) {
+        const p = JSON.parse(cachedProfile);
+        document.getElementById('age').value = p.age || '';
+        document.getElementById('weight').value = p.weight || '';
+        document.getElementById('height').value = p.height || '';
+        document.getElementById('gender').value = p.gender || 'male';
+        document.getElementById('goal').value = p.goal || 'lose';
+    }
+    
     openScreen('profile-settings-screen'); 
 }
 
@@ -93,7 +126,7 @@ async function linkEmailToTelegram() {
         if (error) {
             tg.showAlert("Ошибка: " + error.message);
         } else {
-            tg.showAlert("Email успешно привязан!");
+            tg.showAlert("Email успешно привязан! Теперь вы можете заходить с любого устройства.");
         }
     } catch (e) {
         tg.showAlert("Ошибка сети.");
@@ -104,6 +137,7 @@ function linkTelegramToEmail() {
     tg.showAlert("Ваш Telegram ID сохранен в профиле.");
 }
 
+// --- ОСТАЛЬНАЯ ЛОГИКА ---
 const levelsData = {
     male: [{ xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" }, { xp: 100, title: "Берсерк", video: "VID_20261028_173215_440.mp4" }],
     female: [{ xp: 0, title: "Новичок", video: "VID_20261028_175618_746.mp4" }, { xp: 100, title: "Фурия", video: "VID_20261028_175631_701.mp4" }]
@@ -125,7 +159,7 @@ function closeScreen(screenId) {
     }
 }
 
-function renderProfile(profile) {
+function renderProfile(profile, loginType) {
     userGender = profile.gender || 'male';
     document.body.className = userGender === 'female' ? 'female-theme' : 'male-theme';
     
@@ -138,6 +172,8 @@ function renderProfile(profile) {
     if (document.getElementById('burned-total')) document.getElementById('burned-total').innerText = totalBurnedCalories + " ккал";
     
     updateCharacterUI();
+    
+    // Принудительно переключаем на главный экран
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
     document.getElementById('dashboard-screen').classList.add('active');
 }
@@ -174,7 +210,8 @@ function saveProfile() {
     
     const profile = { age: age, gender: gender, weight: weight, height: height, goal: goal };
     localStorage.setItem('cachedProfile', JSON.stringify(profile));
-    renderProfile(profile);
+    
+    renderProfile(profile, localStorage.getItem('loginType'));
 }
 
 function logout() {
