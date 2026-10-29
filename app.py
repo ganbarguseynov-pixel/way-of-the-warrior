@@ -1,185 +1,71 @@
-const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
-const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-const tg = window.Telegram.WebApp;
-tg.ready(); tg.expand();
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from PIL import Image
+import io
+import os
+import requests
+from google import genai
+from google.genai import types
 
-// Проверка: не вернулись ли мы с камеры/таймера с новым опытом
-window.addEventListener('load', () => {
-    const pendingXP = localStorage.getItem('pendingXP');
-    if (pendingXP) {
-        localStorage.removeItem('pendingXP');
-        setTimeout(() => {
-            if (typeof addXP === 'function') {
-                addXP(parseInt(pendingXP));
-                tg.showAlert("Спасибо! +20 XP добавлено в дневник.");
-            }
-        }, 1000);
-    }
-});
+app = Flask(__name__)
+CORS(app)
 
-// --- МУЗЫКА ---
-const bgTracks = [
-    "01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3", 
-    "05 - The Vengeance.mp3", "06 - The Forest of Death.mp3", "07 - The Ninja in the Night.mp3", 
-    "10 - The Final Boss.mp3", "11 - The Master of the Skills.mp3", "13 - Ronin.mp3"
-];
-const workoutTracks = [
-    "03. TECHNO-SYNDROME 12' MI...", "09 - The Fat Boss.mp3", "24. 2min Loop Battle 03.mp3"
-];
+LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-let isSoundOn = true, isWorkoutMode = false, musicStarted = false;
-let lastBgIndex = -1, lastWorkoutIndex = -1;
+if GEMINI_API_KEY:
+    client = genai.Client(api_key=GEMINI_API_KEY)
 
-const audioBg = document.getElementById('audio-bg');
-const audioWorkout = document.getElementById('audio-workout');
-const audioWin = document.getElementById('audio-win');
-const audioLose = document.getElementById('audio-lose');
+@app.route('/analyze', methods=['POST'])
+def analyze_photo():
+    if 'image' not in request.files:
+        return jsonify({"error": "No image provided"}), 400
+    
+    file = request.files['image']
+    try:
+        image_data = file.read()
+        image = Image.open(io.BytesIO(image_data)).convert("RGB")
+    except:
+        return jsonify({"error": "Invalid image"}), 400
+    
+    # 1. ПРОБУЕМ LOGMEAL
+    if LOGMEAL_TOKEN:
+        try:
+            img_byte_arr = io.BytesIO()
+            image.save(img_byte_arr, format='JPEG')
+            img_byte_arr = img_byte_arr.getvalue()
+            files = {'image': ('food.jpg', img_byte_arr, 'image/jpeg')}
+            headers = {'Authorization': f'Bearer {LOGMEAL_TOKEN}'}
+            lm_response = requests.post('https://api.logmeal.es/v2/image/recognition/type', headers=headers, files=files, timeout=10)
+            if lm_response.status_code == 200:
+                lm_data = lm_response.json()
+                if 'foodType' in lm_data and 'name' in lm_data['foodType']:
+                    return jsonify({"food": lm_data['foodType']['name'], "calories": 250, "protein": 15, "fat": 10, "carbs": 30})
+        except Exception as e:
+            print(f"LogMeal error: {e}")
 
-function getRandomTrack(tracksArray, lastIndex) {
-    let newIndex = Math.floor(Math.random() * tracksArray.length);
-    if (newIndex === lastIndex && tracksArray.length > 1) newIndex = (newIndex + 1) % tracksArray.length;
-    return newIndex;
-}
+    # 2. ПРОБУЕМ GEMINI
+    if GEMINI_API_KEY:
+        try:
+            prompt = "What food is in this image? Answer in one short phrase in Russian. Also estimate calories, protein, fat, and carbs. Format: Food name | Calories | Protein | Fat | Carbs"
+            response = client.models.generate_content(
+                model='gemini-2.0-flash',
+                contents=[types.Part.from_bytes(data=image_data, mime_type='image/jpeg'), prompt]
+            )
+            parts = [p.strip() for p in response.text.strip().split('|')]
+            if len(parts) >= 5:
+                return jsonify({
+                    "food": parts[0],
+                    "calories": int(''.join(filter(str.isdigit, parts[1]))) if any(c.isdigit() for c in parts[1]) else 250,
+                    "protein": int(''.join(filter(str.isdigit, parts[2]))) if any(c.isdigit() for c in parts[2]) else 15,
+                    "fat": int(''.join(filter(str.isdigit, parts[3]))) if any(c.isdigit() for c in parts[3]) else 10,
+                    "carbs": int(''.join(filter(str.isdigit, parts[4]))) if any(c.isdigit() for c in parts[4]) else 30
+                })
+        except Exception as e:
+            print(f"Gemini error: {e}")
 
-function playNextBg() {
-    if (!isSoundOn || isWorkoutMode) return;
-    lastBgIndex = getRandomTrack(bgTracks, lastBgIndex);
-    audioBg.src = bgTracks[lastBgIndex];
-    audioBg.load(); 
-    audioBg.play().catch(e => console.log("Autoplay blocked"));
-}
-audioBg.onended = playNextBg;
+    return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
-function toggleSound() {
-    isSoundOn = !isSoundOn;
-    const btn = document.getElementById('sound-btn');
-    if (isSoundOn) {
-        btn.innerText = "🔊";
-        if (isWorkoutMode) audioWorkout.play(); else playNextBg();
-    } else {
-        btn.innerText = "🔇";
-        audioBg.pause();
-        audioWorkout.pause();
-    }
-}
-
-// --- ПРОФИЛЬ И XP ---
-const levelsData = {
-    male: [
-        { xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" },
-        { xp: 100, title: "Берсерк", video: "VID_20261028_173215_440.mp4" },
-        { xp: 250, title: "Легионер", video: "VID_20261028_162626_544.mp4" },
-        { xp: 500, title: "Титан", video: "VID_20261028_173219_295.mp4" }
-    ],
-    female: [
-        { xp: 0, title: "Новичок", video: "VID_20261028_175618_746.mp4" },
-        { xp: 100, title: "Фурия", video: "VID_20261028_175631_701.mp4" },
-        { xp: 250, title: "Амазонка", video: "VID_20261028_175641_349.mp4" },
-        { xp: 500, title: "Гарпия", video: "VID_20261028_175649_029.mp4" }
-    ]
-};
-
-let currentXP = 0, totalBurnedCalories = 0, userGender = 'male', tgUserName = "друг", currentLevelIndexGlobal = 0;
-
-function loginWithTelegram() {
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        tgUserName = tg.initDataUnsafe.user.first_name;
-        checkProfile();
-    } else {
-        tg.showAlert("Откройте через Telegram!");
-    }
-}
-
-function checkProfile() {
-    tg.CloudStorage.getItem('profile', (err, result) => {
-        if (result) {
-            const profile = JSON.parse(result);
-            userGender = profile.gender;
-            document.body.className = userGender === 'female' ? 'female-theme' : 'male-theme';
-            
-            let bmr = userGender === 'male' ? (10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) : (10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161);
-            let cals = profile.goal === 'lose' ? (bmr * 1.375 - 500) : (bmr * 1.375 + 500);
-            document.getElementById('calories-norm').innerText = `${Math.round(cals)} ккал`;
-
-            tg.CloudStorage.getItem('totalBurned', (err, burned) => {
-                if (burned) { totalBurnedCalories = parseInt(burned); document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`; }
-                tg.CloudStorage.getItem('xp', (err, xp) => {
-                    if (xp) currentXP = parseInt(xp);
-                    updateCharacterUI();
-                    document.getElementById('auth-screen').classList.remove('active');
-                    document.getElementById('onboarding-screen').classList.remove('active');
-                    document.getElementById('dashboard-screen').classList.add('active');
-                    playNextBg();
-                });
-            });
-        } else {
-            document.getElementById('auth-screen').classList.remove('active');
-            document.getElementById('onboarding-screen').classList.add('active');
-        }
-    });
-}
-
-function changeTheme() {
-    document.body.className = document.getElementById('gender').value === 'female' ? 'female-theme' : 'male-theme';
-}
-
-function updateCharacterUI() {
-    const levels = levelsData[userGender];
-    let newLevelIndex = 0;
-    for (let i = 0; i < levels.length; i++) { if (currentXP >= levels[i].xp) newLevelIndex = i; }
-    currentLevelIndexGlobal = newLevelIndex;
-
-    const currentLevel = levels[newLevelIndex];
-    const nextLevel = levels[newLevelIndex + 1] || levels[levels.length - 1];
-    const videoElement = document.getElementById('character-video');
-
-    if (videoElement && videoElement.src.indexOf(currentLevel.video) === -1) {
-        videoElement.src = currentLevel.video;
-        videoElement.load();
-        videoElement.play().catch(e => console.log("Autoplay blocked"));
-    }
-
-    if(document.getElementById('char-level')) document.getElementById('char-level').innerText = `Уровень ${newLevelIndex + 1}`;
-    if(document.getElementById('char-title')) document.getElementById('char-title').innerText = currentLevel.title;
-
-    let progressPercent = 100;
-    if (nextLevel.xp > currentLevel.xp) {
-        progressPercent = ((currentXP - currentLevel.xp) / (nextLevel.xp - currentLevel.xp)) * 100;
-        if(document.getElementById('xp-text')) document.getElementById('xp-text').innerText = `${currentXP} / ${nextLevel.xp} XP`;
-    } else {
-        if(document.getElementById('xp-text')) document.getElementById('xp-text').innerText = `${currentXP} XP (MAX)`;
-    }
-    if(document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = `${progressPercent}%`;
-}
-
-function addXP(amount) {
-    currentXP += amount;
-    tg.CloudStorage.setItem('xp', currentXP.toString());
-    updateCharacterUI();
-}
-
-function logout() {
-    tg.CloudStorage.removeItem('profile');
-    document.getElementById('dashboard-screen').classList.remove('active');
-    document.getElementById('auth-screen').classList.add('active');
-}
-
-function saveProfile() {
-    const age = document.getElementById('age').value;
-    const gender = document.getElementById('gender').value;
-    const weight = document.getElementById('weight').value;
-    const height = document.getElementById('height').value;
-    const goal = document.getElementById('goal').value;
-    if (!age || !weight || !height) { tg.showAlert("Заполни все поля!"); return; }
-    tg.CloudStorage.setItem('profile', JSON.stringify({ age, gender, weight, height, goal }), (err, success) => {
-        if (success) checkProfile();
-    });
-}
-
-document.body.addEventListener('click', function() {
-    if (!musicStarted) {
-        musicStarted = true;
-        if (isSoundOn) playNextBg();
-    }
-}, { once: true });
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
