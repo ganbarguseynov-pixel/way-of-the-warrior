@@ -9,7 +9,7 @@
     <title>Sport App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <!-- Убрал библиотеку QRCode, так как она больше не нужна -->
     <style>
         :root {
             --bg-color: #000000;
@@ -210,13 +210,7 @@
                 <div class="form-group"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)"></div>
                 <button class="btn" onclick="linkEmail()">Привязать Email</button>
             </div>
-            <div style="background: #1c1c1e; padding: 20px; border-radius: 16px;">
-                <h3 style="margin-top: 0;">Безопасность</h3>
-                <p style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;">Двухэтапная аутентификация (2FA) защитит ваш аккаунт.</p>
-                <button class="btn" style="background-color: #34c759; color: white;" onclick="enable2FA()" id="2fa-btn">Включить 2FA</button>
-                <div id="qr-container" style="margin-top: 20px; display: none; text-align: center;"><canvas id="qr-canvas"></canvas><p style="font-size: 12px; color: #8e8e93; margin-top: 10px;">Отсканируйте в Google Authenticator</p></div>
-                <div id="verify-container" style="margin-top: 15px; display: none;"><input type="text" id="2fa-code" placeholder="Введите 6-значный код" style="text-align: center;"><button class="btn" onclick="verify2FA()">Подтвердить</button></div>
-            </div>
+            <!-- Блок Безопасности (2FA) полностью удален -->
         </div>
     </div>
 
@@ -548,26 +542,7 @@
             }
         }
 
-        let pendingFactorId = null;
-        async function enable2FA() {
-            const { data, error } = await supabaseClient.auth.mfa.enroll({ factorType: 'totp' });
-            if (error) { tg.showAlert("Ошибка 2FA: " + error.message); return; }
-            pendingFactorId = data.id;
-            document.getElementById('qr-container').style.display = 'block';
-            document.getElementById('verify-container').style.display = 'block';
-            document.getElementById('2fa-btn').style.display = 'none';
-            QRCode.toCanvas(document.getElementById('qr-canvas'), data.totp.uri, function (error) { if (error) console.error(error); });
-        }
-
-        async function verify2FA() {
-            const code = document.getElementById('2fa-code').value;
-            if (!code) return;
-            const { data: challenge, error: challengeError } = await supabaseClient.auth.mfa.challenge({ factorId: pendingFactorId });
-            if (challengeError) { tg.showAlert("Ошибка: " + challengeError.message); return; }
-            const { data, error } = await supabaseClient.auth.mfa.verify({ factorId: pendingFactorId, challengeId: challenge.id, code: code });
-            if (error) { tg.showAlert("Неверный код. Попробуйте еще раз."); } 
-            else { tg.showAlert("2FA успешно включена!"); closeScreen('profile-settings-screen'); }
-        }
+        // Логика 2FA полностью удалена
 
         function checkProfile() {
             tg.CloudStorage.getItem('profile', (err, result) => {
