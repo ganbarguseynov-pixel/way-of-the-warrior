@@ -4,23 +4,12 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
-// --- ЛОГИКА ВОЗВРАТА И XP ---
+// --- ЛОГИКА ЗАГРУЗКИ И ВОЗВРАТА ---
 window.addEventListener('load', () => {
-    const returning = localStorage.getItem('returningFromTimer');
-    const pendingXP = localStorage.getItem('pendingXP');
-    
-    // Если мы вернулись с таймера или камеры, даем Telegram время загрузить профиль
-    if (returning || pendingXP) {
-        localStorage.removeItem('returningFromTimer');
-        setTimeout(() => {
-            checkProfile(); 
-            if (pendingXP) {
-                localStorage.removeItem('pendingXP');
-                addXP(parseInt(pendingXP));
-                tg.showAlert("Спасибо! XP добавлено в дневник.");
-            }
-        }, 500); 
-    }
+    // Ждем 1.5 секунды, чтобы Telegram успел загрузить данные профиля
+    setTimeout(() => {
+        checkProfile(); 
+    }, 1500); 
 });
 
 // --- МУЗЫКА ---
@@ -97,6 +86,10 @@ function loginWithTelegram() {
 }
 
 function checkProfile() {
+    // Скрываем экран загрузки
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) loadingScreen.classList.remove('active');
+
     tg.CloudStorage.getItem('profile', (err, result) => {
         if (result) {
             const profile = JSON.parse(result);
@@ -119,8 +112,8 @@ function checkProfile() {
                 });
             });
         } else {
-            document.getElementById('auth-screen').classList.remove('active');
-            document.getElementById('onboarding-screen').classList.add('active');
+            document.getElementById('auth-screen').classList.add('active');
+            document.getElementById('onboarding-screen').classList.remove('active');
         }
     });
 }
