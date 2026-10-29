@@ -364,6 +364,7 @@
             document.getElementById('photo-buttons').style.display = 'flex';
             document.getElementById('remove-photo-btn').style.display = 'none';
             document.getElementById('gallery-input').value = "";
+            document.getElementById('loading-spinner').style.display = 'none';
         }
 
         async function handleImage(event) {
@@ -384,6 +385,7 @@
 
         async function sendPhotoToServer(file) {
             document.getElementById('loading-spinner').style.display = 'block';
+            document.getElementById('food-result').style.display = 'none';
 
             const formData = new FormData();
             formData.append('image', file);
@@ -414,7 +416,7 @@
 
             } catch (error) {
                 document.getElementById('loading-spinner').style.display = 'none';
-                tg.showAlert("Ошибка: не удалось связаться с сервером.");
+                tg.showAlert("Ошибка: не удалось связаться с сервером. Подождите 50 секунд (сервер просыпается) и попробуйте снова.");
                 resetCameraScreen();
             }
         }
