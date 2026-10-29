@@ -6,11 +6,8 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <title>Sport App</title>
     
-    <!-- База -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
-    <!-- Стили -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="male-theme">
@@ -20,8 +17,16 @@
     <audio id="audio-win" preload="auto"></audio>
     <audio id="audio-lose" preload="auto"></audio>
 
-    <!-- ЭКРАН ВХОДА (ЦЕНТРИРОВАННЫЙ) -->
-    <div id="auth-screen" class="screen active auth-screen">
+    <!-- ЭКРАН ЗАГРУЗКИ (Показывается первым) -->
+    <div id="loading-screen" class="screen active" style="justify-content: center; align-items: center; background-color: #000;">
+        <div style="text-align: center;">
+            <h1 style="color: var(--accent-color); font-size: 30px;">Загрузка...</h1>
+            <p style="color: #8e8e93;">Проверяем ваш профиль</p>
+        </div>
+    </div>
+
+    <!-- ЭКРАН ВХОДА -->
+    <div id="auth-screen" class="screen auth-screen">
         <div class="auth-container">
             <div class="auth-content">
                 <div class="auth-title">Sport App</div>
@@ -76,7 +81,6 @@
         </div>
     </div>
 
-    <!-- ПОДКЛЮЧАЕМ СКРИПТЫ -->
     <script src="quotes.js"></script>
     <script src="app.js"></script>
 </body>
