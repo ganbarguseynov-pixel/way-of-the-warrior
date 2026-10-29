@@ -5,36 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Рейтинг</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="inner-screen">
         <button class="back-btn" onclick="window.location.href='index.html'">← Назад в приложение</button>
         <h1 style="text-align: center;">🏆 Мировой рейтинг</h1>
-        <p style="text-align: center; color: var(--hint-color); margin-bottom: 20px;">Топ атлетов</p>
+        <p style="text-align: center; color: var(--hint-color); margin-bottom: 20px;">Топ атлетов (онлайн)</p>
         
-        <div id="leaderboard-list"></div>
+        <div id="leaderboard-list">
+            <p style="text-align: center;">Загрузка...</p>
+        </div>
     </div>
 
     <script>
+        const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
+        const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
-        let tgUserName = "Вы";
+        let currentUserId = null;
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            tgUserName = tg.initDataUnsafe.user.first_name;
+            currentUserId = tg.initDataUnsafe.user.id;
         }
 
-        let currentXP = parseInt(localStorage.getItem('cachedXP') || 0);
+        async function loadLeaderboard() {
+            const listDiv = document.getElementById('leaderboard-list');
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('telegram_id, first_name, xp')
+                    .order('xp', { ascending: false })
+                    .limit(50);
 
-        function renderLeaderboard() {
+                if (error) {
+                    console.log("Ошибка базы, показываем локальный рейтинг");
+                    showFallback();
+                    return;
+                }
+
+                if (!data || data.length === 0) {
+                    showFallback();
+                    return;
+                }
+
+                let html = "";
+                for (let i = 0; i < data.length; i++) {
+                    let player = data[i];
+                    let isMe = player.telegram_id == currentUserId;
+                    let name = player.first_name || 'Атлет';
+                    let xp = player.xp || 0;
+                    let rowClass = isMe ? 'my-row' : '';
+
+                    html += '<div class="leaderboard-item ' + rowClass + '">';
+                    html += '<div class="rank">' + (i + 1) + '</div>';
+                    html += '<div class="user-info">';
+                    html += '<p style="margin:0; font-weight:bold; font-size:16px;">' + name + (isMe ? ' (Вы)' : '') + '</p>';
+                    html += '<p style="margin:0; font-size:13px; color:#8e8e93;">' + xp + ' XP</p>';
+                    html += '</div></div>';
+                }
+                listDiv.innerHTML = html;
+
+            } catch(e) {
+                showFallback();
+            }
+        }
+
+        function showFallback() {
+            let tgUserName = "Вы";
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) tgUserName = tg.initDataUnsafe.user.first_name;
+            let currentXP = parseInt(localStorage.getItem('cachedXP') || 0);
+
             const fake = [
                 { name: "Александр", xp: 4500 }, 
                 { name: "Елена", xp: 3200 }
             ];
-            
             let all = fake.concat([{ name: tgUserName, xp: currentXP, isMe: true }]).sort((a, b) => b.xp - a.xp);
-            
+
             let html = "";
             for (let i = 0; i < all.length; i++) {
                 let u = all[i];
@@ -49,7 +99,7 @@
             document.getElementById('leaderboard-list').innerHTML = html;
         }
 
-        renderLeaderboard();
+        loadLeaderboard();
     </script>
 </body>
 </html>
