@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Camera Test</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; padding: 20px; }
+        .btn { background: #ffcc00; color: #000; padding: 15px; border-radius: 10px; border: none; font-size: 18px; font-weight: bold; width: 100%; margin-bottom: 10px; }
+        .btn-dark { background: #333; color: #fff; }
+        #camera-container { display: none; position: relative; width: 100%; height: 60vh; background: #000; border-radius: 16px; overflow: hidden; }
+        #camera-video { width: 100%; height: 100%; object-fit: cover; }
+        #capture-btn { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 70px; height: 70px; border-radius: 50%; background: #fff; border: 5px solid #ccc; }
+        #close-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: #fff; border: none; padding: 10px; border-radius: 50%; font-size: 18px; }
+        #preview { width: 100%; border-radius: 16px; display: none; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Тест камеры</h1>
+    
+    <div id="photo-buttons">
+        <button class="btn" onclick="startCamera()">📷 Включить камеру</button>
+        <button class="btn btn-dark" onclick="document.getElementById('gallery-input').click()">🖼️ Выбрать из галереи</button>
+        <button class="btn" style="background: #ff3b30; color: #fff; margin-top: 20px;" onclick="window.location.href='index.html'">← Вернуться в приложение</button>
+    </div>
+
+    <input type="file" id="gallery-input" accept="image/*" style="display: none;" onchange="handleGallery(event)">
+
+    <div id="camera-container">
+        <button id="close-btn" onclick="closeCamera()">✖</button>
+        <video id="camera-video" autoplay playsinline></video>
+        <button id="capture-btn" onclick="takePhoto()"></button>
+    </div>
+
+    <img id="preview">
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        
+        let stream = null;
+
+        async function startCamera() {
+            try {
+                document.getElementById('photo-buttons').style.display = 'none';
+                document.getElementById('camera-container').style.display = 'block';
+                
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                document.getElementById('camera-video').srcObject = stream;
+            } catch (err) {
+                tg.showAlert("Ошибка камеры: " + err.message);
+                closeCamera();
+            }
+        }
+
+        function takePhoto() {
+            const video = document.getElementById('camera-video');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            const dataUrl = canvas.toDataURL('image/jpeg');
+            document.getElementById('preview').src = dataUrl;
+            document.getElementById('preview').style.display = 'block';
+            
+            closeCamera();
+            tg.showAlert("Фото сделано!");
+        }
+
+        function closeCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            document.getElementById('camera-container').style.display = 'none';
+            document.getElementById('photo-buttons').style.display = 'block';
+        }
+
+        function handleGallery(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('preview').src = e.target.result;
+                document.getElementById('preview').style.display = 'block';
+                tg.showAlert("Фото выбрано!");
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
