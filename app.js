@@ -42,7 +42,7 @@ async function loginWithTelegram() {
         const tgId = tg.initDataUnsafe.user.id;
         localStorage.setItem('tgId', tgId);
 
-        const { data, error } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId).maybeSingle();
+        const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId).maybeSingle();
         
         if (data && data.profile) {
             localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
@@ -62,7 +62,7 @@ async function loginWithTelegram() {
     }
 }
 
-// --- ВХОД ЧЕРЕЗ EMAIL (С ПРАВИЛЬНОЙ ПРОВЕРКОЙ ПАРОЛЯ) ---
+// --- ВХОД ЧЕРЕЗ EMAIL (ПРАВИЛЬНАЯ ПРОВЕРКА ПАРОЛЯ) ---
 function showEmailForm() { openScreen('email-screen'); }
 
 async function handleEmailAuth() {
@@ -78,23 +78,18 @@ async function handleEmailAuth() {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
         if (error) {
-            // Если пароль неверный, пробуем зарегистрировать
+            // Если почта есть, но пароль неверный
             if (error.message.includes("Invalid login credentials")) {
-                const { error: signUpError } = await supabaseClient.auth.signUp({ email, password });
-                if (signUpError) {
-                    tg.showAlert("Ошибка: " + signUpError.message);
-                } else {
-                    tg.showAlert("Регистрация успешна! Теперь войдите с этим паролем.");
-                }
+                tg.showAlert("Неверный Email или пароль.");
             } else {
-                tg.showAlert("Ошибка: " + error.message);
+                tg.showAlert("Ошибка входа: " + error.message);
             }
         } else {
             tg.showAlert("Успешный вход!");
             localStorage.setItem('loginType', 'email');
             localStorage.setItem('currentEmail', email);
             
-            const { data: linkData, error: linkError } = await supabaseClient.from('user_links').select('*').eq('email', email).maybeSingle();
+            const { data: linkData } = await supabaseClient.from('user_links').select('*').eq('email', email).maybeSingle();
             
             if (linkData && linkData.profile) {
                 localStorage.setItem('cachedProfile', JSON.stringify(linkData.profile));
@@ -126,7 +121,6 @@ async function saveProgressToCloud(tgId, email, profile, xp, burned) {
         
         if (!currentTgId && !currentEmail) return;
 
-        // Ищем строку
         let existingId = null;
         if (currentTgId) {
             const { data } = await supabaseClient.from('user_links').select('id').eq('telegram_id', currentTgId).maybeSingle();
@@ -137,7 +131,6 @@ async function saveProgressToCloud(tgId, email, profile, xp, burned) {
             if (data) existingId = data.id;
         }
 
-        // Обновляем или создаем
         if (existingId) {
             await supabaseClient.from('user_links').update({ 
                 profile: profile, xp: xp, burned: burned,
@@ -190,7 +183,6 @@ function renderProfile(profile) {
     currentXP = parseInt(localStorage.getItem('cachedXP') || 0);
     totalBurnedCalories = parseInt(localStorage.getItem('cachedBurned') || 0);
 
-    // Обработка pendingXP
     const pendingXP = parseInt(localStorage.getItem('pendingXP') || 0);
     if (pendingXP > 0) {
         currentXP += pendingXP;
