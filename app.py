@@ -8,46 +8,34 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
-# Берем токен из настроек Render
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 
-# Функция для перевода на русский (через бесплатный Google Translate)
 def translate_to_russian(text):
-    if not text:
-        return text
-    # Если уже на русском, не трогаем
-    if any('а' <= char.lower() <= 'я' for char in text):
-        return text
-    
+    if not text: return text
+    if any('а' <= char.lower() <= 'я' for char in text): return text
     try:
         url = "https://translate.googleapis.com/translate_a/single"
         params = {"client": "gtx", "sl": "auto", "tl": "ru", "dt": "t", "q": text}
         response = requests.get(url, params=params, timeout=3)
-        if response.status_code == 200:
-            return response.json()[0][0][0]
+        if response.status_code == 200: return response.json()[0][0][0]
     except Exception as e:
         print(f"Translate error: {e}")
-    
     return text
 
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q')
-    if not query:
-        return jsonify({"error": "No query provided"}), 400
+    if not query: return jsonify({"error": "No query provided"}), 400
     try:
         response = requests.get(f"https://www.getdietly.com/api/search?q={query}", timeout=10)
         if response.status_code == 200:
             data = response.json()
-            # Переводим названия продуктов на русский
             if isinstance(data, list):
                 for item in data:
-                    if 'name' in item:
-                        item['name'] = translate_to_russian(item['name'])
+                    if 'name' in item: item['name'] = translate_to_russian(item['name'])
             elif isinstance(data, dict) and 'results' in data:
                 for item in data['results']:
-                    if 'name' in item:
-                        item['name'] = translate_to_russian(item['name'])
+                    if 'name' in item: item['name'] = translate_to_russian(item['name'])
             return jsonify(data)
         return jsonify({"error": "DietlyAPI error"}), 500
     except Exception as e:
@@ -55,10 +43,7 @@ def search_food():
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
-    # Проверка, что фото пришло
-    if 'image' not in request.files:
-        return jsonify({"error": "No image provided"}), 400
-    
+    if 'image' not in request.files: return jsonify({"error": "No image provided"}), 400
     file = request.files['image']
     try:
         image = Image.open(io.BytesIO(file.read())).convert("RGB")
@@ -69,7 +54,6 @@ def analyze_photo():
     image.save(img_byte_arr, format='JPEG')
     img_byte_arr = img_byte_arr.getvalue()
 
-    # Используем ТОЛЬКО LogMeal (самый стабильный)
     if LOGMEAL_TOKEN:
         try:
             files = {'image': ('food.jpg', img_byte_arr, 'image/jpeg')}
@@ -80,21 +64,13 @@ def analyze_photo():
                 lm_data = lm_response.json()
                 if 'recognition_results' in lm_data and len(lm_data['recognition_results']) > 0:
                     food_name = lm_data['recognition_results'][0]['name']
-                    food_name_ru = translate_to_russian(food_name)
                     return jsonify({
-                        "food": food_name_ru, 
-                        "calories": 250, 
-                        "protein": 15, 
-                        "fat": 10, 
-                        "carbs": 30
+                        "food": translate_to_russian(food_name), 
+                        "calories": 250, "protein": 15, "fat": 10, "carbs": 30
                     })
-            else:
-                print(f"LogMeal status: {lm_response.status_code}")
-                print(f"LogMeal response: {lm_response.text}")
         except Exception as e:
             print(f"LogMeal error: {e}")
 
-    # Если ничего не сработало
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
 if __name__ == '__main__':
