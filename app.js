@@ -26,8 +26,7 @@ async function loginWithTelegram() {
         const tgId = tg.initDataUnsafe.user.id;
         localStorage.setItem('tgId', tgId);
 
-        // Ищем в облаке по TG ID
-        const { data, error } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId).single();
+        const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId).single();
         
         if (data && data.profile) {
             localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
@@ -61,7 +60,7 @@ async function handleEmailAuth() {
     btn.disabled = true;
 
     try {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
         if (error) {
             const { error: signUpError } = await supabaseClient.auth.signUp({ email, password });
@@ -75,7 +74,6 @@ async function handleEmailAuth() {
             localStorage.setItem('loginType', 'email');
             localStorage.setItem('currentEmail', email);
             
-            // Ищем в облаке по Email
             const { data: linkData } = await supabaseClient.from('user_links').select('*').eq('email', email).single();
             
             if (linkData && linkData.profile) {
@@ -101,7 +99,7 @@ async function handleEmailAuth() {
     }
 }
 
-// --- СИНХРОНИЗАЦИЯ С ОБЛАКОМ (СКЛЕЙКА) ---
+// --- СИНХРОНИЗАЦИЯ С ОБЛАКОМ ---
 async function saveProgressToCloud(tgId, email, profile, xp, burned) {
     try {
         let currentTgId = tgId || localStorage.getItem('tgId');
@@ -109,7 +107,6 @@ async function saveProgressToCloud(tgId, email, profile, xp, burned) {
         
         if (!currentTgId && !currentEmail) return;
 
-        // Ищем существующую запись: сначала по TG, потом по Email
         let existingId = null;
 
         if (currentTgId) {
@@ -123,7 +120,6 @@ async function saveProgressToCloud(tgId, email, profile, xp, burned) {
         }
 
         if (existingId) {
-            // Обновляем существующую запись, добавляя недостающие ID
             await supabaseClient.from('user_links').update({ 
                 profile: profile, 
                 xp: xp, 
@@ -132,7 +128,6 @@ async function saveProgressToCloud(tgId, email, profile, xp, burned) {
                 email: currentEmail || null
             }).eq('id', existingId);
         } else {
-            // Если вообще ничего не нашли — создаем новую
             await supabaseClient.from('user_links').insert([{ 
                 telegram_id: currentTgId, 
                 email: currentEmail, 
@@ -282,6 +277,7 @@ function renderProfile(profile, loginType) {
         localStorage.removeItem('pendingXP');
         const tgId = localStorage.getItem('tgId');
         const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
+        // ЖЕСТКО СОХРАНЯЕМ ПРИ НАЧИСЛЕНИИ XP
         saveProgressToCloud(tgId, email, profile, currentXP, totalBurnedCalories);
     }
 
@@ -340,8 +336,19 @@ async function saveProfile() {
     renderProfile(profile, localStorage.getItem('loginType'));
 }
 
-function logout() {
-    if (confirm("Выйти из аккаунта? Прогресс сохранен в облаке и не потеряется.")) {
+// ЖЕСТКОЕ СОХРАНЕНИЕ ПРИ ВЫХОДЕ
+async function logout() {
+    const tgId = localStorage.getItem('tgId');
+    const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
+    const profile = JSON.parse(localStorage.getItem('cachedProfile'));
+    const xp = parseInt(localStorage.getItem('cachedXP') || 0);
+    const burned = parseInt(localStorage.getItem('cachedBurned') || 0);
+
+    if (profile && (tgId || email)) {
+        await saveProgressToCloud(tgId, email, profile, xp, burned);
+    }
+
+    if (confirm("Выйти из аккаунта? Прогресс сохранен в облаке.")) {
         localStorage.clear();
         supabaseClient.auth.signOut();
         location.reload();
