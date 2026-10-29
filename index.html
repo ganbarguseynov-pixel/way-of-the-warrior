@@ -99,7 +99,7 @@
 </head>
 <body class="male-theme">
 
-    <!-- Добавили preload="auto" для быстрой загрузки музыки -->
+    <!-- preload="auto" для мгновенной загрузки музыки -->
     <audio id="audio-bg" loop preload="auto"></audio>
     <audio id="audio-workout" loop preload="auto"></audio>
     <audio id="audio-win" preload="auto"></audio>
@@ -413,7 +413,6 @@
                 if (currentBgIndex >= bgTracks.length) currentBgIndex = 0;
                 
                 audioBg.src = bgTracks[currentBgIndex];
-                // Обеспечиваем загрузку перед воспроизведением
                 audioBg.load(); 
                 audioBg.play().catch(e => console.log("Autoplay blocked"));
                 
@@ -423,20 +422,31 @@
         }
         audioBg.onended = playNextBg;
 
+        // ФУНКЦИЯ ЗАПУСКА ТРЕКА ТРЕНИРОВКИ (С МГНОВЕННЫМ СТАРТОМ)
         function playNextWorkout() {
             if (!isSoundOn) return;
+            
+            // Сначала жестко глушим фоновую
             audioBg.pause(); 
+            
+            // Загружаем и включаем тренировочную
             audioWorkout.src = workoutTracks[currentWorkoutIndex];
-            audioWorkout.load(); // Принудительная загрузка для устранения лага
-            audioWorkout.play().catch(e => console.log("Autoplay blocked"));
+            audioWorkout.load(); 
+            
+            // Самый важный момент: запускаем воспроизведение сразу после клика пользователя
+            let playPromise = audioWorkout.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => console.log("Ошибка запуска музыки:", e));
+            }
+            
             currentWorkoutIndex = (currentWorkoutIndex + 1) % workoutTracks.length;
         }
         audioWorkout.onended = playNextWorkout;
 
         // КАК ТОЛЬКО МЕЛОДИЯ ПОБЕДЫ ЗАКАНЧИВАЕТСЯ - ВКЛЮЧАЕМ СЛЕДУЮЩУЮ ФОНОВУЮ
         audioWin.onended = function() {
-            isWorkoutMode = false; // Сбрасываем режим
-            playNextBg(); // Включаем фоновую музыку
+            isWorkoutMode = false; 
+            playNextBg(); 
         };
 
         function toggleSound() {
@@ -646,6 +656,7 @@
         let timeLeft = 45, isRunning = false, timerInterval, sessionCalories = 0;
         function updateTimerDisplay() { document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`; }
         
+        // САМАЯ ВАЖНАЯ ФУНКЦИЯ (ЗАПУСК ПО КЛИКУ)
         function toggleTimer() {
             const btn = document.getElementById('timer-btn');
             if (isRunning) { 
@@ -653,12 +664,13 @@
                 btn.innerText = "Старт"; 
                 btn.style.backgroundColor = "var(--accent-color)"; 
             } else {
-                // МГНОВЕННЫЙ запуск музыки по клику (пока браузер не заблокировал)
+                // 1. СРАЗУ ВКЛЮЧАЕМ МУЗЫКУ (пока браузер видит, что был клик)
                 if (isSoundOn) {
                     isWorkoutMode = true;
-                    playNextWorkout();
+                    playNextWorkout(); 
                 }
                 
+                // 2. ЗАПУСКАЕМ СЕКУНДОМЕР
                 if (timeLeft <= 0) timeLeft = 45; 
                 timerInterval = setInterval(() => {
                     timeLeft--; updateTimerDisplay();
@@ -732,7 +744,7 @@
             // 1. ЖЕСТКО останавливаем ВСЮ музыку
             audioWorkout.pause();
             audioWorkout.currentTime = 0;
-            audioBg.pause(); // На всякий случай глушим и фоновую
+            audioBg.pause(); 
 
             // 2. Показываем статистику
             document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
