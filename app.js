@@ -159,10 +159,22 @@ function updateCharacterUI() {
     document.getElementById('xp-bar').style.width = progressPercent + "%";
 }
 
-function addXP(amount) {
+async function addXP(amount) {
     currentXP += amount;
     localStorage.setItem('cachedXP', currentXP); 
     updateCharacterUI();
+    
+    // Отправляем в онлайн-рейтинг
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        const user = tg.initDataUnsafe.user;
+        try {
+            await supabaseClient.from('profiles').upsert({ 
+                telegram_id: user.id, 
+                first_name: user.first_name, 
+                xp: currentXP 
+            }, { onConflict: 'telegram_id' });
+        } catch(e) { console.log("Ошибка рейтинга:", e); }
+    }
 }
 
 function logout() {
