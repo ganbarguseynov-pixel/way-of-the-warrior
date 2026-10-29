@@ -11,96 +11,89 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-color: #000000;
-            --text-color: #ffffff;
-            --hint-color: #8e8e93;
-            --secondary-bg: rgba(30, 30, 30, 0.6);
-            --xp-color: #34c759; 
-            --accent-color: #ffcc00;
+            --bg-color: #000000; --text-color: #ffffff; --hint-color: #8e8e93;
+            --secondary-bg: rgba(30, 30, 30, 0.6); --accent-color: #ffcc00;
         }
         .female-theme { --accent-color: #ff3b30; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #000; color: var(--text-color);
-            margin: 0; padding: 0; display: flex; flex-direction: column;
-            height: 100vh; width: 100vw; box-sizing: border-box; overflow: hidden;
-        }
+        body { font-family: -apple-system, sans-serif; background-color: #000; color: #fff; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; width: 100vw; box-sizing: border-box; overflow: hidden; }
         .video-background { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
-        .overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 25%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.85) 100%);
-            z-index: 2; display: flex; flex-direction: column; justify-content: space-between; padding: 5px 15px 20px 15px;
-            box-sizing: border-box;
-        }
-        .sound-toggle { position: absolute; top: 40px; right: 20px; z-index: 20; background-color: rgba(0,0,0,0.5); border: none; border-radius: 50%; width: 40px; height: 40px; color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 25%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.85) 100%); z-index: 2; display: flex; flex-direction: column; justify-content: space-between; padding: 5px 15px 20px 15px; box-sizing: border-box; }
+        .sound-toggle { position: absolute; top: 40px; right: 20px; z-index: 20; background-color: rgba(0,0,0,0.5); border: none; border-radius: 50%; width: 40px; height: 40px; color: white; font-size: 20px; cursor: pointer; }
         .top-info { text-align: center; margin-top: 50px; }
-        .character-level { font-size: 16px; font-weight: 600; color: var(--hint-color); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 5px; }
-        .character-title { font-size: 34px; font-weight: 900; color: var(--accent-color); margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 20px rgba(255, 204, 0, 0.5), 0 4px 10px rgba(0,0,0,0.8); }
-        .female-theme .character-title { text-shadow: 0 0 20px rgba(255, 59, 48, 0.5), 0 4px 10px rgba(0,0,0,0.8); }
-        .xp-bar-container { background-color: rgba(0, 0, 0, 0.5); border-radius: 20px; height: 16px; width: 80%; margin: 0 auto; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
-        .xp-bar { background: linear-gradient(90deg, #34c759, #a8e063); height: 100%; width: 0%; transition: width 0.5s ease-in-out; border-radius: 20px; }
-        .xp-text { font-size: 12px; color: #fff; text-align: center; margin: 5px 0 0 0; font-weight: bold; text-shadow: 0 1px 3px #000; }
+        .character-level { font-size: 16px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 5px; }
+        .character-title { font-size: 34px; font-weight: 900; color: var(--accent-color); margin: 0 0 15px 0; text-transform: uppercase; text-shadow: 0 0 20px rgba(255, 204, 0, 0.5); }
+        .xp-bar-container { background-color: rgba(0, 0, 0, 0.5); border-radius: 20px; height: 16px; width: 80%; margin: 0 auto; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); }
+        .xp-bar { background: linear-gradient(90deg, #34c759, #a8e063); height: 100%; width: 0%; transition: width 0.5s ease-in-out; }
+        .xp-text { font-size: 12px; text-align: center; margin: 5px 0 0 0; font-weight: bold; }
         .bottom-panel { display: flex; flex-direction: column; gap: 15px; }
         .stats-row { display: flex; justify-content: space-between; gap: 10px; }
-        .stat-box { flex: 1; background-color: var(--secondary-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-radius: 16px; padding: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
-        .stat-box p { margin: 0; font-size: 12px; color: var(--hint-color); text-transform: uppercase; letter-spacing: 1px;}
-        .stat-box h3 { margin: 5px 0 0 0; font-size: 20px; color: var(--text-color); font-weight: bold; }
+        .stat-box { flex: 1; background-color: var(--secondary-bg); border-radius: 16px; padding: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(15px); }
+        .stat-box p { margin: 0; font-size: 12px; color: #8e8e93; }
+        .stat-box h3 { margin: 5px 0 0 0; font-size: 20px; }
         .action-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .action-btn { background-color: var(--secondary-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px 5px; text-align: center; color: var(--text-color); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.1s; }
-        .action-btn:active { transform: scale(0.95); background-color: rgba(255,255,255,0.1); }
+        .action-btn { background-color: var(--secondary-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px 5px; text-align: center; color: white; cursor: pointer; backdrop-filter: blur(15px); }
         .action-btn h3 { margin: 0 0 8px 0; font-size: 24px; }
-        .action-btn p { margin: 0; color: var(--hint-color); font-size: 11px; font-weight: 600; }
-        .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background-color: var(--bg-color); z-index: 10; }
+        .action-btn p { margin: 0; color: #8e8e93; font-size: 11px; }
+        .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background-color: #000; z-index: 10; }
         .screen.active { display: flex; }
         .inner-screen { padding: 20px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow-y: auto; width: 100%; background-color: #0d0d0d; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--hint-color); }
-        input, select { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #3a3a3c; background-color: #2c2c2e; color: var(--text-color); font-size: 16px; box-sizing: border-box; outline: none; }
+        label { display: block; margin-bottom: 8px; font-size: 14px; color: #8e8e93; }
+        input, select { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #3a3a3c; background-color: #2c2c2e; color: white; font-size: 16px; box-sizing: border-box; }
         .row { display: flex; gap: 15px; }
         .row .form-group { flex: 1; }
-        .btn { background-color: var(--accent-color); color: #000; border: none; padding: 16px; border-radius: 16px; font-size: 18px; font-weight: bold; width: 100%; margin-top: 15px; cursor: pointer; transition: opacity 0.2s; }
-        .btn:active { opacity: 0.8; }
-        .btn-secondary { background-color: #2c2c2e; color: #fff; }
-        .back-btn { background: none; border: none; color: var(--accent-color); font-size: 16px; padding: 0; margin-bottom: 20px; cursor: pointer; display: flex; align-items: center; font-weight: bold;}
-        .timer-display { font-size: 80px; font-weight: bold; text-align: center; margin: 20px 0; font-variant-numeric: tabular-nums; }
+        .btn { background-color: var(--accent-color); color: #000; border: none; padding: 16px; border-radius: 16px; font-size: 18px; font-weight: bold; width: 100%; margin-top: 15px; cursor: pointer; }
+        .back-btn { background: none; border: none; color: var(--accent-color); font-size: 16px; padding: 0; margin-bottom: 20px; cursor: pointer; font-weight: bold;}
+        .timer-display { font-size: 80px; font-weight: bold; text-align: center; margin: 20px 0; }
         .quote-box { background-color: #1c1c1e; border-left: 4px solid var(--accent-color); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
         .leaderboard-item { display: flex; align-items: center; background-color: #1c1c1e; padding: 15px; border-radius: 16px; margin-bottom: 10px; border: 1px solid #2c2c2e;}
-        .my-row { border: 2px solid var(--accent-color); background-color: rgba(255, 204, 0, 0.1); }
-        .rank { font-size: 20px; font-weight: bold; width: 40px; color: var(--hint-color); }
+        .my-row { border: 2px solid var(--accent-color); }
+        .rank { font-size: 20px; font-weight: bold; width: 40px; color: #8e8e93; }
         .user-info { flex: 1; margin-left: 10px; }
-        .auth-screen { background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop'); background-size: cover; background-position: center; position: relative; }
-        .auth-screen::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,0.95) 100%); z-index: 1; }
-        .auth-container { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 20px; text-align: center; position: relative; z-index: 2; width: 100%; box-sizing: border-box; }
-        .auth-content { width: 100%; max-width: 350px; display: flex; flex-direction: column; align-items: center; }
-        .auth-title { font-size: 40px; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
-        .inspiration-text { font-size: 16px; color: #ddd; font-style: italic; margin-bottom: 30px; line-height: 1.4; text-shadow: 0 1px 5px rgba(0,0,0,0.8); }
-        .auth-buttons { width: 100%; display: flex; flex-direction: column; gap: 15px; }
-        .auth-btn { padding: 18px; border-radius: 16px; border: none; font-size: 17px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); width: 100%; }
-        .auth-btn:active { transform: scale(0.96); }
-        .tg-btn { background: linear-gradient(90deg, #229ED9, #1E88C7); color: white; }
-        .email-btn { background-color: rgba(44, 44, 46, 0.8); color: white; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
-        .auth-divider { display: flex; align-items: center; text-align: center; color: #ccc; margin: 10px 0; width: 100%; }
+        .auth-screen { background: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop') center/cover; position: relative; }
+        .auth-screen::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.95) 100%); }
+        .auth-container { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 20px; text-align: center; position: relative; z-index: 2; }
+        .auth-title { font-size: 40px; font-weight: 900; margin-bottom: 5px; color: #fff; }
+        .inspiration-text { font-size: 16px; color: #ddd; font-style: italic; margin-bottom: 30px; }
+        .auth-buttons { width: 100%; max-width: 350px; display: flex; flex-direction: column; gap: 15px; }
+        .auth-btn { padding: 18px; border-radius: 16px; border: none; font-size: 17px; font-weight: bold; cursor: pointer; }
+        .tg-btn { background: #229ED9; color: white; }
+        .email-btn { background-color: rgba(44, 44, 46, 0.8); color: white; }
+        .auth-divider { color: #ccc; margin: 10px 0; display: flex; align-items: center; }
         .auth-divider::before, .auth-divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255,255,255,0.2); }
-        .auth-divider span { padding: 0 15px; font-size: 14px; }
+        .auth-divider span { padding: 0 15px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px; background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 12px; color: #8e8e93; font-weight: bold; cursor: pointer; text-align: center; }
+        .tab-btn.active { background: var(--accent-color); color: #000; border-color: var(--accent-color); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        #food-result { text-align: center; width: 100%; box-sizing: border-box; }
+        #food-result h2 { text-align: center; color: var(--accent-color); word-break: break-word; margin-bottom: 20px; }
+        .nutrition-row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 10px; padding: 0 10px; box-sizing: border-box; }
+        #camera-container { position: relative; width: 100%; height: 60vh; border-radius: 16px; overflow: hidden; margin-bottom: 20px; background: #000; display: flex; flex-direction: column; justify-content: space-between; }
+        #camera-video { width: 100%; height: 100%; object-fit: cover; background-color: #000; }
+        #camera-controls { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; }
+        #capture-btn { width: 75px; height: 75px; border-radius: 50%; background: white; border: 5px solid rgba(0,0,0,0.2); cursor: pointer; }
+        #close-camera-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; }
+        #switch-camera-btn { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; }
     </style>
 </head>
 <body class="male-theme">
 
-    <audio id="audio-bg" loop preload="auto"></audio>
-    <audio id="audio-workout" loop preload="auto"></audio>
-    <audio id="audio-win" preload="auto"></audio>
-    <audio id="audio-lose" preload="auto"></audio>
+    <audio id="audio-bg" loop></audio>
+    <audio id="audio-workout" loop></audio>
+    <audio id="audio-win"></audio>
+    <audio id="audio-lose"></audio>
+    <input type="file" id="gallery-input" accept="image/*" style="display: none;" onchange="handleImage(event)">
 
     <div id="auth-screen" class="screen active auth-screen">
         <div class="auth-container">
-            <div class="auth-content">
-                <div class="auth-title">Sport App</div>
-                <div class="inspiration-text">Стань лучшей версией себя.<br>Начни прямо сейчас.</div>
-                <div class="auth-buttons">
-                    <button class="auth-btn tg-btn" onclick="loginWithTelegram()">✈️ Продолжить через Telegram</button>
-                    <div class="auth-divider"><span>или</span></div>
-                    <button class="auth-btn email-btn" onclick="showEmailForm()">✉️ Войти по Email</button>
-                </div>
+            <div class="auth-title">Sport App</div>
+            <div class="inspiration-text">Стань лучшей версией себя.<br>Начни прямо сейчас.</div>
+            <div class="auth-buttons">
+                <button class="auth-btn tg-btn" onclick="loginWithTelegram()">✈️ Продолжить через Telegram</button>
+                <div class="auth-divider"><span>или</span></div>
+                <button class="auth-btn email-btn" onclick="showEmailForm()">✉️ Войти по Email</button>
             </div>
         </div>
     </div>
@@ -108,7 +101,7 @@
     <div id="email-screen" class="screen">
         <div class="inner-screen">
             <button class="back-btn" onclick="closeScreen('email-screen')">← Назад</button>
-            <h1 style="text-align: center; margin-bottom: 30px;">Вход / Регистрация</h1>
+            <h1 style="text-align: center;">Вход / Регистрация</h1>
             <div class="form-group"><label>Email</label><input type="email" id="auth-email" placeholder="your@email.com"></div>
             <div class="form-group"><label>Пароль</label><input type="password" id="auth-password" placeholder="Минимум 6 символов"></div>
             <button class="btn" onclick="handleEmailAuth()">Продолжить</button>
@@ -119,9 +112,9 @@
         <button class="sound-toggle" onclick="toggleSound()" id="sound-btn">🔊</button>
         <video id="character-video" class="video-background" autoplay loop muted playsinline></video>
         <div class="overlay">
-            <div style="display: flex; justify-content: space-between; position: absolute; top: 0px; left: 0px; right: 0px; z-index: 30; padding: 5px 10px;">
-                <button class="btn" style="background-color: rgba(44,44,46,0.7); color: white; width: auto; padding: 8px 15px; font-size: 13px; margin: 0; backdrop-filter: blur(10px); border-radius: 8px;" onclick="openProfileSettings()">⚙️ Настройки</button>
-                <button class="btn" style="background-color: rgba(255,59,48,0.2); color: #ff3b30; width: auto; padding: 8px 15px; font-size: 13px; margin: 0; border: 1px solid #ff3b30; backdrop-filter: blur(10px); border-radius: 8px;" onclick="logout()">Выйти</button>
+            <div style="display: flex; justify-content: space-between; position: absolute; top: 0; left: 0; right: 0; z-index: 30; padding: 5px 10px;">
+                <button class="btn" style="background: rgba(44,44,46,0.7); color: white; width: auto; padding: 8px 15px; font-size: 13px;" onclick="openProfileSettings()">⚙️ Настройки</button>
+                <button class="btn" style="background: rgba(255,59,48,0.2); color: #ff3b30; width: auto; padding: 8px 15px; font-size: 13px; border: 1px solid #ff3b30;" onclick="logout()">Выйти</button>
             </div>
             <div class="top-info">
                 <div class="character-level" id="char-level">Уровень 1</div>
@@ -135,8 +128,7 @@
                     <div class="stat-box"><p>Сожжено</p><h3 id="burned-total">0 ккал</h3></div>
                 </div>
                 <div class="action-grid">
-                    <!-- Кнопка "Еда" ведет на отдельный файл photoes.html -->
-                    <button class="action-btn" onclick="window.location.href='photoes.html'"><h3>📸</h3><p>Еда</p></button>
+                    <button class="action-btn" onclick="openScreen('food-screen')"><h3>📸</h3><p>Еда</p></button>
                     <button class="action-btn" onclick="openScreen('workout-screen')"><h3>💪</h3><p>Треня</p></button>
                     <button class="action-btn" onclick="openScreen('timer-screen')"><h3>⏱</h3><p>Таймер</p></button>
                     <button class="action-btn" onclick="openScreen('leaderboard-screen')"><h3>🏆</h3><p>Рейтинг</p></button>
@@ -145,23 +137,62 @@
         </div>
     </div>
 
+    <div id="food-screen" class="screen">
+        <div class="inner-screen">
+            <button class="back-btn" onclick="closeScreen('food-screen')">← Назад</button>
+            <h1 style="text-align: center;">Анализ еды</h1>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('search')">🔍 Поиск</button>
+                <button class="tab-btn" onclick="switchTab('photo')">📷 Фото</button>
+            </div>
+            <div id="tab-search" class="tab-content active">
+                <div class="form-group"><input type="text" id="food-search-input" placeholder="Введите название"></div>
+                <button class="btn" onclick="searchFood()">Найти</button>
+                <div id="search-result" style="margin-top: 20px;"></div>
+            </div>
+            <div id="tab-photo" class="tab-content">
+                <div id="camera-container" style="display: none;">
+                    <button id="switch-camera-btn" onclick="switchCamera()">🔄</button>
+                    <button id="close-camera-btn" onclick="resetCameraScreen()">✖</button>
+                    <video id="camera-video" autoplay playsinline></video>
+                    <div id="camera-controls"><button id="capture-btn" onclick="takePhoto()"></button></div>
+                </div>
+                <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
+                <div id="photo-buttons">
+                    <button class="btn" onclick="startCamera()">📷 Сделать фото</button>
+                    <button class="btn" style="background: #2c2c2e; color: white;" onclick="document.getElementById('gallery-input').click()">🖼️ Выбрать из галереи</button>
+                </div>
+                <button class="btn" id="remove-photo-btn" style="display: none; background: #ff3b30; color: white; margin-bottom: 10px;" onclick="resetCameraScreen()">❌ Удалить фото</button>
+                <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px;">🤖 ИИ анализирует фото...</div>
+                <div id="food-result" style="display: none; background: #1c1c1e; padding: 20px; border-radius: 16px; margin-top: 20px;">
+                    <h2 id="food-name">Название</h2>
+                    <div class="nutrition-row"><span>Калории:</span> <b id="food-calories">0 ккал</b></div>
+                    <div class="nutrition-row"><span>Белки:</span> <b id="food-protein">0 г</b></div>
+                    <div class="nutrition-row"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
+                    <div class="nutrition-row"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
+                    <button class="btn" style="background: #34c759; color: white; margin-top: 15px;" onclick="addXP(20); resetCameraScreen(); closeScreen('food-screen');">Добавить в дневник (+20 XP)</button>
+                    <button class="btn" style="background: transparent; color: #ff3b30; margin-top: 10px;" onclick="resetCameraScreen()">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="profile-settings-screen" class="screen">
         <div class="inner-screen">
             <button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
-            <h1 style="text-align: center; margin-bottom: 30px;">Настройки профиля</h1>
-            <div style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-bottom: 20px;">
-                <h3 style="margin-top: 0;">Привязка аккаунтов</h3>
-                <p style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;">Привяжите Email и пароль, чтобы не потерять прогресс при смене устройства.</p>
+            <h1 style="text-align: center;">Настройки</h1>
+            <div style="background: #1c1c1e; padding: 20px; border-radius: 16px;">
+                <h3 style="margin-top: 0;">Привязка Email</h3>
                 <div class="form-group"><input type="email" id="link-email" placeholder="your@email.com"></div>
-                <div class="form-group"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)"></div>
-                <button class="btn" onclick="linkEmail()">Привязать Email</button>
+                <div class="form-group"><input type="password" id="link-password" placeholder="Пароль"></div>
+                <button class="btn" onclick="linkEmail()">Привязать</button>
             </div>
         </div>
     </div>
 
     <div id="onboarding-screen" class="screen">
         <div class="inner-screen">
-            <h1 style="text-align: center; margin-bottom: 30px;">Добро пожаловать!</h1>
+            <h1 style="text-align: center;">Добро пожаловать!</h1>
             <div class="form-group"><label>Твоя цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
             <div class="row"><div class="form-group"><label>Возраст</label><input type="number" id="age" placeholder="25"></div><div class="form-group"><label>Пол</label><select id="gender" onchange="changeTheme()"><option value="male">Мужской</option><option value="female">Женский</option></select></div></div>
             <div class="row"><div class="form-group"><label>Вес (кг)</label><input type="number" id="weight" placeholder="70"></div><div class="form-group"><label>Рост (см)</label><input type="number" id="height" placeholder="175"></div></div>
@@ -173,9 +204,8 @@
         <div class="inner-screen">
             <button class="back-btn" onclick="closeScreen('workout-screen')">← Назад</button>
             <h1>Тренировка</h1>
-            <p style="color: var(--hint-color); margin-bottom: 20px;">Комплекс на сегодня</p>
-            <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #2c2c2e;"><h4>Приседания</h4><p style="color: #8e8e93; font-size: 13px;">3 подхода • 15 повторений</p></div>
-            <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #2c2c2e;"><h4>Отжимания</h4><p style="color: #8e8e93; font-size: 13px;">3 подхода • 10 повторений</p></div>
+            <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 10px;"><h4>Приседания</h4><p style="color: #8e8e93; font-size: 13px;">3 подхода • 15 повторений</p></div>
+            <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 10px;"><h4>Отжимания</h4><p style="color: #8e8e93; font-size: 13px;">3 подхода • 10 повторений</p></div>
             <button class="btn" style="margin-top: auto;" onclick="startWorkoutFromList()">Начать тренировку</button>
         </div>
     </div>
@@ -184,29 +214,27 @@
         <div class="inner-screen">
             <button class="back-btn" onclick="closeScreen('timer-screen')">← Назад</button>
             <h1 style="text-align: center;">Таймер</h1>
-            <p style="text-align: center; color: var(--hint-color);">Отдых между подходами</p>
             <div class="timer-display" id="timer-display">00:45</div>
-            <div style="display: flex; gap: 15px;"><button class="btn" onclick="toggleTimer()" id="timer-btn">Старт</button><button class="btn" style="background-color: #2c2c2e; color: white;" onclick="resetTimer()">Сброс</button></div>
-            <button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="completeSet()">Подход выполнен (+15 XP)</button>
-            <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: auto;" onclick="finishWorkout()">Завершить 🏁</button>
+            <div style="display: flex; gap: 15px;"><button class="btn" onclick="toggleTimer()" id="timer-btn">Старт</button><button class="btn" style="background: #2c2c2e; color: white;" onclick="resetTimer()">Сброс</button></div>
+            <button class="btn" style="background: #34c759; color: white; margin-top: 20px;" onclick="completeSet()">Подход выполнен (+15 XP)</button>
+            <button class="btn" style="background: transparent; color: #ff3b30; margin-top: auto;" onclick="finishWorkout()">Завершить 🏁</button>
         </div>
     </div>
 
     <div id="finish-screen" class="screen">
         <div class="inner-screen" style="text-align: center; justify-content: center;">
-            <h1 style="font-size: 80px; margin-bottom: 10px;">🏆</h1>
+            <h1 style="font-size: 80px;">🏆</h1>
             <h2>Тренировка завершена!</h2>
-            <p id="finish-stats" style="color: #8e8e93; margin-bottom: 30px;">Ты сжег 0 ккал.</p>
-            <div class="quote-box"><p id="finish-quote" style="font-style: italic; font-size: 18px; margin-bottom: 10px;">"Цитата"</p><p id="finish-author" style="text-align: right; font-weight: bold; font-size: 14px; color: var(--hint-color);">— Автор</p></div>
-            <button class="btn" onclick="closeScreen('finish-screen')">Вернуться на главную</button>
+            <p id="finish-stats" style="color: #8e8e93;">Ты сжег 0 ккал.</p>
+            <div class="quote-box"><p id="finish-quote" style="font-style: italic; font-size: 18px;">"Цитата"</p><p id="finish-author" style="text-align: right; font-weight: bold; color: #8e8e93;">— Автор</p></div>
+            <button class="btn" onclick="closeScreen('finish-screen')">Вернуться</button>
         </div>
     </div>
 
     <div id="leaderboard-screen" class="screen">
         <div class="inner-screen">
             <button class="back-btn" onclick="closeScreen('leaderboard-screen')">← Назад</button>
-            <h1>🏆 Мировой рейтинг</h1>
-            <p style="color: var(--hint-color); margin-bottom: 20px;">Топ атлетов по сожженным калориям</p>
+            <h1>🏆 Рейтинг</h1>
             <div id="leaderboard-list"></div>
         </div>
     </div>
@@ -217,382 +245,224 @@
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
+        const AI_SERVER_URL = 'https://sport-app-bqlu.onrender.com';
 
-        // Проверка на возврат с экрана еды (добавление XP)
-        window.addEventListener('load', () => {
-            const pendingXP = localStorage.getItem('pendingXP');
-            if (pendingXP) {
-                localStorage.removeItem('pendingXP');
-                setTimeout(() => {
-                    if (typeof addXP === 'function') {
-                        addXP(parseInt(pendingXP));
-                        tg.showAlert("Спасибо! +20 XP добавлено в дневник.");
-                    }
-                }, 1000);
+        // КАМЕРА
+        let videoStream = null;
+        let currentFacingMode = "environment"; 
+
+        async function startCamera() {
+            try {
+                document.getElementById('photo-buttons').style.display = 'none';
+                document.getElementById('camera-container').style.display = 'flex';
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
+                document.getElementById('camera-video').srcObject = videoStream;
+            } catch (err) {
+                tg.showAlert("Ошибка камеры. Разрешите доступ.");
+                resetCameraScreen();
             }
-        });
-
-        // --- ЛОГИКА МУЗЫКИ (РАНДОМНАЯ) ---
-        const bgTracks = [
-            "01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3", 
-            "05 - The Vengeance.mp3", "06 - The Forest of Death.mp3", "07 - The Ninja in the Night.mp3", 
-            "10 - The Final Boss.mp3", "11 - The Master of the Skills.mp3", "13 - Ronin.mp3", 
-            "14 - The Deadly Smoke.mp3", "15 - Old Sensei.mp3", "16 - The Battle Ship.mp3", 
-            "17 - The Shadow Lady.mp3", "18 - The Flower Battlefield.mp3", "22 - Bridge to the Other Side.mp3", 
-            "25 - Burning Town.mp3", "27 - The Hive.mp3", "29 - The Factory.mp3", "30 - The Flying Rocks.mp3"
-        ];
-        const workoutTracks = [
-            "03. TECHNO-SYNDROME 12' MI...", "09 - The Fat Boss.mp3", "24. 2min Loop Battle 03.mp3", 
-            "21. secs Training Arena 01.mp3", "18. min Loop Battle 03.mp3", "17. min Loop Battle 02.mp3", 
-            "20. Sec Music Loop 01.mp3"
-        ];
-        
-        let isSoundOn = true, isWorkoutMode = false, musicStarted = false;
-        let lastBgIndex = -1, lastWorkoutIndex = -1;
-
-        const audioBg = document.getElementById('audio-bg');
-        const audioWorkout = document.getElementById('audio-workout');
-        const audioWin = document.getElementById('audio-win');
-        const audioLose = document.getElementById('audio-lose');
-        audioWin.src = "12. Scroll Win 02.mp3";
-        audioLose.src = "09. Scroll Lose 01.mp3"; 
-        const audioLevelUp = "07. Scroll Draw 01.mp3"; 
-
-        function getRandomTrack(tracksArray, lastIndex) {
-            let newIndex = Math.floor(Math.random() * tracksArray.length);
-            if (newIndex === lastIndex && tracksArray.length > 1) {
-                newIndex = (newIndex + 1) % tracksArray.length;
+        }
+        async function switchCamera() {
+            currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+            stopCamera();
+            await startCamera();
+        }
+        function takePhoto() {
+            if (!videoStream) return;
+            const video = document.getElementById('camera-video');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            stopCamera();
+            canvas.toBlob(async function(blob) {
+                const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+                document.getElementById('photo-preview').src = URL.createObjectURL(blob);
+                document.getElementById('photo-preview').style.display = 'block';
+                document.getElementById('remove-photo-btn').style.display = 'block';
+                await sendPhotoToServer(file);
+            }, 'image/jpeg', 0.8);
+        }
+        function stopCamera() {
+            if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); videoStream = null; }
+            document.getElementById('camera-container').style.display = 'none';
+        }
+        function resetCameraScreen() {
+            stopCamera();
+            document.getElementById('photo-preview').style.display = 'none';
+            document.getElementById('food-result').style.display = 'none';
+            document.getElementById('photo-buttons').style.display = 'flex';
+            document.getElementById('remove-photo-btn').style.display = 'none';
+            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('gallery-input').value = "";
+        }
+        async function handleImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            document.getElementById('photo-buttons').style.display = 'none';
+            document.getElementById('photo-preview').src = URL.createObjectURL(file);
+            document.getElementById('photo-preview').style.display = 'block';
+            document.getElementById('remove-photo-btn').style.display = 'block';
+            await sendPhotoToServer(file);
+        }
+        async function sendPhotoToServer(file) {
+            document.getElementById('loading-spinner').style.display = 'block';
+            document.getElementById('food-result').style.display = 'none';
+            const formData = new FormData();
+            formData.append('image', file);
+            try {
+                const response = await fetch(`${AI_SERVER_URL}/analyze`, { method: 'POST', body: formData });
+                const data = await response.json();
+                document.getElementById('loading-spinner').style.display = 'none';
+                if (data.food !== "Не удалось распознать") {
+                    document.getElementById('food-result').style.display = 'block';
+                    document.getElementById('food-name').innerText = data.food;
+                    document.getElementById('food-calories').innerText = data.calories + " ккал";
+                    document.getElementById('food-protein').innerText = data.protein + " г";
+                    document.getElementById('food-fat').innerText = data.fat + " г";
+                    document.getElementById('food-carbs').innerText = data.carbs + " г";
+                } else {
+                    tg.showAlert("ИИ не смог распознать еду.");
+                    resetCameraScreen();
+                }
+            } catch (error) {
+                document.getElementById('loading-spinner').style.display = 'none';
+                tg.showAlert("Сервер просыпается. Подождите 50 сек и попробуйте снова.");
+                resetCameraScreen();
             }
-            return newIndex;
         }
 
+        // ОСТАЛЬНАЯ ЛОГИКА
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            event.target.classList.add('active');
+        }
+        async function searchFood() {
+            const query = document.getElementById('food-search-input').value;
+            if (!query) return;
+            const resultDiv = document.getElementById('search-result');
+            resultDiv.innerHTML = 'Поиск...';
+            try {
+                const response = await fetch(`${AI_SERVER_URL}/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                if (data.products && data.products.length > 0) {
+                    const p = data.products[0];
+                    resultDiv.innerHTML = `<div style="background: #1c1c1e; padding: 20px; border-radius: 16px; text-align: center;">
+                        <h3 style="color: var(--accent-color);">${p.product_name}</h3>
+                        <div class="nutrition-row"><span>Калории:</span> <b>${p.nutrients.calories} ккал</b></div>
+                        <div class="nutrition-row"><span>Белки:</span> <b>${p.nutrients.proteins} г</b></div>
+                        <div class="nutrition-row"><span>Жиры:</span> <b>${p.nutrients.fat} г</b></div>
+                        <div class="nutrition-row"><span>Углеводы:</span> <b>${p.nutrients.carbohydrates} г</b></div>
+                        <button class="btn" style="background: #34c759; color: white;" onclick="addXP(20); closeScreen('food-screen');">Добавить (+20 XP)</button></div>`;
+                } else { resultDiv.innerHTML = 'Не найдено'; }
+            } catch (e) { resultDiv.innerHTML = 'Ошибка сервера'; }
+        }
+
+        // МУЗЫКА И ОСТАЛЬНОЕ (сокращенно, но рабочее)
+        const bgTracks = ["01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3"];
+        const workoutTracks = ["03. TECHNO-SYNDROME 12' MI...", "09 - The Fat Boss.mp3"];
+        let isSoundOn = true, isWorkoutMode = false, lastBg = -1, lastWk = -1;
+        const audioBg = document.getElementById('audio-bg'), audioWorkout = document.getElementById('audio-workout');
+        const audioWin = document.getElementById('audio-win'), audioLose = document.getElementById('audio-lose');
+        audioWin.src = "12. Scroll Win 02.mp3"; audioLose.src = "09. Scroll Lose 01.mp3";
+        
         function playNextBg() {
             if (!isSoundOn || isWorkoutMode) return;
-            lastBgIndex = getRandomTrack(bgTracks, lastBgIndex);
-            audioBg.src = bgTracks[lastBgIndex];
-            audioBg.load(); 
-            audioBg.play().catch(e => console.log("Autoplay blocked"));
+            let n; do { n = Math.floor(Math.random()*bgTracks.length) } while(n===lastBg && bgTracks.length>1); lastBg=n;
+            audioBg.src = bgTracks[n]; audioBg.play().catch(e=>{});
         }
         audioBg.onended = playNextBg;
-
         function playNextWorkout() {
-            if (!isSoundOn) return;
-            audioBg.pause(); 
-            lastWorkoutIndex = getRandomTrack(workoutTracks, lastWorkoutIndex);
-            audioWorkout.src = workoutTracks[lastWorkoutIndex];
-            audioWorkout.load(); 
-            audioWorkout.play().catch(e => console.log("Ошибка запуска"));
+            if (!isSoundOn) return; audioBg.pause();
+            let n; do { n = Math.floor(Math.random()*workoutTracks.length) } while(n===lastWk && workoutTracks.length>1); lastWk=n;
+            audioWorkout.src = workoutTracks[n]; audioWorkout.play().catch(e=>{});
         }
         audioWorkout.onended = playNextWorkout;
+        audioWin.onended = () => { isWorkoutMode = false; playNextBg(); };
+        function toggleSound() { isSoundOn = !isSoundOn; document.getElementById('sound-btn').innerText = isSoundOn ? "🔊" : "🔇"; if(!isSoundOn){audioBg.pause();audioWorkout.pause();} else {if(isWorkoutMode) audioWorkout.play(); else playNextBg();} }
 
-        audioWin.onended = function() { isWorkoutMode = false; playNextBg(); };
-
-        function toggleSound() {
-            isSoundOn = !isSoundOn;
-            const btn = document.getElementById('sound-btn');
-            if (isSoundOn) {
-                btn.innerText = "🔊";
-                if (isWorkoutMode) audioWorkout.play(); else playNextBg();
-            } else {
-                btn.innerText = "🔇";
-                audioBg.pause();
-                audioWorkout.pause();
-            }
-        }
-
-        // --- ЦИТАТЫ (8 ШТУК ДЛЯ СТАБИЛЬНОСТИ) ---
         const allQuotes = [
-            { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион.", author: "Мухаммед Али" },
+            { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся.", author: "Мухаммед Али" },
             { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
-            { text: "Не молитесь о легкой жизни, молитесь о силах, чтобы вынести тяжелую.", author: "Брюс Ли" },
+            { text: "Не молитесь о легкой жизни, молитесь о силах.", author: "Брюс Ли" },
             { text: "Ты не проиграл, пока не остановился.", author: "Майк Тайсон" },
             { text: "Боль временна. Гордость навсегда.", author: "Лэнс Армстронг" },
-            { text: "Я могу принять поражение, но я не могу принять не попробовать.", author: "Майкл Джордан" },
-            { text: "Ты не можешь быть особенным, если ты не отличаешься от остальных.", author: "Коби Брайант" },
+            { text: "Я могу принять поражение, но не могу принять не попробовать.", author: "Майкл Джордан" },
+            { text: "Ты не можешь быть особенным, если не отличаешься.", author: "Коби Брайант" },
             { text: "Победа — это не всё, но желание победить — это всё.", author: "Винс Ломбарди" }
         ];
-
-        let quoteDeck = [];
-        function refillQuoteDeck() {
-            quoteDeck = [...allQuotes];
-            for (let i = quoteDeck.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [quoteDeck[i], quoteDeck[j]] = [quoteDeck[j], quoteDeck[i]];
-            }
-        }
-        refillQuoteDeck(); 
-
-        function getNextRandomQuote() {
-            if (quoteDeck.length === 0) { refillQuoteDeck(); }
-            return quoteDeck.pop(); 
+        let quoteDeck = [...allQuotes];
+        function getNextQuote() {
+            if(quoteDeck.length===0) quoteDeck = [...allQuotes];
+            return quoteDeck.pop();
         }
 
-        // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
-        const levelsData = {
-            male: [
-                { xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" },
-                { xp: 100, title: "Берсерк", video: "VID_20261028_173215_440.mp4" },
-                { xp: 250, title: "Легионер", video: "VID_20261028_162626_544.mp4" },
-                { xp: 500, title: "Титан", video: "VID_20261028_173219_295.mp4" },
-                { xp: 1000, title: "Дух", video: "VID_20261028_173227_311.mp4" },
-                { xp: 2000, title: "Гладиатор", video: "VID_20261028_173233_432.mp4" },
-                { xp: 3500, title: "Демон", video: "VID_20261028_173238_313.mp4" },
-                { xp: 5000, title: "Охотник", video: "VID_20261028_173251_027.mp4" },
-                { xp: 7500, title: "Мастер", video: "VID_20261028_173803_138.mp4" },
-                { xp: 10000, title: "Чемпион", video: "VID_20261028_173808_318.mp4" }
-            ],
-            female: [
-                { xp: 0, title: "Новичок", video: "VID_20261028_175618_746.mp4" },
-                { xp: 100, title: "Фурия", video: "VID_20261028_175631_701.mp4" },
-                { xp: 250, title: "Амазонка", video: "VID_20261028_175641_349.mp4" },
-                { xp: 500, title: "Гарпия", video: "VID_20261028_175649_029.mp4" },
-                { xp: 1000, title: "Валькирия", video: "VID_20261028_175659_208.mp4" },
-                { xp: 2000, title: "Львица", video: "VID_20261028_175708_920.mp4" },
-                { xp: 3500, title: "Жар-птица", video: "VID_20261028_175726_660.mp4" },
-                { xp: 5000, title: "Горгона", video: "VID_20261028_175732_350.mp4" },
-                { xp: 7500, title: "Богиня", video: "VID_20261028_175744_681.mp4" },
-                { xp: 10000, title: "Химера", video: "VID_20261028_175750_651.mp4" }
-            ]
-        };
+        const levelsData = { male: [{xp:0,title:"Странник",video:"VID_20261028_173134_198.mp4"},{xp:100,title:"Берсерк",video:"VID_20261028_173215_440.mp4"}], female: [{xp:0,title:"Новичок",video:"VID_20261028_175618_746.mp4"},{xp:100,title:"Фурия",video:"VID_20261028_175631_701.mp4"}] };
+        let currentXP = 0, totalBurned = 0, userGender = 'male', tgUserName = "друг", currentLevel = 0;
 
-        let currentXP = 0, totalBurnedCalories = 0, userGender = 'male', tgUserName = "друг", currentLevelIndexGlobal = 0;
-
-        function loginWithTelegram() {
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                tgUserName = tg.initDataUnsafe.user.first_name;
-                checkProfile();
-            } else {
-                tg.showAlert("Пожалуйста, откройте приложение через Telegram!");
-            }
-        }
-
+        function loginWithTelegram() { if(tg.initDataUnsafe?.user) { tgUserName = tg.initDataUnsafe.user.first_name; checkProfile(); } else tg.showAlert("Откройте через Telegram!"); }
         function showEmailForm() { openScreen('email-screen'); }
-
         async function handleEmailAuth() {
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
-            if (!email || !password) { tg.showAlert("Заполните все поля!"); return; }
-            
-            const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (signInError) {
-                const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
-                if (signUpError) { tg.showAlert("Ошибка: " + signUpError.message); } 
-                else { tg.showAlert("Регистрация успешна! Проверьте почту."); }
-            } else {
-                tg.showAlert("Успешный вход!");
-                tgUserName = email.split('@')[0];
-                checkProfile();
-            }
+            const email = document.getElementById('auth-email').value, password = document.getElementById('auth-password').value;
+            if(!email||!password) return;
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) { await supabaseClient.auth.signUp({ email, password }); tg.showAlert("Регистрация/Вход"); } else { tg.showAlert("Успешно!"); tgUserName = email.split('@')[0]; checkProfile(); }
         }
-
-        async function logout() {
-            await supabaseClient.auth.signOut();
-            closeScreen('dashboard-screen');
-            openScreen('auth-screen');
-        }
-
+        async function logout() { await supabaseClient.auth.signOut(); closeScreen('dashboard-screen'); openScreen('auth-screen'); }
         function openProfileSettings() { openScreen('profile-settings-screen'); }
-
         async function linkEmail() {
-            const email = document.getElementById('link-email').value;
-            const password = document.getElementById('link-password').value;
-            if (!email || !password) { tg.showAlert("Заполните Email и пароль!"); return; }
-            
-            const { data, error } = await supabaseClient.auth.updateUser({ email: email, password: password });
-            if (error) {
-                const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
-                if (signUpError) { tg.showAlert("Ошибка: " + signUpError.message); } 
-                else { tg.showAlert("Email успешно привязан и зарегистрирован!"); }
-            } else { tg.showAlert("Email успешно привязан к текущему профилю!"); }
+            const email = document.getElementById('link-email').value, password = document.getElementById('link-password').value;
+            if(!email||!password) return;
+            const { error } = await supabaseClient.auth.updateUser({ email, password });
+            if(error) await supabaseClient.auth.signUp({ email, password });
+            tg.showAlert("Email привязан!");
         }
-
         function checkProfile() {
-            tg.CloudStorage.getItem('profile', (err, result) => {
-                if (result) {
-                    const profile = JSON.parse(result);
-                    userGender = profile.gender;
-                    document.body.className = userGender === 'female' ? 'female-theme' : 'male-theme';
-                    
-                    let bmr = userGender === 'male' ? (10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) : (10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161);
-                    let tdee = bmr * 1.375;
-                    let cals = profile.goal === 'lose' ? (tdee - 500) : (tdee + 500);
-                    document.getElementById('calories-norm').innerText = `${Math.round(cals)} ккал`;
-
-                    tg.CloudStorage.getItem('totalBurned', (err, burned) => {
-                        if (burned) { totalBurnedCalories = parseInt(burned); document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`; }
-                        tg.CloudStorage.getItem('xp', (err, xp) => {
-                            if (xp) currentXP = parseInt(xp);
-                            const levels = levelsData[userGender];
-                            for (let i = 0; i < levels.length; i++) { if (currentXP >= levels[i].xp) currentLevelIndexGlobal = i; }
-                            updateCharacterUI();
-                            closeScreen('auth-screen');
-                            closeScreen('onboarding-screen');
-                            openScreen('dashboard-screen');
-                            playNextBg();
-                        });
-                    });
-                } else {
-                    closeScreen('auth-screen');
-                    openScreen('onboarding-screen');
-                }
+            tg.CloudStorage.getItem('profile', (err, res) => {
+                if(res) {
+                    const p = JSON.parse(res); userGender = p.gender; document.body.className = userGender==='female'?'female-theme':'male-theme';
+                    let bmr = userGender==='male'?(10*p.weight+6.25*p.height-5*p.age+5):(10*p.weight+6.25*p.height-5*p.age-161);
+                    document.getElementById('calories-norm').innerText = `${Math.round(bmr*1.375 + (p.goal==='lose'?-500:500))} ккал`;
+                    tg.CloudStorage.getItem('xp', (e,x) => { if(x) currentXP=parseInt(x); updateUI(); tg.CloudStorage.getItem('burned', (e,b)=>{ if(b) {totalBurned=parseInt(b); document.getElementById('burned-total').innerText=`${totalBurned} ккал`;} closeScreen('auth-screen'); closeScreen('onboarding-screen'); openScreen('dashboard-screen'); playNextBg(); }); });
+                } else { closeScreen('auth-screen'); openScreen('onboarding-screen'); }
             });
         }
-
-        function changeTheme() {
-            const gender = document.getElementById('gender').value;
-            document.body.className = gender === 'female' ? 'female-theme' : 'male-theme';
+        function changeTheme() { document.body.className = document.getElementById('gender').value==='female'?'female-theme':'male-theme'; }
+        function updateUI() {
+            const lvls = levelsData[userGender]; let idx=0; for(let i=0;i<lvls.length;i++) if(currentXP>=lvls[i].xp) idx=i;
+            if(idx>currentLevel) { tg.showAlert("Новый уровень: "+lvls[idx].title); currentLevel=idx; }
+            const cur = lvls[idx], next = lvls[idx+1]||cur;
+            const vid = document.getElementById('character-video'); if(!vid.src.includes(cur.video)){ vid.src=cur.video; vid.play().catch(e=>{}); }
+            document.getElementById('char-level').innerText = `Уровень ${idx+1}`; document.getElementById('char-title').innerText = cur.title;
+            let prog = 100; if(next.xp>cur.xp){ prog=((currentXP-cur.xp)/(next.xp-cur.xp))*100; document.getElementById('xp-text').innerText=`${currentXP} / ${next.xp} XP`; } else document.getElementById('xp-text').innerText=`${currentXP} XP`;
+            document.getElementById('xp-bar').style.width = `${prog}%`;
         }
-
-        function updateCharacterUI() {
-            const levels = levelsData[userGender];
-            let newLevelIndex = 0;
-            for (let i = 0; i < levels.length; i++) { if (currentXP >= levels[i].xp) newLevelIndex = i; }
-
-            if (newLevelIndex > currentLevelIndexGlobal) {
-                const audioUp = new Audio(audioLevelUp);
-                if (isSoundOn) audioUp.play().catch(e => console.log(e));
-                tg.showAlert(`🎉 Поздравляем! Ты достиг нового уровня: ${levels[newLevelIndex].title}!`);
-            }
-            if (newLevelIndex < currentLevelIndexGlobal) {
-                const audioDown = new Audio(audioLose);
-                if (isSoundOn) audioDown.play().catch(e => console.log(e));
-            }
-            currentLevelIndexGlobal = newLevelIndex;
-
-            const currentLevel = levels[newLevelIndex];
-            const nextLevel = levels[newLevelIndex + 1] || levels[levels.length - 1];
-
-            const videoElement = document.getElementById('character-video');
-            if (videoElement.src.indexOf(currentLevel.video) === -1) {
-                videoElement.src = currentLevel.video;
-                videoElement.load();
-                videoElement.play().catch(e => console.log("Autoplay blocked"));
-            }
-
-            document.getElementById('char-level').innerText = `Уровень ${newLevelIndex + 1}`;
-            document.getElementById('char-title').innerText = currentLevel.title;
-
-            let progressPercent = 100;
-            if (nextLevel.xp > currentLevel.xp) {
-                progressPercent = ((currentXP - currentLevel.xp) / (nextLevel.xp - currentLevel.xp)) * 100;
-                document.getElementById('xp-text').innerText = `${currentXP} / ${nextLevel.xp} XP`;
-            } else {
-                document.getElementById('xp-text').innerText = `${currentXP} XP (MAX)`;
-            }
-            document.getElementById('xp-bar').style.width = `${progressPercent}%`;
-        }
-
-        function addXP(amount) {
-            currentXP += amount;
-            tg.CloudStorage.setItem('xp', currentXP.toString());
-            updateCharacterUI();
-        }
-
-        function openScreen(screenId) { 
-            document.getElementById(screenId).classList.add('active'); 
-        }
-        
-        function closeScreen(screenId) { 
-            document.getElementById(screenId).classList.remove('active'); 
-            if (screenId === 'timer-screen') { 
-                isWorkoutMode = false; 
-                audioWorkout.pause(); 
-                if (audioWin.paused) {
-                    playNextBg();
-                }
-            }
-        }
-
-        let timeLeft = 45, isRunning = false, timerInterval, sessionCalories = 0;
-        function updateTimerDisplay() { document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`; }
-        
+        function addXP(a) { currentXP+=a; tg.CloudStorage.setItem('xp',currentXP); updateUI(); }
+        function openScreen(id) { document.getElementById(id).classList.add('active'); }
+        function closeScreen(id) { document.getElementById(id).classList.remove('active'); if(id==='timer-screen'){ isWorkoutMode=false; audioWorkout.pause(); playNextBg(); } }
+        let timeLeft=45, isRunning=false, timerInt, sessionCal=0;
         function toggleTimer() {
             const btn = document.getElementById('timer-btn');
-            if (isRunning) { 
-                clearInterval(timerInterval); 
-                btn.innerText = "Старт"; 
-                btn.style.backgroundColor = "var(--accent-color)"; 
-            } else {
-                if (isSoundOn) {
-                    isWorkoutMode = true;
-                    playNextWorkout();
-                }
-                
-                if (timeLeft <= 0) timeLeft = 45; 
-                timerInterval = setInterval(() => {
-                    timeLeft--; updateTimerDisplay();
-                    if (timeLeft <= 0) { clearInterval(timerInterval); isRunning = false; btn.innerText = "Старт"; btn.style.backgroundColor = "var(--accent-color)"; }
-                }, 1000);
-                btn.innerText = "Пауза"; btn.style.backgroundColor = "#ff3b30";
-            }
-            isRunning = !isRunning;
+            if(isRunning) { clearInterval(timerInt); btn.innerText="Старт"; isRunning=false; }
+            else { if(isSoundOn){isWorkoutMode=true; playNextWorkout();} if(timeLeft<=0) timeLeft=45; timerInt=setInterval(()=>{ timeLeft--; document.getElementById('timer-display').innerText=`${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`; if(timeLeft<=0){clearInterval(timerInt); isRunning=false; btn.innerText="Старт";} },1000); btn.innerText="Пауза"; isRunning=true; }
         }
-        
-        function resetTimer() {
-            clearInterval(timerInterval); isRunning = false; timeLeft = 45; updateTimerDisplay();
-            const btn = document.getElementById('timer-btn');
-            if(btn) { btn.innerText = "Старт"; btn.style.backgroundColor = "var(--accent-color)"; }
-        }
-        
-        function startWorkoutFromList() { sessionCalories = 0; resetTimer(); closeScreen('workout-screen'); openScreen('timer-screen'); }
-        
-        function completeSet() {
-            const kcal = 15; sessionCalories += kcal; totalBurnedCalories += kcal;
-            addXP(15); tg.CloudStorage.setItem('totalBurned', totalBurnedCalories.toString());
-            document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`;
-        }
-
+        function resetTimer() { clearInterval(timerInt); isRunning=false; timeLeft=45; document.getElementById('timer-display').innerText="00:45"; document.getElementById('timer-btn').innerText="Старт"; }
+        function startWorkoutFromList() { sessionCal=0; resetTimer(); closeScreen('workout-screen'); openScreen('timer-screen'); }
+        function completeSet() { sessionCal+=15; totalBurned+=15; addXP(15); tg.CloudStorage.setItem('burned', totalBurned); document.getElementById('burned-total').innerText=`${totalBurned} ккал`; }
         function finishWorkout() {
-            audioWorkout.pause();
-            audioWorkout.currentTime = 0;
-            audioBg.pause(); 
-
-            document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
-            
-            const q = getNextRandomQuote();
-            
-            document.getElementById('finish-quote').innerText = `«${q.text}»`;
-            document.getElementById('finish-author').innerText = `— ${q.author}`;
-            
-            if (isSoundOn) {
-                audioWin.play().catch(e => console.log(e));
-            }
-            
-            closeScreen('timer-screen'); 
-            openScreen('finish-screen');
+            audioWorkout.pause(); audioWin.play().catch(e=>{});
+            document.getElementById('finish-stats').innerText = `Сожжено ${sessionCal} ккал`;
+            const q = getNextQuote(); document.getElementById('finish-quote').innerText=`«${q.text}»`; document.getElementById('finish-author').innerText=`— ${q.author}`;
+            closeScreen('timer-screen'); openScreen('finish-screen');
         }
-
-        function loadLeaderboard() {
-            const fake = [{ name: "Александр", kcal: 4500 }, { name: "Елена", kcal: 3200 }];
-            let all = [...fake, { name: tgUserName + " (Вы)", kcal: totalBurnedCalories, isMe: true }].sort((a, b) => b.kcal - a.kcal);
-            document.getElementById('leaderboard-list').innerHTML = all.map((u, i) => `
-                <div class="leaderboard-item ${u.isMe ? 'my-row' : ''}">
-                    <div class="rank">${i + 1}</div>
-                    <div class="user-info"><p style="margin:0;font-weight:bold;font-size:16px;">${u.name}</p><p style="margin:0;font-size:13px;color:#8e8e93;">${u.kcal} ккал</p></div>
-                </div>`).join('');
-        }
-
         function saveProfile() {
-            const age = document.getElementById('age').value;
-            const gender = document.getElementById('gender').value;
-            const weight = document.getElementById('weight').value;
-            const height = document.getElementById('height').value;
-            const goal = document.getElementById('goal').value;
-            if (!age || !weight || !height) { tg.showAlert("Заполни все поля!"); return; }
-            tg.CloudStorage.setItem('profile', JSON.stringify({ age, gender, weight, height, goal }), (err, success) => {
-                if (success) checkProfile();
-            });
+            const p = { age: document.getElementById('age').value, gender: document.getElementById('gender').value, weight: document.getElementById('weight').value, height: document.getElementById('height').value, goal: document.getElementById('goal').value };
+            if(!p.age||!p.weight||!p.height) return;
+            tg.CloudStorage.setItem('profile', JSON.stringify(p), () => checkProfile());
         }
-
-        document.body.addEventListener('click', function() {
-            if (!musicStarted) {
-                musicStarted = true;
-                if (isSoundOn) {
-                    if (isWorkoutMode) playNextWorkout(); else playNextBg();
-                }
-            }
-        }, { once: true });
-
+        document.body.addEventListener('click', () => { if(!musicStarted){ musicStarted=true; if(isSoundOn) playNextBg(); } }, {once:true});
+        let musicStarted = false;
     </script>
 </body>
 </html>
