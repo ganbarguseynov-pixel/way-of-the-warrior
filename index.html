@@ -92,34 +92,18 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        #food-result {
-            text-align: center;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        #food-result h2 {
-            text-align: center !important;
-            width: 100%;
-            word-break: break-word;
-            margin-bottom: 20px;
-        }
-        .nutrition-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 10px;
-            padding: 0 10px;
-            box-sizing: border-box;
-        }
+        #food-result { text-align: center; width: 100%; box-sizing: border-box; }
+        #food-result h2 { text-align: center !important; width: 100%; word-break: break-word; margin-bottom: 20px; }
+        .nutrition-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; padding: 0 10px; box-sizing: border-box; }
     </style>
 </head>
 <body class="male-theme">
 
-    <audio id="audio-bg" loop></audio>
-    <audio id="audio-workout" loop></audio>
-    <audio id="audio-win"></audio>
-    <audio id="audio-lose"></audio>
+    <!-- Добавили preload="auto" для быстрой загрузки музыки -->
+    <audio id="audio-bg" loop preload="auto"></audio>
+    <audio id="audio-workout" loop preload="auto"></audio>
+    <audio id="audio-win" preload="auto"></audio>
+    <audio id="audio-lose" preload="auto"></audio>
 
     <div id="auth-screen" class="screen active auth-screen">
         <div class="auth-container">
@@ -429,6 +413,8 @@
                 if (currentBgIndex >= bgTracks.length) currentBgIndex = 0;
                 
                 audioBg.src = bgTracks[currentBgIndex];
+                // Обеспечиваем загрузку перед воспроизведением
+                audioBg.load(); 
                 audioBg.play().catch(e => console.log("Autoplay blocked"));
                 
                 tg.CloudStorage.setItem('bgIndex', ((currentBgIndex + 1) % bgTracks.length).toString());
@@ -441,14 +427,15 @@
             if (!isSoundOn) return;
             audioBg.pause(); 
             audioWorkout.src = workoutTracks[currentWorkoutIndex];
+            audioWorkout.load(); // Принудительная загрузка для устранения лага
             audioWorkout.play().catch(e => console.log("Autoplay blocked"));
             currentWorkoutIndex = (currentWorkoutIndex + 1) % workoutTracks.length;
         }
         audioWorkout.onended = playNextWorkout;
 
-        // Как только музыка победы заканчивается, включаем следующую фоновую
+        // КАК ТОЛЬКО МЕЛОДИЯ ПОБЕДЫ ЗАКАНЧИВАЕТСЯ - ВКЛЮЧАЕМ СЛЕДУЮЩУЮ ФОНОВУЮ
         audioWin.onended = function() {
-            isWorkoutMode = false; // Выходим из режима тренировки
+            isWorkoutMode = false; // Сбрасываем режим
             playNextBg(); // Включаем фоновую музыку
         };
 
@@ -650,7 +637,6 @@
             if (screenId === 'timer-screen') { 
                 isWorkoutMode = false; 
                 audioWorkout.pause(); 
-                // Если звук победы не играет, включаем фоновую
                 if (audioWin.paused) {
                     playNextBg();
                 }
@@ -667,7 +653,7 @@
                 btn.innerText = "Старт"; 
                 btn.style.backgroundColor = "var(--accent-color)"; 
             } else {
-                // Включаем музыку моментально по клику (браузеры это разрешают)
+                // МГНОВЕННЫЙ запуск музыки по клику (пока браузер не заблокировал)
                 if (isSoundOn) {
                     isWorkoutMode = true;
                     playNextWorkout();
@@ -743,9 +729,10 @@
         let lastQuoteIndex = -1;
 
         function finishWorkout() {
-            // 1. ЖЕСТКО останавливаем фоновую музыку
+            // 1. ЖЕСТКО останавливаем ВСЮ музыку
             audioWorkout.pause();
             audioWorkout.currentTime = 0;
+            audioBg.pause(); // На всякий случай глушим и фоновую
 
             // 2. Показываем статистику
             document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
