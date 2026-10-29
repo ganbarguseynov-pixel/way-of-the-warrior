@@ -28,14 +28,12 @@
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
         
-        // Создаем аудио-объект для музыки
         let audioWorkout = new Audio();
         let isRunning = false;
         let timeLeft = 45;
         let timerInterval;
 
         function playMusic() {
-            // Используем один из треков, которые есть в вашей папке
             audioWorkout.src = "03. TECHNO-SYNDROME 12' MI..."; 
             audioWorkout.load();
             audioWorkout.play().catch(e => console.log("Ошибка музыки:", e));
@@ -58,7 +56,7 @@
                 btn.innerText = "Старт";
                 isRunning = false;
             } else {
-                playMusic(); // Включаем музыку по клику
+                playMusic(); 
                 btn.innerText = "Пауза";
                 isRunning = true;
                 timerInterval = setInterval(() => {
@@ -92,6 +90,8 @@
 
         function finishAndGoBack() {
             stopMusic();
+            // Ставим флаг, чтобы главный экран понял, что мы вернулись с тренировки
+            localStorage.setItem('returningFromTimer', 'true');
             window.location.href = 'index.html';
         }
     </script>
