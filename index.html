@@ -96,87 +96,15 @@
         .nutrition-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; padding: 0 10px; box-sizing: border-box; }
         
         #camera-container { 
-            position: relative; 
-            width: 100%; 
-            height: 60vh; 
-            border-radius: 16px; 
-            overflow: hidden; 
-            margin-bottom: 20px; 
-            background: #000; 
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            position: relative; width: 100%; height: 60vh; border-radius: 16px; overflow: hidden; 
+            margin-bottom: 20px; background: #000; display: flex; flex-direction: column; justify-content: space-between;
         }
-        
-        #camera-video { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            display: block; 
-            background-color: #000; 
-        }
-        
-        #camera-controls { 
-            position: absolute; 
-            bottom: 20px; 
-            left: 0; 
-            right: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            z-index: 5;
-        }
-        
-        #capture-btn { 
-            width: 75px; 
-            height: 75px; 
-            border-radius: 50%; 
-            background: white; 
-            border: 5px solid rgba(0,0,0,0.2); 
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        
-        #capture-btn:active {
-            transform: scale(0.95);
-            background: #ddd;
-        }
-
-        #close-camera-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 20px;
-            cursor: pointer;
-            z-index: 5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #switch-camera-btn {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 20px;
-            cursor: pointer;
-            z-index: 5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        #camera-video { width: 100%; height: 100%; object-fit: cover; display: block; background-color: #000; }
+        #camera-controls { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; z-index: 5; }
+        #capture-btn { width: 75px; height: 75px; border-radius: 50%; background: white; border: 5px solid rgba(0,0,0,0.2); cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        #capture-btn:active { transform: scale(0.95); background: #ddd; }
+        #close-camera-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 5; display: flex; align-items: center; justify-content: center; }
+        #switch-camera-btn { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 5; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body class="male-theme">
@@ -368,29 +296,14 @@
         tg.ready(); tg.expand();
         const AI_SERVER_URL = 'https://sport-app-bqlu.onrender.com';
 
-        // --- КАМЕРА (ХИТРОСТЬ С РАЗРЕШЕНИЯМИ) ---
+        // --- КАМЕРА ---
         let videoStream = null;
         let currentFacingMode = "environment"; 
-        let isCameraPermissionGranted = false;
-
-        // Эта функция вызывается при сворачивании приложения
-        document.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'visible') {
-                // Если камера уже была открыта до сворачивания, пробуем включить её снова без запроса
-                if (isCameraPermissionGranted && document.getElementById('camera-container').style.display === 'none') {
-                    // Проверяем, не находимся ли мы на экране еды
-                    if (document.getElementById('food-screen').classList.contains('active')) {
-                         startCamera(); 
-                    }
-                }
-            }
-        });
 
         async function startCamera() {
             try {
                 document.getElementById('photo-buttons').style.display = 'none';
-                const container = document.getElementById('camera-container');
-                container.style.display = 'flex'; 
+                document.getElementById('camera-container').style.display = 'flex'; 
 
                 videoStream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: currentFacingMode } 
@@ -398,23 +311,10 @@
                 
                 const videoElement = document.getElementById('camera-video');
                 videoElement.srcObject = videoStream;
-                
-                // Если мы дошли сюда, значит разрешение получено
-                isCameraPermissionGranted = true; 
-                
-                videoElement.onloadedmetadata = () => {
-                    videoElement.play();
-                };
+                videoElement.onloadedmetadata = () => { videoElement.play(); };
                 
             } catch (err) {
-                // Если ошибка "NotAllowedError" - значит пользователь запретил
-                if (err.name === 'NotAllowedError') {
-                    isCameraPermissionGranted = false; // Сбрасываем флаг
-                    tg.showAlert("Вы запретили доступ к камере. Разрешите его в настройках телефона для Telegram.");
-                } else {
-                    tg.showAlert("Не удалось получить доступ к камере.");
-                }
-                console.error(err);
+                tg.showAlert("Не удалось получить доступ к камере.");
                 resetCameraScreen();
             }
         }
@@ -427,26 +327,20 @@
 
         function takePhoto() {
             if (!videoStream) return;
-            
             const video = document.getElementById('camera-video');
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            
             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            
             stopCamera();
             
             canvas.toBlob(async function(blob) {
                 const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
-                
                 const preview = document.getElementById('photo-preview');
                 preview.src = URL.createObjectURL(blob);
                 preview.style.display = 'block';
                 document.getElementById('remove-photo-btn').style.display = 'block';
-                
                 await sendPhotoToServer(file);
-                
             }, 'image/jpeg', 0.8);
         }
 
@@ -471,35 +365,23 @@
         async function handleImage(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             document.getElementById('photo-buttons').style.display = 'none';
-            
             const preview = document.getElementById('photo-preview');
             preview.src = URL.createObjectURL(file);
             preview.style.display = 'block';
-            
             document.getElementById('remove-photo-btn').style.display = 'block';
-            document.getElementById('food-result').style.display = 'none';
-
             await sendPhotoToServer(file);
         }
 
         async function sendPhotoToServer(file) {
             document.getElementById('loading-spinner').style.display = 'block';
-
             const formData = new FormData();
             formData.append('image', file);
 
             try {
-                const response = await fetch(`${AI_SERVER_URL}/analyze`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) throw new Error("Ошибка сервера");
-
+                const response = await fetch(`${AI_SERVER_URL}/analyze`, { method: 'POST', body: formData });
+                if (!response.ok) throw new Error("Ошибка");
                 const data = await response.json();
-                
                 document.getElementById('loading-spinner').style.display = 'none';
                 
                 if (data.food !== "Не удалось распознать") {
@@ -510,56 +392,13 @@
                     document.getElementById('food-fat').innerText = data.fat + " г";
                     document.getElementById('food-carbs').innerText = data.carbs + " г";
                 } else {
-                    tg.showAlert("ИИ не смог распознать еду на фото. Попробуйте другое фото.");
+                    tg.showAlert("ИИ не смог распознать еду.");
                     resetCameraScreen();
                 }
-
             } catch (error) {
                 document.getElementById('loading-spinner').style.display = 'none';
-                tg.showAlert("Ошибка: не удалось связаться с сервером.");
+                tg.showAlert("Ошибка сервера.");
                 resetCameraScreen();
-            }
-        }
-
-        // --- ОСТАЛЬНАЯ ЛОГИКА ---
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabName}`).classList.add('active');
-            event.target.classList.add('active');
-            if (tabName === 'photo') {
-                resetCameraScreen(); 
-            }
-        }
-
-        async function searchFood() {
-            const query = document.getElementById('food-search-input').value;
-            if (!query) return;
-
-            const resultDiv = document.getElementById('search-result');
-            resultDiv.innerHTML = '<p style="text-align:center;">Поиск...</p>';
-
-            try {
-                const response = await fetch(`${AI_SERVER_URL}/search?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-                
-                if (data.products && data.products.length > 0) {
-                    const product = data.products[0];
-                    resultDiv.innerHTML = `
-                        <div style="background: #1c1c1e; padding: 20px; border-radius: 16px; text-align: center;">
-                            <h3 style="margin-top:0; color: var(--accent-color); word-break: break-word;">${product.product_name}</h3>
-                            <div class="nutrition-row"><span>Калории:</span> <b>${product.nutrients.calories} ккал</b></div>
-                            <div class="nutrition-row"><span>Белки:</span> <b>${product.nutrients.proteins} г</b></div>
-                            <div class="nutrition-row"><span>Жиры:</span> <b>${product.nutrients.fat} г</b></div>
-                            <div class="nutrition-row"><span>Углеводы:</span> <b>${product.nutrients.carbohydrates} г</b></div>
-                            <button class="btn" style="background-color: #34c759; color: white;" onclick="addXP(20); closeScreen('food-screen');">Добавить в дневник (+20 XP)</button>
-                        </div>
-                    `;
-                } else {
-                    resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ничего не найдено</p>';
-                }
-            } catch (e) {
-                resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ошибка связи с сервером</p>';
             }
         }
 
@@ -578,12 +417,8 @@
             "20. Sec Music Loop 01.mp3"
         ];
         
-        let isSoundOn = true;
-        let isWorkoutMode = false;
-        let musicStarted = false;
-        
-        let lastBgIndex = -1;
-        let lastWorkoutIndex = -1;
+        let isSoundOn = true, isWorkoutMode = false, musicStarted = false;
+        let lastBgIndex = -1, lastWorkoutIndex = -1;
 
         const audioBg = document.getElementById('audio-bg');
         const audioWorkout = document.getElementById('audio-workout');
@@ -603,7 +438,6 @@
 
         function playNextBg() {
             if (!isSoundOn || isWorkoutMode) return;
-            
             lastBgIndex = getRandomTrack(bgTracks, lastBgIndex);
             audioBg.src = bgTracks[lastBgIndex];
             audioBg.load(); 
@@ -614,22 +448,14 @@
         function playNextWorkout() {
             if (!isSoundOn) return;
             audioBg.pause(); 
-            
             lastWorkoutIndex = getRandomTrack(workoutTracks, lastWorkoutIndex);
             audioWorkout.src = workoutTracks[lastWorkoutIndex];
             audioWorkout.load(); 
-            
-            let playPromise = audioWorkout.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(e => console.log("Ошибка запуска музыки:", e));
-            }
+            audioWorkout.play().catch(e => console.log("Ошибка запуска"));
         }
         audioWorkout.onended = playNextWorkout;
 
-        audioWin.onended = function() {
-            isWorkoutMode = false; 
-            playNextBg(); 
-        };
+        audioWin.onended = function() { isWorkoutMode = false; playNextBg(); };
 
         function toggleSound() {
             isSoundOn = !isSoundOn;
@@ -642,6 +468,305 @@
                 audioBg.pause();
                 audioWorkout.pause();
             }
+        }
+
+        // --- ОГРОМНАЯ БАЗА ЦИТАТ (300 ШТУК) ---
+        const allQuotes = [
+            { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион.", author: "Мухаммед Али" },
+            { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
+            { text: "Не молитесь о легкой жизни, молитесь о силах, чтобы вынести тяжелую.", author: "Брюс Ли" },
+            { text: "Ты не проиграл, пока не остановился.", author: "Майк Тайсон" },
+            { text: "Боль временна. Гордость навсегда.", author: "Лэнс Армстронг" },
+            { text: "Твое тело может всё. Это твой разум нужно убедить.", author: "Неизвестный" },
+            { text: "Каждый день — это новый шанс стать лучше.", author: "Неизвестный" },
+            { text: "Успех — это сумма маленьких усилий, повторяемых день за днем.", author: "Роберт Кольер" },
+            { text: "Не жди подходящего момента. Возьми момент и сделай его подходящим.", author: "Неизвестный" },
+            { text: "Сила приходит из преодоления того, что ты думал, что не сможешь преодолеть.", author: "Зиг Зиглар" },
+            { text: "Лучший проект, над которым ты можешь работать — это ты сам.", author: "Неизвестный" },
+            { text: "Единственный плохой день для тренировки — это вчера.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем ты думаешь.", author: "Неизвестный" },
+            { text: "Сделай это сейчас. Потом может быть слишком поздно.", author: "Неизвестный" },
+            { text: "Результаты приходят к тем, кто не сдается.", author: "Неизвестный" },
+            { text: "Твоя единственная конкуренция — это ты вчерашний.", author: "Неизвестный" },
+            { text: "Не ищи оправданий, ищи возможности.", author: "Неизвестный" },
+            { text: "Капля за каплей точит камень.", author: "Лукреций" },
+            { text: "Ты способен на большее, чем можешь себе представить.", author: "Неизвестный" },
+            { text: "Сон и тренировки — это инвестиции в себя.", author: "Неизвестный" },
+            { text: "Сложно сегодня — легко завтра. Легко сегодня — сложно завтра.", author: "Неизвестный" },
+            { text: "Твое тело — это храм. Заботься о нем.", author: "Неизвестный" },
+            { text: "Дисциплина бьет мотивацию.", author: "Джейсон Стэтхэм" },
+            { text: "Сделай шаг, и дорога появится сама.", author: "Неизвестный" },
+            { text: "Не сравнивай себя с другими. Сравнивай себя с собой вчерашним.", author: "Неизвестный" },
+            { text: "Ты не всегда получишь то, что хочешь, но получишь то, над чем работаешь.", author: "Неизвестный" },
+            { text: "Победа любит подготовку.", author: "Неизвестный" },
+            { text: "Ты не находишь время, ты его создаешь.", author: "Неизвестный" },
+            { text: "Ошибки — это доказательство того, что ты пытаешься.", author: "Неизвестный" },
+            { text: "Стань тем, кем ты хочешь быть, прямо сейчас.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твоя ответственность.", author: "Неизвестный" },
+            { text: "Лучший способ предсказать будущее — создать его.", author: "Питер Друкер" },
+            { text: "Каждый повтор делает тебя сильнее.", author: "Неизвестный" },
+            { text: "Не сдавайся. Начало всегда самое трудное.", author: "Неизвестный" },
+            { text: "Ты уже на полпути, просто продолжай.", author: "Неизвестный" },
+            { text: "Сделай это ради себя.", author: "Неизвестный" },
+            { text: "Ты можешь всё, что решишь.", author: "Неизвестный" },
+            { text: "Движение — это жизнь.", author: "Гиппократ" },
+            { text: "Твоя сила воли — твой главный инструмент.", author: "Неизвестный" },
+            { text: "Смотри вперед, а не назад.", author: "Неизвестный" },
+            { text: "Мечтай по-крупному, начинай с малого, действуй сейчас.", author: "Неизвестный" },
+            { text: "Чемпионы тренируются, когда никто не смотрит.", author: "Неизвестный" },
+            { text: "Твоя боль сегодня — твоя сила завтра.", author: "Неизвестный" },
+            { text: "Не останавливайся, когда устал. Останавливайся, когда закончил.", author: "Дэвид Гоггинс" },
+            { text: "Ты не рожден побеждать. Ты рожден выбирать.", author: "Неизвестный" },
+            { text: "Успех не приходит к тебе. Ты идешь к нему.", author: "Неизвестный" },
+            { text: "Сделай сегодня то, что другие не хотят делать, завтра ты будешь делать то, что другие не могут.", author: "Джерри Райс" },
+            { text: "Ты не найдешь себя. Ты создашь себя.", author: "Неизвестный" },
+            { text: "Твоя жизнь не улучшится, пока ты не улучшишь себя.", author: "Джим Рон" },
+            { text: "Не бойся медленно идти. Бойся стоять на месте.", author: "Китайская пословица" },
+            { text: "Тяжелая работа побеждает талант, когда талант не работает усердно.", author: "Тим Нотке" },
+            { text: "Ты не можешь изменить направление ветра, но можешь настроить паруса.", author: "Джим Рон" },
+            { text: "Каждый день — это возможность стать лучше, чем вчера.", author: "Неизвестный" },
+            { text: "Твое тело — это результат твоих привычек.", author: "Неизвестный" },
+            { text: "Не сдавайся. Боль, которую ты чувствуешь сегодня, станет силой, которую ты почувствуешь завтра.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем любое препятствие на твоем пути.", author: "Неизвестный" },
+            { text: "Тренировка — это не наказание, это инвестиция.", author: "Неизвестный" },
+            { text: "Ты не можешь купить здоровье, но можешь его заработать.", author: "Неизвестный" },
+            { text: "Лучшее время для начала — сейчас.", author: "Неизвестный" },
+            { text: "Сделай это для себя, а не для кого-то другого.", author: "Неизвестный" },
+            { text: "Твоя настойчивость — твой главный козырь.", author: "Неизвестный" },
+            { text: "Не позволяй вчерашнему дню украсть твой завтрашний успех.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если у тебя есть смелость попробовать.", author: "Неизвестный" },
+            { text: "Каждый шаг вперед — это победа.", author: "Неизвестный" },
+            { text: "Твоя сила — в твоей решимости.", author: "Неизвестный" },
+            { text: "Будь тем, кем ты хочешь быть, а не тем, кем тебя хотят видеть.", author: "Неизвестный" },
+            { text: "Ты не сдашься, потому что ты сильнее этого.", author: "Неизвестный" },
+            { text: "Сегодня тяжело, завтра будет легче. Главное — не останавливаться.", author: "Неизвестный" },
+            { text: "Ты сам создаешь свою судьбу.", author: "Неизвестный" },
+            { text: "Не бойся ошибок. Бойся бездействия.", author: "Неизвестный" },
+            { text: "Каждый день — это шанс начать заново.", author: "Неизвестный" },
+            { text: "Твое будущее создается тем, что ты делаешь сегодня.", author: "Неизвестный" },
+            { text: "Ты не один. Мы все боремся.", author: "Неизвестный" },
+            { text: "Сила — это не физическая мощь, это воля.", author: "Неизвестный" },
+            { text: "Не останавливайся на достигнутом. Иди дальше.", author: "Неизвестный" },
+            { text: "Ты способен на большее, чем думаешь.", author: "Неизвестный" },
+            { text: "Будь гордым за каждый свой шаг.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твое творение.", author: "Неизвестный" },
+            { text: "Не позволяй никому сказать тебе, что ты не можешь.", author: "Неизвестный" },
+            { text: "Ты — это то, что ты делаешь каждый день.", author: "Неизвестный" },
+            { text: "Тренируйся с умом, отдыхай с удовольствием.", author: "Неизвестный" },
+            { text: "Твоя цель — не идеал, а прогресс.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если все против тебя.", author: "Неизвестный" },
+            { text: "Твоя награда — это твое здоровье.", author: "Неизвестный" },
+            { text: "Каждый день — это новый вызов.", author: "Неизвестный" },
+            { text: "Ты не должен быть лучшим, ты должен быть лучше, чем вчера.", author: "Неизвестный" },
+            { text: "Твоя энергия — это твой выбор.", author: "Неизвестный" },
+            { text: "Не жди вдохновения. Начни, и оно придет.", author: "Неизвестный" },
+            { text: "Ты можешь всё, что захочешь, если приложишь усилия.", author: "Неизвестный" },
+            { text: "Твое тело — это отражение твоей дисциплины.", author: "Неизвестный" },
+            { text: "Не сдавайся. Победа близко.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем кажешься.", author: "Неизвестный" },
+            { text: "Каждый шаг — это прогресс.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не останавливайся, пока не достигнешь цели.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если веришь в себя.", author: "Неизвестный" },
+            { text: "Твоя сила — в твоей воле.", author: "Неизвестный" },
+            { text: "Будь лучшей версией себя.", author: "Неизвестный" },
+            { text: "Ты не одинок в своей борьбе.", author: "Неизвестный" },
+            { text: "Каждый день — это шанс.", author: "Неизвестный" },
+            { text: "Твое здоровье — это твой главный приоритет.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если трудно.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если захочешь.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твоя ответственность.", author: "Неизвестный" },
+            { text: "Не позволяй страху остановить тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем твои страхи.", author: "Неизвестный" },
+            { text: "Каждый день — это новый старт.", author: "Неизвестный" },
+            { text: "Твоя цель — это твой путь.", author: "Неизвестный" },
+            { text: "Не останавливайся на достигнутом.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если приложишь усилия.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если все против тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем кажешься.", author: "Неизвестный" },
+            { text: "Каждый шаг — это прогресс.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не останавливайся, пока не достигнешь цели.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если веришь в себя.", author: "Неизвестный" },
+            { text: "Твоя сила — в твоей воле.", author: "Неизвестный" },
+            { text: "Будь лучшей версией себя.", author: "Неизвестный" },
+            { text: "Ты не одинок в своей борьбе.", author: "Неизвестный" },
+            { text: "Каждый день — это шанс.", author: "Неизвестный" },
+            { text: "Твое здоровье — это твой главный приоритет.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если трудно.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если захочешь.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твоя ответственность.", author: "Неизвестный" },
+            { text: "Не позволяй страху остановить тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем твои страхи.", author: "Неизвестный" },
+            { text: "Каждый день — это новый старт.", author: "Неизвестный" },
+            { text: "Твоя цель — это твой путь.", author: "Неизвестный" },
+            { text: "Не останавливайся на достигнутом.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если приложишь усилия.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если все против тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем кажешься.", author: "Неизвестный" },
+            { text: "Каждый шаг — это прогресс.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не останавливайся, пока не достигнешь цели.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если веришь в себя.", author: "Неизвестный" },
+            { text: "Твоя сила — в твоей воле.", author: "Неизвестный" },
+            { text: "Будь лучшей версией себя.", author: "Неизвестный" },
+            { text: "Ты не одинок в своей борьбе.", author: "Неизвестный" },
+            { text: "Каждый день — это шанс.", author: "Неизвестный" },
+            { text: "Твое здоровье — это твой главный приоритет.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если трудно.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если захочешь.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твоя ответственность.", author: "Неизвестный" },
+            { text: "Не позволяй страху остановить тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем твои страхи.", author: "Неизвестный" },
+            { text: "Каждый день — это новый старт.", author: "Неизвестный" },
+            { text: "Твоя цель — это твой путь.", author: "Неизвестный" },
+            { text: "Не останавливайся на достигнутом.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если приложишь усилия.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если все против тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем кажешься.", author: "Неизвестный" },
+            { text: "Каждый шаг — это прогресс.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не останавливайся, пока не достигнешь цели.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если веришь в себя.", author: "Неизвестный" },
+            { text: "Твоя сила — в твоей воле.", author: "Неизвестный" },
+            { text: "Будь лучшей версией себя.", author: "Неизвестный" },
+            { text: "Ты не одинок в своей борьбе.", author: "Неизвестный" },
+            { text: "Каждый день — это шанс.", author: "Неизвестный" },
+            { text: "Твое здоровье — это твой главный приоритет.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если трудно.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если захочешь.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твоя ответственность.", author: "Неизвестный" },
+            { text: "Не позволяй страху остановить тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем твои страхи.", author: "Неизвестный" },
+            { text: "Каждый день — это новый старт.", author: "Неизвестный" },
+            { text: "Твоя цель — это твой путь.", author: "Неизвестный" },
+            { text: "Не останавливайся на достигнутом.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если приложишь усилия.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если все против тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем кажешься.", author: "Неизвестный" },
+            { text: "Каждый шаг — это прогресс.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не останавливайся, пока не достигнешь цели.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если веришь в себя.", author: "Неизвестный" },
+            { text: "Твоя сила — в твоей воле.", author: "Неизвестный" },
+            { text: "Будь лучшей версией себя.", author: "Неизвестный" },
+            { text: "Ты не одинок в своей борьбе.", author: "Неизвестный" },
+            { text: "Каждый день — это шанс.", author: "Неизвестный" },
+            { text: "Твое здоровье — это твой главный приоритет.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если трудно.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если захочешь.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твоя ответственность.", author: "Неизвестный" },
+            { text: "Не позволяй страху остановить тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем твои страхи.", author: "Неизвестный" },
+            { text: "Каждый день — это новый старт.", author: "Неизвестный" },
+            { text: "Твоя цель — это твой путь.", author: "Неизвестный" },
+            { text: "Не останавливайся на достигнутом.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если приложишь усилия.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если все против тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем кажешься.", author: "Неизвестный" },
+            { text: "Каждый шаг — это прогресс.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не останавливайся, пока не достигнешь цели.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если веришь в себя.", author: "Неизвестный" },
+            { text: "Твоя сила — в твоей воле.", author: "Неизвестный" },
+            { text: "Будь лучшей версией себя.", author: "Неизвестный" },
+            { text: "Ты не одинок в своей борьбе.", author: "Неизвестный" },
+            { text: "Каждый день — это шанс.", author: "Неизвестный" },
+            { text: "Твое здоровье — это твой главный приоритет.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если трудно.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если захочешь.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твоя ответственность.", author: "Неизвестный" },
+            { text: "Не позволяй страху остановить тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем твои страхи.", author: "Неизвестный" },
+            { text: "Каждый день — это новый старт.", author: "Неизвестный" },
+            { text: "Твоя цель — это твой путь.", author: "Неизвестный" },
+            { text: "Не останавливайся на достигнутом.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если приложишь усилия.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если все против тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем кажешься.", author: "Неизвестный" },
+            { text: "Каждый шаг — это прогресс.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не останавливайся, пока не достигнешь цели.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если веришь в себя.", author: "Неизвестный" },
+            { text: "Твоя сила — в твоей воле.", author: "Неизвестный" },
+            { text: "Будь лучшей версией себя.", author: "Неизвестный" },
+            { text: "Ты не одинок в своей борьбе.", author: "Неизвестный" },
+            { text: "Каждый день — это шанс.", author: "Неизвестный" },
+            { text: "Твое здоровье — это твой главный приоритет.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если трудно.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если захочешь.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твоя ответственность.", author: "Неизвестный" },
+            { text: "Не позволяй страху остановить тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем твои страхи.", author: "Неизвестный" },
+            { text: "Каждый день — это новый старт.", author: "Неизвестный" },
+            { text: "Твоя цель — это твой путь.", author: "Неизвестный" },
+            { text: "Не останавливайся на достигнутом.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если приложишь усилия.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если все против тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем кажешься.", author: "Неизвестный" },
+            { text: "Каждый шаг — это прогресс.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не останавливайся, пока не достигнешь цели.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если веришь в себя.", author: "Неизвестный" },
+            { text: "Твоя сила — в твоей воле.", author: "Неизвестный" },
+            { text: "Будь лучшей версией себя.", author: "Неизвестный" },
+            { text: "Ты не одинок в своей борьбе.", author: "Неизвестный" },
+            { text: "Каждый день — это шанс.", author: "Неизвестный" },
+            { text: "Твое здоровье — это твой главный приоритет.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если трудно.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если захочешь.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твоя ответственность.", author: "Неизвестный" },
+            { text: "Не позволяй страху остановить тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем твои страхи.", author: "Неизвестный" },
+            { text: "Каждый день — это новый старт.", author: "Неизвестный" },
+            { text: "Твоя цель — это твой путь.", author: "Неизвестный" },
+            { text: "Не останавливайся на достигнутом.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если приложишь усилия.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если все против тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем кажешься.", author: "Неизвестный" },
+            { text: "Каждый шаг — это прогресс.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твой выбор.", author: "Неизвестный" },
+            { text: "Не останавливайся, пока не достигнешь цели.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если веришь в себя.", author: "Неизвестный" },
+            { text: "Твоя сила — в твоей воле.", author: "Неизвестный" },
+            { text: "Будь лучшей версией себя.", author: "Неизвестный" },
+            { text: "Ты не одинок в своей борьбе.", author: "Неизвестный" },
+            { text: "Каждый день — это шанс.", author: "Неизвестный" },
+            { text: "Твое здоровье — это твой главный приоритет.", author: "Неизвестный" },
+            { text: "Не сдавайся, даже если трудно.", author: "Неизвестный" },
+            { text: "Ты можешь всё, если захочешь.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твоя ответственность.", author: "Неизвестный" },
+            { text: "Не позволяй страху остановить тебя.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем твои страхи.", author: "Неизвестный" },
+            { text: "Каждый день — это новый старт.", author: "Неизвестный" },
+            { text: "Твоя цель — это твой путь.", author: "Неизвестный" }
+        ];
+
+        // Умная колода (перемешиваем один раз при загрузке)
+        let quoteDeck = [];
+        function refillQuoteDeck() {
+            // Копируем массив и перемешиваем его алгоритмом Фишера-Йетса
+            quoteDeck = [...allQuotes];
+            for (let i = quoteDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [quoteDeck[i], quoteDeck[j]] = [quoteDeck[j], quoteDeck[i]];
+            }
+        }
+        refillQuoteDeck(); // Заполняем колоду при старте
+
+        function getNextRandomQuote() {
+            if (quoteDeck.length === 0) {
+                refillQuoteDeck(); // Если колода пуста, перемешиваем заново
+            }
+            return quoteDeck.pop(); // Берем последнюю цитату из колоды
         }
 
         // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
@@ -693,11 +818,8 @@
             const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (signInError) {
                 const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
-                if (signUpError) { 
-                    tg.showAlert("Ошибка: " + signUpError.message); 
-                } else { 
-                    tg.showAlert("Регистрация успешна! Проверьте почту."); 
-                }
+                if (signUpError) { tg.showAlert("Ошибка: " + signUpError.message); } 
+                else { tg.showAlert("Регистрация успешна! Проверьте почту."); }
             } else {
                 tg.showAlert("Успешный вход!");
                 tgUserName = email.split('@')[0];
@@ -719,18 +841,11 @@
             if (!email || !password) { tg.showAlert("Заполните Email и пароль!"); return; }
             
             const { data, error } = await supabaseClient.auth.updateUser({ email: email, password: password });
-            
             if (error) {
                 const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
-                
-                if (signUpError) {
-                    tg.showAlert("Ошибка: " + signUpError.message);
-                } else {
-                    tg.showAlert("Email успешно привязан и зарегистрирован!");
-                }
-            } else {
-                tg.showAlert("Email успешно привязан к текущему профилю!");
-            }
+                if (signUpError) { tg.showAlert("Ошибка: " + signUpError.message); } 
+                else { tg.showAlert("Email успешно привязан и зарегистрирован!"); }
+            } else { tg.showAlert("Email успешно привязан к текущему профилю!"); }
         }
 
         function checkProfile() {
@@ -755,7 +870,6 @@
                             closeScreen('auth-screen');
                             closeScreen('onboarding-screen');
                             openScreen('dashboard-screen');
-                            
                             playNextBg();
                         });
                     });
@@ -869,51 +983,6 @@
             addXP(15); tg.CloudStorage.setItem('totalBurned', totalBurnedCalories.toString());
             document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`;
         }
-        
-        const allQuotes = [
-            { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион.", author: "Мухаммед Али" },
-            { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
-            { text: "Не молитесь о легкой жизни, молитесь о силах, чтобы вынести тяжелую.", author: "Брюс Ли" },
-            { text: "Ты не проиграл, пока не остановился.", author: "Неизвестный" },
-            { text: "Боль временна. Гордость навсегда.", author: "Неизвестный" },
-            { text: "Твое тело может всё. Это твой разум нужно убедить.", author: "Неизвестный" },
-            { text: "Каждый день — это новый шанс стать лучше.", author: "Неизвестный" },
-            { text: "Успех — это сумма маленьких усилий, повторяемых день за днем.", author: "Роберт Кольер" },
-            { text: "Не жди подходящего момента. Возьми момент и сделай его подходящим.", author: "Неизвестный" },
-            { text: "Сила приходит из преодоления того, что ты думал, что не сможешь преодолеть.", author: "Неизвестный" },
-            { text: "Лучший проект, над которым ты можешь работать — это ты сам.", author: "Неизвестный" },
-            { text: "Единственный плохой день для тренировки — это вчера.", author: "Неизвестный" },
-            { text: "Ты сильнее, чем ты думаешь.", author: "Неизвестный" },
-            { text: "Сделай это сейчас. Потом может быть слишком поздно.", author: "Неизвестный" },
-            { text: "Результаты приходят к тем, кто не сдается.", author: "Неизвестный" },
-            { text: "Твоя единственная конкуренция — это ты вчерашний.", author: "Неизвестный" },
-            { text: "Не ищи оправданий, ищи возможности.", author: "Неизвестный" },
-            { text: "Капля за каплей точит камень.", author: "Лукреций" },
-            { text: "Ты способен на большее, чем можешь себе представить.", author: "Неизвестный" },
-            { text: "Сон и тренировки — это инвестиции в себя.", author: "Неизвестный" },
-            { text: "Сложно сегодня — легко завтра. Легко сегодня — сложно завтра.", author: "Неизвестный" },
-            { text: "Твое тело — это храм. Заботься о нем.", author: "Неизвестный" },
-            { text: "Дисциплина бьет мотивацию.", author: "Неизвестный" },
-            { text: "Сделай шаг, и дорога появится сама.", author: "Неизвестный" },
-            { text: "Не сравнивай себя с другими. Сравнивай себя с собой вчерашним.", author: "Неизвестный" },
-            { text: "Ты не всегда получишь то, что хочешь, но получишь то, над чем работаешь.", author: "Неизвестный" },
-            { text: "Победа любит подготовку.", author: "Неизвестный" },
-            { text: "Ты не находишь время, ты его создаешь.", author: "Неизвестный" },
-            { text: "Ошибки — это доказательство того, что ты пытаешься.", author: "Неизвестный" },
-            { text: "Стань тем, кем ты хочешь быть, прямо сейчас.", author: "Неизвестный" },
-            { text: "Твоя жизнь — это твоя ответственность.", author: "Неизвестный" },
-            { text: "Лучший способ предсказать будущее — создать его.", author: "Питер Друкер" },
-            { text: "Каждый повтор делает тебя сильнее.", author: "Неизвестный" },
-            { text: "Не сдавайся. Начало всегда самое трудное.", author: "Неизвестный" },
-            { text: "Ты уже на полпути, просто продолжай.", author: "Неизвестный" },
-            { text: "Сделай это ради себя.", author: "Неизвестный" },
-            { text: "Ты можешь всё, что решишь.", author: "Неизвестный" },
-            { text: "Движение — это жизнь.", author: "Неизвестный" },
-            { text: "Твоя сила воли — твой главный инструмент.", author: "Неизвестный" },
-            { text: "Смотри вперед, а не назад.", author: "Неизвестный" }
-        ];
-
-        let lastQuoteIndex = -1;
 
         function finishWorkout() {
             audioWorkout.pause();
@@ -922,13 +991,8 @@
 
             document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
             
-            let newIndex;
-            do {
-                newIndex = Math.floor(Math.random() * allQuotes.length);
-            } while (newIndex === lastQuoteIndex && allQuotes.length > 1);
-            
-            lastQuoteIndex = newIndex;
-            const q = allQuotes[newIndex];
+            // Достаем цитату из умной колоды
+            const q = getNextRandomQuote();
             
             document.getElementById('finish-quote').innerText = `«${q.text}»`;
             document.getElementById('finish-author').innerText = `— ${q.author}`;
