@@ -4,11 +4,25 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
-// --- ЛОГИКА ЗАГРУЗКИ (ЖДЕМ 1 СЕКУНДУ) ---
+// --- ГЛАВНАЯ ЗАГРУЗКА ---
 window.addEventListener('load', () => {
-    setTimeout(() => {
-        checkProfile(); 
-    }, 1000); 
+    // 1. Мгновенно проверяем, есть ли профиль в памяти телефона
+    const cachedProfile = localStorage.getItem('cachedProfile');
+    if (cachedProfile) {
+        // Если есть, сразу показываем главный экран (без вылетов!)
+        renderProfile(JSON.parse(cachedProfile));
+        // А в фоне обновляем данные из Telegram
+        tg.CloudStorage.getItem('profile', (err, result) => {
+            if (result) {
+                const freshProfile = JSON.parse(result);
+                localStorage.setItem('cachedProfile', JSON.stringify(freshProfile));
+                renderProfile(freshProfile);
+            }
+        });
+    } else {
+        // Если памяти нет (первый вход), ждем Telegram
+        setTimeout(() => checkProfile(), 500);
+    }
 });
 
 // --- МУЗЫКА ---
@@ -88,29 +102,35 @@ function checkProfile() {
     tg.CloudStorage.getItem('profile', (err, result) => {
         if (result) {
             const profile = JSON.parse(result);
-            userGender = profile.gender;
-            document.body.className = userGender === 'female' ? 'female-theme' : 'male-theme';
-            
-            let bmr = userGender === 'male' ? (10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) : (10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161);
-            let cals = profile.goal === 'lose' ? (bmr * 1.375 - 500) : (bmr * 1.375 + 500);
-            document.getElementById('calories-norm').innerText = `${Math.round(cals)} ккал`;
-
-            tg.CloudStorage.getItem('totalBurned', (err, burned) => {
-                if (burned) { totalBurnedCalories = parseInt(burned); document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`; }
-                tg.CloudStorage.getItem('xp', (err, xp) => {
-                    if (xp) currentXP = parseInt(xp);
-                    updateCharacterUI();
-                    document.getElementById('auth-screen').classList.remove('active');
-                    document.getElementById('onboarding-screen').classList.remove('active');
-                    document.getElementById('dashboard-screen').classList.add('active');
-                    playNextBg();
-                });
-            });
+            localStorage.setItem('cachedProfile', JSON.stringify(profile)); // Кешируем
+            renderProfile(profile);
         } else {
             document.getElementById('auth-screen').classList.add('active');
-            document.getElementById('onboarding-screen').classList.remove('active');
         }
     });
+}
+
+function renderProfile(profile) {
+    userGender = profile.gender;
+    document.body.className = userGender === 'female' ? 'female-theme' : 'male-theme';
+    
+    let bmr = userGender === 'male' ? (10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) : (10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161);
+    let cals = profile.goal === 'lose' ? (bmr * 1.375 - 500) : (bmr * 1.375 + 500);
+    document.getElementById('calories-norm').innerText = `${Math.round(cals)} ккал`;
+
+    // Берем XP и калории из памяти
+    currentXP = parseInt(localStorage.getItem('cachedXP') || 0);
+    totalBurnedCalories = parseInt(localStorage.getItem('cachedBurned') || 0);
+    
+    document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`;
+    updateCharacterUI();
+    
+    // Переключаем экраны
+    document.getElementById('auth-screen').classList.remove('active');
+    document.getElementById('onboarding-screen').classList.remove('active');
+    document.getElementById('dashboard-screen').classList.add('active');
+    
+    playNextBg();
 }
 
 function changeTheme() {
@@ -121,8 +141,7 @@ function updateCharacterUI() {
     const levels = levelsData[userGender];
     let newLevelIndex = 0;
     for (let i = 0; i < levels.length; i++) { if (currentXP >= levels[i].xp) newLevelIndex = i; }
-    currentLevelIndexGlobal = newLevelIndex;
-
+    
     const currentLevel = levels[newLevelIndex];
     const nextLevel = levels[newLevelIndex + 1] || levels[levels.length - 1];
     const videoElement = document.getElementById('character-video');
@@ -133,26 +152,27 @@ function updateCharacterUI() {
         videoElement.play().catch(e => console.log("Autoplay blocked"));
     }
 
-    if(document.getElementById('char-level')) document.getElementById('char-level').innerText = `Уровень ${newLevelIndex + 1}`;
-    if(document.getElementById('char-title')) document.getElementById('char-title').innerText = currentLevel.title;
+    document.getElementById('char-level').innerText = `Уровень ${newLevelIndex + 1}`;
+    document.getElementById('char-title').innerText = currentLevel.title;
 
     let progressPercent = 100;
     if (nextLevel.xp > currentLevel.xp) {
         progressPercent = ((currentXP - currentLevel.xp) / (nextLevel.xp - currentLevel.xp)) * 100;
-        if(document.getElementById('xp-text')) document.getElementById('xp-text').innerText = `${currentXP} / ${nextLevel.xp} XP`;
+        document.getElementById('xp-text').innerText = `${currentXP} / ${nextLevel.xp} XP`;
     } else {
-        if(document.getElementById('xp-text')) document.getElementById('xp-text').innerText = `${currentXP} XP (MAX)`;
+        document.getElementById('xp-text').innerText = `${currentXP} XP (MAX)`;
     }
-    if(document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = `${progressPercent}%`;
+    document.getElementById('xp-bar').style.width = `${progressPercent}%`;
 }
 
 function addXP(amount) {
     currentXP += amount;
-    tg.CloudStorage.setItem('xp', currentXP.toString());
+    localStorage.setItem('cachedXP', currentXP); // Сохраняем в память
     updateCharacterUI();
 }
 
 function logout() {
+    localStorage.clear(); // Очищаем память при выходе
     tg.CloudStorage.removeItem('profile');
     document.getElementById('dashboard-screen').classList.remove('active');
     document.getElementById('auth-screen').classList.add('active');
@@ -165,8 +185,11 @@ function saveProfile() {
     const height = document.getElementById('height').value;
     const goal = document.getElementById('goal').value;
     if (!age || !weight || !height) { tg.showAlert("Заполни все поля!"); return; }
-    tg.CloudStorage.setItem('profile', JSON.stringify({ age, gender, weight, height, goal }), (err, success) => {
-        if (success) checkProfile();
+    
+    const profile = { age, gender, weight, height, goal };
+    localStorage.setItem('cachedProfile', JSON.stringify(profile)); // Кешируем
+    tg.CloudStorage.setItem('profile', JSON.stringify(profile), (err, success) => {
+        if (success) renderProfile(profile);
     });
 }
 
