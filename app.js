@@ -4,17 +4,22 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
-// Проверка: не вернулись ли мы с камеры/таймера с новым опытом
+// --- ЛОГИКА ВОЗВРАТА И XP ---
 window.addEventListener('load', () => {
+    const returning = localStorage.getItem('returningFromTimer');
     const pendingXP = localStorage.getItem('pendingXP');
-    if (pendingXP) {
-        localStorage.removeItem('pendingXP');
+    
+    // Если мы вернулись с таймера или камеры, даем Telegram время загрузить профиль
+    if (returning || pendingXP) {
+        localStorage.removeItem('returningFromTimer');
         setTimeout(() => {
-            if (typeof addXP === 'function') {
+            checkProfile(); 
+            if (pendingXP) {
+                localStorage.removeItem('pendingXP');
                 addXP(parseInt(pendingXP));
-                tg.showAlert("Спасибо! +20 XP добавлено в дневник.");
+                tg.showAlert("Спасибо! XP добавлено в дневник.");
             }
-        }, 1000);
+        }, 500); 
     }
 });
 
