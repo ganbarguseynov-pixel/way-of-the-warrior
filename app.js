@@ -4,7 +4,6 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
-// --- ГЛАВНАЯ ЗАГРУЗКА ---
 window.addEventListener('load', () => {
     const cachedProfile = localStorage.getItem('cachedProfile');
     if (cachedProfile) {
@@ -21,7 +20,6 @@ window.addEventListener('load', () => {
     }
 });
 
-// --- МУЗЫКА ---
 const bgTracks = [
     "01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3", 
     "05 - The Vengeance.mp3", "06 - The Forest of Death.mp3", "07 - The Ninja in the Night.mp3", 
@@ -67,7 +65,6 @@ function toggleSound() {
     }
 }
 
-// --- ПРОФИЛЬ И XP ---
 const levelsData = {
     male: [
         { xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" },
@@ -121,6 +118,7 @@ function renderProfile(profile) {
     updateCharacterUI();
     
     document.getElementById('auth-screen').classList.remove('active');
+    document.getElementById('email-screen').classList.remove('active');
     document.getElementById('onboarding-screen').classList.remove('active');
     document.getElementById('dashboard-screen').classList.add('active');
     
@@ -185,6 +183,37 @@ function saveProfile() {
     tg.CloudStorage.setItem('profile', JSON.stringify(profile), (err, success) => {
         if (success) renderProfile(profile);
     });
+}
+
+// --- ФУНКЦИИ EMAIL ВХОДА ---
+function showEmailForm() {
+    document.getElementById('auth-screen').classList.remove('active');
+    document.getElementById('email-screen').classList.add('active');
+}
+
+function closeScreen(screenId) {
+    document.getElementById(screenId).classList.remove('active');
+    document.getElementById('auth-screen').classList.add('active');
+}
+
+async function handleEmailAuth() {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    if (!email || !password) { tg.showAlert("Заполните все поля!"); return; }
+    
+    const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
+    if (signInError) {
+        const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email: email, password: password });
+        if (signUpError) { 
+            tg.showAlert("Ошибка: " + signUpError.message); 
+        } else { 
+            tg.showAlert("Регистрация успешна! Проверьте почту."); 
+        }
+    } else {
+        tg.showAlert("Успешный вход!");
+        tgUserName = email.split('@')[0];
+        checkProfile();
+    }
 }
 
 document.body.addEventListener('click', function() {
