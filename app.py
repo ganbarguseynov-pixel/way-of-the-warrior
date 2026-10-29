@@ -29,18 +29,23 @@ def analyze_photo():
         try:
             files = {'image': ('food.jpg', img_byte_arr, 'image/jpeg')}
             headers = {'Authorization': f'Bearer {LOGMEAL_TOKEN}'}
-            lm_response = requests.post('https://api.logmeal.es/v2/image/recognition/complete', headers=headers, files=files, timeout=30)
+            
+            # ВОТ ЗДЕСЬ МЫ ИСПРАВИЛИ АДРЕС С complete НА type
+            lm_response = requests.post('https://api.logmeal.es/v2/image/recognition/type', headers=headers, files=files, timeout=30)
             
             if lm_response.status_code == 200:
                 lm_data = lm_response.json()
-                if 'recognition_results' in lm_data and len(lm_data['recognition_results']) > 0:
-                    food_name = lm_data['recognition_results'][0]['name']
+                # Проверяем, что пришло в ответе
+                if 'foodType' in lm_data and 'name' in lm_data['foodType']:
+                    food_name = lm_data['foodType']['name']
                     return jsonify({
                         "food": food_name, 
                         "calories": 250, "protein": 15, "fat": 10, "carbs": 30
                     })
+            else:
+                print(f"LogMeal error: {lm_response.status_code} - {lm_response.text}")
         except Exception as e:
-            print(f"LogMeal error: {e}")
+            print(f"LogMeal exception: {e}")
 
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
