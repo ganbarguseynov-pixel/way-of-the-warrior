@@ -1,39 +1,29 @@
 const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
 const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
-// Включаем сохранение сессии (чтобы запоминал вход)
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, { auth: { persistSession: true } });
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
+let loginType = 'telegram'; // По умолчанию Telegram
+
 // --- ГЛАВНАЯ ЗАГРУЗКА ---
 window.addEventListener('load', async () => {
-    // Проверяем, есть ли активная сессия в Supabase
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    
-    if (session) {
-        // Если есть сессия, загружаем профиль из памяти
-        loadLocalProfile();
-    } else {
-        // Если сессии нет, проверяем Telegram
-        const cachedProfile = localStorage.getItem('cachedProfile');
-        if (cachedProfile) {
-            renderProfile(JSON.parse(cachedProfile));
-        }
-    }
-});
-
-function loadLocalProfile() {
     const cachedProfile = localStorage.getItem('cachedProfile');
     if (cachedProfile) {
         renderProfile(JSON.parse(cachedProfile));
+    } else {
+        // Если профиля нет, показываем экран входа
+        document.getElementById('auth-screen').classList.add('active');
     }
-}
+});
 
 // --- ВХОД ---
 function loginWithTelegram() {
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        if (localStorage.getItem('cachedProfile')) {
-            renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
+        loginType = 'telegram';
+        const cachedProfile = localStorage.getItem('cachedProfile');
+        if (cachedProfile) {
+            renderProfile(JSON.parse(cachedProfile));
         } else {
             openScreen('profile-settings-screen');
         }
@@ -61,7 +51,8 @@ async function handleEmailAuth() {
             if (signUpError) { tg.showAlert("Ошибка: " + signUpError.message); } 
             else { tg.showAlert("Регистрация успешна!"); }
         } else {
-            tg.showAlert("Успешный вход!");
+            tg.showAlert("Успешный вход по Email!");
+            loginType = 'email';
             if (!localStorage.getItem('cachedProfile')) {
                 const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
                 localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
@@ -78,7 +69,28 @@ async function handleEmailAuth() {
     }
 }
 
-// --- ПРИВЯЗКА EMAIL К TELEGRAM ---
+// --- ПРИВЯЗКА ---
+function updateLinkUI() {
+    if (loginType === 'telegram') {
+        document.getElementById('link-title').innerText = "Привязка Email";
+        document.getElementById('link-desc').innerText = "Привяжите Email, чтобы заходить с любого устройства.";
+        document.getElementById('link-email-form').style.display = 'block';
+        document.getElementById('link-tg-form').style.display = 'none';
+    } else {
+        document.getElementById('link-title').innerText = "Привязка Telegram";
+        document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона.";
+        document.getElementById('link-email-form').style.display = 'none';
+        document.getElementById('link-tg-form').style.display = 'block';
+        
+        // Показываем ID текущего пользователя, если он есть
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            document.getElementById('current-tg-id').innerText = tg.initDataUnsafe.user.id;
+        } else {
+            document.getElementById('current-tg-id').innerText = "Не удалось получить (откройте через Telegram)";
+        }
+    }
+}
+
 async function linkEmailToTelegram() {
     const email = document.getElementById('link-email').value;
     const password = document.getElementById('link-password').value;
@@ -95,6 +107,10 @@ async function linkEmailToTelegram() {
     } catch (e) {
         tg.showAlert("Ошибка сети.");
     }
+}
+
+function linkTelegramToEmail() {
+    tg.showAlert("Ваш Telegram ID сохранен в профиле. Используйте его для входа.");
 }
 
 // --- ОСТАЛЬНАЯ ЛОГИКА ---
@@ -115,7 +131,10 @@ const levelsData = {
 
 let currentXP = 0, totalBurnedCalories = 0, userGender = 'male';
 
-function openProfileSettings() { openScreen('profile-settings-screen'); }
+function openProfileSettings() { 
+    updateLinkUI();
+    openScreen('profile-settings-screen'); 
+}
 
 function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
@@ -124,7 +143,7 @@ function openScreen(screenId) {
 
 function closeScreen(screenId) {
     document.getElementById(screenId).classList.remove('active');
-    if (document.getElementById('cachedProfile')) {
+    if (localStorage.getItem('cachedProfile')) {
         document.getElementById('dashboard-screen').classList.add('active');
     } else {
         document.getElementById('auth-screen').classList.add('active');
