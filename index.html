@@ -95,7 +95,6 @@
         #food-result h2 { text-align: center !important; width: 100%; word-break: break-word; margin-bottom: 20px; }
         .nutrition-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; padding: 0 10px; box-sizing: border-box; }
         
-        /* Стили для кнопок фото */
         .photo-btn-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
     </style>
 </head>
@@ -106,9 +105,8 @@
     <audio id="audio-win" preload="auto"></audio>
     <audio id="audio-lose" preload="auto"></audio>
 
-    <!-- Скрытые инпуты для камеры и галереи -->
+    <!-- Оставили только инпут для камеры, убрали accept, чтобы браузер не открывал галерею -->
     <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;" onchange="handleImage(event)">
-    <input type="file" id="gallery-input" accept="image/*" style="display: none;" onchange="handleImage(event)">
 
     <div id="auth-screen" class="screen active auth-screen">
         <div class="auth-container">
@@ -186,8 +184,9 @@
                 <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
                 
                 <div class="photo-btn-group" id="photo-buttons">
-                    <button class="btn" style="padding: 20px; font-size: 18px;" onclick="document.getElementById('camera-input').click()">📷 Сделать фото</button>
-                    <button class="btn" style="padding: 20px; font-size: 18px; background-color: #2c2c2e; color: white;" onclick="document.getElementById('gallery-input').click()">🖼️ Выбрать из галереи</button>
+                    <!-- Кнопка вызывает нативную камеру -->
+                    <button class="btn" style="padding: 20px; font-size: 18px;" onclick="openCamera()">📷 Сделать фото</button>
+                    <button class="btn" style="padding: 20px; font-size: 18px; background-color: #2c2c2e; color: white;" onclick="openGallery()">🖼️ Выбрать из галереи</button>
                 </div>
 
                 <button class="btn" id="remove-photo-btn" style="display: none; background-color: #ff3b30; color: white; margin-bottom: 10px;" onclick="resetCameraScreen()">❌ Удалить фото</button>
@@ -281,22 +280,39 @@
         tg.ready(); tg.expand();
         const AI_SERVER_URL = 'https://sport-app-bqlu.onrender.com';
 
-        // --- ЛОГИКА ФОТО (ВЫБОР ИЛИ КАМЕРА) ---
+        // --- ЛОГИКА ФОТО (ВЫЗОВ КАМЕРЫ И ГАЛЕРЕИ) ---
+        
+        function openCamera() {
+            const input = document.getElementById('camera-input');
+            // Принудительно ставим capture и убираем accept, чтобы сработала камера
+            input.setAttribute('capture', 'camera');
+            input.removeAttribute('accept');
+            input.click();
+        }
+
+        function openGallery() {
+            // Создаем временный инпут только для галереи
+            const tempInput = document.createElement('input');
+            tempInput.type = 'file';
+            tempInput.accept = 'image/*';
+            tempInput.onchange = function(event) {
+                handleImage(event);
+            };
+            tempInput.click();
+        }
+
         function resetCameraScreen() {
             document.getElementById('photo-preview').style.display = 'none';
             document.getElementById('photo-preview').src = "";
             document.getElementById('food-result').style.display = 'none';
-            document.getElementById('photo-buttons').style.display = 'flex'; // Показываем кнопки снова
+            document.getElementById('photo-buttons').style.display = 'flex';
             document.getElementById('remove-photo-btn').style.display = 'none';
-            document.getElementById('camera-input').value = "";
-            document.getElementById('gallery-input').value = "";
         }
 
         async function handleImage(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            // Скрываем кнопки выбора и показываем превью
             document.getElementById('photo-buttons').style.display = 'none';
             
             const preview = document.getElementById('photo-preview');
