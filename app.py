@@ -8,44 +8,29 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
-# Берем токен из настроек Render
+HF_TOKEN = os.environ.get("HF_TOKEN")
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
-
-# Функция для перевода на русский
-def translate_to_russian(text):
-    if not text: return text
-    if any('а' <= char.lower() <= 'я' for char in text): return text
-    try:
-        url = "https://translate.googleapis.com/translate_a/single"
-        params = {"client": "gtx", "sl": "auto", "tl": "ru", "dt": "t", "q": text}
-        response = requests.get(url, params=params, timeout=3)
-        if response.status_code == 200: return response.json()[0][0][0]
-    except Exception as e:
-        print(f"Translate error: {e}")
-    return text
 
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q')
-    if not query: return jsonify({"error": "No query provided"}), 400
+    if not query:
+        return jsonify({"error": "No query provided"}), 400
+    
     try:
         response = requests.get(f"https://www.getdietly.com/api/search?q={query}", timeout=10)
         if response.status_code == 200:
-            data = response.json()
-            if isinstance(data, list):
-                for item in data:
-                    if 'name' in item: item['name'] = translate_to_russian(item['name'])
-            elif isinstance(data, dict) and 'results' in data:
-                for item in data['results']:
-                    if 'name' in item: item['name'] = translate_to_russian(item['name'])
-            return jsonify(data)
-        return jsonify({"error": "DietlyAPI error"}), 500
+            return jsonify(response.json())
+        else:
+            return jsonify({"error": "DietlyAPI error"}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
-    if 'image' not in request.files: return jsonify({"error": "No image provided"}), 400
+    if 'image' not in request.files:
+        return jsonify({"error": "No image provided"}), 400
+    
     file = request.files['image']
     try:
         image = Image.open(io.BytesIO(file.read())).convert("RGB")
@@ -56,6 +41,7 @@ def analyze_photo():
     image.save(img_byte_arr, format='JPEG')
     img_byte_arr = img_byte_arr.getvalue()
 
+    # 1. Пытаемся использовать LogMeal
     if LOGMEAL_TOKEN:
         try:
             files = {'image': ('food.jpg', img_byte_arr, 'image/jpeg')}
@@ -67,13 +53,42 @@ def analyze_photo():
                 if 'recognition_results' in lm_data and len(lm_data['recognition_results']) > 0:
                     food_name = lm_data['recognition_results'][0]['name']
                     return jsonify({
-                        "food": translate_to_russian(food_name), 
-                        "calories": 250, "protein": 15, "fat": 10, "carbs": 30
+                        "food": food_name,
+                        "calories": 250,
+                        "protein": 15,
+                        "fat": 10,
+                        "carbs": 30
                     })
         except Exception as e:
             print(f"LogMeal error: {e}")
 
-    return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
+    # 2. Если LogMeal не сработал, пробуем Hugging Face
+    if HF_TOKEN:
+        try:
+            headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+            hf_response = requests.post("https://api-inference.huggingface.co/models/nateraw/food", headers=headers, data=img_byte_arr, timeout=30)
+            if hf_response.status_code == 200:
+                result = hf_response.json()
+                if isinstance(result, list) and len(result) > 0:
+                    best_guess = result[0]['label']
+                    return jsonify({
+                        "food": best_guess.capitalize(),
+                        "calories": 300,
+                        "protein": 20,
+                        "fat": 15,
+                        "carbs": 40
+                    })
+        except Exception as e:
+            print(f"HF error: {e}")
+
+    # 3. Заглушка, если ничего не сработало
+    return jsonify({
+        "food": "Не удалось распознать",
+        "calories": 0,
+        "protein": 0,
+        "fat": 0,
+        "carbs": 0
+    })
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
