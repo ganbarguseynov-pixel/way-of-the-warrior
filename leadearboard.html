@@ -33,17 +33,20 @@
                 { name: "Елена", xp: 3200 }
             ];
             
-            let all = [...fake, { name: tgUserName, xp: currentXP, isMe: true }].sort((a, b) => b.xp - a.xp);
+            let all = fake.concat([{ name: tgUserName, xp: currentXP, isMe: true }]).sort((a, b) => b.xp - a.xp);
             
-            document.getElementById('leaderboard-list').innerHTML = all.map((u, i) => `
-                <div class="leaderboard-item ${u.isMe ? 'my-row' : ''}">
-                    <div class="rank">${i + 1}</div>
-                    <div class="user-info">
-                        <p style="margin:0; font-weight:bold; font-size:16px;">${u.name}</p>
-                        <p style="margin:0; font-size:13px; color:#8e8e93;">${u.xp} XP</p>
-                    </div>
-                </div>
-            `).join('');
+            let html = "";
+            for (let i = 0; i < all.length; i++) {
+                let u = all[i];
+                let rowClass = u.isMe ? 'my-row' : '';
+                html += '<div class="leaderboard-item ' + rowClass + '">';
+                html += '<div class="rank">' + (i + 1) + '</div>';
+                html += '<div class="user-info">';
+                html += '<p style="margin:0; font-weight:bold; font-size:16px;">' + u.name + '</p>';
+                html += '<p style="margin:0; font-size:13px; color:#8e8e93;">' + u.xp + ' XP</p>';
+                html += '</div></div>';
+            }
+            document.getElementById('leaderboard-list').innerHTML = html;
         }
 
         renderLeaderboard();
