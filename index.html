@@ -293,25 +293,31 @@
         tg.ready(); tg.expand();
         const AI_SERVER_URL = 'https://sport-app-bqlu.onrender.com';
 
-        // --- КАМЕРА ---
+        // --- КАМЕРА И ГАЛЕРЕЯ (ИСПРАВЛЕННЫЕ) ---
         let videoStream = null;
         let currentFacingMode = "environment"; 
 
         async function startCamera() {
             try {
+                // Прячем кнопки, показываем контейнер
                 document.getElementById('photo-buttons').style.display = 'none';
-                document.getElementById('camera-container').style.display = 'flex'; 
+                document.getElementById('camera-container').style.display = 'flex';
 
+                // Запрашиваем камеру
                 videoStream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: currentFacingMode } 
                 });
                 
                 const videoElement = document.getElementById('camera-video');
                 videoElement.srcObject = videoStream;
-                videoElement.onloadedmetadata = () => { videoElement.play(); };
+                
+                // Ждем, пока видео загрузится, и запускаем
+                videoElement.onloadedmetadata = () => {
+                    videoElement.play();
+                };
                 
             } catch (err) {
-                tg.showAlert("Не удалось получить доступ к камере.");
+                tg.showAlert("Не удалось получить доступ к камере. Разрешите доступ в настройках Telegram.");
                 resetCameraScreen();
             }
         }
@@ -324,20 +330,26 @@
 
         function takePhoto() {
             if (!videoStream) return;
+            
             const video = document.getElementById('camera-video');
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
+            
             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            
             stopCamera();
             
             canvas.toBlob(async function(blob) {
                 const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
+                
                 const preview = document.getElementById('photo-preview');
                 preview.src = URL.createObjectURL(blob);
                 preview.style.display = 'block';
                 document.getElementById('remove-photo-btn').style.display = 'block';
+                
                 await sendPhotoToServer(file);
+                
             }, 'image/jpeg', 0.8);
         }
 
@@ -362,23 +374,35 @@
         async function handleImage(event) {
             const file = event.target.files[0];
             if (!file) return;
+
             document.getElementById('photo-buttons').style.display = 'none';
+            
             const preview = document.getElementById('photo-preview');
             preview.src = URL.createObjectURL(file);
             preview.style.display = 'block';
+            
             document.getElementById('remove-photo-btn').style.display = 'block';
+            document.getElementById('food-result').style.display = 'none';
+
             await sendPhotoToServer(file);
         }
 
         async function sendPhotoToServer(file) {
             document.getElementById('loading-spinner').style.display = 'block';
+
             const formData = new FormData();
             formData.append('image', file);
 
             try {
-                const response = await fetch(`${AI_SERVER_URL}/analyze`, { method: 'POST', body: formData });
-                if (!response.ok) throw new Error("Ошибка");
+                const response = await fetch(`${AI_SERVER_URL}/analyze`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error("Ошибка сервера");
+
                 const data = await response.json();
+                
                 document.getElementById('loading-spinner').style.display = 'none';
                 
                 if (data.food !== "Не удалось распознать") {
@@ -389,12 +413,13 @@
                     document.getElementById('food-fat').innerText = data.fat + " г";
                     document.getElementById('food-carbs').innerText = data.carbs + " г";
                 } else {
-                    tg.showAlert("ИИ не смог распознать еду.");
+                    tg.showAlert("ИИ не смог распознать еду на фото. Попробуйте другое фото.");
                     resetCameraScreen();
                 }
+
             } catch (error) {
                 document.getElementById('loading-spinner').style.display = 'none';
-                tg.showAlert("Ошибка сервера.");
+                tg.showAlert("Ошибка: не удалось связаться с сервером.");
                 resetCameraScreen();
             }
         }
@@ -467,7 +492,7 @@
             }
         }
 
-        // --- ВРЕМЕННЫЙ СПИСОК ЦИТАТ (МАЛЕНЬКИЙ, ЧТОБЫ НЕ БЫЛО ОШИБОК) ---
+        // --- ЦИТАТЫ (ВРЕМЕННО 8 ШТУК ДЛЯ СТАБИЛЬНОСТИ) ---
         const allQuotes = [
             { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион.", author: "Мухаммед Али" },
             { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
