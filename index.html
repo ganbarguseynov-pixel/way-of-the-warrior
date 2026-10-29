@@ -99,7 +99,6 @@
 </head>
 <body class="male-theme">
 
-    <!-- preload="auto" для мгновенной загрузки музыки -->
     <audio id="audio-bg" loop preload="auto"></audio>
     <audio id="audio-workout" loop preload="auto"></audio>
     <audio id="audio-win" preload="auto"></audio>
@@ -403,6 +402,11 @@
         audioLose.src = "09. Scroll Lose 01.mp3"; 
         const audioLevelUp = "07. Scroll Draw 01.mp3"; 
 
+        // ПРЕДЗАГРУЗКА ПЕРВОГО ТРЕКА ТРЕНИРОВКИ
+        audioWorkout.src = workoutTracks[0];
+        audioWorkout.load();
+        currentWorkoutIndex = 1; // Следующий трек будет вторым
+
         function playNextBg() {
             if (!isSoundOn || isWorkoutMode) return;
             
@@ -422,24 +426,22 @@
         }
         audioBg.onended = playNextBg;
 
-        // ФУНКЦИЯ ЗАПУСКА ТРЕКА ТРЕНИРОВКИ (С МГНОВЕННЫМ СТАРТОМ)
         function playNextWorkout() {
             if (!isSoundOn) return;
-            
-            // Сначала жестко глушим фоновую
             audioBg.pause(); 
             
-            // Загружаем и включаем тренировочную
-            audioWorkout.src = workoutTracks[currentWorkoutIndex];
-            audioWorkout.load(); 
-            
-            // Самый важный момент: запускаем воспроизведение сразу после клика пользователя
-            let playPromise = audioWorkout.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(e => console.log("Ошибка запуска музыки:", e));
+            // Если это первый запуск, трек уже загружен, просто играем
+            if (!audioWorkout.src) {
+                audioWorkout.src = workoutTracks[currentWorkoutIndex];
+                audioWorkout.load();
             }
             
+            audioWorkout.play().catch(e => console.log("Autoplay blocked"));
             currentWorkoutIndex = (currentWorkoutIndex + 1) % workoutTracks.length;
+            
+            // Заранее готовим следующий трек
+            if (currentWorkoutIndex >= workoutTracks.length) currentWorkoutIndex = 0;
+            // Предзагрузка следующего трека в фоне (опционально)
         }
         audioWorkout.onended = playNextWorkout;
 
@@ -656,7 +658,6 @@
         let timeLeft = 45, isRunning = false, timerInterval, sessionCalories = 0;
         function updateTimerDisplay() { document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`; }
         
-        // САМАЯ ВАЖНАЯ ФУНКЦИЯ (ЗАПУСК ПО КЛИКУ)
         function toggleTimer() {
             const btn = document.getElementById('timer-btn');
             if (isRunning) { 
@@ -664,13 +665,12 @@
                 btn.innerText = "Старт"; 
                 btn.style.backgroundColor = "var(--accent-color)"; 
             } else {
-                // 1. СРАЗУ ВКЛЮЧАЕМ МУЗЫКУ (пока браузер видит, что был клик)
+                // Мгновенный запуск музыки
                 if (isSoundOn) {
                     isWorkoutMode = true;
-                    playNextWorkout(); 
+                    playNextWorkout();
                 }
                 
-                // 2. ЗАПУСКАЕМ СЕКУНДОМЕР
                 if (timeLeft <= 0) timeLeft = 45; 
                 timerInterval = setInterval(() => {
                     timeLeft--; updateTimerDisplay();
