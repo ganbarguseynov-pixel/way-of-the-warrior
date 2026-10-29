@@ -231,7 +231,7 @@ function updateCharacterUI() {
     if (document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = percent + "%";
 }
 
-// --- НАСТРОЙКИ С ВОЗМОЖНОСТЬЮ ОТВЯЗКИ ---
+// --- НАСТРОЙКИ (БЕЗ КНОПОК ОТВЯЗАТЬ, НО С МГНОВЕННОЙ ПРИВЯЗКОЙ) ---
 function openProfileSettings() {
     const loginType = localStorage.getItem('loginType') || 'telegram';
 
@@ -240,28 +240,23 @@ function openProfileSettings() {
         document.getElementById('link-desc').innerText = "Привяжите Email, чтобы заходить с любого устройства.";
         const linked = localStorage.getItem('linkedEmail');
         if (linked) {
-            document.getElementById('link-email-form').innerHTML = `
-                <p style="color: #34c759; font-size: 16px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ${linked}</p>
-                <button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px;" onclick="unlinkEmail()">Отвязать Email</button>
-            `;
+            document.getElementById('link-email-form').innerHTML = `<p style="color: #34c759; font-size: 16px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ${linked}</p>`;
+            document.getElementById('link-email-form').style.display = 'block';
         } else {
             document.getElementById('link-email-form').innerHTML = `
                 <div class="form-group"><input type="email" id="link-email" placeholder="your@email.com"></div>
                 <div class="form-group"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)"></div>
                 <button class="btn" onclick="linkEmailToTelegram()">Привязать Email</button>
             `;
+            document.getElementById('link-email-form').style.display = 'block';
         }
-        document.getElementById('link-email-form').style.display = 'block';
         document.getElementById('link-tg-form').style.display = 'none';
     } else {
         document.getElementById('link-title').innerText = "Привязка Telegram";
         document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона.";
         const tgId = localStorage.getItem('tgId');
         if (tgId) {
-            document.getElementById('link-tg-form').innerHTML = `
-                <p style="color: #34c759; font-size: 16px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ${tgId}</p>
-                <button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px;" onclick="unlinkTelegram()">Отвязать Telegram</button>
-            `;
+            document.getElementById('link-tg-form').innerHTML = `<p style="color: #34c759; font-size: 16px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ${tgId}</p>`;
         } else {
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 document.getElementById('link-tg-form').innerHTML = `
@@ -286,18 +281,10 @@ function openProfileSettings() {
     openScreen('profile-settings-screen');
 }
 
-// --- ЛОГИКА ПРИВЯЗКИ И ОТВЯЗКИ ---
 async function linkEmailToTelegram() {
     const email = document.getElementById('link-email').value;
     const password = document.getElementById('link-password').value;
     if (!email || !password) { tg.showAlert("Заполните Email и пароль!"); return; }
-
-    // Проверка, не занята ли почта
-    const { data: emailCheck } = await supabaseClient.from('user_links').select('telegram_id').eq('email', email).maybeSingle();
-    if (emailCheck && emailCheck.telegram_id && emailCheck.telegram_id !== tg.initDataUnsafe.user.id) {
-        tg.showAlert("Эта почта уже привязана к другому аккаунту Telegram!");
-        return;
-    }
 
     try {
         const { error } = await supabaseClient.auth.signUp({ email, password });
@@ -312,7 +299,7 @@ async function linkEmailToTelegram() {
             const name = localStorage.getItem('userName') || "Атлет";
             
             await saveProgressToCloud(tgId, email, name, profile, xp, burned);
-            tg.showAlert("Email успешно привязан!");
+            tg.showAlert("Email успешно привязан! Теперь вы можете заходить и по почте, и по Telegram.");
             openProfileSettings();
         }
     } catch (e) {
@@ -328,69 +315,15 @@ async function linkTelegramToEmail() {
     const xp = parseInt(localStorage.getItem('cachedXP') || 0);
     const burned = parseInt(localStorage.getItem('cachedBurned') || 0);
 
-    // Проверка, не занят ли ТГ
-    const { data: tgCheck } = await supabaseClient.from('user_links').select('email').eq('telegram_id', tgId).maybeSingle();
-    if (tgCheck && tgCheck.email && tgCheck.email !== email) {
-        tg.showAlert("Этот Telegram уже привязан к другой почте!");
-        return;
-    }
-
     if (tgId && email) {
         await saveProgressToCloud(tgId, email, tgName, profile, xp, burned);
         localStorage.setItem('tgId', tgId);
         localStorage.setItem('userName', tgName);
-        tg.showAlert("Telegram успешно привязан!");
+        tg.showAlert("Telegram успешно привязан! Теперь вы можете заходить и по почте, и по Telegram.");
         openProfileSettings();
     } else {
         tg.showAlert("Ошибка: не найден Email или Telegram ID.");
     }
-}
-
-// --- ОТВЯЗКА ---
-async function unlinkEmail() {
-    if (!confirm("Вы уверены, что хотите отвязать Email? Прогресс останется в Telegram.")) return;
-    
-    const tgId = localStorage.getItem('tgId');
-    const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
-
-    if (tgId || email) {
-        // Ищем строку и обнуляем email
-        let query = supabaseClient.from('user_links');
-        if (tgId) query = query.eq('telegram_id', tgId);
-        else query = query.eq('email', email);
-        
-        const { data } = await query.maybeSingle();
-        if (data) {
-            await supabaseClient.from('user_links').update({ email: null }).eq('id', data.id);
-        }
-    }
-
-    localStorage.removeItem('linkedEmail');
-    localStorage.removeItem('currentEmail');
-    tg.showAlert("Email отвязан.");
-    openProfileSettings();
-}
-
-async function unlinkTelegram() {
-    if (!confirm("Вы уверены, что хотите отвязать Telegram? Прогресс останется в Email.")) return;
-    
-    const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
-    const tgId = localStorage.getItem('tgId');
-
-    if (email || tgId) {
-        let query = supabaseClient.from('user_links');
-        if (email) query = query.eq('email', email);
-        else query = query.eq('telegram_id', tgId);
-        
-        const { data } = await query.maybeSingle();
-        if (data) {
-            await supabaseClient.from('user_links').update({ telegram_id: null }).eq('id', data.id);
-        }
-    }
-
-    localStorage.removeItem('tgId');
-    tg.showAlert("Telegram отвязан.");
-    openProfileSettings();
 }
 
 async function saveProfile() {
