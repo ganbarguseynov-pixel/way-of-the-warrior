@@ -119,9 +119,8 @@
             // 3. Показываем статистику
             document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
             
-            // 4. Берем случайную цитату из файла quotes.js
+            // 4. Берем случайную цитату
             let q = { text: "Ты не проиграл, пока не остановился.", author: "Майк Тайсон" }; 
-            // Проверяем, загрузился ли файл с цитатами
             if (typeof allQuotes !== 'undefined' && allQuotes.length > 0) {
                 q = allQuotes[Math.floor(Math.random() * allQuotes.length)];
             }
@@ -129,17 +128,20 @@
             document.getElementById('finish-quote').innerText = `«${q.text}»`;
             document.getElementById('finish-author').innerText = `— ${q.author}`;
 
-            // 5. Переключаем экраны (скрываем таймер, показываем победу)
+            // 5. Переключаем экраны
             document.getElementById('timer-view').style.display = 'none';
             document.getElementById('finish-view').style.display = 'flex';
         }
 
+        // --- ВОЗВРАТ НА ГЛАВНУЮ ---
         function goBackToMain() {
-            window.location.href = 'index.html';
+            // Небольшая задержка перед переходом, чтобы Telegram "успокоился"
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 100);
         }
     </script>
     
-    <!-- Подключаем цитаты, чтобы они были доступны -->
     <script src="quotes.js"></script>
 </body>
 </html>
