@@ -8,8 +8,10 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="inner-screen">
-        <button class="back-btn" onclick="finishAndGoBack()">← Назад в приложение</button>
+
+    <!-- ЭКРАН ТАЙМЕРА -->
+    <div id="timer-view" class="inner-screen">
+        <button class="back-btn" onclick="window.location.href='index.html'">← Назад в приложение</button>
         <h1 style="text-align: center;">Таймер</h1>
         <p style="text-align: center; color: var(--hint-color);">Отдых между подходами</p>
         
@@ -21,17 +23,33 @@
         </div>
         
         <button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="completeSet()">Подход выполнен (+15 XP)</button>
-        <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: auto;" onclick="finishAndGoBack()">Завершить 🏁</button>
+        <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: auto;" onclick="finishWorkout()">Завершить 🏁</button>
+    </div>
+
+    <!-- ЭКРАН ПОБЕДЫ -->
+    <div id="finish-view" class="inner-screen" style="display: none; text-align: center; justify-content: center;">
+        <h1 style="font-size: 80px; margin-bottom: 10px;">🏆</h1>
+        <h2>Тренировка завершена!</h2>
+        <p id="finish-stats" style="color: #8e8e93; margin-bottom: 30px;">Ты сжег 0 ккал.</p>
+        
+        <div class="quote-box">
+            <p id="finish-quote" style="font-style: italic; font-size: 18px; margin-bottom: 10px;">"Цитата"</p>
+            <p id="finish-author" style="text-align: right; font-weight: bold; font-size: 14px; color: var(--hint-color);">— Автор</p>
+        </div>
+        
+        <button class="btn" onclick="goBackToMain()">Вернуться на главную</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
         
+        // --- ЛОГИКА ТАЙМЕРА ---
         let audioWorkout = new Audio();
         let isRunning = false;
         let timeLeft = 45;
         let timerInterval;
+        let sessionCalories = 0;
 
         function playMusic() {
             audioWorkout.src = "03. TECHNO-SYNDROME 12' MI..."; 
@@ -83,15 +101,45 @@
         }
 
         function completeSet() {
-            let pending = localStorage.getItem('pendingXP') || 0;
-            localStorage.setItem('pendingXP', parseInt(pending) + 15);
+            sessionCalories += 15;
+            let pending = localStorage.getItem('cachedXP') || 0;
+            localStorage.setItem('cachedXP', parseInt(pending) + 15);
             tg.showAlert("+15 XP добавлено!");
         }
 
-        function finishAndGoBack() {
+        // --- ЛОГИКА ЗАВЕРШЕНИЯ (ПОБЕДА) ---
+        function finishWorkout() {
+            // 1. Останавливаем музыку таймера
             stopMusic();
+            
+            // 2. Включаем звук победы
+            let audioWin = new Audio("12. Scroll Win 02.mp3");
+            audioWin.play().catch(e => console.log("Ошибка звука победы:", e));
+
+            // 3. Показываем статистику
+            document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
+            
+            // 4. Берем случайную цитату из файла quotes.js
+            let q = { text: "Ты не проиграл, пока не остановился.", author: "Майк Тайсон" }; 
+            // Проверяем, загрузился ли файл с цитатами
+            if (typeof allQuotes !== 'undefined' && allQuotes.length > 0) {
+                q = allQuotes[Math.floor(Math.random() * allQuotes.length)];
+            }
+            
+            document.getElementById('finish-quote').innerText = `«${q.text}»`;
+            document.getElementById('finish-author').innerText = `— ${q.author}`;
+
+            // 5. Переключаем экраны (скрываем таймер, показываем победу)
+            document.getElementById('timer-view').style.display = 'none';
+            document.getElementById('finish-view').style.display = 'flex';
+        }
+
+        function goBackToMain() {
             window.location.href = 'index.html';
         }
     </script>
+    
+    <!-- Подключаем цитаты, чтобы они были доступны -->
+    <script src="quotes.js"></script>
 </body>
 </html>
