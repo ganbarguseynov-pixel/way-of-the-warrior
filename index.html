@@ -17,7 +17,6 @@
     <audio id="audio-win" preload="auto"></audio>
     <audio id="audio-lose" preload="auto"></audio>
 
-    <!-- ЭКРАН ВХОДА -->
     <div id="auth-screen" class="screen active auth-screen">
         <div class="auth-container">
             <div class="auth-content">
@@ -26,13 +25,22 @@
                 <div class="auth-buttons">
                     <button class="auth-btn tg-btn" onclick="loginWithTelegram()">✈️ Продолжить через Telegram</button>
                     <div class="auth-divider"><span>или</span></div>
-                    <button class="auth-btn email-btn" onclick="alert('Вход по Email пока в разработке')">✉️ Войти по Email</button>
+                    <button class="auth-btn email-btn" onclick="showEmailForm()">✉️ Войти по Email</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ГЛАВНЫЙ ЭКРАН -->
+    <div id="email-screen" class="screen">
+        <div class="inner-screen">
+            <button class="back-btn" onclick="closeScreen('email-screen')">← Назад</button>
+            <h1 style="text-align: center; margin-bottom: 30px;">Вход / Регистрация</h1>
+            <div class="form-group"><label>Email</label><input type="email" id="auth-email" placeholder="your@email.com"></div>
+            <div class="form-group"><label>Пароль</label><input type="password" id="auth-password" placeholder="Минимум 6 символов"></div>
+            <button class="btn" onclick="handleEmailAuth()">Продолжить</button>
+        </div>
+    </div>
+
     <div id="dashboard-screen" class="screen">
         <button class="sound-toggle" onclick="toggleSound()" id="sound-btn">🔊</button>
         <video id="character-video" class="video-background" autoplay loop muted playsinline></video>
@@ -62,7 +70,6 @@
         </div>
     </div>
 
-    <!-- ОНБОРДИНГ -->
     <div id="onboarding-screen" class="screen">
         <div class="inner-screen">
             <h1 style="text-align: center; margin-bottom: 30px;">Добро пожаловать!</h1>
