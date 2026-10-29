@@ -5,20 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <title>Sport App</title>
-    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="male-theme">
 
     <audio id="audio-bg" loop preload="auto"></audio>
-    <audio id="audio-workout" loop preload="auto"></audio>
     <audio id="audio-win" preload="auto"></audio>
-    <audio id="audio-lose" preload="auto"></audio>
 
     <!-- ГЛАВНЫЙ ЭКРАН (СРАЗУ АКТИВЕН) -->
     <div id="dashboard-screen" class="screen active">
-        <button class="sound-toggle" onclick="toggleSound()" id="sound-btn">🔊</button>
         <video id="character-video" class="video-background" autoplay loop muted playsinline></video>
         <div class="overlay">
             <div style="display: flex; justify-content: space-between; position: absolute; top: 0px; left: 0px; right: 0px; z-index: 30; padding: 5px 10px;">
@@ -46,17 +42,6 @@
         </div>
     </div>
 
-    <!-- ОНБОРДИНГ (НАСТРОЙКА ПРОФИЛЯ) -->
-    <div id="onboarding-screen" class="screen">
-        <div class="inner-screen">
-            <h1 style="text-align: center; margin-bottom: 30px;">Настройка профиля</h1>
-            <div class="form-group"><label>Твоя цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
-            <div class="row"><div class="form-group"><label>Возраст</label><input type="number" id="age" placeholder="25"></div><div class="form-group"><label>Пол</label><select id="gender" onchange="changeTheme()"><option value="male">Мужской</option><option value="female">Женский</option></select></div></div>
-            <div class="row"><div class="form-group"><label>Вес (кг)</label><input type="number" id="weight" placeholder="70"></div><div class="form-group"><label>Рост (см)</label><input type="number" id="height" placeholder="175"></div></div>
-            <button class="btn" onclick="saveProfile()">Сохранить</button>
-        </div>
-    </div>
-
     <!-- НАСТРОЙКИ -->
     <div id="profile-settings-screen" class="screen">
         <div class="inner-screen">
@@ -64,7 +49,12 @@
             <h1 style="text-align: center; margin-bottom: 30px;">Настройки</h1>
             <div style="background: #1c1c1e; padding: 20px; border-radius: 16px;">
                 <h3 style="margin-top: 0;">Изменить данные</h3>
-                <button class="btn" onclick="openScreen('onboarding-screen')">Заполнить профиль заново</button>
+                <div class="form-group"><label>Возраст</label><input type="number" id="age" placeholder="25"></div>
+                <div class="form-group"><label>Вес (кг)</label><input type="number" id="weight" placeholder="70"></div>
+                <div class="form-group"><label>Рост (см)</label><input type="number" id="height" placeholder="175"></div>
+                <div class="form-group"><label>Пол</label><select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
+                <div class="form-group"><label>Цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
+                <button class="btn" onclick="saveProfile()">Сохранить</button>
             </div>
         </div>
     </div>
