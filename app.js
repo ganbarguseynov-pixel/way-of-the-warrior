@@ -112,12 +112,12 @@ function renderProfile(profile) {
     
     let bmr = userGender === 'male' ? (10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) : (10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161);
     let cals = profile.goal === 'lose' ? (bmr * 1.375 - 500) : (bmr * 1.375 + 500);
-    document.getElementById('calories-norm').innerText = `${Math.round(cals)} ккал`;
+    document.getElementById('calories-norm').innerText = Math.round(cals) + " ккал";
 
     currentXP = parseInt(localStorage.getItem('cachedXP') || 0);
     totalBurnedCalories = parseInt(localStorage.getItem('cachedBurned') || 0);
     
-    document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`;
+    document.getElementById('burned-total').innerText = totalBurnedCalories + " ккал";
     updateCharacterUI();
     
     document.getElementById('auth-screen').classList.remove('active');
@@ -146,38 +146,22 @@ function updateCharacterUI() {
         videoElement.play().catch(e => console.log("Autoplay blocked"));
     }
 
-    document.getElementById('char-level').innerText = `Уровень ${newLevelIndex + 1}`;
+    document.getElementById('char-level').innerText = "Уровень " + (newLevelIndex + 1);
     document.getElementById('char-title').innerText = currentLevel.title;
 
     let progressPercent = 100;
     if (nextLevel.xp > currentLevel.xp) {
         progressPercent = ((currentXP - currentLevel.xp) / (nextLevel.xp - currentLevel.xp)) * 100;
-        document.getElementById('xp-text').innerText = `${currentXP} / ${nextLevel.xp} XP`;
+        document.getElementById('xp-text').innerText = currentXP + " / " + nextLevel.xp + " XP";
     } else {
-        document.getElementById('xp-text').innerText = `${currentXP} XP (MAX)`;
+        document.getElementById('xp-text').innerText = currentXP + " XP (MAX)";
     }
-    document.getElementById('xp-bar').style.width = `${progressPercent}%`;
+    document.getElementById('xp-bar').style.width = progressPercent + "%";
 }
 
-// --- ОБНОВЛЕННАЯ ФУНКЦИЯ XP (ОТПРАВЛЯЕТ В РЕЙТИНГ) ---
-async function addXP(amount) {
+function addXP(amount) {
     currentXP += amount;
     localStorage.setItem('cachedXP', currentXP); 
-    
-    // Отправляем в базу Supabase для рейтинга
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        const user = tg.initDataUnsafe.user;
-        try {
-            await supabaseClient
-                .from('profiles')
-                .upsert({ 
-                    telegram_id: user.id, 
-                    first_name: user.first_name, 
-                    xp: currentXP 
-                }, { onConflict: 'telegram_id' });
-        } catch(e) { console.log("Ошибка отправки в рейтинг:", e); }
-    }
-    
     updateCharacterUI();
 }
 
