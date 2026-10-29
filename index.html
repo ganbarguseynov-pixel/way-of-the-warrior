@@ -273,7 +273,7 @@
                 <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
                 
                 <div class="photo-btn-group" id="photo-buttons">
-                    <button class="btn" style="padding: 20px; font-size: 18px;" onclick="startCamera()">📷 Открыть камеру</button>
+                    <button class="btn" style="padding: 20px; font-size: 18px;" onclick="startCamera()">📷 Сделать фото</button>
                     <button class="btn" style="padding: 20px; font-size: 18px; background-color: #2c2c2e; color: white;" onclick="document.getElementById('gallery-input').click()">🖼️ Выбрать из галереи</button>
                 </div>
 
@@ -368,19 +368,11 @@
         tg.ready(); tg.expand();
         const AI_SERVER_URL = 'https://sport-app-bqlu.onrender.com';
 
-        // --- ВСТРОЕННАЯ КАМЕРА (БЕЗ ПОВТОРНЫХ ЗАПРОСОВ) ---
+        // --- КАМЕРА ---
         let videoStream = null;
         let currentFacingMode = "environment"; 
-        let isCameraActive = false; // Флаг, чтобы не перезапускать камеру зря
 
         async function startCamera() {
-            // Если камера уже работает, просто показываем её
-            if (isCameraActive) {
-                document.getElementById('photo-buttons').style.display = 'none';
-                document.getElementById('camera-container').style.display = 'flex';
-                return;
-            }
-
             try {
                 document.getElementById('photo-buttons').style.display = 'none';
                 const container = document.getElementById('camera-container');
@@ -392,7 +384,6 @@
                 
                 const videoElement = document.getElementById('camera-video');
                 videoElement.srcObject = videoStream;
-                isCameraActive = true;
                 
                 videoElement.onloadedmetadata = () => {
                     videoElement.play();
@@ -408,7 +399,6 @@
         async function switchCamera() {
             currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
             stopCamera();
-            isCameraActive = false; // Сбрасываем флаг, чтобы startCamera запустил новую
             await startCamera();
         }
 
@@ -443,7 +433,6 @@
                 videoStream = null;
             }
             document.getElementById('camera-container').style.display = 'none';
-            isCameraActive = false;
         }
 
         function resetCameraScreen() {
@@ -509,18 +498,97 @@
             }
         }
 
+        // --- ЛОГИКА МУЗЫКИ (РАНДОМНАЯ) ---
+        const bgTracks = [
+            "01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3", 
+            "05 - The Vengeance.mp3", "06 - The Forest of Death.mp3", "07 - The Ninja in the Night.mp3", 
+            "10 - The Final Boss.mp3", "11 - The Master of the Skills.mp3", "13 - Ronin.mp3", 
+            "14 - The Deadly Smoke.mp3", "15 - Old Sensei.mp3", "16 - The Battle Ship.mp3", 
+            "17 - The Shadow Lady.mp3", "18 - The Flower Battlefield.mp3", "22 - Bridge to the Other Side.mp3", 
+            "25 - Burning Town.mp3", "27 - The Hive.mp3", "29 - The Factory.mp3", "30 - The Flying Rocks.mp3"
+        ];
+        const workoutTracks = [
+            "03. TECHNO-SYNDROME 12' MI...", "09 - The Fat Boss.mp3", "24. 2min Loop Battle 03.mp3", 
+            "21. secs Training Arena 01.mp3", "18. min Loop Battle 03.mp3", "17. min Loop Battle 02.mp3", 
+            "20. Sec Music Loop 01.mp3"
+        ];
+        
+        let isSoundOn = true;
+        let isWorkoutMode = false;
+        let musicStarted = false;
+        
+        // Переменные для хранения индексов последних игравших треков (защита от повторов)
+        let lastBgIndex = -1;
+        let lastWorkoutIndex = -1;
+
+        const audioBg = document.getElementById('audio-bg');
+        const audioWorkout = document.getElementById('audio-workout');
+        const audioWin = document.getElementById('audio-win');
+        const audioLose = document.getElementById('audio-lose');
+        audioWin.src = "12. Scroll Win 02.mp3";
+        audioLose.src = "09. Scroll Lose 01.mp3"; 
+        const audioLevelUp = "07. Scroll Draw 01.mp3"; 
+
+        function getRandomTrack(tracksArray, lastIndex) {
+            let newIndex = Math.floor(Math.random() * tracksArray.length);
+            // Если выпал тот же трек, что играл в прошлый раз, берем следующий по кругу
+            if (newIndex === lastIndex && tracksArray.length > 1) {
+                newIndex = (newIndex + 1) % tracksArray.length;
+            }
+            return newIndex;
+        }
+
+        function playNextBg() {
+            if (!isSoundOn || isWorkoutMode) return;
+            
+            lastBgIndex = getRandomTrack(bgTracks, lastBgIndex);
+            audioBg.src = bgTracks[lastBgIndex];
+            audioBg.load(); 
+            audioBg.play().catch(e => console.log("Autoplay blocked"));
+        }
+        audioBg.onended = playNextBg;
+
+        function playNextWorkout() {
+            if (!isSoundOn) return;
+            audioBg.pause(); 
+            
+            lastWorkoutIndex = getRandomTrack(workoutTracks, lastWorkoutIndex);
+            audioWorkout.src = workoutTracks[lastWorkoutIndex];
+            audioWorkout.load(); 
+            
+            let playPromise = audioWorkout.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => console.log("Ошибка запуска музыки:", e));
+            }
+        }
+        audioWorkout.onended = playNextWorkout;
+
+        audioWin.onended = function() {
+            isWorkoutMode = false; 
+            playNextBg(); 
+        };
+
+        function toggleSound() {
+            isSoundOn = !isSoundOn;
+            const btn = document.getElementById('sound-btn');
+            if (isSoundOn) {
+                btn.innerText = "🔊";
+                if (isWorkoutMode) audioWorkout.play(); else playNextBg();
+            } else {
+                btn.innerText = "🔇";
+                audioBg.pause();
+                audioWorkout.pause();
+            }
+        }
+
         // --- ОСТАЛЬНАЯ ЛОГИКА ---
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tabName}`).classList.add('active');
             event.target.classList.add('active');
-            
             if (tabName === 'photo') {
-                // Не сбрасываем камеру, если она уже была открыта, просто показываем кнопки
-                if (!isCameraActive && !document.getElementById('photo-preview').src) {
-                     document.getElementById('photo-buttons').style.display = 'flex';
-                }
+                resetCameraScreen(); 
             }
         }
 
@@ -552,87 +620,6 @@
                 }
             } catch (e) {
                 resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ошибка связи с сервером</p>';
-            }
-        }
-
-        const bgTracks = [
-            "01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3", 
-            "05 - The Vengeance.mp3", "06 - The Forest of Death.mp3", "07 - The Ninja in the Night.mp3", 
-            "10 - The Final Boss.mp3", "11 - The Master of the Skills.mp3", "13 - Ronin.mp3", 
-            "14 - The Deadly Smoke.mp3", "15 - Old Sensei.mp3", "16 - The Battle Ship.mp3", 
-            "17 - The Shadow Lady.mp3", "18 - The Flower Battlefield.mp3", "22 - Bridge to the Other Side.mp3", 
-            "25 - Burning Town.mp3", "27 - The Hive.mp3", "29 - The Factory.mp3", "30 - The Flying Rocks.mp3"
-        ];
-        const workoutTracks = [
-            "03. TECHNO-SYNDROME 12' MI...", "09 - The Fat Boss.mp3", "24. 2min Loop Battle 03.mp3", 
-            "21. secs Training Arena 01.mp3", "18. min Loop Battle 03.mp3", "17. min Loop Battle 02.mp3", 
-            "20. Sec Music Loop 01.mp3"
-        ];
-        
-        let currentBgIndex = 0;
-        let currentWorkoutIndex = 0;
-        let isSoundOn = true;
-        let isWorkoutMode = false;
-        let musicStarted = false;
-
-        const audioBg = document.getElementById('audio-bg');
-        const audioWorkout = document.getElementById('audio-workout');
-        const audioWin = document.getElementById('audio-win');
-        const audioLose = document.getElementById('audio-lose');
-        audioWin.src = "12. Scroll Win 02.mp3";
-        audioLose.src = "09. Scroll Lose 01.mp3"; 
-        const audioLevelUp = "07. Scroll Draw 01.mp3"; 
-
-        function playNextBg() {
-            if (!isSoundOn || isWorkoutMode) return;
-            
-            tg.CloudStorage.getItem('bgIndex', (err, res) => {
-                if (res && !err) {
-                    currentBgIndex = parseInt(res);
-                }
-                if (currentBgIndex >= bgTracks.length) currentBgIndex = 0;
-                
-                audioBg.src = bgTracks[currentBgIndex];
-                audioBg.load(); 
-                audioBg.play().catch(e => console.log("Autoplay blocked"));
-                
-                tg.CloudStorage.setItem('bgIndex', ((currentBgIndex + 1) % bgTracks.length).toString());
-                currentBgIndex = (currentBgIndex + 1) % bgTracks.length;
-            });
-        }
-        audioBg.onended = playNextBg;
-
-        function playNextWorkout() {
-            if (!isSoundOn) return;
-            audioBg.pause(); 
-            
-            audioWorkout.src = workoutTracks[currentWorkoutIndex];
-            audioWorkout.load(); 
-            
-            let playPromise = audioWorkout.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(e => console.log("Ошибка запуска музыки:", e));
-            }
-            
-            currentWorkoutIndex = (currentWorkoutIndex + 1) % workoutTracks.length;
-        }
-        audioWorkout.onended = playNextWorkout;
-
-        audioWin.onended = function() {
-            isWorkoutMode = false; 
-            playNextBg(); 
-        };
-
-        function toggleSound() {
-            isSoundOn = !isSoundOn;
-            const btn = document.getElementById('sound-btn');
-            if (isSoundOn) {
-                btn.innerText = "🔊";
-                if (isWorkoutMode) audioWorkout.play(); else playNextBg();
-            } else {
-                btn.innerText = "🔇";
-                audioBg.pause();
-                audioWorkout.pause();
             }
         }
 
@@ -746,6 +733,8 @@
                             closeScreen('auth-screen');
                             closeScreen('onboarding-screen');
                             openScreen('dashboard-screen');
+                            
+                            // Запускаем РАНДОМНУЮ музыку при заходе
                             playNextBg();
                         });
                     });
