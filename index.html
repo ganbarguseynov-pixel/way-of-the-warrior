@@ -368,9 +368,23 @@
         tg.ready(); tg.expand();
         const AI_SERVER_URL = 'https://sport-app-bqlu.onrender.com';
 
-        // --- КАМЕРА ---
+        // --- КАМЕРА (ХИТРОСТЬ С РАЗРЕШЕНИЯМИ) ---
         let videoStream = null;
         let currentFacingMode = "environment"; 
+        let isCameraPermissionGranted = false;
+
+        // Эта функция вызывается при сворачивании приложения
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                // Если камера уже была открыта до сворачивания, пробуем включить её снова без запроса
+                if (isCameraPermissionGranted && document.getElementById('camera-container').style.display === 'none') {
+                    // Проверяем, не находимся ли мы на экране еды
+                    if (document.getElementById('food-screen').classList.contains('active')) {
+                         startCamera(); 
+                    }
+                }
+            }
+        });
 
         async function startCamera() {
             try {
@@ -385,12 +399,21 @@
                 const videoElement = document.getElementById('camera-video');
                 videoElement.srcObject = videoStream;
                 
+                // Если мы дошли сюда, значит разрешение получено
+                isCameraPermissionGranted = true; 
+                
                 videoElement.onloadedmetadata = () => {
                     videoElement.play();
                 };
                 
             } catch (err) {
-                tg.showAlert("Не удалось получить доступ к камере. Проверьте разрешения.");
+                // Если ошибка "NotAllowedError" - значит пользователь запретил
+                if (err.name === 'NotAllowedError') {
+                    isCameraPermissionGranted = false; // Сбрасываем флаг
+                    tg.showAlert("Вы запретили доступ к камере. Разрешите его в настройках телефона для Telegram.");
+                } else {
+                    tg.showAlert("Не удалось получить доступ к камере.");
+                }
                 console.error(err);
                 resetCameraScreen();
             }
@@ -498,6 +521,48 @@
             }
         }
 
+        // --- ОСТАЛЬНАЯ ЛОГИКА ---
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            event.target.classList.add('active');
+            if (tabName === 'photo') {
+                resetCameraScreen(); 
+            }
+        }
+
+        async function searchFood() {
+            const query = document.getElementById('food-search-input').value;
+            if (!query) return;
+
+            const resultDiv = document.getElementById('search-result');
+            resultDiv.innerHTML = '<p style="text-align:center;">Поиск...</p>';
+
+            try {
+                const response = await fetch(`${AI_SERVER_URL}/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.products && data.products.length > 0) {
+                    const product = data.products[0];
+                    resultDiv.innerHTML = `
+                        <div style="background: #1c1c1e; padding: 20px; border-radius: 16px; text-align: center;">
+                            <h3 style="margin-top:0; color: var(--accent-color); word-break: break-word;">${product.product_name}</h3>
+                            <div class="nutrition-row"><span>Калории:</span> <b>${product.nutrients.calories} ккал</b></div>
+                            <div class="nutrition-row"><span>Белки:</span> <b>${product.nutrients.proteins} г</b></div>
+                            <div class="nutrition-row"><span>Жиры:</span> <b>${product.nutrients.fat} г</b></div>
+                            <div class="nutrition-row"><span>Углеводы:</span> <b>${product.nutrients.carbohydrates} г</b></div>
+                            <button class="btn" style="background-color: #34c759; color: white;" onclick="addXP(20); closeScreen('food-screen');">Добавить в дневник (+20 XP)</button>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ничего не найдено</p>';
+                }
+            } catch (e) {
+                resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ошибка связи с сервером</p>';
+            }
+        }
+
         // --- ЛОГИКА МУЗЫКИ (РАНДОМНАЯ) ---
         const bgTracks = [
             "01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3", 
@@ -517,7 +582,6 @@
         let isWorkoutMode = false;
         let musicStarted = false;
         
-        // Переменные для хранения индексов последних игравших треков (защита от повторов)
         let lastBgIndex = -1;
         let lastWorkoutIndex = -1;
 
@@ -531,7 +595,6 @@
 
         function getRandomTrack(tracksArray, lastIndex) {
             let newIndex = Math.floor(Math.random() * tracksArray.length);
-            // Если выпал тот же трек, что играл в прошлый раз, берем следующий по кругу
             if (newIndex === lastIndex && tracksArray.length > 1) {
                 newIndex = (newIndex + 1) % tracksArray.length;
             }
@@ -581,48 +644,7 @@
             }
         }
 
-        // --- ОСТАЛЬНАЯ ЛОГИКА ---
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabName}`).classList.add('active');
-            event.target.classList.add('active');
-            if (tabName === 'photo') {
-                resetCameraScreen(); 
-            }
-        }
-
-        async function searchFood() {
-            const query = document.getElementById('food-search-input').value;
-            if (!query) return;
-
-            const resultDiv = document.getElementById('search-result');
-            resultDiv.innerHTML = '<p style="text-align:center;">Поиск...</p>';
-
-            try {
-                const response = await fetch(`${AI_SERVER_URL}/search?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-                
-                if (data.products && data.products.length > 0) {
-                    const product = data.products[0];
-                    resultDiv.innerHTML = `
-                        <div style="background: #1c1c1e; padding: 20px; border-radius: 16px; text-align: center;">
-                            <h3 style="margin-top:0; color: var(--accent-color); word-break: break-word;">${product.product_name}</h3>
-                            <div class="nutrition-row"><span>Калории:</span> <b>${product.nutrients.calories} ккал</b></div>
-                            <div class="nutrition-row"><span>Белки:</span> <b>${product.nutrients.proteins} г</b></div>
-                            <div class="nutrition-row"><span>Жиры:</span> <b>${product.nutrients.fat} г</b></div>
-                            <div class="nutrition-row"><span>Углеводы:</span> <b>${product.nutrients.carbohydrates} г</b></div>
-                            <button class="btn" style="background-color: #34c759; color: white;" onclick="addXP(20); closeScreen('food-screen');">Добавить в дневник (+20 XP)</button>
-                        </div>
-                    `;
-                } else {
-                    resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ничего не найдено</p>';
-                }
-            } catch (e) {
-                resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ошибка связи с сервером</p>';
-            }
-        }
-
+        // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
         const levelsData = {
             male: [
                 { xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" },
@@ -734,7 +756,6 @@
                             closeScreen('onboarding-screen');
                             openScreen('dashboard-screen');
                             
-                            // Запускаем РАНДОМНУЮ музыку при заходе
                             playNextBg();
                         });
                     });
