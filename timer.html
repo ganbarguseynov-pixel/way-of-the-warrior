@@ -1,1 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Таймер</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="inner-screen">
+        <button class="back-btn" onclick="finishAndGoBack()">← Назад в приложение</button>
+        <h1 style="text-align: center;">Таймер</h1>
+        <p style="text-align: center; color: var(--hint-color);">Отдых между подходами</p>
+        <div class="timer-display" id="timer-display">00:45</div>
+        <div style="display: flex; gap: 15px;">
+            <button class="btn" onclick="toggleTimer()" id="timer-btn">Старт</button>
+            <button class="btn" style="background-color: #2c2c2e; color: white;" onclick="resetTimer()">Сброс</button>
+        </div>
+        <button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="completeSet()">Подход выполнен (+15 XP)</button>
+        <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: auto;" onclick="finishAndGoBack()">Завершить 🏁</button>
+    </div>
 
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready(); tg.expand();
+        
+        let audioWorkout = new Audio();
+        let isRunning = false;
+        let timeLeft = 45;
+        let timerInterval;
+
+        function playMusic() {
+            audioWorkout.src = "03. TECHNO-SYNDROME 12' MI..."; // Первый трек
+            audioWorkout.play().catch(e => console.log("Ошибка музыки"));
+        }
+
+        function stopMusic() {
+            audioWorkout.pause();
+            audioWorkout.currentTime = 0;
+        }
+
+        function updateDisplay() {
+            document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`;
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('timer-btn');
+            if (isRunning) {
+                clearInterval(timerInterval);
+                stopMusic();
+                btn.innerText = "Старт";
+                isRunning = false;
+            } else {
+                playMusic();
+                btn.innerText = "Пауза";
+                isRunning = true;
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateDisplay();
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        stopMusic();
+                        btn.innerText = "Старт";
+                        isRunning = false;
+                        tg.showAlert("Время вышло!");
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            stopMusic();
+            isRunning = false;
+            timeLeft = 45;
+            updateDisplay();
+            document.getElementById('timer-btn').innerText = "Старт";
+        }
+
+        function completeSet() {
+            // Сохраняем 15 XP в память, чтобы они добавились на главном экране
+            let pending = localStorage.getItem('pendingXP') || 0;
+            localStorage.setItem('pendingXP', parseInt(pending) + 15);
+            tg.showAlert("+15 XP добавлено! (Увидите на главном экране)");
+        }
+
+        function finishAndGoBack() {
+            stopMusic();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
