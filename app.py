@@ -34,13 +34,15 @@ def check_gemini():
     if not GEMINI_API_KEY:
         return "ОШИБКА: Ключ Gemini не найден", 500
     try:
-        # Используем новую библиотеку и модель 3.8-flash
         response = client.models.generate_content(
             model='gemini-3.8-flash',
             contents="Напиши ровно одно слово: РАБОТАЕТ"
         )
         return f"УСПЕХ! Gemini ответил: {response.text}"
     except Exception as e:
+        # Красиво обрабатываем ошибку лимита
+        if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+            return "ВНИМАНИЕ: Лимит бесплатных запросов Gemini на сегодня исчерпан. Попробуйте завтра!", 200
         return f"ОШИБКА GEMINI: {str(e)}", 500
 
 @app.route('/analyze', methods=['POST'])
