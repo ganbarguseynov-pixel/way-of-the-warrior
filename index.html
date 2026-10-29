@@ -3,6 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Sport App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -88,6 +91,28 @@
         .tab-btn.active { background: var(--accent-color); color: #000; border-color: var(--accent-color); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+
+        /* --- ИСПРАВЛЕНИЕ ВЕРСТКИ БЛОКА С ЕДОЙ --- */
+        #food-result {
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #food-result h2 {
+            text-align: center !important;
+            width: 100%;
+            word-break: break-word;
+            margin-bottom: 20px;
+        }
+        .nutrition-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body class="male-theme">
@@ -150,7 +175,6 @@
         </div>
     </div>
 
-    <!-- ЭКРАН ЕДЫ С ДВУМЯ ВКЛАДКАМИ -->
     <div id="food-screen" class="screen">
         <div class="inner-screen">
             <button class="back-btn" onclick="closeScreen('food-screen')">← Назад</button>
@@ -161,7 +185,6 @@
                 <button class="tab-btn" onclick="switchTab('photo')">📷 Фото</button>
             </div>
 
-            <!-- ВКЛАДКА ПОИСКА -->
             <div id="tab-search" class="tab-content active">
                 <div class="form-group">
                     <input type="text" id="food-search-input" placeholder="Введите название (например, йогурт)">
@@ -170,10 +193,9 @@
                 <div id="search-result" style="margin-top: 20px;"></div>
             </div>
 
-            <!-- ВКЛАДКА ФОТО -->
             <div id="tab-photo" class="tab-content">
-                <!-- capture="camera" заставляет открывать камеру сразу -->
-                <input type="file" id="camera-input" accept="image/*" capture="camera" style="display: none;" onchange="handleImage(event)">
+                <!-- Заменили capture="camera" на capture="environment" для стабильной работы -->
+                <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;" onchange="handleImage(event)">
                 
                 <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
                 
@@ -185,10 +207,10 @@
                 
                 <div id="food-result" style="display: none; background: #1c1c1e; padding: 20px; border-radius: 16px; margin-top: 20px;">
                     <h2 id="food-name" style="margin-top: 0; color: var(--accent-color);">Название</h2>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;"><span>Калории:</span> <b id="food-calories">0 ккал</b></div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;"><span>Белки:</span> <b id="food-protein">0 г</b></div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
-                    <div style="display: flex; justify-content: space-between;"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
+                    <div class="nutrition-row"><span>Калории:</span> <b id="food-calories">0 ккал</b></div>
+                    <div class="nutrition-row"><span>Белки:</span> <b id="food-protein">0 г</b></div>
+                    <div class="nutrition-row"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
+                    <div class="nutrition-row"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
                     <button class="btn" style="background-color: #34c759; color: white; margin-top: 15px;" onclick="addXP(20); resetCameraScreen(); closeScreen('food-screen');">Добавить в дневник (+20 XP)</button>
                     <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 10px;" onclick="resetCameraScreen()">Отмена / Переснять</button>
                 </div>
@@ -196,7 +218,6 @@
         </div>
     </div>
 
-    <!-- ОСТАЛЬНЫЕ ЭКРАНЫ (без изменений) -->
     <div id="profile-settings-screen" class="screen">
         <div class="inner-screen">
             <button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
@@ -278,7 +299,6 @@
         tg.ready(); tg.expand();
         const AI_SERVER_URL = 'https://sport-app-bqlu.onrender.com';
 
-        // --- ЛОГИКА ВКЛАДОК ---
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -286,7 +306,6 @@
             event.target.classList.add('active');
         }
 
-        // --- ПОИСК ЕДЫ (DietlyAPI) ---
         async function searchFood() {
             const query = document.getElementById('food-search-input').value;
             if (!query) return;
@@ -301,12 +320,12 @@
                 if (data.products && data.products.length > 0) {
                     const product = data.products[0];
                     resultDiv.innerHTML = `
-                        <div style="background: #1c1c1e; padding: 20px; border-radius: 16px;">
-                            <h3 style="margin-top:0; color: var(--accent-color);">${product.product_name}</h3>
-                            <p><b>Калории:</b> ${product.nutrients.calories} ккал</p>
-                            <p><b>Белки:</b> ${product.nutrients.proteins} г</p>
-                            <p><b>Жиры:</b> ${product.nutrients.fat} г</p>
-                            <p><b>Углеводы:</b> ${product.nutrients.carbohydrates} г</p>
+                        <div style="background: #1c1c1e; padding: 20px; border-radius: 16px; text-align: center;">
+                            <h3 style="margin-top:0; color: var(--accent-color); word-break: break-word;">${product.product_name}</h3>
+                            <div class="nutrition-row"><span>Калории:</span> <b>${product.nutrients.calories} ккал</b></div>
+                            <div class="nutrition-row"><span>Белки:</span> <b>${product.nutrients.proteins} г</b></div>
+                            <div class="nutrition-row"><span>Жиры:</span> <b>${product.nutrients.fat} г</b></div>
+                            <div class="nutrition-row"><span>Углеводы:</span> <b>${product.nutrients.carbohydrates} г</b></div>
                             <button class="btn" style="background-color: #34c759; color: white;" onclick="addXP(20); closeScreen('food-screen');">Добавить в дневник (+20 XP)</button>
                         </div>
                     `;
@@ -318,7 +337,6 @@
             }
         }
 
-        // --- ФОТО (LogMeal / Gemini) ---
         function resetCameraScreen() {
             document.getElementById('photo-preview').style.display = 'none';
             document.getElementById('photo-preview').src = "";
@@ -375,7 +393,6 @@
             }
         }
 
-        // --- МУЗЫКА ---
         const bgTracks = [
             "01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3", 
             "05 - The Vengeance.mp3", "06 - The Forest of Death.mp3", "07 - The Ninja in the Night.mp3", 
@@ -444,7 +461,6 @@
             }
         }
 
-        // --- ОСТАЛЬНАЯ ЛОГИКА ---
         const levelsData = {
             male: [
                 { xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" },
@@ -623,7 +639,6 @@
 
         function openScreen(screenId) { 
             document.getElementById(screenId).classList.add('active'); 
-            if (screenId === 'timer-screen') { isWorkoutMode = true; playNextWorkout(); }
         }
         
         function closeScreen(screenId) { 
@@ -633,10 +648,20 @@
 
         let timeLeft = 45, isRunning = false, timerInterval, sessionCalories = 0;
         function updateTimerDisplay() { document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`; }
+        
         function toggleTimer() {
             const btn = document.getElementById('timer-btn');
-            if (isRunning) { clearInterval(timerInterval); btn.innerText = "Старт"; btn.style.backgroundColor = "var(--accent-color)"; }
-            else {
+            if (isRunning) { 
+                clearInterval(timerInterval); 
+                btn.innerText = "Старт"; 
+                btn.style.backgroundColor = "var(--accent-color)"; 
+            } else {
+                // Включаем музыку моментально по клику (браузеры это разрешают)
+                if (isSoundOn) {
+                    isWorkoutMode = true;
+                    playNextWorkout();
+                }
+                
                 if (timeLeft <= 0) timeLeft = 45; 
                 timerInterval = setInterval(() => {
                     timeLeft--; updateTimerDisplay();
@@ -646,31 +671,91 @@
             }
             isRunning = !isRunning;
         }
+        
         function resetTimer() {
             clearInterval(timerInterval); isRunning = false; timeLeft = 45; updateTimerDisplay();
             const btn = document.getElementById('timer-btn');
             if(btn) { btn.innerText = "Старт"; btn.style.backgroundColor = "var(--accent-color)"; }
         }
+        
         function startWorkoutFromList() { sessionCalories = 0; resetTimer(); closeScreen('workout-screen'); openScreen('timer-screen'); }
+        
         function completeSet() {
             const kcal = 15; sessionCalories += kcal; totalBurnedCalories += kcal;
             addXP(15); tg.CloudStorage.setItem('totalBurned', totalBurnedCalories.toString());
             document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`;
         }
         
+        // БОЛЬШОЙ СПИСОК ЦИТАТ
+        const allQuotes = [
+            { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион.", author: "Мухаммед Али" },
+            { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
+            { text: "Не молитесь о легкой жизни, молитесь о силах, чтобы вынести тяжелую.", author: "Брюс Ли" },
+            { text: "Ты не проиграл, пока не остановился.", author: "Неизвестный" },
+            { text: "Боль временна. Гордость навсегда.", author: "Неизвестный" },
+            { text: "Твое тело может всё. Это твой разум нужно убедить.", author: "Неизвестный" },
+            { text: "Каждый день — это новый шанс стать лучше.", author: "Неизвестный" },
+            { text: "Успех — это сумма маленьких усилий, повторяемых день за днем.", author: "Роберт Кольер" },
+            { text: "Не жди подходящего момента. Возьми момент и сделай его подходящим.", author: "Неизвестный" },
+            { text: "Сила приходит из преодоления того, что ты думал, что не сможешь преодолеть.", author: "Неизвестный" },
+            { text: "Лучший проект, над которым ты можешь работать — это ты сам.", author: "Неизвестный" },
+            { text: "Единственный плохой день для тренировки — это вчера.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем ты думаешь.", author: "Неизвестный" },
+            { text: "Сделай это сейчас. Потом может быть слишком поздно.", author: "Неизвестный" },
+            { text: "Результаты приходят к тем, кто не сдается.", author: "Неизвестный" },
+            { text: "Твоя единственная конкуренция — это ты вчерашний.", author: "Неизвестный" },
+            { text: "Не ищи оправданий, ищи возможности.", author: "Неизвестный" },
+            { text: "Капля за каплей точит камень.", author: "Лукреций" },
+            { text: "Ты способен на большее, чем можешь себе представить.", author: "Неизвестный" },
+            { text: "Сон и тренировки — это инвестиции в себя.", author: "Неизвестный" },
+            { text: "Сложно сегодня — легко завтра. Легко сегодня — сложно завтра.", author: "Неизвестный" },
+            { text: "Твое тело — это храм. Заботься о нем.", author: "Неизвестный" },
+            { text: "Дисциплина бьет мотивацию.", author: "Неизвестный" },
+            { text: "Сделай шаг, и дорога появится сама.", author: "Неизвестный" },
+            { text: "Не сравнивай себя с другими. Сравнивай себя с собой вчерашним.", author: "Неизвестный" },
+            { text: "Ты не всегда получишь то, что хочешь, но получишь то, над чем работаешь.", author: "Неизвестный" },
+            { text: "Победа любит подготовку.", author: "Неизвестный" },
+            { text: "Ты не находишь время, ты его создаешь.", author: "Неизвестный" },
+            { text: "Ошибки — это доказательство того, что ты пытаешься.", author: "Неизвестный" },
+            { text: "Стань тем, кем ты хочешь быть, прямо сейчас.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твоя ответственность.", author: "Неизвестный" },
+            { text: "Лучший способ предсказать будущее — создать его.", author: "Питер Друкер" },
+            { text: "Каждый повтор делает тебя сильнее.", author: "Неизвестный" },
+            { text: "Не сдавайся. Начало всегда самое трудное.", author: "Неизвестный" },
+            { text: "Ты уже на полпути, просто продолжай.", author: "Неизвестный" },
+            { text: "Сделай это ради себя.", author: "Неизвестный" },
+            { text: "Ты можешь всё, что решишь.", author: "Неизвестный" },
+            { text: "Движение — это жизнь.", author: "Неизвестный" },
+            { text: "Твоя сила воли — твой главный инструмент.", author: "Неизвестный" },
+            { text: "Смотри вперед, а не назад.", author: "Неизвестный" }
+        ];
+
+        let lastQuoteIndex = -1;
+
         function finishWorkout() {
+            // 1. Обязательно останавливаем фоновую музыку
+            audioWorkout.pause();
+            audioWorkout.currentTime = 0;
+
+            // 2. Показываем статистику
             document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
-            const quotes = [
-                { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион.", author: "Мухаммед Али" },
-                { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
-                { text: "Не молитесь о легкой жизни, молитесь о силах, чтобы вынести тяжелую.", author: "Брюс Ли" }
-            ];
-            const q = quotes[Math.floor(Math.random() * quotes.length)];
+            
+            // 3. Выбираем случайную цитату без повторов
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * allQuotes.length);
+            } while (newIndex === lastQuoteIndex && allQuotes.length > 1);
+            
+            lastQuoteIndex = newIndex;
+            const q = allQuotes[newIndex];
+            
             document.getElementById('finish-quote').innerText = `«${q.text}»`;
             document.getElementById('finish-author').innerText = `— ${q.author}`;
             
-            audioWorkout.pause();
-            if (isSoundOn) audioWin.play().catch(e => console.log(e));
+            // 4. Играем звук победы
+            if (isSoundOn) {
+                audioWin.play().catch(e => console.log(e));
+            }
             
             closeScreen('timer-screen'); openScreen('finish-screen');
         }
