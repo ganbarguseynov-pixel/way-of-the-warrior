@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -6,39 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Рейтинг</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="inner-screen">
         <button class="back-btn" onclick="window.location.href='index.html'">← Назад в приложение</button>
-        <h1>🏆 Мировой рейтинг</h1>
-        <p style="color: var(--hint-color); margin-bottom: 20px;">Топ атлетов</p>
-        <div id="leaderboard-list"></div>
+        <h1 style="text-align: center;">🏆 Мировой рейтинг</h1>
+        <p style="text-align: center; color: var(--hint-color); margin-bottom: 20px;">Топ атлетов (онлайн)</p>
+        
+        <div id="leaderboard-list">
+            <p style="text-align: center;">Загрузка рейтинга...</p>
+        </div>
     </div>
 
     <script>
+        const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
+        const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
-        
-        let tgUserName = "Вы";
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) tgUserName = tg.initDataUnsafe.user.first_name;
-        
-        let totalBurned = 0;
-        tg.CloudStorage.getItem('totalBurned', (err, burned) => {
-            if (burned) totalBurned = parseInt(burned);
-            renderLeaderboard();
-        });
 
-        function renderLeaderboard() {
-            const fake = [{ name: "Александр", kcal: 4500 }, { name: "Елена", kcal: 3200 }];
-            let all = [...fake, { name: tgUserName, kcal: totalBurned, isMe: true }].sort((a, b) => b.kcal - a.kcal);
-            
-            document.getElementById('leaderboard-list').innerHTML = all.map((u, i) => `
-                <div class="leaderboard-item ${u.isMe ? 'my-row' : ''}">
-                    <div class="rank">${i + 1}</div>
-                    <div class="user-info"><p style="margin:0;font-weight:bold;font-size:16px;">${u.name}</p><p style="margin:0;font-size:13px;color:#8e8e93;">${u.kcal} ккал</p></div>
-                </div>`).join('');
+        let currentUserId = null;
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            currentUserId = tg.initDataUnsafe.user.id;
         }
+
+        // Загружаем рейтинг
+        async function loadLeaderboard() {
+            const { data, error } = await supabaseClient
+                .from('profiles')
+                .select('telegram_id, first_name, xp')
+                .order('xp', { ascending: false })
+                .limit(50);
+
+            const listDiv = document.getElementById('leaderboard-list');
+            
+            if (error) {
+                listDiv.innerHTML = '<p style="text-align: center; color: #ff3b30;">Ошибка загрузки. Возможно, таблица не создана.</p>';
+                console.error(error);
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93;">Пока нет игроков. Сделайте тренировку!</p>';
+                return;
+            }
+
+            listDiv.innerHTML = data.map((player, index) => {
+                const isMe = player.telegram_id == currentUserId;
+                const name = player.first_name || 'Атлет';
+                const xp = player.xp || 0;
+                
+                return `
+                    <div class="leaderboard-item ${isMe ? 'my-row' : ''}">
+                        <div class="rank">${index + 1}</div>
+                        <div class="user-info">
+                            <p style="margin:0; font-weight:bold; font-size:16px;">${name} ${isMe ? '(Вы)' : ''}</p>
+                            <p style="margin:0; font-size:13px; color:#8e8e93;">${xp} XP</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Включаем онлайн-обновление
+        try {
+            supabaseClient
+                .channel('leaderboard-changes')
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, () => {
+                    loadLeaderboard();
+                })
+                .subscribe();
+        } catch(e) {
+            console.log("Realtime не настроен, но рейтинг будет грузиться при входе.");
+        }
+
+        loadLeaderboard();
     </script>
 </body>
 </html>
