@@ -1,55 +1,73 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Рейтинг</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Рейтинг</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="inner-screen">
-        <button class="back-btn" onclick="window.location.href='index.html'">← Назад в приложение</button>
-        <h1 style="text-align: center;">🏆 Мировой рейтинг</h1>
-        <p style="text-align: center; color: var(--hint-color); margin-bottom: 20px;">Топ атлетов</p>
+<div class="inner-screen">
+<button class="back-btn" onclick="window.location.href='index.html'">← Назад в приложение</button>
+<h1 style="text-align: center;">🏆 Мировой рейтинг</h1>
+<p style="text-align: center; color: var(--hint-color); margin-bottom: 20px;">Топ атлетов в реальном времени</p>
+
+<div id="leaderboard-list">
+    <p style="text-align: center;">Загрузка...</p>
+</div>
+</div>
+
+<script>
+const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
+const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+const tg = window.Telegram.WebApp;
+tg.ready(); tg.expand();
+
+const myName = localStorage.getItem('userName') || "Вы";
+
+function renderList(data) {
+    const listDiv = document.getElementById('leaderboard-list');
+    
+    if (!data || data.length === 0) {
+        listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93;">Пока нет игроков. Стань первым!</p>';
+        return;
+    }
+
+    data.sort((a, b) => (b.xp || 0) - (a.xp || 0));
+
+    let html = "";
+    for (let i = 0; i < data.length; i++) {
+        let u = data[i];
+        let displayName = u.name || "Атлет";
+        let isMe = (displayName === myName) ? 'my-row' : '';
         
-        <div id="leaderboard-list"></div>
-    </div>
+        let medal = (i === 0) ? "🥇" : (i === 1) ? "🥈" : (i === 2) ? "🥉" : (i + 1);
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready(); tg.expand();
+        html += '<div class="leaderboard-item ' + isMe + '">';
+        html += '<div class="rank" style="font-size: 24px;">' + medal + '</div>';
+        html += '<div class="user-info" style="margin-left: 15px;">';
+        html += '<p style="margin:0; font-weight:bold; font-size:16px;">' + displayName + '</p>';
+        html += '<p style="margin:0; font-size:13px; color:#8e8e93;">' + (u.xp || 0) + ' XP</p>';
+        html += '</div></div>';
+    }
+    listDiv.innerHTML = html;
+}
 
-        let tgUserName = "Вы";
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            tgUserName = tg.initDataUnsafe.user.first_name;
-        }
+async function loadLeaderboard() {
+    const { data, error } = await supabaseClient.from('user_links').select('name, xp').order('xp', { ascending: false }).limit(50);
+    if (!error) renderList(data);
+}
 
-        let currentXP = parseInt(localStorage.getItem('cachedXP') || 0);
+loadLeaderboard();
 
-        function renderLeaderboard() {
-            const fake = [
-                { name: "Александр", xp: 4500 }, 
-                { name: "Елена", xp: 3200 }
-            ];
-            
-            let all = fake.concat([{ name: tgUserName, xp: currentXP, isMe: true }]).sort((a, b) => b.xp - a.xp);
-            
-            let html = "";
-            for (let i = 0; i < all.length; i++) {
-                let u = all[i];
-                let rowClass = u.isMe ? 'my-row' : '';
-                html += '<div class="leaderboard-item ' + rowClass + '">';
-                html += '<div class="rank">' + (i + 1) + '</div>';
-                html += '<div class="user-info">';
-                html += '<p style="margin:0; font-weight:bold; font-size:16px;">' + u.name + '</p>';
-                html += '<p style="margin:0; font-size:13px; color:#8e8e93;">' + u.xp + ' XP</p>';
-                html += '</div></div>';
-            }
-            document.getElementById('leaderboard-list').innerHTML = html;
-        }
-
-        renderLeaderboard();
-    </script>
+supabaseClient.channel('public:user_links')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'user_links' }, payload => {
+    loadLeaderboard();
+  })
+  .subscribe();
+</script>
 </body>
 </html>
