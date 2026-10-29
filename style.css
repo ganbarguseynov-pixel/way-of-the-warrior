@@ -284,12 +284,15 @@ input, select {
     font-weight: bold;
 }
 
-/* --- ЭКРАН ВХОДА (AUTH) --- */
+/* --- ЭКРАН ВХОДА (ЦЕНТРИРОВАННЫЙ) --- */
 .auth-screen {
     background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop');
     background-size: cover;
     background-position: center;
     position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .auth-screen::before {
@@ -306,10 +309,20 @@ input, select {
     justify-content: center;
     align-items: center;
     height: 100%;
+    width: 100%;
     padding: 20px;
+    box-sizing: border-box;
     text-align: center;
     position: relative;
     z-index: 2;
+}
+
+.auth-content {
+    width: 100%;
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .auth-title {
@@ -329,7 +342,6 @@ input, select {
 
 .auth-buttons {
     width: 100%;
-    max-width: 350px;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -498,6 +510,40 @@ input, select {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* --- ВКЛАДКИ (ПОИСК / ФОТО) --- */
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px;
+    background: #1c1c1e;
+    border: 1px solid #2c2c2e;
+    border-radius: 12px;
+    color: #8e8e93;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+}
+
+.tab-btn.active {
+    background: var(--accent-color);
+    color: #000;
+    border-color: var(--accent-color);
+}
+
+.tab-content {
+    display: none;
+    width: 100%;
+}
+
+.tab-content.active {
+    display: block;
 }
 
 /* --- РЕЗУЛЬТАТЫ ЕДЫ --- */
