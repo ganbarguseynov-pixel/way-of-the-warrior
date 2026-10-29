@@ -4,7 +4,6 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, { auth: {
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
-// --- ЗАГРУЗКА ---
 window.addEventListener('load', () => {
     const cachedProfile = localStorage.getItem('cachedProfile');
     if (cachedProfile) {
@@ -12,10 +11,9 @@ window.addEventListener('load', () => {
     }
 });
 
-// --- ВХОД ---
 function loginWithTelegram() {
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        localStorage.setItem('loginType', 'telegram'); // Запоминаем, что вошли через ТГ
+        localStorage.setItem('loginType', 'telegram');
         if (localStorage.getItem('cachedProfile')) {
             renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
         } else {
@@ -46,7 +44,7 @@ async function handleEmailAuth() {
             else { tg.showAlert("Регистрация успешна!"); }
         } else {
             tg.showAlert("Успешный вход!");
-            localStorage.setItem('loginType', 'email'); // Запоминаем, что вошли через почту
+            localStorage.setItem('loginType', 'email');
             if (!localStorage.getItem('cachedProfile')) {
                 const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
                 localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
@@ -63,7 +61,6 @@ async function handleEmailAuth() {
     }
 }
 
-// --- НАСТРОЙКИ И ПРИВЯЗКА ---
 function openProfileSettings() { 
     const loginType = localStorage.getItem('loginType') || 'telegram';
     
@@ -96,7 +93,7 @@ async function linkEmailToTelegram() {
         if (error) {
             tg.showAlert("Ошибка: " + error.message);
         } else {
-            tg.showAlert("Email успешно привязан! Теперь вы можете заходить с любого устройства.");
+            tg.showAlert("Email успешно привязан!");
         }
     } catch (e) {
         tg.showAlert("Ошибка сети.");
@@ -104,10 +101,9 @@ async function linkEmailToTelegram() {
 }
 
 function linkTelegramToEmail() {
-    tg.showAlert("Ваш Telegram ID сохранен в профиле. Используйте его для входа.");
+    tg.showAlert("Ваш Telegram ID сохранен в профиле.");
 }
 
-// --- ОСТАЛЬНАЯ ЛОГИКА (ПРОФИЛЬ) ---
 const levelsData = {
     male: [{ xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" }, { xp: 100, title: "Берсерк", video: "VID_20261028_173215_440.mp4" }],
     female: [{ xp: 0, title: "Новичок", video: "VID_20261028_175618_746.mp4" }, { xp: 100, title: "Фурия", video: "VID_20261028_175631_701.mp4" }]
