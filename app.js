@@ -43,15 +43,18 @@ async function loginWithTelegram() {
         localStorage.setItem('tgId', tgId);
         localStorage.setItem('userName', tgName); 
 
+        // Ищем строку по TG ID
         const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId).maybeSingle(); 
 
         if (data && data.profile) {
+            // Если нашли — грузим прогресс
             localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
             localStorage.setItem('cachedXP', data.xp || 0);
             localStorage.setItem('cachedBurned', data.burned || 0);
             if (data.email) localStorage.setItem('linkedEmail', data.email);
             if (data.name) localStorage.setItem('userName', data.name);
         } else {
+            // Если нет — создаем новую
             const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
             localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
             localStorage.setItem('cachedXP', 0);
@@ -92,15 +95,18 @@ async function handleEmailAuth() {
             const emailName = email.split('@')[0];
             localStorage.setItem('userName', emailName); 
 
+            // Ищем строку по Email
             const { data: linkData } = await supabaseClient.from('user_links').select('*').eq('email', email).maybeSingle(); 
 
             if (linkData && linkData.profile) {
+                // Если нашли — грузим прогресс и подтягиваем TG ID
                 localStorage.setItem('cachedProfile', JSON.stringify(linkData.profile));
                 localStorage.setItem('cachedXP', linkData.xp || 0);
                 localStorage.setItem('cachedBurned', linkData.burned || 0);
                 if (linkData.telegram_id) localStorage.setItem('tgId', linkData.telegram_id);
                 if (linkData.name) localStorage.setItem('userName', linkData.name);
             } else {
+                // Если нет — создаем новую
                 const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
                 localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
                 localStorage.setItem('cachedXP', 0);
@@ -127,6 +133,7 @@ async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
         if (!currentTgId && !currentEmail) return; 
 
         let existingId = null;
+        // Ищем сначала по TG, потом по Email
         if (currentTgId) {
             const { data } = await supabaseClient.from('user_links').select('id').eq('telegram_id', currentTgId).maybeSingle();
             if (data) existingId = data.id;
@@ -231,7 +238,7 @@ function updateCharacterUI() {
     if (document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = percent + "%";
 } 
 
-// --- НАСТРОЙКИ С РЕДАКТИРОВАНИЕМ ---
+// --- НАСТРОЙКИ (Добавлены кнопки отвязки) ---
 function openProfileSettings() {
     const loginType = localStorage.getItem('loginType') || 'telegram'; 
 
@@ -343,7 +350,7 @@ async function linkTelegramToEmail() {
     }
 } 
 
-// --- ОТВЯЗКА ---
+// --- ФУНКЦИИ ОТВЯЗКИ (Новые) ---
 async function unlinkEmail() {
     if (!confirm("Отвязать Email? Прогресс останется в Telegram.")) return;
     const tgId = localStorage.getItem('tgId');
