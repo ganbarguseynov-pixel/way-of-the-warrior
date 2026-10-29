@@ -1,35 +1,48 @@
+const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
+const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
+// Включаем сохранение сессии (чтобы запоминал вход)
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, { auth: { persistSession: true } });
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
-const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
-const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
-// Отключаем сохранение сессии, чтобы не было зависаний
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
+// --- ГЛАВНАЯ ЗАГРУЗКА ---
+window.addEventListener('load', async () => {
+    // Проверяем, есть ли активная сессия в Supabase
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    
+    if (session) {
+        // Если есть сессия, загружаем профиль из памяти
+        loadLocalProfile();
+    } else {
+        // Если сессии нет, проверяем Telegram
+        const cachedProfile = localStorage.getItem('cachedProfile');
+        if (cachedProfile) {
+            renderProfile(JSON.parse(cachedProfile));
+        }
+    }
+});
 
-window.addEventListener('load', () => {
+function loadLocalProfile() {
     const cachedProfile = localStorage.getItem('cachedProfile');
     if (cachedProfile) {
         renderProfile(JSON.parse(cachedProfile));
     }
-});
+}
 
-// --- ЛОГИКА ВХОДА ---
+// --- ВХОД ---
 function loginWithTelegram() {
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        // Просто показываем главный экран, так как Telegram уже дал нам данные
         if (localStorage.getItem('cachedProfile')) {
             renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
         } else {
             openScreen('profile-settings-screen');
         }
     } else {
-        tg.showAlert("Пожалуйста, откройте приложение через Telegram!");
+        tg.showAlert("Откройте через Telegram!");
     }
 }
 
-function showEmailForm() {
-    openScreen('email-screen');
-}
+function showEmailForm() { openScreen('email-screen'); }
 
 async function handleEmailAuth() {
     const email = document.getElementById('auth-email').value;
@@ -37,7 +50,6 @@ async function handleEmailAuth() {
     const btn = document.getElementById('email-submit-btn');
 
     if (!email || !password) { tg.showAlert("Заполните все поля!"); return; }
-
     btn.innerText = "Загрузка...";
     btn.disabled = true;
 
@@ -46,27 +58,46 @@ async function handleEmailAuth() {
         
         if (signInError) {
             const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
-            if (signUpError) { 
-                tg.showAlert("Ошибка: " + signUpError.message); 
-            } else { 
-                tg.showAlert("Регистрация успешна! Теперь войдите."); 
-            }
+            if (signUpError) { tg.showAlert("Ошибка: " + signUpError.message); } 
+            else { tg.showAlert("Регистрация успешна!"); }
         } else {
             tg.showAlert("Успешный вход!");
-            // Создаем локальный профиль для Email-пользователя
-            const emailProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
-            localStorage.setItem('cachedProfile', JSON.stringify(emailProfile));
-            renderProfile(emailProfile);
+            if (!localStorage.getItem('cachedProfile')) {
+                const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
+                localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
+                renderProfile(defaultProfile);
+            } else {
+                renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
+            }
         }
     } catch (e) {
-        tg.showAlert("Ошибка сети. Попробуйте позже.");
+        tg.showAlert("Ошибка сети.");
     } finally {
         btn.innerText = "Продолжить";
         btn.disabled = false;
     }
 }
 
-// --- ОСТАЛЬНАЯ ЛОГИКА (ПРОФИЛЬ, МУЗЫКА, РЕЙТИНГ) ---
+// --- ПРИВЯЗКА EMAIL К TELEGRAM ---
+async function linkEmailToTelegram() {
+    const email = document.getElementById('link-email').value;
+    const password = document.getElementById('link-password').value;
+
+    if (!email || !password) { tg.showAlert("Заполните Email и пароль!"); return; }
+
+    try {
+        const { data, error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) {
+            tg.showAlert("Ошибка: " + error.message);
+        } else {
+            tg.showAlert("Email успешно привязан! Теперь вы можете заходить с любого устройства.");
+        }
+    } catch (e) {
+        tg.showAlert("Ошибка сети.");
+    }
+}
+
+// --- ОСТАЛЬНАЯ ЛОГИКА ---
 const levelsData = {
     male: [
         { xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" },
@@ -93,7 +124,11 @@ function openScreen(screenId) {
 
 function closeScreen(screenId) {
     document.getElementById(screenId).classList.remove('active');
-    document.getElementById('auth-screen').classList.add('active');
+    if (document.getElementById('cachedProfile')) {
+        document.getElementById('dashboard-screen').classList.add('active');
+    } else {
+        document.getElementById('auth-screen').classList.add('active');
+    }
 }
 
 function renderProfile(profile) {
@@ -103,16 +138,12 @@ function renderProfile(profile) {
     let bmr = userGender === 'male' ? (10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) : (10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161);
     let cals = profile.goal === 'lose' ? (bmr * 1.375 - 500) : (bmr * 1.375 + 500);
     
-    if (document.getElementById('calories-norm')) {
-        document.getElementById('calories-norm').innerText = Math.round(cals) + " ккал";
-    }
+    if (document.getElementById('calories-norm')) document.getElementById('calories-norm').innerText = Math.round(cals) + " ккал";
 
     currentXP = parseInt(localStorage.getItem('cachedXP') || 0);
     totalBurnedCalories = parseInt(localStorage.getItem('cachedBurned') || 0);
     
-    if (document.getElementById('burned-total')) {
-        document.getElementById('burned-total').innerText = totalBurnedCalories + " ккал";
-    }
+    if (document.getElementById('burned-total')) document.getElementById('burned-total').innerText = totalBurnedCalories + " ккал";
     
     updateCharacterUI();
     
@@ -165,5 +196,6 @@ function saveProfile() {
 
 function logout() {
     localStorage.clear();
+    supabaseClient.auth.signOut();
     location.reload();
 }
