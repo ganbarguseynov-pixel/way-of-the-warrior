@@ -1,55 +1,42 @@
+
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Рейтинг</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Рейтинг</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="inner-screen">
-        <button class="back-btn" onclick="window.location.href='index.html'">← Назад в приложение</button>
-        <h1 style="text-align: center;">🏆 Мировой рейтинг</h1>
-        <p style="text-align: center; color: var(--hint-color); margin-bottom: 20px;">Топ атлетов</p>
-        
-        <div id="leaderboard-list"></div>
-    </div>
+<div class="inner-screen">
+<button class="back-btn" onclick="window.location.href='index.html'">← Назад в приложение</button>
+<h1>🏆 Мировой рейтинг</h1>
+<p style="color: var(--hint-color); margin-bottom: 20px;">Топ атлетов</p>
+<div id="leaderboard-list"></div>
+</div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready(); tg.expand();
+<script>
+const tg = window.Telegram.WebApp;
+tg.ready(); tg.expand();
 
-        let tgUserName = "Вы";
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            tgUserName = tg.initDataUnsafe.user.first_name;
-        }
+let tgUserName = "Вы";
+if (tg.initDataUnsafe && tg.initDataUnsafe.user) tgUserName = tg.initDataUnsafe.user.first_name;
 
-        let currentXP = parseInt(localStorage.getItem('cachedXP') || 0);
+let totalBurned = 0;
+tg.CloudStorage.getItem('totalBurned', (err, burned) => {
+if (burned) totalBurned = parseInt(burned);
+renderLeaderboard();
+});
 
-        function renderLeaderboard() {
-            const fake = [
-                { name: "Александр", xp: 4500 }, 
-                { name: "Елена", xp: 3200 }
-            ];
-            
-            let all = fake.concat([{ name: tgUserName, xp: currentXP, isMe: true }]).sort((a, b) => b.xp - a.xp);
-            
-            let html = "";
-            for (let i = 0; i < all.length; i++) {
-                let u = all[i];
-                let rowClass = u.isMe ? 'my-row' : '';
-                html += '<div class="leaderboard-item ' + rowClass + '">';
-                html += '<div class="rank">' + (i + 1) + '</div>';
-                html += '<div class="user-info">';
-                html += '<p style="margin:0; font-weight:bold; font-size:16px;">' + u.name + '</p>';
-                html += '<p style="margin:0; font-size:13px; color:#8e8e93;">' + u.xp + ' XP</p>';
-                html += '</div></div>';
-            }
-            document.getElementById('leaderboard-list').innerHTML = html;
-        }
+function renderLeaderboard() {
+const fake = [{ name: "Александр", kcal: 4500 }, { name: "Елена", kcal: 3200 }];
+let all = [...fake, { name: tgUserName, kcal: totalBurned, isMe: true }].sort((a, b) => b.kcal - a.kcal);
 
-        renderLeaderboard();
-    </script>
+document.getElementById('leaderboard-list').innerHTML = all.map((u, i) => &lt;div class="leaderboard-item ${u.isMe ? 'my-row' : ''}">
+<div class="rank">${i + 1}&lt;/div&gt; &lt;div class="user-info"&gt;&lt;p style="margin:0;font-weight:bold;font-size:16px;"&gt;${u.name}</p><p style="margin:0;font-size:13px;color:#8e8e93;">${u.kcal} ккал&lt;/p&gt;&lt;/div&gt; &lt;/div>).join('');
+}
+</script>
 </body>
 </html>
+
