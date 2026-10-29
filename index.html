@@ -92,7 +92,6 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* --- ИСПРАВЛЕНИЕ ВЕРСТКИ БЛОКА С ЕДОЙ --- */
         #food-result {
             text-align: center;
             width: 100%;
@@ -194,7 +193,6 @@
             </div>
 
             <div id="tab-photo" class="tab-content">
-                <!-- Заменили capture="camera" на capture="environment" для стабильной работы -->
                 <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;" onchange="handleImage(event)">
                 
                 <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
@@ -448,6 +446,12 @@
         }
         audioWorkout.onended = playNextWorkout;
 
+        // Как только музыка победы заканчивается, включаем следующую фоновую
+        audioWin.onended = function() {
+            isWorkoutMode = false; // Выходим из режима тренировки
+            playNextBg(); // Включаем фоновую музыку
+        };
+
         function toggleSound() {
             isSoundOn = !isSoundOn;
             const btn = document.getElementById('sound-btn');
@@ -643,7 +647,14 @@
         
         function closeScreen(screenId) { 
             document.getElementById(screenId).classList.remove('active'); 
-            if (screenId === 'timer-screen') { isWorkoutMode = false; audioWorkout.pause(); playNextBg(); }
+            if (screenId === 'timer-screen') { 
+                isWorkoutMode = false; 
+                audioWorkout.pause(); 
+                // Если звук победы не играет, включаем фоновую
+                if (audioWin.paused) {
+                    playNextBg();
+                }
+            }
         }
 
         let timeLeft = 45, isRunning = false, timerInterval, sessionCalories = 0;
@@ -686,7 +697,6 @@
             document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`;
         }
         
-        // БОЛЬШОЙ СПИСОК ЦИТАТ
         const allQuotes = [
             { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион.", author: "Мухаммед Али" },
             { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
@@ -733,7 +743,7 @@
         let lastQuoteIndex = -1;
 
         function finishWorkout() {
-            // 1. Обязательно останавливаем фоновую музыку
+            // 1. ЖЕСТКО останавливаем фоновую музыку
             audioWorkout.pause();
             audioWorkout.currentTime = 0;
 
@@ -757,7 +767,8 @@
                 audioWin.play().catch(e => console.log(e));
             }
             
-            closeScreen('timer-screen'); openScreen('finish-screen');
+            closeScreen('timer-screen'); 
+            openScreen('finish-screen');
         }
 
         function loadLeaderboard() {
