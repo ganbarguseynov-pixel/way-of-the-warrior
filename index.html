@@ -15,6 +15,7 @@
             --text-color: #ffffff;
             --hint-color: #8e8e93;
             --secondary-bg: rgba(30, 30, 30, 0.6);
+            --xp-color: #34c759; 
             --accent-color: #ffcc00;
         }
         .female-theme { --accent-color: #ff3b30; }
@@ -94,13 +95,88 @@
         #food-result h2 { text-align: center !important; width: 100%; word-break: break-word; margin-bottom: 20px; }
         .nutrition-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; padding: 0 10px; box-sizing: border-box; }
         
-        #camera-container { position: relative; width: 100%; height: 60vh; border-radius: 16px; overflow: hidden; margin-bottom: 20px; background: #000; display: flex; flex-direction: column; justify-content: space-between; }
-        #camera-video { width: 100%; height: 100%; object-fit: cover; display: block; background-color: #000; }
-        #camera-controls { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; z-index: 5; }
-        #capture-btn { width: 75px; height: 75px; border-radius: 50%; background: white; border: 5px solid rgba(0,0,0,0.2); cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        #capture-btn:active { transform: scale(0.95); background: #ddd; }
-        #close-camera-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 5; display: flex; align-items: center; justify-content: center; }
-        #switch-camera-btn { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 5; display: flex; align-items: center; justify-content: center; }
+        #camera-container { 
+            position: relative; 
+            width: 100%; 
+            height: 60vh; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            margin-bottom: 20px; 
+            background: #000; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        #camera-video { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            display: block; 
+            background-color: #000; 
+        }
+        
+        #camera-controls { 
+            position: absolute; 
+            bottom: 20px; 
+            left: 0; 
+            right: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            z-index: 5;
+        }
+        
+        #capture-btn { 
+            width: 75px; 
+            height: 75px; 
+            border-radius: 50%; 
+            background: white; 
+            border: 5px solid rgba(0,0,0,0.2); 
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        
+        #capture-btn:active {
+            transform: scale(0.95);
+            background: #ddd;
+        }
+
+        #close-camera-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #switch-camera-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body class="male-theme">
@@ -197,7 +273,7 @@
                 <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
                 
                 <div class="photo-btn-group" id="photo-buttons">
-                    <button class="btn" style="padding: 20px; font-size: 18px;" onclick="startCamera()">📷 Сделать фото</button>
+                    <button class="btn" style="padding: 20px; font-size: 18px;" onclick="startCamera()">📷 Открыть камеру</button>
                     <button class="btn" style="padding: 20px; font-size: 18px; background-color: #2c2c2e; color: white;" onclick="document.getElementById('gallery-input').click()">🖼️ Выбрать из галереи</button>
                 </div>
 
@@ -292,14 +368,23 @@
         tg.ready(); tg.expand();
         const AI_SERVER_URL = 'https://sport-app-bqlu.onrender.com';
 
-        // --- КАМЕРА И ГАЛЕРЕЯ ---
+        // --- ВСТРОЕННАЯ КАМЕРА (БЕЗ ПОВТОРНЫХ ЗАПРОСОВ) ---
         let videoStream = null;
         let currentFacingMode = "environment"; 
+        let isCameraActive = false; // Флаг, чтобы не перезапускать камеру зря
 
         async function startCamera() {
-            try {
+            // Если камера уже работает, просто показываем её
+            if (isCameraActive) {
                 document.getElementById('photo-buttons').style.display = 'none';
                 document.getElementById('camera-container').style.display = 'flex';
+                return;
+            }
+
+            try {
+                document.getElementById('photo-buttons').style.display = 'none';
+                const container = document.getElementById('camera-container');
+                container.style.display = 'flex'; 
 
                 videoStream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: currentFacingMode } 
@@ -307,10 +392,15 @@
                 
                 const videoElement = document.getElementById('camera-video');
                 videoElement.srcObject = videoStream;
-                videoElement.onloadedmetadata = () => { videoElement.play(); };
+                isCameraActive = true;
+                
+                videoElement.onloadedmetadata = () => {
+                    videoElement.play();
+                };
                 
             } catch (err) {
-                tg.showAlert("Не удалось получить доступ к камере. Разрешите доступ в настройках Telegram.");
+                tg.showAlert("Не удалось получить доступ к камере. Проверьте разрешения.");
+                console.error(err);
                 resetCameraScreen();
             }
         }
@@ -318,6 +408,7 @@
         async function switchCamera() {
             currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
             stopCamera();
+            isCameraActive = false; // Сбрасываем флаг, чтобы startCamera запустил новую
             await startCamera();
         }
 
@@ -352,6 +443,7 @@
                 videoStream = null;
             }
             document.getElementById('camera-container').style.display = 'none';
+            isCameraActive = false;
         }
 
         function resetCameraScreen() {
@@ -362,7 +454,6 @@
             document.getElementById('photo-buttons').style.display = 'flex';
             document.getElementById('remove-photo-btn').style.display = 'none';
             document.getElementById('gallery-input').value = "";
-            document.getElementById('loading-spinner').style.display = 'none';
         }
 
         async function handleImage(event) {
@@ -383,7 +474,6 @@
 
         async function sendPhotoToServer(file) {
             document.getElementById('loading-spinner').style.display = 'block';
-            document.getElementById('food-result').style.display = 'none';
 
             const formData = new FormData();
             formData.append('image', file);
@@ -414,7 +504,7 @@
 
             } catch (error) {
                 document.getElementById('loading-spinner').style.display = 'none';
-                tg.showAlert("Ошибка: не удалось связаться с сервером. Подождите 50 секунд (сервер просыпается) и попробуйте снова.");
+                tg.showAlert("Ошибка: не удалось связаться с сервером.");
                 resetCameraScreen();
             }
         }
@@ -425,8 +515,12 @@
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tabName}`).classList.add('active');
             event.target.classList.add('active');
+            
             if (tabName === 'photo') {
-                resetCameraScreen(); 
+                // Не сбрасываем камеру, если она уже была открыта, просто показываем кнопки
+                if (!isCameraActive && !document.getElementById('photo-preview').src) {
+                     document.getElementById('photo-buttons').style.display = 'flex';
+                }
             }
         }
 
@@ -461,7 +555,6 @@
             }
         }
 
-        // --- ЛОГИКА МУЗЫКИ (РАНДОМНАЯ) ---
         const bgTracks = [
             "01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3", 
             "05 - The Vengeance.mp3", "06 - The Forest of Death.mp3", "07 - The Ninja in the Night.mp3", 
@@ -476,8 +569,11 @@
             "20. Sec Music Loop 01.mp3"
         ];
         
-        let isSoundOn = true, isWorkoutMode = false, musicStarted = false;
-        let lastBgIndex = -1, lastWorkoutIndex = -1;
+        let currentBgIndex = 0;
+        let currentWorkoutIndex = 0;
+        let isSoundOn = true;
+        let isWorkoutMode = false;
+        let musicStarted = false;
 
         const audioBg = document.getElementById('audio-bg');
         const audioWorkout = document.getElementById('audio-workout');
@@ -487,34 +583,45 @@
         audioLose.src = "09. Scroll Lose 01.mp3"; 
         const audioLevelUp = "07. Scroll Draw 01.mp3"; 
 
-        function getRandomTrack(tracksArray, lastIndex) {
-            let newIndex = Math.floor(Math.random() * tracksArray.length);
-            if (newIndex === lastIndex && tracksArray.length > 1) {
-                newIndex = (newIndex + 1) % tracksArray.length;
-            }
-            return newIndex;
-        }
-
         function playNextBg() {
             if (!isSoundOn || isWorkoutMode) return;
-            lastBgIndex = getRandomTrack(bgTracks, lastBgIndex);
-            audioBg.src = bgTracks[lastBgIndex];
-            audioBg.load(); 
-            audioBg.play().catch(e => console.log("Autoplay blocked"));
+            
+            tg.CloudStorage.getItem('bgIndex', (err, res) => {
+                if (res && !err) {
+                    currentBgIndex = parseInt(res);
+                }
+                if (currentBgIndex >= bgTracks.length) currentBgIndex = 0;
+                
+                audioBg.src = bgTracks[currentBgIndex];
+                audioBg.load(); 
+                audioBg.play().catch(e => console.log("Autoplay blocked"));
+                
+                tg.CloudStorage.setItem('bgIndex', ((currentBgIndex + 1) % bgTracks.length).toString());
+                currentBgIndex = (currentBgIndex + 1) % bgTracks.length;
+            });
         }
         audioBg.onended = playNextBg;
 
         function playNextWorkout() {
             if (!isSoundOn) return;
             audioBg.pause(); 
-            lastWorkoutIndex = getRandomTrack(workoutTracks, lastWorkoutIndex);
-            audioWorkout.src = workoutTracks[lastWorkoutIndex];
+            
+            audioWorkout.src = workoutTracks[currentWorkoutIndex];
             audioWorkout.load(); 
-            audioWorkout.play().catch(e => console.log("Ошибка запуска"));
+            
+            let playPromise = audioWorkout.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => console.log("Ошибка запуска музыки:", e));
+            }
+            
+            currentWorkoutIndex = (currentWorkoutIndex + 1) % workoutTracks.length;
         }
         audioWorkout.onended = playNextWorkout;
 
-        audioWin.onended = function() { isWorkoutMode = false; playNextBg(); };
+        audioWin.onended = function() {
+            isWorkoutMode = false; 
+            playNextBg(); 
+        };
 
         function toggleSound() {
             isSoundOn = !isSoundOn;
@@ -529,34 +636,6 @@
             }
         }
 
-        // --- ЦИТАТЫ (8 ШТУК ДЛЯ СТАБИЛЬНОСТИ) ---
-        const allQuotes = [
-            { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион.", author: "Мухаммед Али" },
-            { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
-            { text: "Не молитесь о легкой жизни, молитесь о силах, чтобы вынести тяжелую.", author: "Брюс Ли" },
-            { text: "Ты не проиграл, пока не остановился.", author: "Майк Тайсон" },
-            { text: "Боль временна. Гордость навсегда.", author: "Лэнс Армстронг" },
-            { text: "Я могу принять поражение, но я не могу принять не попробовать.", author: "Майкл Джордан" },
-            { text: "Ты не можешь быть особенным, если ты не отличаешься от остальных.", author: "Коби Брайант" },
-            { text: "Победа — это не всё, но желание победить — это всё.", author: "Винс Ломбарди" }
-        ];
-
-        let quoteDeck = [];
-        function refillQuoteDeck() {
-            quoteDeck = [...allQuotes];
-            for (let i = quoteDeck.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [quoteDeck[i], quoteDeck[j]] = [quoteDeck[j], quoteDeck[i]];
-            }
-        }
-        refillQuoteDeck(); 
-
-        function getNextRandomQuote() {
-            if (quoteDeck.length === 0) { refillQuoteDeck(); }
-            return quoteDeck.pop(); 
-        }
-
-        // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
         const levelsData = {
             male: [
                 { xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" },
@@ -605,8 +684,11 @@
             const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (signInError) {
                 const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
-                if (signUpError) { tg.showAlert("Ошибка: " + signUpError.message); } 
-                else { tg.showAlert("Регистрация успешна! Проверьте почту."); }
+                if (signUpError) { 
+                    tg.showAlert("Ошибка: " + signUpError.message); 
+                } else { 
+                    tg.showAlert("Регистрация успешна! Проверьте почту."); 
+                }
             } else {
                 tg.showAlert("Успешный вход!");
                 tgUserName = email.split('@')[0];
@@ -628,11 +710,18 @@
             if (!email || !password) { tg.showAlert("Заполните Email и пароль!"); return; }
             
             const { data, error } = await supabaseClient.auth.updateUser({ email: email, password: password });
+            
             if (error) {
                 const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
-                if (signUpError) { tg.showAlert("Ошибка: " + signUpError.message); } 
-                else { tg.showAlert("Email успешно привязан и зарегистрирован!"); }
-            } else { tg.showAlert("Email успешно привязан к текущему профилю!"); }
+                
+                if (signUpError) {
+                    tg.showAlert("Ошибка: " + signUpError.message);
+                } else {
+                    tg.showAlert("Email успешно привязан и зарегистрирован!");
+                }
+            } else {
+                tg.showAlert("Email успешно привязан к текущему профилю!");
+            }
         }
 
         function checkProfile() {
@@ -770,6 +859,51 @@
             addXP(15); tg.CloudStorage.setItem('totalBurned', totalBurnedCalories.toString());
             document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`;
         }
+        
+        const allQuotes = [
+            { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион.", author: "Мухаммед Али" },
+            { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
+            { text: "Не молитесь о легкой жизни, молитесь о силах, чтобы вынести тяжелую.", author: "Брюс Ли" },
+            { text: "Ты не проиграл, пока не остановился.", author: "Неизвестный" },
+            { text: "Боль временна. Гордость навсегда.", author: "Неизвестный" },
+            { text: "Твое тело может всё. Это твой разум нужно убедить.", author: "Неизвестный" },
+            { text: "Каждый день — это новый шанс стать лучше.", author: "Неизвестный" },
+            { text: "Успех — это сумма маленьких усилий, повторяемых день за днем.", author: "Роберт Кольер" },
+            { text: "Не жди подходящего момента. Возьми момент и сделай его подходящим.", author: "Неизвестный" },
+            { text: "Сила приходит из преодоления того, что ты думал, что не сможешь преодолеть.", author: "Неизвестный" },
+            { text: "Лучший проект, над которым ты можешь работать — это ты сам.", author: "Неизвестный" },
+            { text: "Единственный плохой день для тренировки — это вчера.", author: "Неизвестный" },
+            { text: "Ты сильнее, чем ты думаешь.", author: "Неизвестный" },
+            { text: "Сделай это сейчас. Потом может быть слишком поздно.", author: "Неизвестный" },
+            { text: "Результаты приходят к тем, кто не сдается.", author: "Неизвестный" },
+            { text: "Твоя единственная конкуренция — это ты вчерашний.", author: "Неизвестный" },
+            { text: "Не ищи оправданий, ищи возможности.", author: "Неизвестный" },
+            { text: "Капля за каплей точит камень.", author: "Лукреций" },
+            { text: "Ты способен на большее, чем можешь себе представить.", author: "Неизвестный" },
+            { text: "Сон и тренировки — это инвестиции в себя.", author: "Неизвестный" },
+            { text: "Сложно сегодня — легко завтра. Легко сегодня — сложно завтра.", author: "Неизвестный" },
+            { text: "Твое тело — это храм. Заботься о нем.", author: "Неизвестный" },
+            { text: "Дисциплина бьет мотивацию.", author: "Неизвестный" },
+            { text: "Сделай шаг, и дорога появится сама.", author: "Неизвестный" },
+            { text: "Не сравнивай себя с другими. Сравнивай себя с собой вчерашним.", author: "Неизвестный" },
+            { text: "Ты не всегда получишь то, что хочешь, но получишь то, над чем работаешь.", author: "Неизвестный" },
+            { text: "Победа любит подготовку.", author: "Неизвестный" },
+            { text: "Ты не находишь время, ты его создаешь.", author: "Неизвестный" },
+            { text: "Ошибки — это доказательство того, что ты пытаешься.", author: "Неизвестный" },
+            { text: "Стань тем, кем ты хочешь быть, прямо сейчас.", author: "Неизвестный" },
+            { text: "Твоя жизнь — это твоя ответственность.", author: "Неизвестный" },
+            { text: "Лучший способ предсказать будущее — создать его.", author: "Питер Друкер" },
+            { text: "Каждый повтор делает тебя сильнее.", author: "Неизвестный" },
+            { text: "Не сдавайся. Начало всегда самое трудное.", author: "Неизвестный" },
+            { text: "Ты уже на полпути, просто продолжай.", author: "Неизвестный" },
+            { text: "Сделай это ради себя.", author: "Неизвестный" },
+            { text: "Ты можешь всё, что решишь.", author: "Неизвестный" },
+            { text: "Движение — это жизнь.", author: "Неизвестный" },
+            { text: "Твоя сила воли — твой главный инструмент.", author: "Неизвестный" },
+            { text: "Смотри вперед, а не назад.", author: "Неизвестный" }
+        ];
+
+        let lastQuoteIndex = -1;
 
         function finishWorkout() {
             audioWorkout.pause();
@@ -778,7 +912,13 @@
 
             document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
             
-            const q = getNextRandomQuote();
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * allQuotes.length);
+            } while (newIndex === lastQuoteIndex && allQuotes.length > 1);
+            
+            lastQuoteIndex = newIndex;
+            const q = allQuotes[newIndex];
             
             document.getElementById('finish-quote').innerText = `«${q.text}»`;
             document.getElementById('finish-author').innerText = `— ${q.author}`;
