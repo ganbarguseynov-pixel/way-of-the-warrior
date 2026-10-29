@@ -1,1 +1,44 @@
 
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Рейтинг</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="inner-screen">
+        <button class="back-btn" onclick="window.location.href='index.html'">← Назад в приложение</button>
+        <h1>🏆 Мировой рейтинг</h1>
+        <p style="color: var(--hint-color); margin-bottom: 20px;">Топ атлетов</p>
+        <div id="leaderboard-list"></div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready(); tg.expand();
+        
+        let tgUserName = "Вы";
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) tgUserName = tg.initDataUnsafe.user.first_name;
+        
+        let totalBurned = 0;
+        tg.CloudStorage.getItem('totalBurned', (err, burned) => {
+            if (burned) totalBurned = parseInt(burned);
+            renderLeaderboard();
+        });
+
+        function renderLeaderboard() {
+            const fake = [{ name: "Александр", kcal: 4500 }, { name: "Елена", kcal: 3200 }];
+            let all = [...fake, { name: tgUserName, kcal: totalBurned, isMe: true }].sort((a, b) => b.kcal - a.kcal);
+            
+            document.getElementById('leaderboard-list').innerHTML = all.map((u, i) => `
+                <div class="leaderboard-item ${u.isMe ? 'my-row' : ''}">
+                    <div class="rank">${i + 1}</div>
+                    <div class="user-info"><p style="margin:0;font-weight:bold;font-size:16px;">${u.name}</p><p style="margin:0;font-size:13px;color:#8e8e93;">${u.kcal} ккал</p></div>
+                </div>`).join('');
+        }
+    </script>
+</body>
+</html>
