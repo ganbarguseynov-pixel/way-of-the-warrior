@@ -4,12 +4,11 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
-// --- ЛОГИКА ЗАГРУЗКИ И ВОЗВРАТА ---
+// --- ЛОГИКА ЗАГРУЗКИ (ЖДЕМ 1 СЕКУНДУ) ---
 window.addEventListener('load', () => {
-    // Ждем 1.5 секунды, чтобы Telegram успел загрузить данные профиля
     setTimeout(() => {
         checkProfile(); 
-    }, 1500); 
+    }, 1000); 
 });
 
 // --- МУЗЫКА ---
@@ -86,10 +85,6 @@ function loginWithTelegram() {
 }
 
 function checkProfile() {
-    // Скрываем экран загрузки
-    const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) loadingScreen.classList.remove('active');
-
     tg.CloudStorage.getItem('profile', (err, result) => {
         if (result) {
             const profile = JSON.parse(result);
