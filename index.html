@@ -1,82 +1,75 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>Sport App</title>
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="style.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>Sport App</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="male-theme">
 
-<audio id="audio-bg" loop preload="auto"></audio>
-<audio id="audio-workout" loop preload="auto"></audio>
-<audio id="audio-win" preload="auto"></audio>
-<audio id="audio-lose" preload="auto"></audio>
+    <audio id="audio-bg" loop preload="auto"></audio>
+    <audio id="audio-workout" loop preload="auto"></audio>
+    <audio id="audio-win" preload="auto"></audio>
+    <audio id="audio-lose" preload="auto"></audio>
 
-<!-- ЭКРАН ВХОДА -->
-<div id="auth-screen" class="screen active auth-screen">
-<div class="auth-container">
-<div class="auth-content">
-<div class="auth-title">Sport App</div>
-<div class="inspiration-text">Стань лучшей версией себя.<br>Начни прямо сейчас.</div>
-<div class="auth-buttons">
-<button class="auth-btn tg-btn" onclick="loginWithTelegram()">✈️ Продолжить через Telegram</button>
-<div class="auth-divider"><span>или</span></div>
-<button class="auth-btn email-btn" onclick="alert('Вход по Email пока в разработке')">✉️ Войти по Email</button>
-</div>
-</div>
-</div>
-</div>
+    <!-- ГЛАВНЫЙ ЭКРАН (СРАЗУ АКТИВЕН) -->
+    <div id="dashboard-screen" class="screen active">
+        <button class="sound-toggle" onclick="toggleSound()" id="sound-btn">🔊</button>
+        <video id="character-video" class="video-background" autoplay loop muted playsinline></video>
+        <div class="overlay">
+            <div style="display: flex; justify-content: space-between; position: absolute; top: 0px; left: 0px; right: 0px; z-index: 30; padding: 5px 10px;">
+                <button class="btn" style="background-color: rgba(44,44,46,0.7); color: white; width: auto; padding: 8px 15px; font-size: 13px; margin: 0;" onclick="openProfileSettings()">⚙️ Настройки</button>
+                <button class="btn" style="background-color: rgba(255,59,48,0.2); color: #ff3b30; width: auto; padding: 8px 15px; font-size: 13px; margin: 0; border: 1px solid #ff3b30;" onclick="logout()">Выйти</button>
+            </div>
+            <div class="top-info">
+                <div class="character-level" id="char-level">Уровень 1</div>
+                <div class="character-title" id="char-title">Странник</div>
+                <div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
+                <p class="xp-text" id="xp-text">0 / 100 XP</p>
+            </div>
+            <div class="bottom-panel">
+                <div class="stats-row">
+                    <div class="stat-box"><p>Норма</p><h3 id="calories-norm">0 ккал</h3></div>
+                    <div class="stat-box"><p>Сожжено</p><h3 id="burned-total">0 ккал</h3></div>
+                </div>
+                <div class="action-grid">
+                    <button class="action-btn" onclick="window.location.href='camera.html'"><h3>📸</h3><p>Еда</p></button>
+                    <button class="action-btn" onclick="window.location.href='workout.html'"><h3>💪</h3><p>Треня</p></button>
+                    <button class="action-btn" onclick="window.location.href='timer.html'"><h3>⏱</h3><p>Таймер</p></button>
+                    <button class="action-btn" onclick="window.location.href='leaderboard.html'"><h3>🏆</h3><p>Рейтинг</p></button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<!-- ГЛАВНЫЙ ЭКРАН -->
-<div id="dashboard-screen" class="screen">
-<button class="sound-toggle" onclick="toggleSound()" id="sound-btn">🔊</button>
-<video id="character-video" class="video-background" autoplay loop muted playsinline></video>
-<div class="overlay">
-<div style="display: flex; justify-content: space-between; position: absolute; top: 0px; left: 0px; right: 0px; z-index: 30; padding: 5px 10px;">
-<button class="btn" style="background-color: rgba(44,44,46,0.7); color: white; width: auto; padding: 8px 15px; font-size: 13px; margin: 0;" onclick="alert('Настройки в разработке')">⚙️ Настройки</button>
-<button class="btn" style="background-color: rgba(255,59,48,0.2); color: #ff3b30; width: auto; padding: 8px 15px; font-size: 13px; margin: 0; border: 1px solid #ff3b30;" onclick="logout()">Выйти</button>
-</div>
-<div class="top-info">
-<div class="character-level" id="char-level">Уровень 1</div>
-<div class="character-title" id="char-title">Странник</div>
-<div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
-<p class="xp-text" id="xp-text">0 / 100 XP</p>
-</div>
-<div class="bottom-panel">
-<div class="stats-row">
-<div class="stat-box"><p>Норма</p><h3 id="calories-norm">0 ккал</h3></div>
-<div class="stat-box"><p>Сожжено</p><h3 id="burned-total">0 ккал</h3></div>
-</div>
-<div class="action-grid">
-<button class="action-btn" onclick="window.location.href='camera.html'"><h3>📸</h3><p>Еда</p></button>
-<button class="action-btn" onclick="window.location.href='workout.html'"><h3>💪</h3><p>Треня</p></button>
-<button class="action-btn" onclick="window.location.href='timer.html'"><h3>⏱</h3><p>Таймер</p></button>
-<button class="action-btn" onclick="window.location.href='leaderboard.html'"><h3>🏆</h3><p>Рейтинг</p></button>
-</div>
-</div>
-</div>
-</div>
+    <!-- ОНБОРДИНГ (НАСТРОЙКА ПРОФИЛЯ) -->
+    <div id="onboarding-screen" class="screen">
+        <div class="inner-screen">
+            <h1 style="text-align: center; margin-bottom: 30px;">Настройка профиля</h1>
+            <div class="form-group"><label>Твоя цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
+            <div class="row"><div class="form-group"><label>Возраст</label><input type="number" id="age" placeholder="25"></div><div class="form-group"><label>Пол</label><select id="gender" onchange="changeTheme()"><option value="male">Мужской</option><option value="female">Женский</option></select></div></div>
+            <div class="row"><div class="form-group"><label>Вес (кг)</label><input type="number" id="weight" placeholder="70"></div><div class="form-group"><label>Рост (см)</label><input type="number" id="height" placeholder="175"></div></div>
+            <button class="btn" onclick="saveProfile()">Сохранить</button>
+        </div>
+    </div>
 
-<!-- ОНБОРДИНГ -->
-<div id="onboarding-screen" class="screen">
-<div class="inner-screen">
-<h1 style="text-align: center; margin-bottom: 30px;">Добро пожаловать!</h1>
-<div class="form-group"><label>Твоя цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
-<div class="row"><div class="form-group"><label>Возраст</label><input type="number" id="age" placeholder="25"></div><div class="form-group"><label>Пол</label><select id="gender" onchange="changeTheme()"><option value="male">Мужской</option><option value="female">Женский</option></select></div></div>
-<div class="row"><div class="form-group"><label>Вес (кг)</label><input type="number" id="weight" placeholder="70"></div><div class="form-group"><label>Рост (см)</label><input type="number" id="height" placeholder="175"></div></div>
-<button class="btn" onclick="saveProfile()">Начать путь</button>
-</div>
-</div>
+    <!-- НАСТРОЙКИ -->
+    <div id="profile-settings-screen" class="screen">
+        <div class="inner-screen">
+            <button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
+            <h1 style="text-align: center; margin-bottom: 30px;">Настройки</h1>
+            <div style="background: #1c1c1e; padding: 20px; border-radius: 16px;">
+                <h3 style="margin-top: 0;">Изменить данные</h3>
+                <button class="btn" onclick="openScreen('onboarding-screen')">Заполнить профиль заново</button>
+            </div>
+        </div>
+    </div>
 
-<script src="quotes.js"></script>
-<script src="app.js"></script>
+    <script src="quotes.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
-
-
-
