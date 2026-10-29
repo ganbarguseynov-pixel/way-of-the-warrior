@@ -13,7 +13,6 @@
             --bg-color: #000000;
             --text-color: #ffffff;
             --hint-color: #8e8e93;
-            --secondary-bg: rgba(30, 30, 30, 0.6);
             --accent-color: #ffcc00;
         }
         body {
@@ -46,7 +45,7 @@
 <body>
 
     <div class="inner-screen">
-        <button class="back-btn" onclick="goBack()">← Назад</button>
+        <button class="back-btn" onclick="window.location.href='index.html'">← Назад</button>
         <h1 style="text-align: center; margin-top: 0;">Анализ еды</h1>
         
         <div id="photo-buttons">
@@ -69,7 +68,7 @@
         
         <button class="btn" id="remove-photo-btn" style="display: none; background-color: #ff3b30; color: white; margin-bottom: 10px;" onclick="resetCameraScreen()">❌ Удалить фото</button>
         
-        <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px; font-size: 18px; color: var(--accent-color);">🤖 ИИ анализирует фото (сервер может просыпаться до 50 секунд)...</div>
+        <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px; font-size: 18px;">🤖 ИИ анализирует фото (может занять до 30 секунд)...</div>
         
         <div id="food-result" style="display: none; background: #1c1c1e; padding: 20px; border-radius: 16px; margin-top: 20px;">
             <h2 id="food-name" style="margin-top: 0; color: var(--accent-color);">Название</h2>
@@ -77,9 +76,7 @@
             <div class="nutrition-row"><span>Белки:</span> <b id="food-protein">0 г</b></div>
             <div class="nutrition-row"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
             <div class="nutrition-row"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
-            
-            <!-- Кнопка добавления с передачей XP через localStorage -->
-            <button class="btn" style="background-color: #34c759; color: white; margin-top: 15px;" onclick="saveXPAndGoBack()">Добавить в дневник (+20 XP)</button>
+            <button class="btn" style="background-color: #34c759; color: white; margin-top: 15px;" onclick="addXP(20); window.location.href='index.html';">Добавить в дневник (+20 XP)</button>
             <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 10px;" onclick="resetCameraScreen()">Отмена / Переснять</button>
         </div>
     </div>
@@ -105,10 +102,12 @@
                 
                 const videoElement = document.getElementById('camera-video');
                 videoElement.srcObject = videoStream;
-                videoElement.onloadedmetadata = () => { videoElement.play(); };
+                videoElement.onloadedmetadata = () => {
+                    videoElement.play();
+                };
                 
             } catch (err) {
-                tg.showAlert("Не удалось получить доступ к камере. Разрешите доступ в настройках Telegram.");
+                tg.showAlert("Не удалось получить доступ к камере.");
                 resetCameraScreen();
             }
         }
@@ -121,20 +120,26 @@
 
         function takePhoto() {
             if (!videoStream) return;
+            
             const video = document.getElementById('camera-video');
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
+            
             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            
             stopCamera();
             
             canvas.toBlob(async function(blob) {
                 const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
+                
                 const preview = document.getElementById('photo-preview');
                 preview.src = URL.createObjectURL(blob);
                 preview.style.display = 'block';
                 document.getElementById('remove-photo-btn').style.display = 'block';
+                
                 await sendPhotoToServer(file);
+                
             }, 'image/jpeg', 0.8);
         }
 
@@ -157,20 +162,22 @@
             document.getElementById('loading-spinner').style.display = 'none';
         }
 
-        // --- ГАЛЕРЕЯ ---
         async function handleImage(event) {
             const file = event.target.files[0];
             if (!file) return;
+
             document.getElementById('photo-buttons').style.display = 'none';
+            
             const preview = document.getElementById('photo-preview');
             preview.src = URL.createObjectURL(file);
             preview.style.display = 'block';
+            
             document.getElementById('remove-photo-btn').style.display = 'block';
             document.getElementById('food-result').style.display = 'none';
+
             await sendPhotoToServer(file);
         }
 
-        // --- ОТПРАВКА НА СЕРВЕР ---
         async function sendPhotoToServer(file) {
             document.getElementById('loading-spinner').style.display = 'block';
             document.getElementById('food-result').style.display = 'none';
@@ -184,9 +191,10 @@
                     body: formData
                 });
 
-                if (!response.ok) throw new Error("Сервер вернул ошибку");
+                if (!response.ok) throw new Error("Ошибка сервера");
 
                 const data = await response.json();
+                
                 document.getElementById('loading-spinner').style.display = 'none';
                 
                 if (data.food !== "Не удалось распознать") {
@@ -197,25 +205,19 @@
                     document.getElementById('food-fat').innerText = data.fat + " г";
                     document.getElementById('food-carbs').innerText = data.carbs + " г";
                 } else {
-                    tg.showAlert("ИИ не смог распознать еду. Попробуйте другое фото.");
+                    tg.showAlert("ИИ не смог распознать еду на фото. Попробуйте другое фото.");
                     resetCameraScreen();
                 }
 
             } catch (error) {
                 document.getElementById('loading-spinner').style.display = 'none';
-                tg.showAlert("Ошибка связи. Сервер 'просыпается'. Подождите 50 секунд и нажмите 'Отмена/Переснять', затем попробуйте снова.");
+                tg.showAlert("Ошибка: не удалось связаться с сервером.");
+                resetCameraScreen();
             }
         }
 
-        // --- ВОЗВРАТ В ОСНОВНОЕ ПРИЛОЖЕНИЕ ---
-        function saveXPAndGoBack() {
-            // Передаем 20 XP в основное приложение через localStorage
-            localStorage.setItem('pendingXP', '20');
-            window.location.href = 'index.html';
-        }
-
-        function goBack() {
-            window.location.href = 'index.html';
+        function addXP(amount) {
+            localStorage.setItem('pendingXP', amount.toString());
         }
     </script>
 </body>
