@@ -8,8 +8,10 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
+# Берем токен из настроек Render
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 
+# Функция для перевода на русский
 def translate_to_russian(text):
     if not text: return text
     if any('а' <= char.lower() <= 'я' for char in text): return text
