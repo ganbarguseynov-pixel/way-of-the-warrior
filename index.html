@@ -95,7 +95,6 @@
         #food-result h2 { text-align: center !important; width: 100%; word-break: break-word; margin-bottom: 20px; }
         .nutrition-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; padding: 0 10px; box-sizing: border-box; }
         
-        /* --- СТИЛИ ДЛЯ БОЛЬШОЙ КАМЕРЫ --- */
         #camera-container { 
             position: relative; 
             width: 100%; 
@@ -161,7 +160,6 @@
             justify-content: center;
         }
 
-        /* Кнопка переключения камеры */
         #switch-camera-btn {
             position: absolute;
             top: 15px;
@@ -370,23 +368,31 @@
         tg.ready(); tg.expand();
         const AI_SERVER_URL = 'https://sport-app-bqlu.onrender.com';
 
-        // --- ВСТРОЕННАЯ КАМЕРА (С ПЕРЕКЛЮЧЕНИЕМ) ---
+        // --- ВСТРОЕННАЯ КАМЕРА (БЕЗ ПОВТОРНЫХ ЗАПРОСОВ) ---
         let videoStream = null;
-        let currentFacingMode = "environment"; // По умолчанию задняя камера
+        let currentFacingMode = "environment"; 
+        let isCameraActive = false; // Флаг, чтобы не перезапускать камеру зря
 
         async function startCamera() {
+            // Если камера уже работает, просто показываем её
+            if (isCameraActive) {
+                document.getElementById('photo-buttons').style.display = 'none';
+                document.getElementById('camera-container').style.display = 'flex';
+                return;
+            }
+
             try {
                 document.getElementById('photo-buttons').style.display = 'none';
                 const container = document.getElementById('camera-container');
                 container.style.display = 'flex'; 
 
-                // Запрашиваем камеру с текущим режимом (задняя/передняя)
                 videoStream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: currentFacingMode } 
                 });
                 
                 const videoElement = document.getElementById('camera-video');
                 videoElement.srcObject = videoStream;
+                isCameraActive = true;
                 
                 videoElement.onloadedmetadata = () => {
                     videoElement.play();
@@ -400,13 +406,9 @@
         }
 
         async function switchCamera() {
-            // Меняем режим
             currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
-            
-            // Останавливаем текущую камеру
             stopCamera();
-            
-            // Запускаем новую
+            isCameraActive = false; // Сбрасываем флаг, чтобы startCamera запустил новую
             await startCamera();
         }
 
@@ -441,6 +443,7 @@
                 videoStream = null;
             }
             document.getElementById('camera-container').style.display = 'none';
+            isCameraActive = false;
         }
 
         function resetCameraScreen() {
@@ -512,8 +515,12 @@
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tabName}`).classList.add('active');
             event.target.classList.add('active');
+            
             if (tabName === 'photo') {
-                resetCameraScreen(); 
+                // Не сбрасываем камеру, если она уже была открыта, просто показываем кнопки
+                if (!isCameraActive && !document.getElementById('photo-preview').src) {
+                     document.getElementById('photo-buttons').style.display = 'flex';
+                }
             }
         }
 
