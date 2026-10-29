@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <title>Sport App</title>
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="male-theme">
@@ -13,8 +15,34 @@
     <audio id="audio-bg" loop preload="auto"></audio>
     <audio id="audio-win" preload="auto"></audio>
 
+    <!-- ЭКРАН ВХОДА -->
+    <div id="auth-screen" class="screen active auth-screen">
+        <div class="auth-container">
+            <div class="auth-content">
+                <div class="auth-title">Sport App</div>
+                <div class="inspiration-text">Стань лучшей версией себя.<br>Начни прямо сейчас.</div>
+                <div class="auth-buttons">
+                    <button class="auth-btn tg-btn" onclick="loginWithTelegram()">✈️ Продолжить через Telegram</button>
+                    <div class="auth-divider"><span>или</span></div>
+                    <button class="auth-btn email-btn" onclick="showEmailForm()">✉️ Войти по Email</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ЭКРАН EMAIL -->
+    <div id="email-screen" class="screen">
+        <div class="inner-screen">
+            <button class="back-btn" onclick="closeScreen('email-screen')">← Назад</button>
+            <h1 style="text-align: center; margin-bottom: 30px;">Вход / Регистрация</h1>
+            <div class="form-group"><label>Email</label><input type="email" id="auth-email" placeholder="your@email.com"></div>
+            <div class="form-group"><label>Пароль</label><input type="password" id="auth-password" placeholder="Минимум 6 символов"></div>
+            <button class="btn" onclick="handleEmailAuth()" id="email-submit-btn">Продолжить</button>
+        </div>
+    </div>
+
     <!-- ГЛАВНЫЙ ЭКРАН -->
-    <div id="dashboard-screen" class="screen active">
+    <div id="dashboard-screen" class="screen">
         <video id="character-video" class="video-background" autoplay loop muted playsinline></video>
         <div class="overlay">
             <div style="display: flex; justify-content: space-between; position: absolute; top: 0px; left: 0px; right: 0px; z-index: 30; padding: 5px 10px;">
@@ -42,7 +70,7 @@
         </div>
     </div>
 
-    <!-- НАСТРОЙКИ (ВСЕГДА ДОСТУПНЫ) -->
+    <!-- НАСТРОЙКИ -->
     <div id="profile-settings-screen" class="screen">
         <div class="inner-screen">
             <button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
