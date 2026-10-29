@@ -5,55 +5,9 @@ window.addEventListener('load', () => {
     const cachedProfile = localStorage.getItem('cachedProfile');
     if (cachedProfile) {
         renderProfile(JSON.parse(cachedProfile));
-    } else {
-        // Если профиля нет, показываем главный экран и подсказку
-        document.getElementById('dashboard-screen').classList.add('active');
-        tg.showAlert("Пожалуйста, заполните профиль в настройках (⚙️)");
     }
 });
 
-// --- МУЗЫКА ---
-const bgTracks = [
-    "01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3", 
-    "05 - The Vengeance.mp3", "06 - The Forest of Death.mp3", "07 - The Ninja in the Night.mp3", 
-    "10 - The Final Boss.mp3", "11 - The Master of the Skills.mp3", "13 - Ronin.mp3"
-];
-let isSoundOn = true, musicStarted = false;
-let lastBgIndex = -1;
-
-const audioBg = document.getElementById('audio-bg');
-const audioWorkout = document.getElementById('audio-workout');
-const audioWin = document.getElementById('audio-win');
-const audioLose = document.getElementById('audio-lose');
-
-function getRandomTrack(tracksArray, lastIndex) {
-    let newIndex = Math.floor(Math.random() * tracksArray.length);
-    if (newIndex === lastIndex && tracksArray.length > 1) newIndex = (newIndex + 1) % tracksArray.length;
-    return newIndex;
-}
-
-function playNextBg() {
-    if (!isSoundOn) return;
-    lastBgIndex = getRandomTrack(bgTracks, lastBgIndex);
-    audioBg.src = bgTracks[lastBgIndex];
-    audioBg.load(); 
-    audioBg.play().catch(e => console.log("Autoplay blocked"));
-}
-audioBg.onended = playNextBg;
-
-function toggleSound() {
-    isSoundOn = !isSoundOn;
-    const btn = document.getElementById('sound-btn');
-    if (isSoundOn) {
-        btn.innerText = "🔊";
-        playNextBg();
-    } else {
-        btn.innerText = "🔇";
-        audioBg.pause();
-    }
-}
-
-// --- ПРОФИЛЬ ---
 const levelsData = {
     male: [
         { xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" },
@@ -69,16 +23,11 @@ const levelsData = {
     ]
 };
 
-let currentXP = 0, totalBurnedCalories = 0, userGender = 'male', currentLevelIndexGlobal = 0;
+let currentXP = 0, totalBurnedCalories = 0, userGender = 'male';
 
 function openProfileSettings() {
     document.getElementById('dashboard-screen').classList.remove('active');
     document.getElementById('profile-settings-screen').classList.add('active');
-}
-
-function openScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-    document.getElementById(screenId).classList.add('active');
 }
 
 function closeScreen(screenId) {
@@ -99,15 +48,6 @@ function renderProfile(profile) {
     
     document.getElementById('burned-total').innerText = totalBurnedCalories + " ккал";
     updateCharacterUI();
-    
-    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-    document.getElementById('dashboard-screen').classList.add('active');
-    
-    playNextBg();
-}
-
-function changeTheme() {
-    document.body.className = document.getElementById('gender').value === 'female' ? 'female-theme' : 'male-theme';
 }
 
 function updateCharacterUI() {
@@ -138,18 +78,6 @@ function updateCharacterUI() {
     document.getElementById('xp-bar').style.width = progressPercent + "%";
 }
 
-function addXP(amount) {
-    currentXP += amount;
-    localStorage.setItem('cachedXP', currentXP); 
-    updateCharacterUI();
-}
-
-function logout() {
-    localStorage.clear();
-    tg.showAlert("Данные профиля очищены. Перезапустите приложение.");
-    location.reload();
-}
-
 function saveProfile() {
     const age = document.getElementById('age').value;
     const gender = document.getElementById('gender').value;
@@ -161,11 +89,10 @@ function saveProfile() {
     const profile = { age: age, gender: gender, weight: weight, height: height, goal: goal };
     localStorage.setItem('cachedProfile', JSON.stringify(profile));
     renderProfile(profile);
+    closeScreen('profile-settings-screen');
 }
 
-document.body.addEventListener('click', function() {
-    if (!musicStarted) {
-        musicStarted = true;
-        if (isSoundOn) playNextBg();
-    }
-}, { once: true });
+function logout() {
+    localStorage.clear();
+    location.reload();
+}
