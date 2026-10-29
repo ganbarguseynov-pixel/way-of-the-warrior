@@ -4,39 +4,51 @@ from PIL import Image
 import io
 import os
 import requests
+import re
 
 app = Flask(__name__)
 CORS(app)
 
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 
-# Функция для проверки, есть ли русские буквы в тексте
-def is_russian(text):
-    return any('а' <= char.lower() <= 'я' for char in text)
+# Словарь для популярных продуктов
+RU_DICT = {
+    "apple": "яблоко", "banana": "банан", "cauliflower": "цветная капуста", 
+    "chicken": "курица", "beef": "говядина", "pork": "свинина", 
+    "rice": "рис", "bread": "хлеб", "egg": "яйцо", "cheese": "сыр",
+    "tomato": "помидор", "cucumber": "огурец", "potato": "картофель",
+    "salad": "салат", "fish": "рыба", "milk": "молоко", "water": "вода",
+    "broccoli": "брокколи", "carrot": "морковь", "onion": "лук"
+}
 
-# Функция для перевода на русский
 def translate_to_russian(text):
-    if is_russian(text):
-        return text  # Если уже на русском, ничего не переводим
+    if not text:
+        return text
     
+    # 1. Если уже на русском - не трогаем
+    if any('а' <= char.lower() <= 'я' for char in text):
+        return text
+        
+    # 2. Защита от никнеймов: если есть цифры, спецсимволы или это одно длинное слово без пробелов - не переводим
+    if re.search(r'[0-9_@#\$%^&*!]', text) or (len(text.split()) == 1 and len(text) > 15):
+        return text
+        
+    text_lower = text.lower()
+    # 3. Проверяем словарь
+    if text_lower in RU_DICT:
+        return RU_DICT[text_lower]
+    
+    # 4. Пытаемся перевести через Google
     try:
-        # Используем бесплатный API Google Translate (без ключа)
         url = "https://translate.googleapis.com/translate_a/single"
-        params = {
-            "client": "gtx",
-            "sl": "auto",
-            "tl": "ru",
-            "dt": "t",
-            "q": text
-        }
-        response = requests.get(url, params=params, timeout=5)
+        params = {"client": "gtx", "sl": "auto", "tl": "ru", "dt": "t", "q": text}
+        response = requests.get(url, params=params, timeout=3)
         if response.status_code == 200:
-            translated = response.json()[0][0][0]
-            return translated
+            return response.json()[0][0][0]
     except Exception as e:
         print(f"Translate error: {e}")
     
-    return text  # Если перевод не удался, возвращаем оригинал
+    return text
 
 @app.route('/search', methods=['GET'])
 def search_food():
@@ -47,7 +59,6 @@ def search_food():
         response = requests.get(f"https://www.getdietly.com/api/search?q={query}", timeout=10)
         if response.status_code == 200:
             data = response.json()
-            # Переводим названия продуктов на русский
             if isinstance(data, list):
                 for item in data:
                     if 'name' in item:
@@ -76,7 +87,6 @@ def analyze_photo():
     image.save(img_byte_arr, format='JPEG')
     img_byte_arr = img_byte_arr.getvalue()
 
-    # Используем LogMeal для распознавания
     if LOGMEAL_TOKEN:
         try:
             files = {'image': ('food.jpg', img_byte_arr, 'image/jpeg')}
@@ -86,7 +96,6 @@ def analyze_photo():
                 lm_data = lm_response.json()
                 if 'recognition_results' in lm_data and len(lm_data['recognition_results']) > 0:
                     food_name = lm_data['recognition_results'][0]['name']
-                    # Переводим название еды с фото на русский
                     food_name_ru = translate_to_russian(food_name)
                     return jsonify({"food": food_name_ru, "calories": 250, "protein": 15, "fat": 10, "carbs": 30})
         except Exception as e:
