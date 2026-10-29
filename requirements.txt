@@ -3,5 +3,4 @@ gunicorn
 Pillow
 requests
 flask-cors
-google-generativeai
 google-genai
