@@ -9,7 +9,6 @@
     <title>Sport App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <!-- Убрал библиотеку QRCode, так как она больше не нужна -->
     <style>
         :root {
             --bg-color: #000000;
@@ -95,6 +94,12 @@
         #food-result { text-align: center; width: 100%; box-sizing: border-box; }
         #food-result h2 { text-align: center !important; width: 100%; word-break: break-word; margin-bottom: 20px; }
         .nutrition-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; padding: 0 10px; box-sizing: border-box; }
+
+        /* Стили для встроенной камеры */
+        #camera-container { position: relative; width: 100%; border-radius: 16px; overflow: hidden; margin-bottom: 20px; background: #000; }
+        #camera-video { width: 100%; height: 300px; object-fit: cover; display: block; }
+        #camera-controls { position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; }
+        #capture-btn { width: 60px; height: 60px; border-radius: 50%; background: white; border: 4px solid rgba(0,0,0,0.3); cursor: pointer; }
     </style>
 </head>
 <body class="male-theme">
@@ -176,13 +181,20 @@
             </div>
 
             <div id="tab-photo" class="tab-content">
-                <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;" onchange="handleImage(event)">
                 
+                <!-- ВСТРОЕННАЯ КАМЕРА -->
+                <div id="camera-container" style="display: none;">
+                    <video id="camera-video" autoplay playsinline></video>
+                    <div id="camera-controls">
+                        <button id="capture-btn" onclick="takePhoto()"></button>
+                    </div>
+                </div>
+
                 <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
                 
                 <button class="btn" id="remove-photo-btn" style="display: none; background-color: #ff3b30; color: white; margin-bottom: 10px;" onclick="resetCameraScreen()">❌ Удалить фото</button>
 
-                <button class="btn" id="take-photo-btn" onclick="document.getElementById('camera-input').click()" style="padding: 40px 20px; font-size: 20px;">📷 Сделать фото</button>
+                <button class="btn" id="open-camera-btn" onclick="startCamera()" style="padding: 40px 20px; font-size: 20px;">📷 Открыть камеру</button>
                 
                 <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px; font-size: 18px;">🤖 ИИ анализирует фото (может занять до 30 секунд)...</div>
                 
@@ -210,7 +222,6 @@
                 <div class="form-group"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)"></div>
                 <button class="btn" onclick="linkEmail()">Привязать Email</button>
             </div>
-            <!-- Блок Безопасности (2FA) полностью удален -->
         </div>
     </div>
 
@@ -274,63 +285,80 @@
         tg.ready(); tg.expand();
         const AI_SERVER_URL = 'https://sport-app-bqlu.onrender.com';
 
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabName}`).classList.add('active');
-            event.target.classList.add('active');
-        }
+        // --- ЛОГИКА ВСТРОЕННОЙ КАМЕРЫ ---
+        let videoStream = null;
 
-        async function searchFood() {
-            const query = document.getElementById('food-search-input').value;
-            if (!query) return;
-
-            const resultDiv = document.getElementById('search-result');
-            resultDiv.innerHTML = '<p style="text-align:center;">Поиск...</p>';
-
+        async function startCamera() {
             try {
-                const response = await fetch(`${AI_SERVER_URL}/search?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
+                // Запрашиваем доступ к камере (задняя камера - environment)
+                videoStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" } 
+                });
                 
-                if (data.products && data.products.length > 0) {
-                    const product = data.products[0];
-                    resultDiv.innerHTML = `
-                        <div style="background: #1c1c1e; padding: 20px; border-radius: 16px; text-align: center;">
-                            <h3 style="margin-top:0; color: var(--accent-color); word-break: break-word;">${product.product_name}</h3>
-                            <div class="nutrition-row"><span>Калории:</span> <b>${product.nutrients.calories} ккал</b></div>
-                            <div class="nutrition-row"><span>Белки:</span> <b>${product.nutrients.proteins} г</b></div>
-                            <div class="nutrition-row"><span>Жиры:</span> <b>${product.nutrients.fat} г</b></div>
-                            <div class="nutrition-row"><span>Углеводы:</span> <b>${product.nutrients.carbohydrates} г</b></div>
-                            <button class="btn" style="background-color: #34c759; color: white;" onclick="addXP(20); closeScreen('food-screen');">Добавить в дневник (+20 XP)</button>
-                        </div>
-                    `;
-                } else {
-                    resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ничего не найдено</p>';
-                }
-            } catch (e) {
-                resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ошибка связи с сервером</p>';
+                const videoElement = document.getElementById('camera-video');
+                videoElement.srcObject = videoStream;
+                
+                // Показываем контейнер с камерой и скрываем кнопку открытия
+                document.getElementById('camera-container').style.display = 'block';
+                document.getElementById('open-camera-btn').style.display = 'none';
+                
+                // Скрываем предыдущие результаты, если были
+                document.getElementById('photo-preview').style.display = 'none';
+                document.getElementById('food-result').style.display = 'none';
+            } catch (err) {
+                tg.showAlert("Не удалось получить доступ к камере. Возможно, нет разрешения.");
+                console.error(err);
             }
         }
 
+        function takePhoto() {
+            if (!videoStream) return;
+            
+            const video = document.getElementById('camera-video');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Рисуем текущий кадр с видео на холст
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Останавливаем камеру, чтобы освободить ресурс
+            stopCamera();
+            
+            // Получаем картинку в формате JPEG
+            canvas.toBlob(async function(blob) {
+                const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
+                
+                // Показываем превью
+                const preview = document.getElementById('photo-preview');
+                preview.src = URL.createObjectURL(blob);
+                preview.style.display = 'block';
+                document.getElementById('remove-photo-btn').style.display = 'block';
+                
+                // Отправляем на сервер
+                await sendPhotoToServer(file);
+                
+            }, 'image/jpeg', 0.8);
+        }
+
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            document.getElementById('camera-container').style.display = 'none';
+        }
+
         function resetCameraScreen() {
+            stopCamera();
             document.getElementById('photo-preview').style.display = 'none';
             document.getElementById('photo-preview').src = "";
             document.getElementById('food-result').style.display = 'none';
-            document.getElementById('take-photo-btn').style.display = 'block';
+            document.getElementById('open-camera-btn').style.display = 'block';
             document.getElementById('remove-photo-btn').style.display = 'none';
-            document.getElementById('camera-input').value = "";
         }
 
-        async function handleImage(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const preview = document.getElementById('photo-preview');
-            preview.src = URL.createObjectURL(file);
-            preview.style.display = 'block';
-            
-            document.getElementById('take-photo-btn').style.display = 'none';
-            document.getElementById('remove-photo-btn').style.display = 'block';
+        async function sendPhotoToServer(file) {
             document.getElementById('loading-spinner').style.display = 'block';
             document.getElementById('food-result').style.display = 'none';
 
@@ -365,6 +393,48 @@
                 document.getElementById('loading-spinner').style.display = 'none';
                 tg.showAlert("Ошибка: не удалось связаться с сервером.");
                 resetCameraScreen();
+            }
+        }
+
+        // --- ОСТАЛЬНАЯ ЛОГИКА ---
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            event.target.classList.add('active');
+            if (tabName === 'photo') {
+                resetCameraScreen(); // Сбрасываем камеру при переходе
+            }
+        }
+
+        async function searchFood() {
+            const query = document.getElementById('food-search-input').value;
+            if (!query) return;
+
+            const resultDiv = document.getElementById('search-result');
+            resultDiv.innerHTML = '<p style="text-align:center;">Поиск...</p>';
+
+            try {
+                const response = await fetch(`${AI_SERVER_URL}/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.products && data.products.length > 0) {
+                    const product = data.products[0];
+                    resultDiv.innerHTML = `
+                        <div style="background: #1c1c1e; padding: 20px; border-radius: 16px; text-align: center;">
+                            <h3 style="margin-top:0; color: var(--accent-color); word-break: break-word;">${product.product_name}</h3>
+                            <div class="nutrition-row"><span>Калории:</span> <b>${product.nutrients.calories} ккал</b></div>
+                            <div class="nutrition-row"><span>Белки:</span> <b>${product.nutrients.proteins} г</b></div>
+                            <div class="nutrition-row"><span>Жиры:</span> <b>${product.nutrients.fat} г</b></div>
+                            <div class="nutrition-row"><span>Углеводы:</span> <b>${product.nutrients.carbohydrates} г</b></div>
+                            <button class="btn" style="background-color: #34c759; color: white;" onclick="addXP(20); closeScreen('food-screen');">Добавить в дневник (+20 XP)</button>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ничего не найдено</p>';
+                }
+            } catch (e) {
+                resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ошибка связи с сервером</p>';
             }
         }
 
@@ -494,10 +564,8 @@
             const password = document.getElementById('auth-password').value;
             if (!email || !password) { tg.showAlert("Заполните все поля!"); return; }
             
-            // Сначала пробуем войти
             const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (signInError) {
-                // Если не удалось, пробуем зарегистрировать
                 const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
                 if (signUpError) { 
                     tg.showAlert("Ошибка: " + signUpError.message); 
@@ -524,12 +592,9 @@
             const password = document.getElementById('link-password').value;
             if (!email || !password) { tg.showAlert("Заполните Email и пароль!"); return; }
             
-            // Пытаемся обновить текущего пользователя (привязать email)
             const { data, error } = await supabaseClient.auth.updateUser({ email: email, password: password });
             
             if (error) {
-                // Если ошибка (например, email уже занят или не зарегистрирован), 
-                // мы просто создаем нового пользователя с этим email и паролем
                 const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
                 
                 if (signUpError) {
@@ -541,8 +606,6 @@
                 tg.showAlert("Email успешно привязан к текущему профилю!");
             }
         }
-
-        // Логика 2FA полностью удалена
 
         function checkProfile() {
             tg.CloudStorage.getItem('profile', (err, result) => {
@@ -651,7 +714,6 @@
                 btn.innerText = "Старт"; 
                 btn.style.backgroundColor = "var(--accent-color)"; 
             } else {
-                // Мгновенный запуск музыки
                 if (isSoundOn) {
                     isWorkoutMode = true;
                     playNextWorkout();
@@ -727,15 +789,12 @@
         let lastQuoteIndex = -1;
 
         function finishWorkout() {
-            // 1. ЖЕСТКО останавливаем ВСЮ музыку
             audioWorkout.pause();
             audioWorkout.currentTime = 0;
             audioBg.pause(); 
 
-            // 2. Показываем статистику
             document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
             
-            // 3. Выбираем случайную цитату без повторов
             let newIndex;
             do {
                 newIndex = Math.floor(Math.random() * allQuotes.length);
@@ -747,7 +806,6 @@
             document.getElementById('finish-quote').innerText = `«${q.text}»`;
             document.getElementById('finish-author').innerText = `— ${q.author}`;
             
-            // 4. Играем звук победы
             if (isSoundOn) {
                 audioWin.play().catch(e => console.log(e));
             }
