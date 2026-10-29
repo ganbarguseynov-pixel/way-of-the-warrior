@@ -421,26 +421,18 @@
         }
         audioBg.onended = playNextBg;
 
-        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ЗАПУСКА МУЗЫКИ
         function playNextWorkout() {
             if (!isSoundOn) return;
-            
-            // Жестко глушим фоновую
             audioBg.pause(); 
             
-            // Устанавливаем источник трека
             audioWorkout.src = workoutTracks[currentWorkoutIndex];
-            
-            // Принудительно перезагружаем и стартуем
             audioWorkout.load(); 
             
-            // Запускаем play и ловим ошибку, если браузер заблокировал
             let playPromise = audioWorkout.play();
             if (playPromise !== undefined) {
                 playPromise.catch(e => console.log("Ошибка запуска музыки:", e));
             }
             
-            // Переключаем индекс на следующий трек
             currentWorkoutIndex = (currentWorkoutIndex + 1) % workoutTracks.length;
         }
         audioWorkout.onended = playNextWorkout;
@@ -507,11 +499,17 @@
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
             if (!email || !password) { tg.showAlert("Заполните все поля!"); return; }
+            
+            // Сначала пробуем войти
             const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (signInError) {
+                // Если не удалось, пробуем зарегистрировать
                 const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
-                if (signUpError) { tg.showAlert("Ошибка: " + signUpError.message); } 
-                else { tg.showAlert("Регистрация успешна! Проверьте почту."); }
+                if (signUpError) { 
+                    tg.showAlert("Ошибка: " + signUpError.message); 
+                } else { 
+                    tg.showAlert("Регистрация успешна! Проверьте почту."); 
+                }
             } else {
                 tg.showAlert("Успешный вход!");
                 tgUserName = email.split('@')[0];
@@ -531,9 +529,23 @@
             const email = document.getElementById('link-email').value;
             const password = document.getElementById('link-password').value;
             if (!email || !password) { tg.showAlert("Заполните Email и пароль!"); return; }
+            
+            // Пытаемся обновить текущего пользователя (привязать email)
             const { data, error } = await supabaseClient.auth.updateUser({ email: email, password: password });
-            if (error) { tg.showAlert("Ошибка привязки: " + error.message); } 
-            else { tg.showAlert("Email успешно привязан!"); }
+            
+            if (error) {
+                // Если ошибка (например, email уже занят или не зарегистрирован), 
+                // мы просто создаем нового пользователя с этим email и паролем
+                const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
+                
+                if (signUpError) {
+                    tg.showAlert("Ошибка: " + signUpError.message);
+                } else {
+                    tg.showAlert("Email успешно привязан и зарегистрирован!");
+                }
+            } else {
+                tg.showAlert("Email успешно привязан к текущему профилю!");
+            }
         }
 
         let pendingFactorId = null;
