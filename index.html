@@ -19,14 +19,12 @@
             --accent-color: #ffcc00;
         }
         .female-theme { --accent-color: #ff3b30; }
-        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: #000; color: var(--text-color);
             margin: 0; padding: 0; display: flex; flex-direction: column;
             height: 100vh; width: 100vw; box-sizing: border-box; overflow: hidden;
         }
-        
         .video-background { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -84,16 +82,6 @@
         .auth-divider { display: flex; align-items: center; text-align: center; color: #ccc; margin: 10px 0; width: 100%; }
         .auth-divider::before, .auth-divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255,255,255,0.2); }
         .auth-divider span { padding: 0 15px; font-size: 14px; }
-
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 12px; background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 12px; color: #8e8e93; font-weight: bold; cursor: pointer; text-align: center; }
-        .tab-btn.active { background: var(--accent-color); color: #000; border-color: var(--accent-color); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        #food-result { text-align: center; width: 100%; box-sizing: border-box; }
-        #food-result h2 { text-align: center !important; width: 100%; word-break: break-word; margin-bottom: 20px; }
-        .nutrition-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; padding: 0 10px; box-sizing: border-box; }
     </style>
 </head>
 <body class="male-theme">
@@ -147,7 +135,7 @@
                     <div class="stat-box"><p>Сожжено</p><h3 id="burned-total">0 ккал</h3></div>
                 </div>
                 <div class="action-grid">
-                    <!-- Кнопка Еда теперь перенаправляет на photoes.html -->
+                    <!-- Кнопка "Еда" ведет на отдельный файл photoes.html -->
                     <button class="action-btn" onclick="window.location.href='photoes.html'"><h3>📸</h3><p>Еда</p></button>
                     <button class="action-btn" onclick="openScreen('workout-screen')"><h3>💪</h3><p>Треня</p></button>
                     <button class="action-btn" onclick="openScreen('timer-screen')"><h3>⏱</h3><p>Таймер</p></button>
@@ -156,8 +144,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Экраны еды удалены, так как теперь есть отдельный файл -->
 
     <div id="profile-settings-screen" class="screen">
         <div class="inner-screen">
@@ -232,6 +218,20 @@
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
+        // Проверка на возврат с экрана еды (добавление XP)
+        window.addEventListener('load', () => {
+            const pendingXP = localStorage.getItem('pendingXP');
+            if (pendingXP) {
+                localStorage.removeItem('pendingXP');
+                setTimeout(() => {
+                    if (typeof addXP === 'function') {
+                        addXP(parseInt(pendingXP));
+                        tg.showAlert("Спасибо! +20 XP добавлено в дневник.");
+                    }
+                }, 1000);
+            }
+        });
+
         // --- ЛОГИКА МУЗЫКИ (РАНДОМНАЯ) ---
         const bgTracks = [
             "01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3", 
@@ -300,7 +300,7 @@
             }
         }
 
-        // --- ЦИТАТЫ (ВРЕМЕННО 8 ШТУК ДЛЯ СТАБИЛЬНОСТИ) ---
+        // --- ЦИТАТЫ (8 ШТУК ДЛЯ СТАБИЛЬНОСТИ) ---
         const allQuotes = [
             { text: "Я ненавижу каждый момент тренировки, но я говорю себе: не сдавайся. Страдай сейчас и живи остаток жизни как чемпион.", author: "Мухаммед Али" },
             { text: "Дисциплина — это мост между целями и их достижением.", author: "Джим Рон" },
