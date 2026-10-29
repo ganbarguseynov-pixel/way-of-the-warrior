@@ -1,7 +1,3 @@
-const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
-const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
-// Исправление зависания: добавляем настройку auth
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
@@ -9,29 +5,21 @@ window.addEventListener('load', () => {
     const cachedProfile = localStorage.getItem('cachedProfile');
     if (cachedProfile) {
         renderProfile(JSON.parse(cachedProfile));
-        tg.CloudStorage.getItem('profile', (err, result) => {
-            if (result) {
-                const freshProfile = JSON.parse(result);
-                localStorage.setItem('cachedProfile', JSON.stringify(freshProfile));
-                renderProfile(freshProfile);
-            }
-        });
     } else {
-        setTimeout(() => checkProfile(), 500);
+        // Если профиля нет, показываем главный экран и подсказку
+        document.getElementById('dashboard-screen').classList.add('active');
+        tg.showAlert("Пожалуйста, заполните профиль в настройках (⚙️)");
     }
 });
 
+// --- МУЗЫКА ---
 const bgTracks = [
     "01. Shadow Fight Song.mp3", "02 - The Training Room.mp3", "04 - The Blade Dance.mp3", 
     "05 - The Vengeance.mp3", "06 - The Forest of Death.mp3", "07 - The Ninja in the Night.mp3", 
     "10 - The Final Boss.mp3", "11 - The Master of the Skills.mp3", "13 - Ronin.mp3"
 ];
-const workoutTracks = [
-    "03. TECHNO-SYNDROME 12' MI...", "09 - The Fat Boss.mp3", "24. 2min Loop Battle 03.mp3"
-];
-
-let isSoundOn = true, isWorkoutMode = false, musicStarted = false;
-let lastBgIndex = -1, lastWorkoutIndex = -1;
+let isSoundOn = true, musicStarted = false;
+let lastBgIndex = -1;
 
 const audioBg = document.getElementById('audio-bg');
 const audioWorkout = document.getElementById('audio-workout');
@@ -45,7 +33,7 @@ function getRandomTrack(tracksArray, lastIndex) {
 }
 
 function playNextBg() {
-    if (!isSoundOn || isWorkoutMode) return;
+    if (!isSoundOn) return;
     lastBgIndex = getRandomTrack(bgTracks, lastBgIndex);
     audioBg.src = bgTracks[lastBgIndex];
     audioBg.load(); 
@@ -58,14 +46,14 @@ function toggleSound() {
     const btn = document.getElementById('sound-btn');
     if (isSoundOn) {
         btn.innerText = "🔊";
-        if (isWorkoutMode) audioWorkout.play(); else playNextBg();
+        playNextBg();
     } else {
         btn.innerText = "🔇";
         audioBg.pause();
-        audioWorkout.pause();
     }
 }
 
+// --- ПРОФИЛЬ ---
 const levelsData = {
     male: [
         { xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" },
@@ -81,27 +69,21 @@ const levelsData = {
     ]
 };
 
-let currentXP = 0, totalBurnedCalories = 0, userGender = 'male', tgUserName = "друг", currentLevelIndexGlobal = 0;
+let currentXP = 0, totalBurnedCalories = 0, userGender = 'male', currentLevelIndexGlobal = 0;
 
-function loginWithTelegram() {
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        tgUserName = tg.initDataUnsafe.user.first_name;
-        checkProfile();
-    } else {
-        tg.showAlert("Откройте через Telegram!");
-    }
+function openProfileSettings() {
+    document.getElementById('dashboard-screen').classList.remove('active');
+    document.getElementById('profile-settings-screen').classList.add('active');
 }
 
-function checkProfile() {
-    tg.CloudStorage.getItem('profile', (err, result) => {
-        if (result) {
-            const profile = JSON.parse(result);
-            localStorage.setItem('cachedProfile', JSON.stringify(profile));
-            renderProfile(profile);
-        } else {
-            document.getElementById('auth-screen').classList.add('active');
-        }
-    });
+function openScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+}
+
+function closeScreen(screenId) {
+    document.getElementById(screenId).classList.remove('active');
+    document.getElementById('dashboard-screen').classList.add('active');
 }
 
 function renderProfile(profile) {
@@ -118,9 +100,7 @@ function renderProfile(profile) {
     document.getElementById('burned-total').innerText = totalBurnedCalories + " ккал";
     updateCharacterUI();
     
-    document.getElementById('auth-screen').classList.remove('active');
-    document.getElementById('email-screen').classList.remove('active');
-    document.getElementById('onboarding-screen').classList.remove('active');
+    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
     document.getElementById('dashboard-screen').classList.add('active');
     
     playNextBg();
@@ -166,9 +146,8 @@ function addXP(amount) {
 
 function logout() {
     localStorage.clear();
-    tg.CloudStorage.removeItem('profile');
-    document.getElementById('dashboard-screen').classList.remove('active');
-    document.getElementById('auth-screen').classList.add('active');
+    tg.showAlert("Данные профиля очищены. Перезапустите приложение.");
+    location.reload();
 }
 
 function saveProfile() {
@@ -181,29 +160,7 @@ function saveProfile() {
     
     const profile = { age: age, gender: gender, weight: weight, height: height, goal: goal };
     localStorage.setItem('cachedProfile', JSON.stringify(profile));
-    tg.CloudStorage.setItem('profile', JSON.stringify(profile), (err, success) => {
-        if (success) renderProfile(profile);
-    });
-}
-
-// --- ФУНКЦИИ EMAIL ВХОДА ---
-function showEmailForm() {
-    document.getElementById('auth-screen').classList.remove('active');
-    document.getElementById('email-screen').classList.add('active');
-}
-
-function closeScreen(screenId) {
-    document.getElementById(screenId).classList.remove('active');
-    document.getElementById('auth-screen').classList.add('active');
-}
-
-async function handleEmailAuth() {
-    const email = document.getElementById('auth-email').value;
-    const password = document.getElementById('auth-password').value;
-    if (!email || !password) { tg.showAlert("Заполните все поля!"); return; }
-    
-    // Простая проверка без сложных запросов, чтобы не зависало
-    tg.showAlert("Вход по Email временно недоступен. Используйте Telegram.");
+    renderProfile(profile);
 }
 
 document.body.addEventListener('click', function() {
