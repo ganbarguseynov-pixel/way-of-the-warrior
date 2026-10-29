@@ -402,11 +402,6 @@
         audioLose.src = "09. Scroll Lose 01.mp3"; 
         const audioLevelUp = "07. Scroll Draw 01.mp3"; 
 
-        // ПРЕДЗАГРУЗКА ПЕРВОГО ТРЕКА ТРЕНИРОВКИ
-        audioWorkout.src = workoutTracks[0];
-        audioWorkout.load();
-        currentWorkoutIndex = 1; // Следующий трек будет вторым
-
         function playNextBg() {
             if (!isSoundOn || isWorkoutMode) return;
             
@@ -426,26 +421,30 @@
         }
         audioBg.onended = playNextBg;
 
+        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ЗАПУСКА МУЗЫКИ
         function playNextWorkout() {
             if (!isSoundOn) return;
+            
+            // Жестко глушим фоновую
             audioBg.pause(); 
             
-            // Если это первый запуск, трек уже загружен, просто играем
-            if (!audioWorkout.src) {
-                audioWorkout.src = workoutTracks[currentWorkoutIndex];
-                audioWorkout.load();
+            // Устанавливаем источник трека
+            audioWorkout.src = workoutTracks[currentWorkoutIndex];
+            
+            // Принудительно перезагружаем и стартуем
+            audioWorkout.load(); 
+            
+            // Запускаем play и ловим ошибку, если браузер заблокировал
+            let playPromise = audioWorkout.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => console.log("Ошибка запуска музыки:", e));
             }
             
-            audioWorkout.play().catch(e => console.log("Autoplay blocked"));
+            // Переключаем индекс на следующий трек
             currentWorkoutIndex = (currentWorkoutIndex + 1) % workoutTracks.length;
-            
-            // Заранее готовим следующий трек
-            if (currentWorkoutIndex >= workoutTracks.length) currentWorkoutIndex = 0;
-            // Предзагрузка следующего трека в фоне (опционально)
         }
         audioWorkout.onended = playNextWorkout;
 
-        // КАК ТОЛЬКО МЕЛОДИЯ ПОБЕДЫ ЗАКАНЧИВАЕТСЯ - ВКЛЮЧАЕМ СЛЕДУЮЩУЮ ФОНОВУЮ
         audioWin.onended = function() {
             isWorkoutMode = false; 
             playNextBg(); 
