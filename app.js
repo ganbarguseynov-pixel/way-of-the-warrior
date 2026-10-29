@@ -1,16 +1,72 @@
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
-// Загрузка профиля из памяти
+const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
+const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
+// Отключаем сохранение сессии, чтобы не было зависаний
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
+
 window.addEventListener('load', () => {
     const cachedProfile = localStorage.getItem('cachedProfile');
     if (cachedProfile) {
         renderProfile(JSON.parse(cachedProfile));
-    } else {
-        openScreen('profile-settings-screen');
     }
 });
 
+// --- ЛОГИКА ВХОДА ---
+function loginWithTelegram() {
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        // Просто показываем главный экран, так как Telegram уже дал нам данные
+        if (localStorage.getItem('cachedProfile')) {
+            renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
+        } else {
+            openScreen('profile-settings-screen');
+        }
+    } else {
+        tg.showAlert("Пожалуйста, откройте приложение через Telegram!");
+    }
+}
+
+function showEmailForm() {
+    openScreen('email-screen');
+}
+
+async function handleEmailAuth() {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    const btn = document.getElementById('email-submit-btn');
+
+    if (!email || !password) { tg.showAlert("Заполните все поля!"); return; }
+
+    btn.innerText = "Загрузка...";
+    btn.disabled = true;
+
+    try {
+        const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password });
+        
+        if (signInError) {
+            const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
+            if (signUpError) { 
+                tg.showAlert("Ошибка: " + signUpError.message); 
+            } else { 
+                tg.showAlert("Регистрация успешна! Теперь войдите."); 
+            }
+        } else {
+            tg.showAlert("Успешный вход!");
+            // Создаем локальный профиль для Email-пользователя
+            const emailProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
+            localStorage.setItem('cachedProfile', JSON.stringify(emailProfile));
+            renderProfile(emailProfile);
+        }
+    } catch (e) {
+        tg.showAlert("Ошибка сети. Попробуйте позже.");
+    } finally {
+        btn.innerText = "Продолжить";
+        btn.disabled = false;
+    }
+}
+
+// --- ОСТАЛЬНАЯ ЛОГИКА (ПРОФИЛЬ, МУЗЫКА, РЕЙТИНГ) ---
 const levelsData = {
     male: [
         { xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" },
@@ -28,9 +84,7 @@ const levelsData = {
 
 let currentXP = 0, totalBurnedCalories = 0, userGender = 'male';
 
-function openProfileSettings() {
-    openScreen('profile-settings-screen');
-}
+function openProfileSettings() { openScreen('profile-settings-screen'); }
 
 function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
@@ -39,7 +93,7 @@ function openScreen(screenId) {
 
 function closeScreen(screenId) {
     document.getElementById(screenId).classList.remove('active');
-    document.getElementById('dashboard-screen').classList.add('active');
+    document.getElementById('auth-screen').classList.add('active');
 }
 
 function renderProfile(profile) {
@@ -61,6 +115,9 @@ function renderProfile(profile) {
     }
     
     updateCharacterUI();
+    
+    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+    document.getElementById('dashboard-screen').classList.add('active');
 }
 
 function updateCharacterUI() {
@@ -104,11 +161,9 @@ function saveProfile() {
     localStorage.setItem('cachedProfile', JSON.stringify(profile));
     
     renderProfile(profile);
-    closeScreen('profile-settings-screen');
 }
 
 function logout() {
     localStorage.clear();
-    tg.showAlert("Данные очищены. Перезапустите приложение.");
     location.reload();
 }
