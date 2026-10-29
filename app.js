@@ -10,7 +10,6 @@ function openScreen(screenId) {
     const el = document.getElementById(screenId);
     if (el) el.classList.add('active');
 }
-
 function closeScreen(screenId) {
     document.getElementById(screenId).classList.remove('active');
     if (localStorage.getItem('cachedProfile')) {
@@ -40,7 +39,9 @@ async function loginWithTelegram() {
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         localStorage.setItem('loginType', 'telegram');
         const tgId = tg.initDataUnsafe.user.id;
+        const tgName = tg.initDataUnsafe.user.first_name || "Атлет";
         localStorage.setItem('tgId', tgId);
+        localStorage.setItem('userName', tgName);
 
         const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId).maybeSingle();
         
@@ -49,12 +50,13 @@ async function loginWithTelegram() {
             localStorage.setItem('cachedXP', data.xp || 0);
             localStorage.setItem('cachedBurned', data.burned || 0);
             if (data.email) localStorage.setItem('linkedEmail', data.email);
+            if (data.name) localStorage.setItem('userName', data.name);
         } else {
             const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
             localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
             localStorage.setItem('cachedXP', 0);
             localStorage.setItem('cachedBurned', 0);
-            await saveProgressToCloud(tgId, null, defaultProfile, 0, 0);
+            await saveProgressToCloud(tgId, null, tgName, defaultProfile, 0, 0);
         }
         renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
     } else {
@@ -75,7 +77,7 @@ async function handleEmailAuth() {
     btn.disabled = true;
 
     try {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
         if (error) {
             if (error.message.includes("Invalid login credentials")) {
@@ -87,6 +89,8 @@ async function handleEmailAuth() {
             tg.showAlert("Успешный вход!");
             localStorage.setItem('loginType', 'email');
             localStorage.setItem('currentEmail', email);
+            const emailName = email.split('@')[0];
+            localStorage.setItem('userName', emailName);
             
             const { data: linkData } = await supabaseClient.from('user_links').select('*').eq('email', email).maybeSingle();
             
@@ -95,12 +99,13 @@ async function handleEmailAuth() {
                 localStorage.setItem('cachedXP', linkData.xp || 0);
                 localStorage.setItem('cachedBurned', linkData.burned || 0);
                 if (linkData.telegram_id) localStorage.setItem('tgId', linkData.telegram_id);
+                if (linkData.name) localStorage.setItem('userName', linkData.name);
             } else {
                 const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
                 localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
                 localStorage.setItem('cachedXP', 0);
                 localStorage.setItem('cachedBurned', 0);
-                await saveProgressToCloud(null, email, defaultProfile, 0, 0);
+                await saveProgressToCloud(null, email, emailName, defaultProfile, 0, 0);
             }
             renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
         }
@@ -113,10 +118,11 @@ async function handleEmailAuth() {
 }
 
 // --- СИНХРОНИЗАЦИЯ ---
-async function saveProgressToCloud(tgId, email, profile, xp, burned) {
+async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
     try {
         let currentTgId = tgId || localStorage.getItem('tgId');
         let currentEmail = email || localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
+        let currentName = name || localStorage.getItem('userName') || "Атлет";
         
         if (!currentTgId && !currentEmail) return;
 
@@ -132,12 +138,12 @@ async function saveProgressToCloud(tgId, email, profile, xp, burned) {
 
         if (existingId) {
             await supabaseClient.from('user_links').update({ 
-                profile: profile, xp: xp, burned: burned,
+                profile: profile, xp: xp, burned: burned, name: currentName,
                 telegram_id: currentTgId || null, email: currentEmail || null
             }).eq('id', existingId);
         } else {
             await supabaseClient.from('user_links').insert([{ 
-                telegram_id: currentTgId, email: currentEmail, profile: profile, xp: xp, burned: burned 
+                telegram_id: currentTgId, email: currentEmail, profile: profile, xp: xp, burned: burned, name: currentName
             }]);
         }
     } catch (e) {
@@ -156,6 +162,7 @@ async function syncProgressFromCloud(email, tgId) {
             localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
             localStorage.setItem('cachedXP', data.xp || 0);
             localStorage.setItem('cachedBurned', data.burned || 0);
+            if (data.name) localStorage.setItem('userName', data.name);
             renderProfile(data.profile);
         }
     } catch (e) {
@@ -187,6 +194,7 @@ function renderProfile(profile) {
         currentXP += pendingXP;
         localStorage.setItem('cachedXP', currentXP);
         localStorage.removeItem('pendingXP');
+        saveProgressToCloud(null, null, null, profile, currentXP, totalBurnedCalories);
     }
 
     if (document.getElementById('burned-total')) document.getElementById('burned-total').innerText = totalBurnedCalories + " ккал";
@@ -222,44 +230,35 @@ function updateCharacterUI() {
     if (document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = percent + "%";
 }
 
-// --- НАСТРОЙКИ И ПРИВЯЗКА (ВИЗУАЛЬНЫЕ ИСПРАВЛЕНИЯ) ---
+// --- НАСТРОЙКИ ---
 function openProfileSettings() {
     const loginType = localStorage.getItem('loginType') || 'telegram';
 
     if (loginType === 'telegram') {
         document.getElementById('link-title').innerText = "Привязка Email";
         document.getElementById('link-desc').innerText = "Привяжите Email, чтобы заходить с любого устройства.";
-        
         const linked = localStorage.getItem('linkedEmail');
         if (linked) {
-            // Если Email привязан — показываем статус
             document.getElementById('link-email-form').innerHTML = '<p style="color: #34c759; font-size: 16px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ' + linked + '</p>';
-            document.getElementById('link-email-form').style.display = 'block';
         } else {
-            // Если нет — показываем форму
             document.getElementById('link-email-form').innerHTML = `
                 <div class="form-group"><input type="email" id="link-email" placeholder="your@email.com"></div>
                 <div class="form-group"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)"></div>
                 <button class="btn" onclick="linkEmailToTelegram()">Привязать Email</button>
             `;
-            document.getElementById('link-email-form').style.display = 'block';
         }
+        document.getElementById('link-email-form').style.display = 'block';
         document.getElementById('link-tg-form').style.display = 'none';
-        
     } else {
         document.getElementById('link-title').innerText = "Привязка Telegram";
         document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона.";
-        
         const tgId = localStorage.getItem('tgId');
         if (tgId) {
-            // Если Telegram привязан
             document.getElementById('link-tg-form').innerHTML = '<p style="color: #34c759; font-size: 16px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ' + tgId + '</p>';
         } else {
-            // Если нет
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 document.getElementById('link-tg-form').innerHTML = `
                     <p style="font-size: 14px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b>${tg.initDataUnsafe.user.id}</b></p>
-                    <p style="font-size: 12px; color: #8e8e93; margin-bottom: 15px;">Нажмите, чтобы привязать этот Telegram к вашему Email.</p>
                     <button class="btn" onclick="linkTelegramToEmail()">Привязать Telegram</button>
                 `;
             }
@@ -295,10 +294,11 @@ async function linkEmailToTelegram() {
             const profile = JSON.parse(localStorage.getItem('cachedProfile'));
             const xp = parseInt(localStorage.getItem('cachedXP') || 0);
             const burned = parseInt(localStorage.getItem('cachedBurned') || 0);
+            const name = localStorage.getItem('userName') || "Атлет";
             
-            await saveProgressToCloud(tgId, email, profile, xp, burned);
+            await saveProgressToCloud(tgId, email, name, profile, xp, burned);
             tg.showAlert("Email успешно привязан!");
-            openProfileSettings(); // Перерисовываем экран, чтобы показать зеленую галочку
+            openProfileSettings();
         }
     } catch (e) {
         tg.showAlert("Ошибка сети.");
@@ -307,16 +307,18 @@ async function linkEmailToTelegram() {
 
 async function linkTelegramToEmail() {
     const tgId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : null;
+    const tgName = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.first_name : "Атлет";
     const email = localStorage.getItem('currentEmail');
     const profile = JSON.parse(localStorage.getItem('cachedProfile'));
     const xp = parseInt(localStorage.getItem('cachedXP') || 0);
     const burned = parseInt(localStorage.getItem('cachedBurned') || 0);
 
     if (tgId && email) {
-        await saveProgressToCloud(tgId, email, profile, xp, burned);
+        await saveProgressToCloud(tgId, email, tgName, profile, xp, burned);
         localStorage.setItem('tgId', tgId);
+        localStorage.setItem('userName', tgName);
         tg.showAlert("Telegram успешно привязан!");
-        openProfileSettings(); // Перерисовываем экран
+        openProfileSettings();
     } else {
         tg.showAlert("Ошибка: не найден Email или Telegram ID.");
     }
@@ -336,7 +338,9 @@ async function saveProfile() {
 
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
-    await saveProgressToCloud(tgId, email, profile, currentXP, totalBurnedCalories);
+    const name = localStorage.getItem('userName') || "Атлет";
+    
+    await saveProgressToCloud(tgId, email, name, profile, currentXP, totalBurnedCalories);
 
     renderProfile(profile);
     tg.showAlert("Данные сохранены!");
@@ -348,9 +352,10 @@ async function logout() {
     const profile = JSON.parse(localStorage.getItem('cachedProfile'));
     const xp = parseInt(localStorage.getItem('cachedXP') || 0);
     const burned = parseInt(localStorage.getItem('cachedBurned') || 0);
+    const name = localStorage.getItem('userName') || "Атлет";
 
     if (profile && (tgId || email)) {
-        await saveProgressToCloud(tgId, email, profile, xp, burned);
+        await saveProgressToCloud(tgId, email, name, profile, xp, burned);
     }
 
     if (confirm("Выйти из аккаунта? Прогресс сохранен.")) {
