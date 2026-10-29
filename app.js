@@ -180,7 +180,7 @@ function saveProfile() {
     const goal = document.getElementById('goal').value;
     if (!age || !weight || !height) { tg.showAlert("Заполни все поля!"); return; }
     
-    const profile = { age, gender, weight, height, goal };
+    const profile = { age: age, gender: gender, weight: weight, height: height, goal: goal };
     localStorage.setItem('cachedProfile', JSON.stringify(profile));
     tg.CloudStorage.setItem('profile', JSON.stringify(profile), (err, success) => {
         if (success) renderProfile(profile);
