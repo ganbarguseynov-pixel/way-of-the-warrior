@@ -94,12 +94,9 @@
         #food-result { text-align: center; width: 100%; box-sizing: border-box; }
         #food-result h2 { text-align: center !important; width: 100%; word-break: break-word; margin-bottom: 20px; }
         .nutrition-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; padding: 0 10px; box-sizing: border-box; }
-
-        /* Стили для встроенной камеры */
-        #camera-container { position: relative; width: 100%; border-radius: 16px; overflow: hidden; margin-bottom: 20px; background: #000; }
-        #camera-video { width: 100%; height: 300px; object-fit: cover; display: block; }
-        #camera-controls { position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; }
-        #capture-btn { width: 60px; height: 60px; border-radius: 50%; background: white; border: 4px solid rgba(0,0,0,0.3); cursor: pointer; }
+        
+        /* Стили для кнопок фото */
+        .photo-btn-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
     </style>
 </head>
 <body class="male-theme">
@@ -108,6 +105,10 @@
     <audio id="audio-workout" loop preload="auto"></audio>
     <audio id="audio-win" preload="auto"></audio>
     <audio id="audio-lose" preload="auto"></audio>
+
+    <!-- Скрытые инпуты для камеры и галереи -->
+    <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;" onchange="handleImage(event)">
+    <input type="file" id="gallery-input" accept="image/*" style="display: none;" onchange="handleImage(event)">
 
     <div id="auth-screen" class="screen active auth-screen">
         <div class="auth-container">
@@ -182,19 +183,14 @@
 
             <div id="tab-photo" class="tab-content">
                 
-                <!-- ВСТРОЕННАЯ КАМЕРА -->
-                <div id="camera-container" style="display: none;">
-                    <video id="camera-video" autoplay playsinline></video>
-                    <div id="camera-controls">
-                        <button id="capture-btn" onclick="takePhoto()"></button>
-                    </div>
-                </div>
-
                 <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
                 
-                <button class="btn" id="remove-photo-btn" style="display: none; background-color: #ff3b30; color: white; margin-bottom: 10px;" onclick="resetCameraScreen()">❌ Удалить фото</button>
+                <div class="photo-btn-group" id="photo-buttons">
+                    <button class="btn" style="padding: 20px; font-size: 18px;" onclick="document.getElementById('camera-input').click()">📷 Сделать фото</button>
+                    <button class="btn" style="padding: 20px; font-size: 18px; background-color: #2c2c2e; color: white;" onclick="document.getElementById('gallery-input').click()">🖼️ Выбрать из галереи</button>
+                </div>
 
-                <button class="btn" id="open-camera-btn" onclick="startCamera()" style="padding: 40px 20px; font-size: 20px;">📷 Открыть камеру</button>
+                <button class="btn" id="remove-photo-btn" style="display: none; background-color: #ff3b30; color: white; margin-bottom: 10px;" onclick="resetCameraScreen()">❌ Удалить фото</button>
                 
                 <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px; font-size: 18px;">🤖 ИИ анализирует фото (может занять до 30 секунд)...</div>
                 
@@ -285,80 +281,29 @@
         tg.ready(); tg.expand();
         const AI_SERVER_URL = 'https://sport-app-bqlu.onrender.com';
 
-        // --- ЛОГИКА ВСТРОЕННОЙ КАМЕРЫ ---
-        let videoStream = null;
-
-        async function startCamera() {
-            try {
-                // Запрашиваем доступ к камере (задняя камера - environment)
-                videoStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment" } 
-                });
-                
-                const videoElement = document.getElementById('camera-video');
-                videoElement.srcObject = videoStream;
-                
-                // Показываем контейнер с камерой и скрываем кнопку открытия
-                document.getElementById('camera-container').style.display = 'block';
-                document.getElementById('open-camera-btn').style.display = 'none';
-                
-                // Скрываем предыдущие результаты, если были
-                document.getElementById('photo-preview').style.display = 'none';
-                document.getElementById('food-result').style.display = 'none';
-            } catch (err) {
-                tg.showAlert("Не удалось получить доступ к камере. Возможно, нет разрешения.");
-                console.error(err);
-            }
-        }
-
-        function takePhoto() {
-            if (!videoStream) return;
-            
-            const video = document.getElementById('camera-video');
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            
-            // Рисуем текущий кадр с видео на холст
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            // Останавливаем камеру, чтобы освободить ресурс
-            stopCamera();
-            
-            // Получаем картинку в формате JPEG
-            canvas.toBlob(async function(blob) {
-                const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
-                
-                // Показываем превью
-                const preview = document.getElementById('photo-preview');
-                preview.src = URL.createObjectURL(blob);
-                preview.style.display = 'block';
-                document.getElementById('remove-photo-btn').style.display = 'block';
-                
-                // Отправляем на сервер
-                await sendPhotoToServer(file);
-                
-            }, 'image/jpeg', 0.8);
-        }
-
-        function stopCamera() {
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-                videoStream = null;
-            }
-            document.getElementById('camera-container').style.display = 'none';
-        }
-
+        // --- ЛОГИКА ФОТО (ВЫБОР ИЛИ КАМЕРА) ---
         function resetCameraScreen() {
-            stopCamera();
             document.getElementById('photo-preview').style.display = 'none';
             document.getElementById('photo-preview').src = "";
             document.getElementById('food-result').style.display = 'none';
-            document.getElementById('open-camera-btn').style.display = 'block';
+            document.getElementById('photo-buttons').style.display = 'flex'; // Показываем кнопки снова
             document.getElementById('remove-photo-btn').style.display = 'none';
+            document.getElementById('camera-input').value = "";
+            document.getElementById('gallery-input').value = "";
         }
 
-        async function sendPhotoToServer(file) {
+        async function handleImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Скрываем кнопки выбора и показываем превью
+            document.getElementById('photo-buttons').style.display = 'none';
+            
+            const preview = document.getElementById('photo-preview');
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+            
+            document.getElementById('remove-photo-btn').style.display = 'block';
             document.getElementById('loading-spinner').style.display = 'block';
             document.getElementById('food-result').style.display = 'none';
 
@@ -403,7 +348,7 @@
             document.getElementById(`tab-${tabName}`).classList.add('active');
             event.target.classList.add('active');
             if (tabName === 'photo') {
-                resetCameraScreen(); // Сбрасываем камеру при переходе
+                resetCameraScreen(); 
             }
         }
 
