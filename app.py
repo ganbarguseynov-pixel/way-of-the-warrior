@@ -4,7 +4,8 @@ from PIL import Image
 import io
 import os
 import requests
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 app = Flask(__name__)
 CORS(app)
@@ -13,9 +14,9 @@ HF_TOKEN = os.environ.get("HF_TOKEN")
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# Настраиваем Gemini
+# Инициализация клиента Gemini
 if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+    client = genai.Client(api_key=GEMINI_API_KEY)
 
 @app.route('/search', methods=['GET'])
 def search_food():
@@ -28,19 +29,19 @@ def search_food():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- ПРОВЕРКА GEMINI ---
 @app.route('/check_gemini', methods=['GET'])
 def check_gemini():
     if not GEMINI_API_KEY:
-        return "ОШИБКА: Ключ Gemini не найден в настройках сервера", 500
+        return "ОШИБКА: Ключ Gemini не найден", 500
     try:
-        # Используем модель, которую рекомендует сам Google
-        model = genai.GenerativeModel('gemini-3.8-flash')
-        response = model.generate_content("Напиши ровно одно слово: РАБОТАЕТ")
+        # Используем новую библиотеку и модель 3.8-flash
+        response = client.models.generate_content(
+            model='gemini-3.8-flash',
+            contents="Напиши ровно одно слово: РАБОТАЕТ"
+        )
         return f"УСПЕХ! Gemini ответил: {response.text}"
     except Exception as e:
         return f"ОШИБКА GEMINI: {str(e)}", 500
-# -----------------------------
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
@@ -49,18 +50,15 @@ def analyze_photo():
     
     file = request.files['image']
     try:
-        image = Image.open(io.BytesIO(file.read())).convert("RGB")
+        image_data = file.read()
+        image = Image.open(io.BytesIO(image_data)).convert("RGB")
     except:
         return jsonify({"error": "Invalid image"}), 400
-    
-    img_byte_arr = io.BytesIO()
-    image.save(img_byte_arr, format='JPEG')
-    img_byte_arr = img_byte_arr.getvalue()
 
-    # 1. Пытаемся использовать LogMeal
+    # 1. LogMeal
     if LOGMEAL_TOKEN:
         try:
-            files = {'image': ('food.jpg', img_byte_arr, 'image/jpeg')}
+            files = {'image': ('food.jpg', image_data, 'image/jpeg')}
             headers = {'Authorization': f'Bearer {LOGMEAL_TOKEN}'}
             lm_response = requests.post('https://api.logmeal.es/v2/image/recognition/complete', headers=headers, files=files, timeout=30)
             if lm_response.status_code == 200:
@@ -70,15 +68,19 @@ def analyze_photo():
         except Exception as e:
             print(f"LogMeal error: {e}")
 
-    # 2. Если LogMeal не сработал, пробуем Gemini
+    # 2. Gemini
     if GEMINI_API_KEY:
         try:
-            model = genai.GenerativeModel('gemini-3.8-flash')
             prompt = "What food is in this image? Answer in one short phrase in Russian. Also estimate calories, protein, fat, and carbs. Format: Food name | Calories | Protein | Fat | Carbs"
-            response = model.generate_content([prompt, image])
+            response = client.models.generate_content(
+                model='gemini-3.8-flash',
+                contents=[
+                    types.Part.from_bytes(data=image_data, mime_type='image/jpeg'),
+                    prompt
+                ]
+            )
             text = response.text.strip()
             
-            # Простой парсинг ответа
             parts = [p.strip() for p in text.split('|')]
             if len(parts) >= 5:
                 return jsonify({
