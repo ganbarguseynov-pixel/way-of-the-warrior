@@ -62,7 +62,7 @@ async function loginWithTelegram() {
     }
 }
 
-// --- ВХОД ЧЕРЕЗ EMAIL (ПРАВИЛЬНАЯ ПРОВЕРКА ПАРОЛЯ) ---
+// --- ВХОД ЧЕРЕЗ EMAIL ---
 function showEmailForm() { openScreen('email-screen'); }
 
 async function handleEmailAuth() {
@@ -78,7 +78,6 @@ async function handleEmailAuth() {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
         if (error) {
-            // Если почта есть, но пароль неверный
             if (error.message.includes("Invalid login credentials")) {
                 tg.showAlert("Неверный Email или пароль.");
             } else {
@@ -113,7 +112,7 @@ async function handleEmailAuth() {
     }
 }
 
-// --- СИНХРОНИЗАЦИЯ (ГЛАВНАЯ ФУНКЦИЯ) ---
+// --- СИНХРОНИЗАЦИЯ ---
 async function saveProgressToCloud(tgId, email, profile, xp, burned) {
     try {
         let currentTgId = tgId || localStorage.getItem('tgId');
@@ -223,25 +222,50 @@ function updateCharacterUI() {
     if (document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = percent + "%";
 }
 
-// --- СОХРАНЕНИЕ ПРОФИЛЯ И ПРИВЯЗКА ---
+// --- НАСТРОЙКИ И ПРИВЯЗКА (ВИЗУАЛЬНЫЕ ИСПРАВЛЕНИЯ) ---
 function openProfileSettings() {
     const loginType = localStorage.getItem('loginType') || 'telegram';
 
     if (loginType === 'telegram') {
         document.getElementById('link-title').innerText = "Привязка Email";
         document.getElementById('link-desc').innerText = "Привяжите Email, чтобы заходить с любого устройства.";
-        document.getElementById('link-email-form').style.display = 'block';
-        document.getElementById('link-tg-form').style.display = 'none';
+        
         const linked = localStorage.getItem('linkedEmail');
-        if (linked) document.getElementById('link-email').value = linked;
+        if (linked) {
+            // Если Email привязан — показываем статус
+            document.getElementById('link-email-form').innerHTML = '<p style="color: #34c759; font-size: 16px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ' + linked + '</p>';
+            document.getElementById('link-email-form').style.display = 'block';
+        } else {
+            // Если нет — показываем форму
+            document.getElementById('link-email-form').innerHTML = `
+                <div class="form-group"><input type="email" id="link-email" placeholder="your@email.com"></div>
+                <div class="form-group"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)"></div>
+                <button class="btn" onclick="linkEmailToTelegram()">Привязать Email</button>
+            `;
+            document.getElementById('link-email-form').style.display = 'block';
+        }
+        document.getElementById('link-tg-form').style.display = 'none';
+        
     } else {
         document.getElementById('link-title').innerText = "Привязка Telegram";
         document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона.";
+        
+        const tgId = localStorage.getItem('tgId');
+        if (tgId) {
+            // Если Telegram привязан
+            document.getElementById('link-tg-form').innerHTML = '<p style="color: #34c759; font-size: 16px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ' + tgId + '</p>';
+        } else {
+            // Если нет
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                document.getElementById('link-tg-form').innerHTML = `
+                    <p style="font-size: 14px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b>${tg.initDataUnsafe.user.id}</b></p>
+                    <p style="font-size: 12px; color: #8e8e93; margin-bottom: 15px;">Нажмите, чтобы привязать этот Telegram к вашему Email.</p>
+                    <button class="btn" onclick="linkTelegramToEmail()">Привязать Telegram</button>
+                `;
+            }
+        }
         document.getElementById('link-email-form').style.display = 'none';
         document.getElementById('link-tg-form').style.display = 'block';
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            document.getElementById('current-tg-id').innerText = tg.initDataUnsafe.user.id;
-        }
     }
 
     const cachedProfile = localStorage.getItem('cachedProfile');
@@ -274,7 +298,7 @@ async function linkEmailToTelegram() {
             
             await saveProgressToCloud(tgId, email, profile, xp, burned);
             tg.showAlert("Email успешно привязан!");
-            closeScreen('profile-settings-screen');
+            openProfileSettings(); // Перерисовываем экран, чтобы показать зеленую галочку
         }
     } catch (e) {
         tg.showAlert("Ошибка сети.");
@@ -290,8 +314,9 @@ async function linkTelegramToEmail() {
 
     if (tgId && email) {
         await saveProgressToCloud(tgId, email, profile, xp, burned);
+        localStorage.setItem('tgId', tgId);
         tg.showAlert("Telegram успешно привязан!");
-        closeScreen('profile-settings-screen');
+        openProfileSettings(); // Перерисовываем экран
     } else {
         tg.showAlert("Ошибка: не найден Email или Telegram ID.");
     }
@@ -314,6 +339,7 @@ async function saveProfile() {
     await saveProgressToCloud(tgId, email, profile, currentXP, totalBurnedCalories);
 
     renderProfile(profile);
+    tg.showAlert("Данные сохранены!");
 }
 
 async function logout() {
