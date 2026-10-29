@@ -1,10 +1,13 @@
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
+// Загрузка профиля из памяти
 window.addEventListener('load', () => {
     const cachedProfile = localStorage.getItem('cachedProfile');
     if (cachedProfile) {
         renderProfile(JSON.parse(cachedProfile));
+    } else {
+        openScreen('profile-settings-screen');
     }
 });
 
@@ -26,8 +29,12 @@ const levelsData = {
 let currentXP = 0, totalBurnedCalories = 0, userGender = 'male';
 
 function openProfileSettings() {
-    document.getElementById('dashboard-screen').classList.remove('active');
-    document.getElementById('profile-settings-screen').classList.add('active');
+    openScreen('profile-settings-screen');
+}
+
+function openScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
 }
 
 function closeScreen(screenId) {
@@ -36,17 +43,23 @@ function closeScreen(screenId) {
 }
 
 function renderProfile(profile) {
-    userGender = profile.gender;
+    userGender = profile.gender || 'male';
     document.body.className = userGender === 'female' ? 'female-theme' : 'male-theme';
     
     let bmr = userGender === 'male' ? (10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) : (10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161);
     let cals = profile.goal === 'lose' ? (bmr * 1.375 - 500) : (bmr * 1.375 + 500);
-    document.getElementById('calories-norm').innerText = Math.round(cals) + " ккал";
+    
+    if (document.getElementById('calories-norm')) {
+        document.getElementById('calories-norm').innerText = Math.round(cals) + " ккал";
+    }
 
     currentXP = parseInt(localStorage.getItem('cachedXP') || 0);
     totalBurnedCalories = parseInt(localStorage.getItem('cachedBurned') || 0);
     
-    document.getElementById('burned-total').innerText = totalBurnedCalories + " ккал";
+    if (document.getElementById('burned-total')) {
+        document.getElementById('burned-total').innerText = totalBurnedCalories + " ккал";
+    }
+    
     updateCharacterUI();
 }
 
@@ -65,17 +78,17 @@ function updateCharacterUI() {
         videoElement.play().catch(e => console.log("Autoplay blocked"));
     }
 
-    document.getElementById('char-level').innerText = "Уровень " + (newLevelIndex + 1);
-    document.getElementById('char-title').innerText = currentLevel.title;
+    if (document.getElementById('char-level')) document.getElementById('char-level').innerText = "Уровень " + (newLevelIndex + 1);
+    if (document.getElementById('char-title')) document.getElementById('char-title').innerText = currentLevel.title;
 
     let progressPercent = 100;
     if (nextLevel.xp > currentLevel.xp) {
         progressPercent = ((currentXP - currentLevel.xp) / (nextLevel.xp - currentLevel.xp)) * 100;
-        document.getElementById('xp-text').innerText = currentXP + " / " + nextLevel.xp + " XP";
+        if (document.getElementById('xp-text')) document.getElementById('xp-text').innerText = currentXP + " / " + nextLevel.xp + " XP";
     } else {
-        document.getElementById('xp-text').innerText = currentXP + " XP (MAX)";
+        if (document.getElementById('xp-text')) document.getElementById('xp-text').innerText = currentXP + " XP (MAX)";
     }
-    document.getElementById('xp-bar').style.width = progressPercent + "%";
+    if (document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = progressPercent + "%";
 }
 
 function saveProfile() {
@@ -84,15 +97,18 @@ function saveProfile() {
     const weight = document.getElementById('weight').value;
     const height = document.getElementById('height').value;
     const goal = document.getElementById('goal').value;
+    
     if (!age || !weight || !height) { tg.showAlert("Заполни все поля!"); return; }
     
     const profile = { age: age, gender: gender, weight: weight, height: height, goal: goal };
     localStorage.setItem('cachedProfile', JSON.stringify(profile));
+    
     renderProfile(profile);
     closeScreen('profile-settings-screen');
 }
 
 function logout() {
     localStorage.clear();
+    tg.showAlert("Данные очищены. Перезапустите приложение.");
     location.reload();
 }
