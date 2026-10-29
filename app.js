@@ -6,12 +6,9 @@ tg.ready(); tg.expand();
 
 // --- ГЛАВНАЯ ЗАГРУЗКА ---
 window.addEventListener('load', () => {
-    // 1. Мгновенно проверяем, есть ли профиль в памяти телефона
     const cachedProfile = localStorage.getItem('cachedProfile');
     if (cachedProfile) {
-        // Если есть, сразу показываем главный экран (без вылетов!)
         renderProfile(JSON.parse(cachedProfile));
-        // А в фоне обновляем данные из Telegram
         tg.CloudStorage.getItem('profile', (err, result) => {
             if (result) {
                 const freshProfile = JSON.parse(result);
@@ -20,7 +17,6 @@ window.addEventListener('load', () => {
             }
         });
     } else {
-        // Если памяти нет (первый вход), ждем Telegram
         setTimeout(() => checkProfile(), 500);
     }
 });
@@ -102,7 +98,7 @@ function checkProfile() {
     tg.CloudStorage.getItem('profile', (err, result) => {
         if (result) {
             const profile = JSON.parse(result);
-            localStorage.setItem('cachedProfile', JSON.stringify(profile)); // Кешируем
+            localStorage.setItem('cachedProfile', JSON.stringify(profile));
             renderProfile(profile);
         } else {
             document.getElementById('auth-screen').classList.add('active');
@@ -118,14 +114,12 @@ function renderProfile(profile) {
     let cals = profile.goal === 'lose' ? (bmr * 1.375 - 500) : (bmr * 1.375 + 500);
     document.getElementById('calories-norm').innerText = `${Math.round(cals)} ккал`;
 
-    // Берем XP и калории из памяти
     currentXP = parseInt(localStorage.getItem('cachedXP') || 0);
     totalBurnedCalories = parseInt(localStorage.getItem('cachedBurned') || 0);
     
     document.getElementById('burned-total').innerText = `${totalBurnedCalories} ккал`;
     updateCharacterUI();
     
-    // Переключаем экраны
     document.getElementById('auth-screen').classList.remove('active');
     document.getElementById('onboarding-screen').classList.remove('active');
     document.getElementById('dashboard-screen').classList.add('active');
@@ -165,14 +159,30 @@ function updateCharacterUI() {
     document.getElementById('xp-bar').style.width = `${progressPercent}%`;
 }
 
-function addXP(amount) {
+// --- ОБНОВЛЕННАЯ ФУНКЦИЯ XP (ОТПРАВЛЯЕТ В РЕЙТИНГ) ---
+async function addXP(amount) {
     currentXP += amount;
-    localStorage.setItem('cachedXP', currentXP); // Сохраняем в память
+    localStorage.setItem('cachedXP', currentXP); 
+    
+    // Отправляем в базу Supabase для рейтинга
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        const user = tg.initDataUnsafe.user;
+        try {
+            await supabaseClient
+                .from('profiles')
+                .upsert({ 
+                    telegram_id: user.id, 
+                    first_name: user.first_name, 
+                    xp: currentXP 
+                }, { onConflict: 'telegram_id' });
+        } catch(e) { console.log("Ошибка отправки в рейтинг:", e); }
+    }
+    
     updateCharacterUI();
 }
 
 function logout() {
-    localStorage.clear(); // Очищаем память при выходе
+    localStorage.clear();
     tg.CloudStorage.removeItem('profile');
     document.getElementById('dashboard-screen').classList.remove('active');
     document.getElementById('auth-screen').classList.add('active');
@@ -187,7 +197,7 @@ function saveProfile() {
     if (!age || !weight || !height) { tg.showAlert("Заполни все поля!"); return; }
     
     const profile = { age, gender, weight, height, goal };
-    localStorage.setItem('cachedProfile', JSON.stringify(profile)); // Кешируем
+    localStorage.setItem('cachedProfile', JSON.stringify(profile));
     tg.CloudStorage.setItem('profile', JSON.stringify(profile), (err, success) => {
         if (success) renderProfile(profile);
     });
