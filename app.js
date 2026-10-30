@@ -4,7 +4,7 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand(); 
 
-// --- МУЗЫКА ---
+// --- МУЗЫКА НА ГЛАВНОЙ ---
 const playlist = [
     '01. Shadow Fight Song.mp3', '02- The Training Room.mp3', '03. TECHNO-SYNDROME 12\' MI...',
     '04 - The Blade Dance.mp3', '05 - The Vengeance.mp3', '06 - The Forest of Death.mp3',
@@ -17,48 +17,28 @@ const playlist = [
 const levelUpSoundFile = '07. Scroll Draw 01.mp3';
 const levelDownSoundFile = '09. Scroll Lose 01.mp3';
 
-let currentTrackIndex = parseInt(localStorage.getItem('musicIndex') || Math.floor(Math.random() * playlist.length));
-let currentTime = parseFloat(localStorage.getItem('musicTime') || 0);
-let isMusicPlaying = localStorage.getItem('musicPlaying') === 'true';
-
+let currentTrackIndex = Math.floor(Math.random() * playlist.length);
 const bgMusic = new Audio(playlist[currentTrackIndex]);
 bgMusic.volume = 0.5;
-bgMusic.currentTime = currentTime;
 
-// Пытаемся запустить сразу, если музыка должна играть
-if (isMusicPlaying) {
-    bgMusic.play().catch(e => console.log("Ждем клика"));
-}
+let musicStarted = false;
 
-// Запускаем музыку при любом клике на странице
+// Запускаем музыку при первом клике
 document.addEventListener('click', () => {
-    if (!bgMusic.paused) return; // Уже играет
-    if (isMusicPlaying) {
-        bgMusic.play().catch(e => console.log(e));
-    } else {
-        bgMusic.play().catch(e => console.log(e));
-        isMusicPlaying = true;
-        localStorage.setItem('musicPlaying', 'true');
+    if (!musicStarted) {
+        bgMusic.play().catch(e => console.log("Музыка ждет клика"));
+        musicStarted = true;
     }
 }, { once: true });
 
-setInterval(() => {
-    if (!bgMusic.paused) {
-        localStorage.setItem('musicIndex', currentTrackIndex);
-        localStorage.setItem('musicTime', bgMusic.currentTime);
-        localStorage.setItem('musicPlaying', 'true');
-    }
-}, 500);
-
+// Когда трек кончается — включаем следующий случайный
 bgMusic.addEventListener('ended', () => {
     currentTrackIndex = Math.floor(Math.random() * playlist.length);
-    localStorage.setItem('musicIndex', currentTrackIndex);
-    localStorage.setItem('musicTime', 0);
     bgMusic.src = playlist[currentTrackIndex];
     bgMusic.play().catch(e => console.log(e));
 });
 
-// --- СТАРЫЙ КОД ---
+// --- СТАРЫЙ КОД (СОХРАНЕНИЕ, ПРИВЯЗКА) ---
 function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
     const el = document.getElementById(screenId);
