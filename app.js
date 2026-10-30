@@ -4,32 +4,6 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand(); 
 
-// --- УПРАВЛЕНИЕ МУЗЫКОЙ ЧЕРЕЗ IFRAME ---
-const musicFrame = document.getElementById('music-frame');
-let musicStarted = false;
-
-function sendMusicCommand(cmd) {
-    if (musicFrame && musicFrame.contentWindow) {
-        musicFrame.contentWindow.postMessage(cmd, '*');
-    }
-}
-
-document.addEventListener('click', () => {
-    if (!musicStarted) {
-        sendMusicCommand('play');
-        musicStarted = true;
-    }
-}, { once: true });
-
-function playBgMusic() { sendMusicCommand('play'); }
-function pauseBgMusic() { sendMusicCommand('pause'); }
-function playWorkoutMusic() { sendMusicCommand('next'); }
-function pauseWorkoutMusic() { sendMusicCommand('pause'); }
-function playWinSound() { sendMusicCommand('win'); }
-function playLevelUpSound() { sendMusicCommand('levelup'); }
-function playLevelDownSound() { sendMusicCommand('leveldown'); }
-
-// --- ОСТАЛЬНОЙ КОД (НЕ ТРОГАЕМ) ---
 function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
     const el = document.getElementById(screenId);
@@ -208,7 +182,6 @@ const levelsData = {
 }; 
 
 let currentXP = 0, totalBurnedCalories = 0, userGender = 'male';
-let previousXP = parseInt(localStorage.getItem('cachedXP') || 0);
 
 function renderProfile(profile) {
     userGender = profile.gender || 'male';
@@ -223,7 +196,6 @@ function renderProfile(profile) {
 
     const pendingXP = parseInt(localStorage.getItem('pendingXP') || 0);
     if (pendingXP > 0) {
-        previousXP = currentXP;
         currentXP += pendingXP;
         localStorage.setItem('cachedXP', currentXP);
         localStorage.removeItem('pendingXP');
@@ -231,21 +203,9 @@ function renderProfile(profile) {
     } 
 
     if (document.getElementById('burned-total')) document.getElementById('burned-total').innerText = totalBurnedCalories + " ккал";
-    checkLevelTransition(profile);
     updateCharacterUI();
     openScreen('dashboard-screen');
 } 
-
-function checkLevelTransition(profile) {
-    const levels = levelsData[profile.gender || 'male'];
-    let oldLevel = 0, newLevel = 0;
-    for (let i = 0; i < levels.length; i++) {
-        if (previousXP >= levels[i].xp) oldLevel = i;
-        if (currentXP >= levels[i].xp) newLevel = i;
-    }
-    if (newLevel > oldLevel) playLevelUpSound();
-    else if (newLevel < oldLevel) playLevelDownSound();
-}
 
 function updateCharacterUI() {
     const levels = levelsData[userGender];
