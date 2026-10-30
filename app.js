@@ -4,6 +4,58 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand(); 
 
+// --- МУЗЫКАЛЬНЫЙ ЦЕНТР ---
+const playlist = [
+    '01. Shadow Fight Song.mp3', '02- The Training Room.mp3', '03. TECHNO-SYNDROME 12\' MI...',
+    '04 - The Blade Dance.mp3', '05 - The Vengeance.mp3', '06 - The Forest of Death.mp3',
+    '07 - The Ninja in the Night.mp3', '09 - The Fat Boss.mp3', '10 - The Final Boss.mp3',
+    '11 - The Master of the Skills.mp3', '13 - Ronin.mp3', '14 - The Deadly Smoke.mp3',
+    '15 - Old Sensei.mp3', '16 - The Battle Ship.mp3', '17 - The Shadow Lady.mp3',
+    '18 - The Flower Battlefield.mp3', '22 - Bridge to the Other Side.mp3',
+    '25 - Burning Town.mp3', '27 - The Hive.mp3', '29 - The Factory.mp3', '30 - The Flying Rocks.mp3'
+];
+
+// Звуки событий
+const winSoundFile = '12. Scroll Win 02.mp3';
+const levelUpSoundFile = '07. Scroll Draw 01.mp3';
+const levelDownSoundFile = '09. Scroll Lose 01.mp3';
+
+let currentTrackIndex = Math.floor(Math.random() * playlist.length);
+const bgMusic = new Audio(playlist[currentTrackIndex]);
+bgMusic.volume = 0.5;
+let isMusicStarted = false;
+
+function playNextTrack() {
+    currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+    bgMusic.src = playlist[currentTrackIndex];
+    bgMusic.play().catch(e => console.log("Музыка ждет клика"));
+}
+
+bgMusic.addEventListener('ended', () => { playNextTrack(); });
+
+document.addEventListener('click', () => {
+    if (!isMusicStarted) {
+        bgMusic.play().catch(e => console.log("Музыка ждет клика"));
+        isMusicStarted = true;
+    }
+}, { once: true });
+
+function playBgMusic() { bgMusic.play().catch(e => console.log(e)); }
+function pauseBgMusic() { bgMusic.pause(); }
+function playWorkoutMusic() { playNextTrack(); }
+function pauseWorkoutMusic() { bgMusic.pause(); }
+
+function playEventSound(soundFile) {
+    bgMusic.pause();
+    const eventAudio = new Audio(soundFile);
+    eventAudio.play().catch(e => console.log(e));
+    eventAudio.onended = () => { playNextTrack(); };
+}
+
+function playWinSound() { playEventSound(winSoundFile); }
+function playLevelUpSound() { playEventSound(levelUpSoundFile); }
+function playLevelDownSound() { playEventSound(levelDownSoundFile); }
+
 // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
 function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
@@ -104,7 +156,6 @@ async function handleEmailAuth() {
                 localStorage.setItem('cachedProfile', JSON.stringify(linkData.profile));
                 localStorage.setItem('cachedXP', linkData.xp || 0);
                 localStorage.setItem('cachedBurned', linkData.burned || 0);
-                // Подтягиваем TG ID, чтобы сохранение не создавало дубль
                 if (linkData.telegram_id) {
                     localStorage.setItem('tgId', linkData.telegram_id);
                 } else {
@@ -128,7 +179,7 @@ async function handleEmailAuth() {
     }
 } 
 
-// --- СИНХРОНИЗАЦИЯ (Склейка и сохранение) ---
+// --- СИНХРОНИЗАЦИЯ ---
 async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
     try {
         let currentTgId = tgId || localStorage.getItem('tgId');
@@ -138,7 +189,6 @@ async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
         if (!currentTgId && !currentEmail) return; 
 
         let existingId = null;
-        // Ищем по TG, потом по Email
         if (currentTgId) {
             const { data } = await supabaseClient.from('user_links').select('id').eq('telegram_id', currentTgId).maybeSingle();
             if (data) existingId = data.id;
@@ -189,7 +239,8 @@ const levelsData = {
     female: [{ xp: 0, title: "Новичок", video: "VID_20261028_175618_746.mp4" }, { xp: 100, title: "Фурия", video: "VID_20261028_175631_701.mp4" }]
 }; 
 
-let currentXP = 0, totalBurnedCalories = 0, userGender = 'male'; 
+let currentXP = 0, totalBurnedCalories = 0, userGender = 'male';
+let previousXP = parseInt(localStorage.getItem('cachedXP') || 0); // Запоминаем предыдущий XP для проверки перехода
 
 function renderProfile(profile) {
     userGender = profile.gender || 'male';
@@ -204,6 +255,7 @@ function renderProfile(profile) {
 
     const pendingXP = parseInt(localStorage.getItem('pendingXP') || 0);
     if (pendingXP > 0) {
+        previousXP = currentXP;
         currentXP += pendingXP;
         localStorage.setItem('cachedXP', currentXP);
         localStorage.removeItem('pendingXP');
@@ -211,9 +263,29 @@ function renderProfile(profile) {
     } 
 
     if (document.getElementById('burned-total')) document.getElementById('burned-total').innerText = totalBurnedCalories + " ккал";
+    
+    // Проверка на переход уровня
+    checkLevelTransition(profile);
+
     updateCharacterUI();
     openScreen('dashboard-screen');
 } 
+
+function checkLevelTransition(profile) {
+    const levels = levelsData[profile.gender || 'male'];
+    let oldLevel = 0, newLevel = 0;
+    
+    for (let i = 0; i < levels.length; i++) {
+        if (previousXP >= levels[i].xp) oldLevel = i;
+        if (currentXP >= levels[i].xp) newLevel = i;
+    }
+
+    if (newLevel > oldLevel) {
+        playLevelUpSound();
+    } else if (newLevel < oldLevel) {
+        playLevelDownSound();
+    }
+}
 
 function updateCharacterUI() {
     const levels = levelsData[userGender];
@@ -298,13 +370,11 @@ function openProfileSettings() {
     openScreen('profile-settings-screen');
 } 
 
-// --- ЖЕСТКАЯ ПРОВЕРКА ПРИ ПРИВЯЗКЕ ---
 async function linkEmailToTelegram() {
     const email = document.getElementById('link-email').value;
     const password = document.getElementById('link-password').value;
     if (!email || !password) { tg.showAlert("Заполните Email и пароль!"); return; } 
 
-    // Проверяем, не занята ли эта почта кем-то ДРУГИМ
     const { data: emailCheck } = await supabaseClient.from('user_links').select('telegram_id').eq('email', email).maybeSingle();
     if (emailCheck && emailCheck.telegram_id && emailCheck.telegram_id !== tg.initDataUnsafe.user.id) {
         tg.showAlert("Эта почта уже привязана к другому аккаунту Telegram!");
@@ -344,14 +414,12 @@ async function linkTelegramToEmail() {
 
     if (!tgId || !email) { tg.showAlert("Ошибка: не найден Email или Telegram ID."); return; }
 
-    // Проверяем, не занят ли этот Telegram кем-то ДРУГИМ
     const { data: tgCheck } = await supabaseClient.from('user_links').select('email').eq('telegram_id', tgId).maybeSingle();
     if (tgCheck && tgCheck.email && tgCheck.email !== email) {
         tg.showAlert("Этот Telegram уже привязан к другой почте!");
         return;
     } 
 
-    // Проверяем, не занята ли эта почта ДРУГИМ Телеграмом
     const { data: emailCheck } = await supabaseClient.from('user_links').select('telegram_id').eq('email', email).maybeSingle();
     if (emailCheck && emailCheck.telegram_id && emailCheck.telegram_id !== tgId) {
         tg.showAlert("Эта почта уже привязана к другому Telegram!");
@@ -365,7 +433,6 @@ async function linkTelegramToEmail() {
     openProfileSettings();
 } 
 
-// --- ОТВЯЗКА ---
 async function unlinkEmail() {
     if (!confirm("Отвязать Email? Прогресс останется в Telegram.")) return;
     const tgId = localStorage.getItem('tgId');
