@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- ЭКРАН ТАЙМЕРА -->
     <div id="timer-view" class="inner-screen">
         <button class="back-btn" onclick="goBackToMain()">← Назад в приложение</button>
         <h1 style="text-align: center;">Таймер</h1>
@@ -25,7 +24,6 @@
         <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: auto;" onclick="finishWorkout()">Завершить 🏁</button>
     </div>
 
-    <!-- ЭКРАН ПОБЕДЫ -->
     <div id="finish-view" class="inner-screen" style="display: none; text-align: center; justify-content: center;">
         <h1 style="font-size: 80px; margin-bottom: 10px;">🏆</h1>
         <h2>Тренировка завершена!</h2>
@@ -59,6 +57,7 @@
                 btn.innerText = "Старт";
                 isRunning = false;
             } else {
+                // Принудительно переключаем трек при старте
                 if (window.playWorkoutMusic) window.playWorkoutMusic();
                 btn.innerText = "Пауза";
                 isRunning = true;
