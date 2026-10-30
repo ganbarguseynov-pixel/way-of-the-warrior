@@ -4,7 +4,7 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand(); 
 
-// --- МУЗЫКА С ВОССТАНОВЛЕНИЕМ ---
+// --- МУЗЫКА ---
 const playlist = [
     '01. Shadow Fight Song.mp3', '02- The Training Room.mp3', '03. TECHNO-SYNDROME 12\' MI...',
     '04 - The Blade Dance.mp3', '05 - The Vengeance.mp3', '06 - The Forest of Death.mp3',
@@ -25,7 +25,6 @@ const bgMusic = new Audio(playlist[currentTrackIndex]);
 bgMusic.volume = 0.5;
 bgMusic.currentTime = currentTime;
 
-// Сохраняем позицию каждые 500 мс
 setInterval(() => {
     if (!bgMusic.paused) {
         localStorage.setItem('musicIndex', currentTrackIndex);
@@ -34,7 +33,6 @@ setInterval(() => {
     }
 }, 500);
 
-// Когда трек кончается, включаем следующий случайный
 bgMusic.addEventListener('ended', () => {
     currentTrackIndex = Math.floor(Math.random() * playlist.length);
     localStorage.setItem('musicIndex', currentTrackIndex);
@@ -43,41 +41,15 @@ bgMusic.addEventListener('ended', () => {
     bgMusic.play().catch(e => console.log(e));
 });
 
-// Запускаем музыку после первого клика
 document.addEventListener('click', () => {
-    if (isMusicPlaying && bgMusic.paused) {
-        bgMusic.play().catch(e => console.log(e));
-    } else if (!isMusicPlaying) {
+    if (!isMusicPlaying) {
         bgMusic.play().catch(e => console.log(e));
         isMusicPlaying = true;
         localStorage.setItem('musicPlaying', 'true');
     }
 }, { once: true });
 
-// Функции для таймера
-function playWorkoutMusic() {
-    currentTrackIndex = Math.floor(Math.random() * playlist.length);
-    localStorage.setItem('musicIndex', currentTrackIndex);
-    localStorage.setItem('musicTime', 0);
-    bgMusic.src = playlist[currentTrackIndex];
-    bgMusic.play().catch(e => console.log(e));
-    localStorage.setItem('musicPlaying', 'true');
-}
-function pauseWorkoutMusic() { bgMusic.pause(); localStorage.setItem('musicPlaying', 'false'); }
-function playWinSound() {
-    bgMusic.pause();
-    const winAudio = new Audio('12. Scroll Win 02.mp3');
-    winAudio.play().catch(e => console.log(e));
-    winAudio.onended = () => {
-        currentTrackIndex = Math.floor(Math.random() * playlist.length);
-        localStorage.setItem('musicIndex', currentTrackIndex);
-        localStorage.setItem('musicTime', 0);
-        bgMusic.src = playlist[currentTrackIndex];
-        bgMusic.play().catch(e => console.log(e));
-    };
-}
-
-// --- СТАРЫЙ КОД (СОХРАНЕНИЕ, ПРИВЯЗКА) ---
+// --- ОСТАЛЬНОЙ КОД ---
 function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
     const el = document.getElementById(screenId);
