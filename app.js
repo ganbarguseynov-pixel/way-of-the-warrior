@@ -231,7 +231,7 @@ function updateCharacterUI() {
     if (document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = percent + "%";
 } 
 
-// --- НАСТРОЙКИ ---
+// --- НАСТРОЙКИ С РЕДАКТИРОВАНИЕМ ---
 function openProfileSettings() {
     const loginType = localStorage.getItem('loginType') || 'telegram'; 
 
@@ -240,7 +240,10 @@ function openProfileSettings() {
         document.getElementById('link-desc').innerText = "Привяжите Email, чтобы заходить с любого устройства.";
         const linked = localStorage.getItem('linkedEmail');
         if (linked) {
-            document.getElementById('link-email-form').innerHTML = '<p style="color: #34c759; font-size: 16px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ' + linked + '</p>';
+            document.getElementById('link-email-form').innerHTML = `
+                <p style="color: #34c759; font-size: 16px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ${linked}</p>
+                <button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px;" onclick="unlinkEmail()">Отвязать Email</button>
+            `;
         } else {
             document.getElementById('link-email-form').innerHTML = `
                 <div class="form-group"><input type="email" id="link-email" placeholder="your@email.com"></div>
@@ -255,7 +258,10 @@ function openProfileSettings() {
         document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона.";
         const tgId = localStorage.getItem('tgId');
         if (tgId) {
-            document.getElementById('link-tg-form').innerHTML = '<p style="color: #34c759; font-size: 16px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ' + tgId + '</p>';
+            document.getElementById('link-tg-form').innerHTML = `
+                <p style="color: #34c759; font-size: 16px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ${tgId}</p>
+                <button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px;" onclick="unlinkTelegram()">Отвязать Telegram</button>
+            `;
         } else {
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 document.getElementById('link-tg-form').innerHTML = `
@@ -304,7 +310,7 @@ async function linkEmailToTelegram() {
             const name = localStorage.getItem('userName') || "Атлет"; 
 
             await saveProgressToCloud(tgId, email, name, profile, xp, burned);
-            tg.showAlert("Email успешно привязан! Теперь вы можете заходить и по почте, и по Telegram.");
+            tg.showAlert("Email успешно привязан!");
             openProfileSettings();
         }
     } catch (e) {
@@ -330,11 +336,28 @@ async function linkTelegramToEmail() {
         await saveProgressToCloud(tgId, email, tgName, profile, xp, burned);
         localStorage.setItem('tgId', tgId);
         localStorage.setItem('userName', tgName);
-        tg.showAlert("Telegram успешно привязан! Теперь вы можете заходить и по почте, и по Telegram.");
+        tg.showAlert("Telegram успешно привязан!");
         openProfileSettings();
     } else {
         tg.showAlert("Ошибка: не найден Email или Telegram ID.");
     }
+} 
+
+async function unlinkEmail() {
+    if (!confirm("Отвязать Email? Прогресс останется в Telegram.")) return;
+    localStorage.removeItem('linkedEmail');
+    localStorage.removeItem('currentEmail');
+    await saveProgressToCloud();
+    tg.showAlert("Email отвязан.");
+    openProfileSettings();
+}
+
+async function unlinkTelegram() {
+    if (!confirm("Отвязать Telegram? Прогресс останется в Email.")) return;
+    localStorage.removeItem('tgId');
+    await saveProgressToCloud();
+    tg.showAlert("Telegram отвязан.");
+    openProfileSettings();
 } 
 
 async function saveProfile() {
