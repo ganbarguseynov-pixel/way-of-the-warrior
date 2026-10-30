@@ -4,7 +4,6 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand(); 
 
-// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
 function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
     const el = document.getElementById(screenId);
@@ -19,7 +18,6 @@ function closeScreen(screenId) {
     }
 } 
 
-// --- ЗАГРУЗКА ПРИ СТАРТЕ ---
 window.addEventListener('load', async () => {
     const cachedProfile = localStorage.getItem('cachedProfile');
     if (cachedProfile) {
@@ -34,7 +32,6 @@ window.addEventListener('load', async () => {
     }
 }); 
 
-// --- ВХОД ЧЕРЕЗ TELEGRAM ---
 async function loginWithTelegram() {
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         localStorage.setItem('loginType', 'telegram');
@@ -64,7 +61,6 @@ async function loginWithTelegram() {
     }
 } 
 
-// --- ВХОД ЧЕРЕЗ EMAIL ---
 function showEmailForm() { openScreen('email-screen'); } 
 
 async function handleEmailAuth() {
@@ -117,7 +113,6 @@ async function handleEmailAuth() {
     }
 } 
 
-// --- СИНХРОНИЗАЦИЯ ---
 async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
     try {
         let currentTgId = tgId || localStorage.getItem('tgId');
@@ -171,7 +166,6 @@ async function syncProgressFromCloud(email, tgId) {
     }
 } 
 
-// --- ОТРИСОВКА ПРОФИЛЯ ---
 const levelsData = {
     male: [{ xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" }, { xp: 100, title: "Берсерк", video: "VID_20261028_173215_440.mp4" }],
     female: [{ xp: 0, title: "Новичок", video: "VID_20261028_175618_746.mp4" }, { xp: 100, title: "Фурия", video: "VID_20261028_175631_701.mp4" }]
@@ -231,7 +225,6 @@ function updateCharacterUI() {
     if (document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = percent + "%";
 } 
 
-// --- НАСТРОЙКИ С РЕДАКТИРОВАНИЕМ ---
 function openProfileSettings() {
     const loginType = localStorage.getItem('loginType') || 'telegram'; 
 
@@ -345,17 +338,25 @@ async function linkTelegramToEmail() {
 
 async function unlinkEmail() {
     if (!confirm("Отвязать Email? Прогресс останется в Telegram.")) return;
+    const tgId = localStorage.getItem('tgId');
+    if (tgId) {
+        const { data } = await supabaseClient.from('user_links').select('id').eq('telegram_id', tgId).maybeSingle();
+        if (data) await supabaseClient.from('user_links').update({ email: null }).eq('id', data.id);
+    }
     localStorage.removeItem('linkedEmail');
     localStorage.removeItem('currentEmail');
-    await saveProgressToCloud();
     tg.showAlert("Email отвязан.");
     openProfileSettings();
 }
 
 async function unlinkTelegram() {
     if (!confirm("Отвязать Telegram? Прогресс останется в Email.")) return;
+    const email = localStorage.getItem('currentEmail');
+    if (email) {
+        const { data } = await supabaseClient.from('user_links').select('id').eq('email', email).maybeSingle();
+        if (data) await supabaseClient.from('user_links').update({ telegram_id: null }).eq('id', data.id);
+    }
     localStorage.removeItem('tgId');
-    await saveProgressToCloud();
     tg.showAlert("Telegram отвязан.");
     openProfileSettings();
 } 
