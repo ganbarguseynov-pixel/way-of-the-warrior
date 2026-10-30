@@ -9,8 +9,6 @@
 </head>
 <body>
 
-<iframe src="music.html" style="display:none;" id="music-frame"></iframe>
-
 <div id="timer-view" class="inner-screen">
 <button class="back-btn" onclick="goBackToMain()">← Назад в приложение</button>
 <h1 style="text-align: center;">Таймер</h1>
@@ -60,7 +58,6 @@ function toggleTimer() {
         btn.innerText = "Старт";
         isRunning = false;
     } else {
-        if (window.playWorkoutMusic) window.playWorkoutMusic();
         btn.innerText = "Пауза";
         isRunning = true;
         timerInterval = setInterval(() => {
@@ -68,7 +65,6 @@ function toggleTimer() {
             updateDisplay();
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                if (window.pauseWorkoutMusic) window.pauseWorkoutMusic();
                 btn.innerText = "Старт";
                 isRunning = false;
                 tg.showAlert("Время вышло!");
@@ -79,7 +75,6 @@ function toggleTimer() {
 
 function resetTimer() {
     clearInterval(timerInterval);
-    if (window.pauseWorkoutMusic) window.pauseWorkoutMusic();
     isRunning = false;
     timeLeft = 45;
     updateDisplay();
@@ -94,8 +89,8 @@ function completeSet() {
 }
 
 function finishWorkout() {
-    if (window.pauseWorkoutMusic) window.pauseWorkoutMusic();
-    if (window.playWinSound) window.playWinSound();
+    let audioWin = new Audio("12. Scroll Win 02.mp3");
+    audioWin.play().catch(e => console.log("Ошибка звука победы:", e));
 
     document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
 
@@ -112,8 +107,6 @@ function finishWorkout() {
 }
 
 function goBackToMain() {
-    if (window.pauseWorkoutMusic) window.pauseWorkoutMusic();
-    if (window.playBgMusic) window.playBgMusic();
     setTimeout(() => { window.location.href = 'index.html'; }, 100);
 }
 </script>
