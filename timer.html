@@ -42,7 +42,6 @@
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
-// Музыка в таймере
 const playlist = [
     '01. Shadow Fight Song.mp3', '02- The Training Room.mp3', '03. TECHNO-SYNDROME 12\' MI...',
     '04 - The Blade Dance.mp3', '05 - The Vengeance.mp3', '06 - The Forest of Death.mp3',
@@ -52,24 +51,42 @@ const playlist = [
     '18 - The Flower Battlefield.mp3', '22 - Bridge to the Other Side.mp3',
     '25 - Burning Town.mp3', '27 - The Hive.mp3', '29 - The Factory.mp3', '30 - The Flying Rocks.mp3'
 ];
-let audioWorkout = new Audio();
-let currentTrackIndex = Math.floor(Math.random() * playlist.length);
+let currentTrackIndex = 0;
+let currentTime = 0;
+let isMusicPlaying = false;
+
+const bgMusic = new Audio();
+bgMusic.volume = 0.5;
+
+// Слушаем сообщения от главной
+try {
+    const musicChannel = new BroadcastChannel('music_sync');
+    musicChannel.onmessage = (event) => {
+        const data = event.data;
+        if (data.playing) {
+            currentTrackIndex = data.track;
+            currentTime = data.time;
+            isMusicPlaying = true;
+            bgMusic.src = playlist[currentTrackIndex];
+            bgMusic.currentTime = currentTime;
+            bgMusic.play().catch(e => console.log("Ждем клика"));
+        }
+    };
+} catch(e) {
+    console.log("BroadcastChannel не поддерживается");
+}
+
+// Если музыка не заиграла, запускаем при клике
+document.addEventListener('click', () => {
+    if (isMusicPlaying && bgMusic.paused) {
+        bgMusic.play().catch(e => console.log(e));
+    }
+}, { once: true });
 
 let isRunning = false;
 let timeLeft = 45;
 let timerInterval;
 let sessionCalories = 0;
-
-function playMusic() {
-    audioWorkout.src = playlist[currentTrackIndex];
-    audioWorkout.load();
-    audioWorkout.play().catch(e => console.log("Ошибка музыки:", e));
-}
-
-function stopMusic() {
-    audioWorkout.pause();
-    audioWorkout.currentTime = 0;
-}
 
 function updateDisplay() {
     document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`;
@@ -79,13 +96,13 @@ function toggleTimer() {
     const btn = document.getElementById('timer-btn');
     if (isRunning) {
         clearInterval(timerInterval);
-        stopMusic();
+        bgMusic.pause();
         btn.innerText = "Старт";
         isRunning = false;
     } else {
-        // Переключаем трек при старте
         currentTrackIndex = Math.floor(Math.random() * playlist.length);
-        playMusic();
+        bgMusic.src = playlist[currentTrackIndex];
+        bgMusic.play().catch(e => console.log(e));
         btn.innerText = "Пауза";
         isRunning = true;
         timerInterval = setInterval(() => {
@@ -93,7 +110,7 @@ function toggleTimer() {
             updateDisplay();
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                stopMusic();
+                bgMusic.pause();
                 btn.innerText = "Старт";
                 isRunning = false;
                 tg.showAlert("Время вышло!");
@@ -104,7 +121,7 @@ function toggleTimer() {
 
 function resetTimer() {
     clearInterval(timerInterval);
-    stopMusic();
+    bgMusic.pause();
     isRunning = false;
     timeLeft = 45;
     updateDisplay();
@@ -119,10 +136,9 @@ function completeSet() {
 }
 
 function finishWorkout() {
-    stopMusic();
-    
+    bgMusic.pause();
     const winAudio = new Audio("12. Scroll Win 02.mp3");
-    winAudio.play().catch(e => console.log("Ошибка звука победы:", e));
+    winAudio.play().catch(e => console.log(e));
 
     document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
 
@@ -139,7 +155,6 @@ function finishWorkout() {
 }
 
 function goBackToMain() {
-    stopMusic();
     setTimeout(() => { window.location.href = 'index.html'; }, 100);
 }
 </script>
