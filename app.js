@@ -392,14 +392,14 @@ async function logout() {
     }
 }
 
-// --- ТЕСТ ТРЯСКИ (БЕЗ ТАЙМЕРА, С КНОПКОЙ СТОП) ---
+// --- ТЕСТ ТРЯСКИ С ОТДЕЛЬНОЙ КНОПКОЙ СТОП ---
 let isShakeTesting = false;
 let maxShakeValue = 0;
 
-async function testShake() {
-    if (isShakeTesting) return; // Уже идет тест
+async function startShakeTest() {
+    if (isShakeTesting) return;
 
-    tg.showAlert("Сейчас появится запрос на доступ. Нажми 'Разрешить', а потом тряси телефон.");
+    tg.showAlert("Сейчас появится запрос на доступ. Нажми 'Разрешить'.");
     
     if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
         try {
@@ -417,13 +417,10 @@ async function testShake() {
     isShakeTesting = true;
     maxShakeValue = 0;
     
-    // Меняем текст на кнопке
-    const btn = event.target;
-    const originalText = btn.innerText;
-    btn.innerText = "🛑 СТОП (нажми, когда потрясешь)";
-    btn.style.backgroundColor = "#ff3b30";
+    document.getElementById('test-shake-btn').style.display = 'none';
+    document.getElementById('stop-shake-btn').style.display = 'block';
 
-    window.addEventListener('devicemotion', function handler(event) {
+    window.addEventListener('devicemotion', function(event) {
         if (!isShakeTesting) return;
         const acc = event.accelerationIncludingGravity;
         if (acc) {
@@ -432,13 +429,11 @@ async function testShake() {
             if (shakeValue > maxShakeValue) maxShakeValue = shakeValue;
         }
     });
+}
 
-    // Ждем нажатия СТОП (второй раз)
-    btn.onclick = function() {
-        isShakeTesting = false;
-        btn.innerText = originalText;
-        btn.style.backgroundColor = "#007aff";
-        btn.onclick = testShake; // Возвращаем обычную функцию
-        tg.showAlert("Максимальная тряска: " + maxShakeValue + "\n\nЕсли число больше 5 — датчики работают!");
-    };
+function stopShakeTest() {
+    isShakeTesting = false;
+    document.getElementById('test-shake-btn').style.display = 'block';
+    document.getElementById('stop-shake-btn').style.display = 'none';
+    tg.showAlert("Максимальная тряска: " + maxShakeValue);
 }
