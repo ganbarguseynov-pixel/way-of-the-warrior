@@ -9,13 +9,16 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+<iframe src="music.html" style="display:none;" id="music-frame"></iframe>
+
 <div class="inner-screen">
 <button class="back-btn" onclick="window.location.href='index.html'">← Назад в приложение</button>
 <h1 style="text-align: center;">🏆 Мировой рейтинг</h1>
 <p style="text-align: center; color: var(--hint-color); margin-bottom: 20px;">Топ атлетов в реальном времени</p>
 
 <div id="leaderboard-list">
-    <p style="text-align: center;">Загрузка...</p>
+<p style="text-align: center;">Загрузка...</p>
 </div>
 </div>
 
@@ -29,45 +32,45 @@ tg.ready(); tg.expand();
 const myName = localStorage.getItem('userName') || "Вы";
 
 function renderList(data) {
-    const listDiv = document.getElementById('leaderboard-list');
-    
-    if (!data || data.length === 0) {
-        listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93;">Пока нет игроков. Стань первым!</p>';
-        return;
-    }
+const listDiv = document.getElementById('leaderboard-list');
 
-    data.sort((a, b) => (b.xp || 0) - (a.xp || 0));
+if (!data || data.length === 0) {
+listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93;">Пока нет игроков. Стань первым!</p>';
+return;
+}
 
-    let html = "";
-    for (let i = 0; i < data.length; i++) {
-        let u = data[i];
-        let displayName = u.name || "Атлет";
-        let isMe = (displayName === myName) ? 'my-row' : '';
-        
-        let medal = (i === 0) ? "🥇" : (i === 1) ? "🥈" : (i === 2) ? "🥉" : (i + 1);
+data.sort((a, b) => (b.xp || 0) - (a.xp || 0));
 
-        html += '<div class="leaderboard-item ' + isMe + '">';
-        html += '<div class="rank" style="font-size: 24px;">' + medal + '</div>';
-        html += '<div class="user-info" style="margin-left: 15px;">';
-        html += '<p style="margin:0; font-weight:bold; font-size:16px;">' + displayName + '</p>';
-        html += '<p style="margin:0; font-size:13px; color:#8e8e93;">' + (u.xp || 0) + ' XP</p>';
-        html += '</div></div>';
-    }
-    listDiv.innerHTML = html;
+let html = "";
+for (let i = 0; i < data.length; i++) {
+let u = data[i];
+let displayName = u.name || "Атлет";
+let isMe = (displayName === myName) ? 'my-row' : '';
+
+let medal = (i === 0) ? "🥇" : (i === 1) ? "🥈" : (i === 2) ? "🥉" : (i + 1);
+
+html += '<div class="leaderboard-item ' + isMe + '">';
+html += '<div class="rank" style="font-size: 24px;">' + medal + '</div>';
+html += '<div class="user-info" style="margin-left: 15px;">';
+html += '<p style="margin:0; font-weight:bold; font-size:16px;">' + displayName + '</p>';
+html += '<p style="margin:0; font-size:13px; color:#8e8e93;">' + (u.xp || 0) + ' XP</p>';
+html += '</div></div>';
+}
+listDiv.innerHTML = html;
 }
 
 async function loadLeaderboard() {
-    const { data, error } = await supabaseClient.from('user_links').select('name, xp').order('xp', { ascending: false }).limit(50);
-    if (!error) renderList(data);
+const { data, error } = await supabaseClient.from('user_links').select('name, xp').order('xp', { ascending: false }).limit(50);
+if (!error) renderList(data);
 }
 
 loadLeaderboard();
 
 supabaseClient.channel('public:user_links')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'user_links' }, payload => {
-    loadLeaderboard();
-  })
-  .subscribe();
+.on('postgres_changes', { event: '*', schema: 'public', table: 'user_links' }, payload => {
+loadLeaderboard();
+})
+.subscribe();
 </script>
 </body>
 </html>
