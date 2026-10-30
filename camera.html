@@ -1,199 +1,198 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Камера</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Камера</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="inner-screen">
-        <button class="back-btn" onclick="window.location.href='index.html'">← Назад в приложение</button>
-        <h1 style="text-align: center;">Анализ еды</h1>
-        
-        <!-- ВКЛАДКИ (Поиск и Фото) -->
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('search')">🔍 Поиск</button>
-            <button class="tab-btn" onclick="switchTab('photo')">📷 Фото</button>
-        </div>
 
-        <!-- ВКЛАДКА ПОИСКА -->
-        <div id="tab-search" class="tab-content active">
-            <div class="form-group">
-                <input type="text" id="food-search-input" placeholder="Введите название (например, йогурт)">
-            </div>
-            <button class="btn" onclick="searchFood()">Найти</button>
-            <div id="search-result" style="margin-top: 20px;"></div>
-        </div>
+<iframe src="music.html" style="display:none;" id="music-frame"></iframe>
 
-        <!-- ВКЛАДКА ФОТО -->
-        <div id="tab-photo" class="tab-content">
-            <div id="photo-buttons">
-                <button class="btn" onclick="startCamera()">📷 Сделать фото</button>
-                <button class="btn" style="background-color: #2c2c2e; color: white;" onclick="document.getElementById('gallery-input').click()">🖼️ Выбрать из галереи</button>
-            </div>
+<div class="inner-screen">
+<button class="back-btn" onclick="window.location.href='index.html'">← Назад в приложение</button>
+<h1 style="text-align: center;">Анализ еды</h1>
 
-            <input type="file" id="gallery-input" accept="image/*" style="display: none;" onchange="handleImage(event)">
+<div class="tabs">
+<button class="tab-btn active" onclick="switchTab('search')">🔍 Поиск</button>
+<button class="tab-btn" onclick="switchTab('photo')">📷 Фото</button>
+</div>
 
-            <div id="camera-container" style="display: none;">
-                <button id="switch-camera-btn" onclick="switchCamera()">🔄</button>
-                <button id="close-camera-btn" onclick="resetCameraScreen()">✖</button>
-                <video id="camera-video" autoplay playsinline></video>
-                <div id="camera-controls">
-                    <button id="capture-btn" onclick="takePhoto()"></button>
-                </div>
-            </div>
+<div id="tab-search" class="tab-content active">
+<div class="form-group">
+<input type="text" id="food-search-input" placeholder="Введите название (например, йогурт)">
+</div>
+<button class="btn" onclick="searchFood()">Найти</button>
+<div id="search-result" style="margin-top: 20px;"></div>
+</div>
 
-            <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
-            
-            <button class="btn" id="remove-photo-btn" style="display: none; background-color: #ff3b30; color: white; margin-bottom: 10px;" onclick="resetCameraScreen()">❌ Удалить фото</button>
-            
-            <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px; font-size: 18px;">🤖 ИИ анализирует фото...</div>
-            
-            <div id="food-result" style="display: none; background: #1c1c1e; padding: 20px; border-radius: 16px; margin-top: 20px;">
-                <h2 id="food-name" style="margin-top: 0; color: var(--accent-color);">Название</h2>
-                <div class="nutrition-row"><span>Калории:</span> <b id="food-calories">0 ккал</b></div>
-                <div class="nutrition-row"><span>Белки:</span> <b id="food-protein">0 г</b></div>
-                <div class="nutrition-row"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
-                <div class="nutrition-row"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
-                <button class="btn" style="background-color: #34c759; color: white; margin-top: 15px;" onclick="saveXPAndGoBack()">Добавить (+20 XP)</button>
-                <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 10px;" onclick="resetCameraScreen()">Отмена</button>
-            </div>
-        </div>
-    </div>
+<div id="tab-photo" class="tab-content">
+<div id="photo-buttons">
+<button class="btn" onclick="startCamera()">📷 Сделать фото</button>
+<button class="btn" style="background-color: #2c2c2e; color: white;" onclick="document.getElementById('gallery-input').click()">🖼️ Выбрать из галереи</button>
+</div>
 
-    <script>
-        const AI_SERVER_URL = 'https://sport-app-bqlu.onrender.com';
-        const tg = window.Telegram.WebApp;
-        tg.ready(); tg.expand();
+<input type="file" id="gallery-input" accept="image/*" style="display: none;" onchange="handleImage(event)">
 
-        // Логика вкладок
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabName}`).classList.add('active');
-            event.target.classList.add('active');
-            if (tabName === 'photo') resetCameraScreen();
+<div id="camera-container" style="display: none;">
+<button id="switch-camera-btn" onclick="switchCamera()">🔄</button>
+<button id="close-camera-btn" onclick="resetCameraScreen()">✖</button>
+<video id="camera-video" autoplay playsinline></video>
+<div id="camera-controls">
+<button id="capture-btn" onclick="takePhoto()"></button>
+</div>
+</div>
+
+<img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
+
+<button class="btn" id="remove-photo-btn" style="display: none; background-color: #ff3b30; color: white; margin-bottom: 10px;" onclick="resetCameraScreen()">❌ Удалить фото</button>
+
+<div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px; font-size: 18px;">🤖 ИИ анализирует фото...</div>
+
+<div id="food-result" style="display: none; background: #1c1c1e; padding: 20px; border-radius: 16px; margin-top: 20px;">
+<h2 id="food-name" style="margin-top: 0; color: var(--accent-color);">Название</h2>
+<div class="nutrition-row"><span>Калории:</span> <b id="food-calories">0 ккал</b></div>
+<div class="nutrition-row"><span>Белки:</span> <b id="food-protein">0 г</b></div>
+<div class="nutrition-row"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
+<div class="nutrition-row"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
+<button class="btn" style="background-color: #34c759; color: white; margin-top: 15px;" onclick="saveXPAndGoBack()">Добавить (+20 XP)</button>
+<button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 10px;" onclick="resetCameraScreen()">Отмена</button>
+</div>
+</div>
+</div>
+
+<script>
+const AI_SERVER_URL = 'https://sport-app-bqlu.onrender.com';
+const tg = window.Telegram.WebApp;
+tg.ready(); tg.expand();
+
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+    event.target.classList.add('active');
+    if (tabName === 'photo') resetCameraScreen();
+}
+
+async function searchFood() {
+    const query = document.getElementById('food-search-input').value;
+    if (!query) return;
+    const resultDiv = document.getElementById('search-result');
+    resultDiv.innerHTML = '<p style="text-align:center;">Поиск...</p>';
+    try {
+        const response = await fetch(`${AI_SERVER_URL}/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        if (data.products && data.products.length > 0) {
+            const p = data.products[0];
+            resultDiv.innerHTML = `<div style="background: #1c1c1e; padding: 20px; border-radius: 16px; text-align: center;">
+                <h3 style="color: var(--accent-color);">${p.product_name}</h3>
+                <div class="nutrition-row"><span>Калории:</span> <b>${p.nutrients.proteins} г</b></div>
+                <div class="nutrition-row"><span>Жиры:</span> <b>${p.nutrients.carbohydrates} г</b></div>
+                <button class="btn" style="background: #34c759; color: white;" onclick="saveXPAndGoBack()">Добавить (+20 XP)</button></div>`;
+        } else {
+            resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ничего не найдено</p>';
         }
+    } catch (e) {
+        resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ошибка связи</p>';
+    }
+}
 
-        // Логика поиска
-        async function searchFood() {
-            const query = document.getElementById('food-search-input').value;
-            if (!query) return;
-            const resultDiv = document.getElementById('search-result');
-            resultDiv.innerHTML = '<p style="text-align:center;">Поиск...</p>';
-            try {
-                const response = await fetch(`${AI_SERVER_URL}/search?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-                if (data.products && data.products.length > 0) {
-                    const p = data.products[0];
-                    resultDiv.innerHTML = `<div style="background: #1c1c1e; padding: 20px; border-radius: 16px; text-align: center;">
-                        <h3 style="color: var(--accent-color);">${p.product_name}</h3>
-                        <div class="nutrition-row"><span>Калории:</span> <b>${p.nutrients.calories} ккал</b></div>
-                        <div class="nutrition-row"><span>Белки:</span> <b>${p.nutrients.proteins} г</b></div>
-                        <div class="nutrition-row"><span>Жиры:</span> <b>${p.nutrients.fat} г</b></div>
-                        <div class="nutrition-row"><span>Углеводы:</span> <b>${p.nutrients.carbohydrates} г</b></div>
-                        <button class="btn" style="background: #34c759; color: white;" onclick="saveXPAndGoBack()">Добавить (+20 XP)</button></div>`;
-                } else { resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ничего не найдено</p>'; }
-            } catch (e) { resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ошибка связи</p>'; }
+let videoStream = null;
+let currentFacingMode = "environment";
+
+async function startCamera() {
+    try {
+        document.getElementById('photo-buttons').style.display = 'none';
+        document.getElementById('camera-container').style.display = 'flex';
+        videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
+        document.getElementById('camera-video').srcObject = videoStream;
+    } catch (err) {
+        tg.showAlert("Ошибка камеры. Разрешите доступ.");
+        resetCameraScreen();
+    }
+}
+
+async function switchCamera() {
+    currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+    stopCamera();
+    await startCamera();
+}
+
+function takePhoto() {
+    if (!videoStream) return;
+    const video = document.getElementById('camera-video');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    stopCamera();
+    canvas.toBlob(async function(blob) {
+        const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+        document.getElementById('photo-preview').src = URL.createObjectURL(blob);
+        document.getElementById('photo-preview').style.display = 'block';
+        document.getElementById('remove-photo-btn').style.display = 'block';
+        await sendPhotoToServer(file);
+    }, 'image/jpeg', 0.8);
+}
+
+function stopCamera() {
+    if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); videoStream = null; }
+    document.getElementById('camera-container').style.display = 'none';
+}
+
+function resetCameraScreen() {
+    stopCamera();
+    document.getElementById('photo-preview').style.display = 'none';
+    document.getElementById('food-result').style.display = 'none';
+    document.getElementById('photo-buttons').style.display = 'block';
+    document.getElementById('remove-photo-btn').style.display = 'none';
+    document.getElementById('loading-spinner').style.display = 'none';
+    document.getElementById('gallery-input').value = "";
+}
+
+async function handleImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    document.getElementById('photo-buttons').style.display = 'none';
+    document.getElementById('photo-preview').src = URL.createObjectURL(file);
+    document.getElementById('photo-preview').style.display = 'block';
+    document.getElementById('remove-photo-btn').style.display = 'block';
+    await sendPhotoToServer(file);
+}
+
+async function sendPhotoToServer(file) {
+    document.getElementById('loading-spinner').style.display = 'block';
+    document.getElementById('food-result').style.display = 'none';
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+        const response = await fetch(`${AI_SERVER_URL}/analyze`, { method: 'POST', body: formData });
+        const data = await response.json();
+        document.getElementById('loading-spinner').style.display = 'none';
+        if (data.food !== "Не удалось распознать") {
+            document.getElementById('food-result').style.display = 'block';
+            document.getElementById('food-name').innerText = data.food;
+            document.getElementById('food-calories').innerText = data.calories + " ккал";
+            document.getElementById('food-protein').innerText = data.protein + " г";
+            document.getElementById('food-fat').innerText = data.fat + " г";
+            document.getElementById('food-carbs').innerText = data.carbs + " г";
+        } else {
+            tg.showAlert("ИИ не смог распознать еду.");
+            resetCameraScreen();
         }
+    } catch (error) {
+        document.getElementById('loading-spinner').style.display = 'none';
+        tg.showAlert("Сервер просыпается. Подождите 50 сек.");
+        resetCameraScreen();
+    }
+}
 
-        // Логика камеры
-        let videoStream = null;
-        let currentFacingMode = "environment"; 
-
-        async function startCamera() {
-            try {
-                document.getElementById('photo-buttons').style.display = 'none';
-                document.getElementById('camera-container').style.display = 'flex';
-                videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
-                document.getElementById('camera-video').srcObject = videoStream;
-            } catch (err) {
-                tg.showAlert("Ошибка камеры. Разрешите доступ.");
-                resetCameraScreen();
-            }
-        }
-
-        async function switchCamera() {
-            currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
-            stopCamera();
-            await startCamera();
-        }
-
-        function takePhoto() {
-            if (!videoStream) return;
-            const video = document.getElementById('camera-video');
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            stopCamera();
-            canvas.toBlob(async function(blob) {
-                const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-                document.getElementById('photo-preview').src = URL.createObjectURL(blob);
-                document.getElementById('photo-preview').style.display = 'block';
-                document.getElementById('remove-photo-btn').style.display = 'block';
-                await sendPhotoToServer(file);
-            }, 'image/jpeg', 0.8);
-        }
-
-        function stopCamera() {
-            if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); videoStream = null; }
-            document.getElementById('camera-container').style.display = 'none';
-        }
-
-        function resetCameraScreen() {
-            stopCamera();
-            document.getElementById('photo-preview').style.display = 'none';
-            document.getElementById('food-result').style.display = 'none';
-            document.getElementById('photo-buttons').style.display = 'block';
-            document.getElementById('remove-photo-btn').style.display = 'none';
-            document.getElementById('loading-spinner').style.display = 'none';
-            document.getElementById('gallery-input').value = "";
-        }
-
-        async function handleImage(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            document.getElementById('photo-buttons').style.display = 'none';
-            document.getElementById('photo-preview').src = URL.createObjectURL(file);
-            document.getElementById('photo-preview').style.display = 'block';
-            document.getElementById('remove-photo-btn').style.display = 'block';
-            await sendPhotoToServer(file);
-        }
-
-        async function sendPhotoToServer(file) {
-            document.getElementById('loading-spinner').style.display = 'block';
-            document.getElementById('food-result').style.display = 'none';
-            const formData = new FormData();
-            formData.append('image', file);
-            try {
-                const response = await fetch(`${AI_SERVER_URL}/analyze`, { method: 'POST', body: formData });
-                const data = await response.json();
-                document.getElementById('loading-spinner').style.display = 'none';
-                if (data.food !== "Не удалось распознать") {
-                    document.getElementById('food-result').style.display = 'block';
-                    document.getElementById('food-name').innerText = data.food;
-                    document.getElementById('food-calories').innerText = data.calories + " ккал";
-                    document.getElementById('food-protein').innerText = data.protein + " г";
-                    document.getElementById('food-fat').innerText = data.fat + " г";
-                    document.getElementById('food-carbs').innerText = data.carbs + " г";
-                } else {
-                    tg.showAlert("ИИ не смог распознать еду.");
-                    resetCameraScreen();
-                }
-            } catch (error) {
-                document.getElementById('loading-spinner').style.display = 'none';
-                tg.showAlert("Сервер просыпается. Подождите 50 сек.");
-                resetCameraScreen();
-            }
-        }
-
-        function saveXPAndGoBack() {
-            localStorage.setItem('pendingXP', '20');
-            window.location.href = 'index.html';
-        }
-    </script>
+function saveXPAndGoBack() {
+    localStorage.setItem('pendingXP', '20');
+    window.location.href = 'index.html';
+}
+</script>
 </body>
 </html>
