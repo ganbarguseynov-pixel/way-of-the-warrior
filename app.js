@@ -392,9 +392,14 @@ async function logout() {
     }
 }
 
-// --- ТЕСТ ТРЯСКИ С РАЗРЕШЕНИЕМ ---
+// --- ТЕСТ ТРЯСКИ (БЕЗ ТАЙМЕРА, С КНОПКОЙ СТОП) ---
+let isShakeTesting = false;
+let maxShakeValue = 0;
+
 async function testShake() {
-    tg.showAlert("Сейчас появится запрос на доступ к датчикам. Нажми 'Разрешить'.");
+    if (isShakeTesting) return; // Уже идет тест
+
+    tg.showAlert("Сейчас появится запрос на доступ. Нажми 'Разрешить', а потом тряси телефон.");
     
     if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
         try {
@@ -404,24 +409,36 @@ async function testShake() {
                 return;
             }
         } catch (e) {
-            tg.showAlert("Ошибка запроса разрешения: " + e.message);
+            tg.showAlert("Ошибка запроса: " + e.message);
             return;
         }
     }
 
-    tg.showAlert("Отлично! Теперь тряси телефон 5 секунд.");
-    let maxShake = 0;
+    isShakeTesting = true;
+    maxShakeValue = 0;
+    
+    // Меняем текст на кнопке
+    const btn = event.target;
+    const originalText = btn.innerText;
+    btn.innerText = "🛑 СТОП (нажми, когда потрясешь)";
+    btn.style.backgroundColor = "#ff3b30";
 
-    window.addEventListener('devicemotion', function(event) {
+    window.addEventListener('devicemotion', function handler(event) {
+        if (!isShakeTesting) return;
         const acc = event.accelerationIncludingGravity;
         if (acc) {
             const force = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
             const shakeValue = Math.round(force);
-            if (shakeValue > maxShake) maxShake = shakeValue;
+            if (shakeValue > maxShakeValue) maxShakeValue = shakeValue;
         }
     });
 
-    setTimeout(() => {
-        tg.showAlert("Максимальная тряска: " + maxShake + "\n\nЕсли число больше 5 — датчики работают!");
-    }, 5000);
+    // Ждем нажатия СТОП (второй раз)
+    btn.onclick = function() {
+        isShakeTesting = false;
+        btn.innerText = originalText;
+        btn.style.backgroundColor = "#007aff";
+        btn.onclick = testShake; // Возвращаем обычную функцию
+        tg.showAlert("Максимальная тряска: " + maxShakeValue + "\n\nЕсли число больше 5 — датчики работают!");
+    };
 }
