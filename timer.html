@@ -42,6 +42,7 @@
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
+// Музыка в таймере
 const playlist = [
     '01. Shadow Fight Song.mp3', '02- The Training Room.mp3', '03. TECHNO-SYNDROME 12\' MI...',
     '04 - The Blade Dance.mp3', '05 - The Vengeance.mp3', '06 - The Forest of Death.mp3',
@@ -51,46 +52,24 @@ const playlist = [
     '18 - The Flower Battlefield.mp3', '22 - Bridge to the Other Side.mp3',
     '25 - Burning Town.mp3', '27 - The Hive.mp3', '29 - The Factory.mp3', '30 - The Flying Rocks.mp3'
 ];
-let currentTrackIndex = parseInt(localStorage.getItem('musicIndex') || 0);
-let currentTime = parseFloat(localStorage.getItem('musicTime') || 0);
-let isMusicPlaying = localStorage.getItem('musicPlaying') === 'true';
-
-const bgMusic = new Audio(playlist[currentTrackIndex]);
-bgMusic.volume = 0.5;
-bgMusic.currentTime = currentTime;
-
-// Пытаемся включить музыку сразу
-if (isMusicPlaying) {
-    bgMusic.play().catch(e => console.log("Ждем клика"));
-}
-
-// Включаем при клике, если не заиграла
-document.addEventListener('click', () => {
-    if (isMusicPlaying && bgMusic.paused) {
-        bgMusic.play().catch(e => console.log(e));
-    }
-}, { once: true });
-
-setInterval(() => {
-    if (!bgMusic.paused) {
-        localStorage.setItem('musicIndex', currentTrackIndex);
-        localStorage.setItem('musicTime', bgMusic.currentTime);
-        localStorage.setItem('musicPlaying', 'true');
-    }
-}, 500);
-
-bgMusic.addEventListener('ended', () => {
-    currentTrackIndex = Math.floor(Math.random() * playlist.length);
-    localStorage.setItem('musicIndex', currentTrackIndex);
-    localStorage.setItem('musicTime', 0);
-    bgMusic.src = playlist[currentTrackIndex];
-    bgMusic.play().catch(e => console.log(e));
-});
+let audioWorkout = new Audio();
+let currentTrackIndex = Math.floor(Math.random() * playlist.length);
 
 let isRunning = false;
 let timeLeft = 45;
 let timerInterval;
 let sessionCalories = 0;
+
+function playMusic() {
+    audioWorkout.src = playlist[currentTrackIndex];
+    audioWorkout.load();
+    audioWorkout.play().catch(e => console.log("Ошибка музыки:", e));
+}
+
+function stopMusic() {
+    audioWorkout.pause();
+    audioWorkout.currentTime = 0;
+}
 
 function updateDisplay() {
     document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`;
@@ -100,18 +79,13 @@ function toggleTimer() {
     const btn = document.getElementById('timer-btn');
     if (isRunning) {
         clearInterval(timerInterval);
-        bgMusic.pause();
-        localStorage.setItem('musicPlaying', 'false');
+        stopMusic();
         btn.innerText = "Старт";
         isRunning = false;
     } else {
+        // Переключаем трек при старте
         currentTrackIndex = Math.floor(Math.random() * playlist.length);
-        localStorage.setItem('musicIndex', currentTrackIndex);
-        localStorage.setItem('musicTime', 0);
-        bgMusic.src = playlist[currentTrackIndex];
-        bgMusic.play().catch(e => console.log(e));
-        localStorage.setItem('musicPlaying', 'true');
-
+        playMusic();
         btn.innerText = "Пауза";
         isRunning = true;
         timerInterval = setInterval(() => {
@@ -119,8 +93,7 @@ function toggleTimer() {
             updateDisplay();
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                bgMusic.pause();
-                localStorage.setItem('musicPlaying', 'false');
+                stopMusic();
                 btn.innerText = "Старт";
                 isRunning = false;
                 tg.showAlert("Время вышло!");
@@ -131,8 +104,7 @@ function toggleTimer() {
 
 function resetTimer() {
     clearInterval(timerInterval);
-    bgMusic.pause();
-    localStorage.setItem('musicPlaying', 'false');
+    stopMusic();
     isRunning = false;
     timeLeft = 45;
     updateDisplay();
@@ -147,19 +119,10 @@ function completeSet() {
 }
 
 function finishWorkout() {
-    bgMusic.pause();
-    localStorage.setItem('musicPlaying', 'false');
+    stopMusic();
     
     const winAudio = new Audio("12. Scroll Win 02.mp3");
-    winAudio.play().catch(e => console.log(e));
-    winAudio.onended = () => {
-        currentTrackIndex = Math.floor(Math.random() * playlist.length);
-        localStorage.setItem('musicIndex', currentTrackIndex);
-        localStorage.setItem('musicTime', 0);
-        bgMusic.src = playlist[currentTrackIndex];
-        bgMusic.play().catch(e => console.log(e));
-        localStorage.setItem('musicPlaying', 'true');
-    };
+    winAudio.play().catch(e => console.log("Ошибка звука победы:", e));
 
     document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
 
@@ -176,6 +139,7 @@ function finishWorkout() {
 }
 
 function goBackToMain() {
+    stopMusic();
     setTimeout(() => { window.location.href = 'index.html'; }, 100);
 }
 </script>
