@@ -4,6 +4,7 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand(); 
 
+// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
 function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
     const el = document.getElementById(screenId);
@@ -18,6 +19,7 @@ function closeScreen(screenId) {
     }
 } 
 
+// --- ЗАГРУЗКА ПРИ СТАРТЕ ---
 window.addEventListener('load', async () => {
     const cachedProfile = localStorage.getItem('cachedProfile');
     if (cachedProfile) {
@@ -32,6 +34,7 @@ window.addEventListener('load', async () => {
     }
 }); 
 
+// --- ВХОД ЧЕРЕЗ TELEGRAM ---
 async function loginWithTelegram() {
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         localStorage.setItem('loginType', 'telegram');
@@ -46,7 +49,14 @@ async function loginWithTelegram() {
             localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
             localStorage.setItem('cachedXP', data.xp || 0);
             localStorage.setItem('cachedBurned', data.burned || 0);
-            if (data.email) localStorage.setItem('linkedEmail', data.email);
+            // ВОТ ИСПРАВЛЕНИЕ: Подтягиваем почту из базы, если она там есть
+            if (data.email) {
+                localStorage.setItem('linkedEmail', data.email);
+                localStorage.setItem('currentEmail', data.email);
+            } else {
+                localStorage.removeItem('linkedEmail');
+                localStorage.removeItem('currentEmail');
+            }
             if (data.name) localStorage.setItem('userName', data.name);
         } else {
             const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
@@ -61,6 +71,7 @@ async function loginWithTelegram() {
     }
 } 
 
+// --- ВХОД ЧЕРЕЗ EMAIL ---
 function showEmailForm() { openScreen('email-screen'); } 
 
 async function handleEmailAuth() {
@@ -94,7 +105,12 @@ async function handleEmailAuth() {
                 localStorage.setItem('cachedProfile', JSON.stringify(linkData.profile));
                 localStorage.setItem('cachedXP', linkData.xp || 0);
                 localStorage.setItem('cachedBurned', linkData.burned || 0);
-                if (linkData.telegram_id) localStorage.setItem('tgId', linkData.telegram_id);
+                // ВОТ ИСПРАВЛЕНИЕ: Подтягиваем Телеграм из базы, если он там есть
+                if (linkData.telegram_id) {
+                    localStorage.setItem('tgId', linkData.telegram_id);
+                } else {
+                    localStorage.removeItem('tgId');
+                }
                 if (linkData.name) localStorage.setItem('userName', linkData.name);
             } else {
                 const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
@@ -113,6 +129,7 @@ async function handleEmailAuth() {
     }
 } 
 
+// --- СИНХРОНИЗАЦИЯ ---
 async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
     try {
         let currentTgId = tgId || localStorage.getItem('tgId');
@@ -166,6 +183,7 @@ async function syncProgressFromCloud(email, tgId) {
     }
 } 
 
+// --- ОТРИСОВКА ПРОФИЛЯ ---
 const levelsData = {
     male: [{ xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" }, { xp: 100, title: "Берсерк", video: "VID_20261028_173215_440.mp4" }],
     female: [{ xp: 0, title: "Новичок", video: "VID_20261028_175618_746.mp4" }, { xp: 100, title: "Фурия", video: "VID_20261028_175631_701.mp4" }]
@@ -225,6 +243,7 @@ function updateCharacterUI() {
     if (document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = percent + "%";
 } 
 
+// --- НАСТРОЙКИ С РЕДАКТИРОВАНИЕМ ---
 function openProfileSettings() {
     const loginType = localStorage.getItem('loginType') || 'telegram'; 
 
@@ -336,6 +355,7 @@ async function linkTelegramToEmail() {
     }
 } 
 
+// --- НОВЫЕ ФУНКЦИИ ДЛЯ ОТВЯЗКИ ---
 async function unlinkEmail() {
     if (!confirm("Отвязать Email? Прогресс останется в Telegram.")) return;
     const tgId = localStorage.getItem('tgId');
