@@ -392,15 +392,14 @@ async function logout() {
     }
 }
 
-// --- ТЕСТ ТРЯСКИ С ОТДЕЛЬНОЙ КНОПКОЙ СТОП ---
+// --- ТЕСТ ТРЯСКИ С КНОПКОЙ СТОП (БЕЗ ТЕКСТА ПРО РАЗРЕШЕНИЕ) ---
 let isShakeTesting = false;
 let maxShakeValue = 0;
 
 async function startShakeTest() {
     if (isShakeTesting) return;
 
-    tg.showAlert("Сейчас появится запрос на доступ. Нажми 'Разрешить'.");
-    
+    // Запрашиваем разрешение только если оно реально требуется (на iPhone)
     if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
         try {
             const permission = await DeviceMotionEvent.requestPermission();
@@ -414,6 +413,7 @@ async function startShakeTest() {
         }
     }
 
+    // Сразу начинаем тест (без текста про "Разрешить")
     isShakeTesting = true;
     maxShakeValue = 0;
     
@@ -429,6 +429,8 @@ async function startShakeTest() {
             if (shakeValue > maxShakeValue) maxShakeValue = shakeValue;
         }
     });
+
+    tg.showAlert("Тряси телефон! Когда закончишь — нажми СТОП.");
 }
 
 function stopShakeTest() {
