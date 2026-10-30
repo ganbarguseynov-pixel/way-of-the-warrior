@@ -392,9 +392,24 @@ async function logout() {
     }
 }
 
-// --- ТЕСТ ТРЯСКИ ---
-function testShake() {
-    tg.showAlert("Начни трясти телефон! Через 5 секунд покажу результат.");
+// --- ТЕСТ ТРЯСКИ С РАЗРЕШЕНИЕМ ---
+async function testShake() {
+    tg.showAlert("Сейчас появится запрос на доступ к датчикам. Нажми 'Разрешить'.");
+    
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        try {
+            const permission = await DeviceMotionEvent.requestPermission();
+            if (permission !== 'granted') {
+                tg.showAlert("Ты не дал доступ к датчикам. Тест невозможен.");
+                return;
+            }
+        } catch (e) {
+            tg.showAlert("Ошибка запроса разрешения: " + e.message);
+            return;
+        }
+    }
+
+    tg.showAlert("Отлично! Теперь тряси телефон 5 секунд.");
     let maxShake = 0;
 
     window.addEventListener('devicemotion', function(event) {
