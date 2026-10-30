@@ -391,3 +391,22 @@ async function logout() {
         location.reload();
     }
 }
+
+// --- ТЕСТ ТРЯСКИ ---
+function testShake() {
+    tg.showAlert("Начни трясти телефон! Через 5 секунд покажу результат.");
+    let maxShake = 0;
+
+    window.addEventListener('devicemotion', function(event) {
+        const acc = event.accelerationIncludingGravity;
+        if (acc) {
+            const force = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
+            const shakeValue = Math.round(force);
+            if (shakeValue > maxShake) maxShake = shakeValue;
+        }
+    });
+
+    setTimeout(() => {
+        tg.showAlert("Максимальная тряска: " + maxShake + "\n\nЕсли число больше 5 — датчики работают!");
+    }, 5000);
+}
