@@ -1,120 +1,122 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Таймер</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Таймер</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="timer-view" class="inner-screen">
-        <button class="back-btn" onclick="goBackToMain()">← Назад в приложение</button>
-        <h1 style="text-align: center;">Таймер</h1>
-        <p style="text-align: center; color: var(--hint-color);">Отдых между подходами</p>
 
-        <div class="timer-display" id="timer-display">00:45</div>
+<iframe src="music.html" style="display:none;" id="music-frame"></iframe>
 
-        <div style="display: flex; gap: 15px;">
-            <button class="btn" onclick="toggleTimer()" id="timer-btn">Старт</button>
-            <button class="btn" style="background-color: #2c2c2e; color: white;" onclick="resetTimer()">Сброс</button>
-        </div>
+<div id="timer-view" class="inner-screen">
+<button class="back-btn" onclick="goBackToMain()">← Назад в приложение</button>
+<h1 style="text-align: center;">Таймер</h1>
+<p style="text-align: center; color: var(--hint-color);">Отдых между подходами</p>
 
-        <button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="completeSet()">Подход выполнен (+15 XP)</button>
-        <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: auto;" onclick="finishWorkout()">Завершить 🏁</button>
-    </div>
+<div class="timer-display" id="timer-display">00:45</div>
 
-    <div id="finish-view" class="inner-screen" style="display: none; text-align: center; justify-content: center;">
-        <h1 style="font-size: 80px; margin-bottom: 10px;">🏆</h1>
-        <h2>Тренировка завершена!</h2>
-        <p id="finish-stats" style="color: #8e8e93; margin-bottom: 30px;">Ты сжег 0 ккал.</p>
+<div style="display: flex; gap: 15px;">
+<button class="btn" onclick="toggleTimer()" id="timer-btn">Старт</button>
+<button class="btn" style="background-color: #2c2c2e; color: white;" onclick="resetTimer()">Сброс</button>
+</div>
 
-        <div class="quote-box">
-            <p id="finish-quote" style="font-style: italic; font-size: 18px; margin-bottom: 10px;">"Цитата"</p>
-            <p id="finish-author" style="text-align: right; font-weight: bold; font-size: 14px; color: var(--hint-color);">— Автор</p>
-        </div>
+<button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="completeSet()">Подход выполнен (+15 XP)</button>
+<button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: auto;" onclick="finishWorkout()">Завершить 🏁</button>
+</div>
 
-        <button class="btn" onclick="goBackToMain()">Вернуться на главную</button>
-    </div>
+<div id="finish-view" class="inner-screen" style="display: none; text-align: center; justify-content: center;">
+<h1 style="font-size: 80px; margin-bottom: 10px;">🏆</h1>
+<h2>Тренировка завершена!</h2>
+<p id="finish-stats" style="color: #8e8e93; margin-bottom: 30px;">Ты сжег 0 ккал.</p>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready(); tg.expand();
+<div class="quote-box">
+<p id="finish-quote" style="font-style: italic; font-size: 18px; margin-bottom: 10px;">"Цитата"</p>
+<p id="finish-author" style="text-align: right; font-weight: bold; font-size: 14px; color: var(--hint-color);">— Автор</p>
+</div>
 
-        let isRunning = false;
-        let timeLeft = 45;
-        let timerInterval;
-        let sessionCalories = 0;
+<button class="btn" onclick="goBackToMain()">Вернуться на главную</button>
+</div>
 
-        function updateDisplay() {
-            document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`;
-        }
+<script>
+const tg = window.Telegram.WebApp;
+tg.ready(); tg.expand();
 
-        function toggleTimer() {
-            const btn = document.getElementById('timer-btn');
-            if (isRunning) {
+let isRunning = false;
+let timeLeft = 45;
+let timerInterval;
+let sessionCalories = 0;
+
+function updateDisplay() {
+    document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`;
+}
+
+function toggleTimer() {
+    const btn = document.getElementById('timer-btn');
+    if (isRunning) {
+        clearInterval(timerInterval);
+        btn.innerText = "Старт";
+        isRunning = false;
+    } else {
+        if (window.playWorkoutMusic) window.playWorkoutMusic();
+        btn.innerText = "Пауза";
+        isRunning = true;
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateDisplay();
+            if (timeLeft <= 0) {
                 clearInterval(timerInterval);
+                if (window.pauseWorkoutMusic) window.pauseWorkoutMusic();
                 btn.innerText = "Старт";
                 isRunning = false;
-            } else {
-                // Принудительно переключаем трек при старте
-                if (window.playWorkoutMusic) window.playWorkoutMusic();
-                btn.innerText = "Пауза";
-                isRunning = true;
-                timerInterval = setInterval(() => {
-                    timeLeft--;
-                    updateDisplay();
-                    if (timeLeft <= 0) {
-                        clearInterval(timerInterval);
-                        if (window.pauseWorkoutMusic) window.pauseWorkoutMusic();
-                        btn.innerText = "Старт";
-                        isRunning = false;
-                        tg.showAlert("Время вышло!");
-                    }
-                }, 1000);
+                tg.showAlert("Время вышло!");
             }
-        }
+        }, 1000);
+    }
+}
 
-        function resetTimer() {
-            clearInterval(timerInterval);
-            if (window.pauseWorkoutMusic) window.pauseWorkoutMusic();
-            isRunning = false;
-            timeLeft = 45;
-            updateDisplay();
-            document.getElementById('timer-btn').innerText = "Старт";
-        }
+function resetTimer() {
+    clearInterval(timerInterval);
+    if (window.pauseWorkoutMusic) window.pauseWorkoutMusic();
+    isRunning = false;
+    timeLeft = 45;
+    updateDisplay();
+    document.getElementById('timer-btn').innerText = "Старт";
+}
 
-        function completeSet() {
-            sessionCalories += 15;
-            let pending = localStorage.getItem('cachedXP') || 0;
-            localStorage.setItem('cachedXP', parseInt(pending) + 15);
-            tg.showAlert("+15 XP добавлено!");
-        }
+function completeSet() {
+    sessionCalories += 15;
+    let pending = localStorage.getItem('cachedXP') || 0;
+    localStorage.setItem('cachedXP', parseInt(pending) + 15);
+    tg.showAlert("+15 XP добавлено!");
+}
 
-        function finishWorkout() {
-            if (window.pauseWorkoutMusic) window.pauseWorkoutMusic();
-            if (window.playWinSound) window.playWinSound();
+function finishWorkout() {
+    if (window.pauseWorkoutMusic) window.pauseWorkoutMusic();
+    if (window.playWinSound) window.playWinSound();
 
-            document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
+    document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
 
-            let q = { text: "Ты не проиграл, пока не остановился.", author: "Майк Тайсон" };
-            if (typeof allQuotes !== 'undefined' && allQuotes.length > 0) {
-                q = allQuotes[Math.floor(Math.random() * allQuotes.length)];
-            }
+    let q = { text: "Ты не проиграл, пока не остановился.", author: "Майк Тайсон" };
+    if (typeof allQuotes !== 'undefined' && allQuotes.length > 0) {
+        q = allQuotes[Math.floor(Math.random() * allQuotes.length)];
+    }
 
-            document.getElementById('finish-quote').innerText = `«${q.text}»`;
-            document.getElementById('finish-author').innerText = `— ${q.author}`;
+    document.getElementById('finish-quote').innerText = `«${q.text}»`;
+    document.getElementById('finish-author').innerText = `— ${q.author}`;
 
-            document.getElementById('timer-view').style.display = 'none';
-            document.getElementById('finish-view').style.display = 'flex';
-        }
+    document.getElementById('timer-view').style.display = 'none';
+    document.getElementById('finish-view').style.display = 'flex';
+}
 
-        function goBackToMain() {
-            if (window.pauseWorkoutMusic) window.pauseWorkoutMusic();
-            if (window.playBgMusic) window.playBgMusic();
-            setTimeout(() => { window.location.href = 'index.html'; }, 100);
-        }
-    </script>
-    <script src="quotes.js"></script>
+function goBackToMain() {
+    if (window.pauseWorkoutMusic) window.pauseWorkoutMusic();
+    if (window.playBgMusic) window.playBgMusic();
+    setTimeout(() => { window.location.href = 'index.html'; }, 100);
+}
+</script>
+<script src="quotes.js"></script>
 </body>
 </html>
