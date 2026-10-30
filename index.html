@@ -3,356 +3,107 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Sport App</title>
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="style.css">
-<style>
-    /* Стили для скрытия экранов (чтобы не перезагружать страницу) */
-    .screen { display: none; }
-    .screen.active { display: flex; }
-</style>
 </head>
 <body class="male-theme">
 
-<!-- МУЗЫКА (играет всегда, пока приложение открыто) -->
-<audio id="bgMusic" loop></audio>
+<audio id="audio-bg" loop preload="auto"></audio>
+<audio id="audio-win" preload="auto"></audio>
 
-<!-- ГЛАВНЫЙ ЭКРАН (ВХОД) -->
 <div id="auth-screen" class="screen active auth-screen">
-    <div class="auth-container">
-        <div class="auth-content">
-            <div class="auth-title">Sport App</div>
-            <div class="inspiration-text">Стань лучшей версией себя.<br>Начни прямо сейчас.</div>
-            <div class="auth-buttons">
-                <button class="auth-btn tg-btn" onclick="loginWithTelegram()">✈️ Продолжить через Telegram</button>
-                <div class="auth-divider"><span>или</span></div>
-                <button class="auth-btn email-btn" onclick="showScreen('email-screen')">✉️ Войти по Email</button>
-            </div>
-        </div>
-    </div>
+<div class="auth-container">
+<div class="auth-content">
+<div class="auth-title">Sport App</div>
+<div class="inspiration-text">Стань лучшей версией себя.<br>Начни прямо сейчас.</div>
+<div class="auth-buttons">
+<button class="auth-btn tg-btn" onclick="loginWithTelegram()">✈️ Продолжить через Telegram</button>
+<div class="auth-divider"><span>или</span></div>
+<button class="auth-btn email-btn" onclick="showEmailForm()">✉️ Войти по Email</button>
+</div>
+</div>
+</div>
 </div>
 
-<!-- ЭКРАН EMAIL -->
 <div id="email-screen" class="screen">
-    <div class="inner-screen">
-        <button class="back-btn" onclick="showScreen('auth-screen')">← Назад</button>
-        <h1 style="text-align: center; margin-bottom: 30px;">Вход / Регистрация</h1>
-        <div class="form-group"><label>Email</label><input type="email" id="auth-email" placeholder="your@email.com"></div>
-        <div class="form-group"><label>Пароль</label><input type="password" id="auth-password" placeholder="Минимум 6 символов"></div>
-        <button class="btn" onclick="handleEmailAuth()" id="email-submit-btn">Продолжить</button>
-    </div>
+<div class="inner-screen">
+<button class="back-btn" onclick="closeScreen('email-screen')">← Назад</button>
+<h1 style="text-align: center; margin-bottom: 30px;">Вход / Регистрация</h1>
+<div class="form-group"><label>Email</label><input type="email" id="auth-email" placeholder="your@email.com"></div>
+<div class="form-group"><label>Пароль</label><input type="password" id="auth-password" placeholder="Минимум 6 символов"></div>
+<button class="btn" onclick="handleEmailAuth()" id="email-submit-btn">Продолжить</button>
+</div>
 </div>
 
-<!-- ГЛАВНЫЙ ЭКРАН (ПРОФИЛЬ) -->
 <div id="dashboard-screen" class="screen">
-    <video id="character-video" class="video-background" autoplay loop muted playsinline></video>
-    <div class="overlay">
-        <div style="display: flex; justify-content: space-between; position: absolute; top: 0px; left: 0px; right: 0px; z-index: 30; padding: 5px 10px;">
-            <button class="btn" style="background-color: rgba(44,44,46,0.7); color: white; width: auto; padding: 8px 15px; font-size: 13px; margin: 0;" onclick="openProfileSettings()">⚙️ Настройки</button>
-            <button class="btn" style="background-color: rgba(255,59,48,0.2); color: #ff3b30; width: auto; padding: 8px 15px; font-size: 13px; margin: 0; border: 1px solid #ff3b30;" onclick="logout()">Выйти</button>
-        </div>
-        <div class="top-info">
-            <div class="character-level" id="char-level">Уровень 1</div>
-            <div class="character-title" id="char-title">Странник</div>
-            <div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
-            <p class="xp-text" id="xp-text">0 / 100 XP</p>
-        </div>
-        <div class="bottom-panel">
-            <div class="stats-row">
-                <div class="stat-box"><p>Норма</p><h3 id="calories-norm">0 ккал</h3></div>
-                <div class="stat-box"><p>Сожжено</p><h3 id="burned-total">0 ккал</h3></div>
-            </div>
-            <div class="action-grid">
-                <button class="action-btn" onclick="showScreen('camera-screen')"><h3>📸</h3><p>Еда</p></button>
-                <button class="action-btn" onclick="showScreen('workout-screen')"><h3>💪</h3><p>Треня</p></button>
-                <button class="action-btn" onclick="showScreen('timer-screen')"><h3>⏱</h3><p>Таймер</p></button>
-                <button class="action-btn" onclick="showScreen('leaderboard-screen')"><h3>🏆</h3><p>Рейтинг</p></button>
-            </div>
-        </div>
-    </div>
+<video id="character-video" class="video-background" autoplay loop muted playsinline></video>
+<div class="overlay">
+<div style="display: flex; justify-content: space-between; position: absolute; top: 0px; left: 0px; right: 0px; z-index: 30; padding: 5px 10px;">
+<button class="btn" style="background-color: rgba(44,44,46,0.7); color: white; width: auto; padding: 8px 15px; font-size: 13px; margin: 0;" onclick="openProfileSettings()">⚙️ Настройки</button>
+<button class="btn" style="background-color: rgba(255,59,48,0.2); color: #ff3b30; width: auto; padding: 8px 15px; font-size: 13px; margin: 0; border: 1px solid #ff3b30;" onclick="logout()">Выйти</button>
+</div>
+<div class="top-info">
+<div class="character-level" id="char-level">Уровень 1</div>
+<div class="character-title" id="char-title">Странник</div>
+<div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
+<p class="xp-text" id="xp-text">0 / 100 XP</p>
+</div>
+<div class="bottom-panel">
+<div class="stats-row">
+<div class="stat-box"><p>Норма</p><h3 id="calories-norm">0 ккал</h3></div>
+<div class="stat-box"><p>Сожжено</p><h3 id="burned-total">0 ккал</h3></div>
+</div>
+<div class="action-grid">
+<button class="action-btn" onclick="window.location.href='camera.html'"><h3>📸</h3><p>Еда</p></button>
+<button class="action-btn" onclick="window.location.href='workout.html'"><h3>💪</h3><p>Треня</p></button>
+<button class="action-btn" onclick="window.location.href='timer.html'"><h3>⏱</h3><p>Таймер</p></button>
+<button class="action-btn" onclick="window.location.href='leaderboard.html'"><h3>🏆</h3><p>Рейтинг</p></button>
+</div>
+</div>
+</div>
 </div>
 
-<!-- ЭКРАН ТАЙМЕРА -->
-<div id="timer-screen" class="screen">
-    <div class="inner-screen">
-        <button class="back-btn" onclick="showScreen('dashboard-screen')">← Назад</button>
-        <h1 style="text-align: center;">Таймер</h1>
-        <p style="text-align: center; color: var(--hint-color);">Отдых между подходами</p>
-        <div class="timer-display" id="timer-display">00:45</div>
-        <div style="display: flex; gap: 15px;">
-            <button class="btn" onclick="toggleTimer()" id="timer-btn">Старт</button>
-            <button class="btn" style="background-color: #2c2c2e; color: white;" onclick="resetTimer()">Сброс</button>
-        </div>
-        <button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="completeSet()">Подход выполнен (+15 XP)</button>
-        <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: auto;" onclick="finishWorkout()">Завершить 🏁</button>
-    </div>
-</div>
-
-<!-- ЭКРАН ПОБЕДЫ -->
-<div id="finish-screen" class="screen">
-    <div class="inner-screen" style="text-align: center; justify-content: center;">
-        <h1 style="font-size: 80px; margin-bottom: 10px;">🏆</h1>
-        <h2>Тренировка завершена!</h2>
-        <p id="finish-stats" style="color: #8e8e93; margin-bottom: 30px;">Ты сжег 0 ккал.</p>
-        <div class="quote-box">
-            <p id="finish-quote" style="font-style: italic; font-size: 18px; margin-bottom: 10px;">"Цитата"</p>
-            <p id="finish-author" style="text-align: right; font-weight: bold; font-size: 14px; color: var(--hint-color);">— Автор</p>
-        </div>
-        <button class="btn" onclick="showScreen('dashboard-screen')">Вернуться на главную</button>
-    </div>
-</div>
-
-<!-- ЭКРАН КАМЕРЫ -->
-<div id="camera-screen" class="screen">
-    <div class="inner-screen">
-        <button class="back-btn" onclick="showScreen('dashboard-screen')">← Назад в приложение</button>
-        <h1 style="text-align: center;">Анализ еды</h1>
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('search')">🔍 Поиск</button>
-            <button class="tab-btn" onclick="switchTab('photo')">📷 Фото</button>
-        </div>
-        <div id="tab-search" class="tab-content active">
-            <div class="form-group">
-                <input type="text" id="food-search-input" placeholder="Введите название (например, йогурт)">
-            </div>
-            <button class="btn" onclick="searchFood()">Найти</button>
-            <div id="search-result" style="margin-top: 20px;"></div>
-        </div>
-        <div id="tab-photo" class="tab-content">
-            <div id="photo-buttons">
-                <button class="btn" onclick="startCamera()">📷 Сделать фото</button>
-                <button class="btn" style="background-color: #2c2c2e; color: white;" onclick="document.getElementById('gallery-input').click()">🖼️ Выбрать из галереи</button>
-            </div>
-            <input type="file" id="gallery-input" accept="image/*" style="display: none;" onchange="handleImage(event)">
-            <div id="camera-container" style="display: none;">
-                <button id="switch-camera-btn" onclick="switchCamera()">🔄</button>
-                <button id="close-camera-btn" onclick="resetCameraScreen()">✖</button>
-                <video id="camera-video" autoplay playsinline></video>
-                <div id="camera-controls">
-                    <button id="capture-btn" onclick="takePhoto()"></button>
-                </div>
-            </div>
-            <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
-            <button class="btn" id="remove-photo-btn" style="display: none; background-color: #ff3b30; color: white; margin-bottom: 10px;" onclick="resetCameraScreen()">❌ Удалить фото</button>
-            <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px; font-size: 18px;">🤖 ИИ анализирует фото...</div>
-            <div id="food-result" style="display: none; background: #1c1c1e; padding: 20px; border-radius: 16px; margin-top: 20px;">
-                <h2 id="food-name" style="margin-top: 0; color: var(--accent-color);">Название</h2>
-                <div class="nutrition-row"><span>Калории:</span> <b id="food-calories">0 ккал</b></div>
-                <div class="nutrition-row"><span>Белки:</span> <b id="food-protein">0 г</b></div>
-                <div class="nutrition-row"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
-                <div class="nutrition-row"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
-                <button class="btn" style="background-color: #34c759; color: white; margin-top: 15px;" onclick="saveXPAndGoBack()">Добавить (+20 XP)</button>
-                <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 10px;" onclick="resetCameraScreen()">Отмена</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ЭКРАН ТРЕНИРОВКИ -->
-<div id="workout-screen" class="screen">
-    <div class="inner-screen">
-        <button class="back-btn" onclick="showScreen('dashboard-screen')">← Назад в приложение</button>
-        <h1>Тренировка</h1>
-        <p style="color: var(--hint-color); margin-bottom: 20px;">Комплекс на сегодня</p>
-        <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #2c2c2e;"><h4>Приседания</h4><p style="color: #8e8e93; font-size: 13px;">3 подхода • 15 повторений</p></div>
-        <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #2c2c2e;"><h4>Отжимания</h4><p style="color: #8e8e93; font-size: 13px;">3 подхода • 10 повторений</p></div>
-        <button class="btn" style="margin-top: auto;" onclick="showScreen('timer-screen')">Начать тренировку</button>
-    </div>
-</div>
-
-<!-- ЭКРАН РЕЙТИНГА -->
-<div id="leaderboard-screen" class="screen">
-    <div class="inner-screen">
-        <button class="back-btn" onclick="showScreen('dashboard-screen')">← Назад в приложение</button>
-        <h1 style="text-align: center;">🏆 Мировой рейтинг</h1>
-        <p style="text-align: center; color: var(--hint-color); margin-bottom: 20px;">Топ атлетов в реальном времени</p>
-        <div id="leaderboard-list">
-            <p style="text-align: center;">Загрузка...</p>
-        </div>
-    </div>
-</div>
-
-<!-- ЭКРАН НАСТРОЕК -->
 <div id="profile-settings-screen" class="screen">
-    <div class="inner-screen">
-        <button class="back-btn" onclick="showScreen('dashboard-screen')">← Назад</button>
-        <h1 style="text-align: center; margin-bottom: 30px;">Настройки профиля</h1>
-        <div id="link-section" style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-bottom: 20px;">
-            <h3 style="margin-top: 0;" id="link-title">Привязка аккаунта</h3>
-            <p style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;" id="link-desc">Привяжите второй способ входа.</p>
-            <div id="link-email-form">
-                <div class="form-group"><input type="email" id="link-email" placeholder="your@email.com"></div>
-                <div class="form-group"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)"></div>
-                <button class="btn" onclick="linkEmailToTelegram()">Привязать Email</button>
-            </div>
-            <div id="link-tg-form" style="display: none;">
-                <p style="font-size: 14px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b id="current-tg-id">неизвестно</b></p>
-                <p style="font-size: 12px; color: #8e8e93; margin-bottom: 15px;">Скопируйте этот ID и используйте его для входа.</p>
-                <button class="btn" onclick="linkTelegramToEmail()">Подтвердить привязку</button>
-            </div>
-        </div>
-        <div style="background: #1c1c1e; padding: 20px; border-radius: 16px;">
-            <h3 style="margin-top: 0;">Изменить данные</h3>
-            <div class="form-group"><label>Возраст</label><input type="number" id="age" placeholder="25"></div>
-            <div class="form-group"><label>Вес (кг)</label><input type="number" id="weight" placeholder="70"></div>
-            <div class="form-group"><label>Рост (см)</label><input type="number" id="height" placeholder="175"></div>
-            <div class="form-group"><label>Пол</label><select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
-            <div class="form-group"><label>Цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
-            <button class="btn" onclick="saveProfile()">Сохранить</button>
-        </div>
-    </div>
+<div class="inner-screen">
+<button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
+<h1 style="text-align: center; margin-bottom: 30px;">Настройки профиля</h1>
+
+<div id="link-section" style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-bottom: 20px;">
+<h3 style="margin-top: 0;" id="link-title">Привязка аккаунта</h3>
+<p style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;" id="link-desc">Привяжите второй способ входа.</p>
+
+<div id="link-email-form">
+<div class="form-group"><input type="email" id="link-email" placeholder="your@email.com"></div>
+<div class="form-group"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)"></div>
+<button class="btn" onclick="linkEmailToTelegram()">Привязать Email</button>
 </div>
 
-<script>
-// --- ПЕРЕМЕННЫЕ ---
-const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
-const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-const tg = window.Telegram.WebApp;
-tg.ready(); tg.expand();
+<div id="link-tg-form" style="display: none;">
+<p style="font-size: 14px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b id="current-tg-id">неизвестно</b></p>
+<p style="font-size: 12px; color: #8e8e93; margin-bottom: 15px;">Скопируйте этот ID и используйте его для входа.</p>
+<button class="btn" onclick="linkTelegramToEmail()">Подтвердить привязку</button>
+</div>
+</div>
 
-// --- МУЗЫКА ---
-const playlist = [
-    '01. Shadow Fight Song.mp3', '02- The Training Room.mp3', '03. TECHNO-SYNDROME 12\' MI...',
-    '04 - The Blade Dance.mp3', '05 - The Vengeance.mp3', '06 - The Forest of Death.mp3',
-    '07 - The Ninja in the Night.mp3', '09 - The Fat Boss.mp3', '10 - The Final Boss.mp3',
-    '11 - The Master of the Skills.mp3', '13 - Ronin.mp3', '14 - The Deadly Smoke.mp3',
-    '15 - Old Sensei.mp3', '16 - The Battle Ship.mp3', '17 - The Shadow Lady.mp3',
-    '18 - The Flower Battlefield.mp3', '22 - Bridge to the Other Side.mp3',
-    '25 - Burning Town.mp3', '27 - The Hive.mp3', '29 - The Factory.mp3', '30 - The Flying Rocks.mp3'
-];
-const levelUpSoundFile = '07. Scroll Draw 01.mp3';
-const levelDownSoundFile = '09. Scroll Lose 01.mp3';
+<div style="background: #1c1c1e; padding: 20px; border-radius: 16px;">
+<h3 style="margin-top: 0;">Изменить данные</h3>
+<div class="form-group"><label>Возраст</label><input type="number" id="age" placeholder="25"></div>
+<div class="form-group"><label>Вес (кг)</label><input type="number" id="weight" placeholder="70"></div>
+<div class="form-group"><label>Рост (см)</label><input type="number" id="height" placeholder="175"></div>
+<div class="form-group"><label>Пол</label><select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
+<div class="form-group"><label>Цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
+<button class="btn" onclick="saveProfile()">Сохранить</button>
+</div>
+</div>
+</div>
 
-let currentTrackIndex = Math.floor(Math.random() * playlist.length);
-const bgMusic = document.getElementById('bgMusic');
-bgMusic.src = playlist[currentTrackIndex];
-bgMusic.volume = 0.5;
-
-let musicStarted = false;
-document.addEventListener('click', () => {
-    if (!musicStarted) {
-        bgMusic.play().catch(e => console.log(e));
-        musicStarted = true;
-    }
-}, { once: true });
-
-bgMusic.addEventListener('ended', () => {
-    currentTrackIndex = Math.floor(Math.random() * playlist.length);
-    bgMusic.src = playlist[currentTrackIndex];
-    bgMusic.play().catch(e => console.log(e));
-});
-
-// --- НАВИГАЦИЯ ---
-function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-    document.getElementById(screenId).classList.add('active');
-    if (screenId === 'leaderboard-screen') loadLeaderboard();
-}
-
-// --- ТАЙМЕР ---
-let isRunning = false;
-let timeLeft = 45;
-let timerInterval;
-let sessionCalories = 0;
-
-function updateDisplay() {
-    document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`;
-}
-
-function toggleTimer() {
-    const btn = document.getElementById('timer-btn');
-    if (isRunning) {
-        clearInterval(timerInterval);
-        bgMusic.pause();
-        btn.innerText = "Старт";
-        isRunning = false;
-    } else {
-        currentTrackIndex = Math.floor(Math.random() * playlist.length);
-        bgMusic.src = playlist[currentTrackIndex];
-        bgMusic.play().catch(e => console.log(e));
-        btn.innerText = "Пауза";
-        isRunning = true;
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            updateDisplay();
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                bgMusic.pause();
-                btn.innerText = "Старт";
-                isRunning = false;
-                tg.showAlert("Время вышло!");
-            }
-        }, 1000);
-    }
-}
-
-function resetTimer() {
-    clearInterval(timerInterval);
-    bgMusic.pause();
-    isRunning = false;
-    timeLeft = 45;
-    updateDisplay();
-    document.getElementById('timer-btn').innerText = "Старт";
-}
-
-function completeSet() {
-    sessionCalories += 15;
-    let pending = localStorage.getItem('cachedXP') || 0;
-    localStorage.setItem('cachedXP', parseInt(pending) + 15);
-    tg.showAlert("+15 XP добавлено!");
-}
-
-function finishWorkout() {
-    bgMusic.pause();
-    const winAudio = new Audio("12. Scroll Win 02.mp3");
-    winAudio.play().catch(e => console.log(e));
-    winAudio.onended = () => {
-        currentTrackIndex = Math.floor(Math.random() * playlist.length);
-        bgMusic.src = playlist[currentTrackIndex];
-        bgMusic.play().catch(e => console.log(e));
-    };
-
-    document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
-    let q = { text: "Ты не проиграл, пока не остановился.", author: "Майк Тайсон" };
-    if (typeof allQuotes !== 'undefined' && allQuotes.length > 0) {
-        q = allQuotes[Math.floor(Math.random() * allQuotes.length)];
-    }
-    document.getElementById('finish-quote').innerText = `«${q.text}»`;
-    document.getElementById('finish-author').innerText = `— ${q.author}`;
-    showScreen('finish-screen');
-}
-
-// --- КАМЕРА (УПРОЩЕННО) ---
-function switchTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById(`tab-${tabName}`).classList.add('active');
-    event.target.classList.add('active');
-}
-
-async function searchFood() {
-    tg.showAlert("Поиск еды пока в разработке.");
-}
-
-// --- РЕЙТИНГ ---
-async function loadLeaderboard() {
-    const { data, error } = await supabaseClient.from('user_links').select('name, xp').order('xp', { ascending: false }).limit(50);
-    if (!error && data) {
-        let html = '';
-        data.forEach((u, i) => {
-            let medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
-            html += `<div class="leaderboard-item"><div class="rank">${medal}</div><div class="user-info"><p style="margin:0;font-weight:bold;">${u.name || 'Атлет'}</p><p style="margin:0;font-size:13px;color:#8e8e93;">${u.xp || 0} XP</p></div></div>`;
-        });
-        document.getElementById('leaderboard-list').innerHTML = html;
-    }
-}
-
-// --- ОСТАЛЬНОЙ КОД (СОХРАНЕНИЕ, ПРИВЯЗКА) ---
-// (здесь должен быть весь код из app.js, который ты уже вставлял, но без дублирования музыки)
-// Я не могу вставить его полностью из-за размера, но он должен быть вставлен в этот же <script>.
-</script>
 <script src="quotes.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
+<!-- TEST 282 -->
+
