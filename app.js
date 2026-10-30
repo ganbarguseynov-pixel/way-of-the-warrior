@@ -4,62 +4,6 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand(); 
 
-// --- МУЗЫКА С BROADCAST CHANNEL ---
-const playlist = [
-    '01. Shadow Fight Song.mp3', '02- The Training Room.mp3', '03. TECHNO-SYNDROME 12\' MI...',
-    '04 - The Blade Dance.mp3', '05 - The Vengeance.mp3', '06 - The Forest of Death.mp3',
-    '07 - The Ninja in the Night.mp3', '09 - The Fat Boss.mp3', '10 - The Final Boss.mp3',
-    '11 - The Master of the Skills.mp3', '13 - Ronin.mp3', '14 - The Deadly Smoke.mp3',
-    '15 - Old Sensei.mp3', '16 - The Battle Ship.mp3', '17 - The Shadow Lady.mp3',
-    '18 - The Flower Battlefield.mp3', '22 - Bridge to the Other Side.mp3',
-    '25 - Burning Town.mp3', '27 - The Hive.mp3', '29 - The Factory.mp3', '30 - The Flying Rocks.mp3'
-];
-const levelUpSoundFile = '07. Scroll Draw 01.mp3';
-const levelDownSoundFile = '09. Scroll Lose 01.mp3';
-
-let currentTrackIndex = Math.floor(Math.random() * playlist.length);
-const bgMusic = new Audio(playlist[currentTrackIndex]);
-bgMusic.volume = 0.5;
-
-let musicStarted = false;
-let musicChannel = null;
-
-// Создаем канал для общения между страницами
-try {
-    musicChannel = new BroadcastChannel('music_sync');
-} catch(e) {
-    console.log("BroadcastChannel не поддерживается");
-}
-
-// Отправляем состояние музыки на другие страницы
-if (musicChannel) {
-    setInterval(() => {
-        if (!bgMusic.paused) {
-            musicChannel.postMessage({
-                track: currentTrackIndex,
-                time: bgMusic.currentTime,
-                playing: true
-            });
-        }
-    }, 500);
-}
-
-// Запускаем музыку при клике
-document.addEventListener('click', () => {
-    if (!musicStarted) {
-        bgMusic.play().catch(e => console.log(e));
-        musicStarted = true;
-    }
-}, { once: true });
-
-// Когда трек кончается — следующий
-bgMusic.addEventListener('ended', () => {
-    currentTrackIndex = Math.floor(Math.random() * playlist.length);
-    bgMusic.src = playlist[currentTrackIndex];
-    bgMusic.play().catch(e => console.log(e));
-});
-
-// --- СТАРЫЙ КОД (СОХРАНЕНИЕ, ПРИВЯЗКА) ---
 function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
     const el = document.getElementById(screenId);
@@ -238,7 +182,6 @@ const levelsData = {
 }; 
 
 let currentXP = 0, totalBurnedCalories = 0, userGender = 'male';
-let previousXP = parseInt(localStorage.getItem('cachedXP') || 0);
 
 function renderProfile(profile) {
     userGender = profile.gender || 'male';
@@ -253,7 +196,6 @@ function renderProfile(profile) {
 
     const pendingXP = parseInt(localStorage.getItem('pendingXP') || 0);
     if (pendingXP > 0) {
-        previousXP = currentXP;
         currentXP += pendingXP;
         localStorage.setItem('cachedXP', currentXP);
         localStorage.removeItem('pendingXP');
@@ -261,30 +203,9 @@ function renderProfile(profile) {
     } 
 
     if (document.getElementById('burned-total')) document.getElementById('burned-total').innerText = totalBurnedCalories + " ккал";
-    checkLevelTransition(profile);
     updateCharacterUI();
     openScreen('dashboard-screen');
 } 
-
-function checkLevelTransition(profile) {
-    const levels = levelsData[profile.gender || 'male'];
-    let oldLevel = 0, newLevel = 0;
-    for (let i = 0; i < levels.length; i++) {
-        if (previousXP >= levels[i].xp) oldLevel = i;
-        if (currentXP >= levels[i].xp) newLevel = i;
-    }
-    if (newLevel > oldLevel) {
-        bgMusic.pause();
-        const s = new Audio(levelUpSoundFile);
-        s.play().catch(e => console.log(e));
-        s.onended = () => { bgMusic.play().catch(e => console.log(e)); };
-    } else if (newLevel < oldLevel) {
-        bgMusic.pause();
-        const s = new Audio(levelDownSoundFile);
-        s.play().catch(e => console.log(e));
-        s.onended = () => { bgMusic.play().catch(e => console.log(e)); };
-    }
-}
 
 function updateCharacterUI() {
     const levels = levelsData[userGender];
