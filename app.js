@@ -25,6 +25,23 @@ const bgMusic = new Audio(playlist[currentTrackIndex]);
 bgMusic.volume = 0.5;
 bgMusic.currentTime = currentTime;
 
+// Пытаемся запустить сразу, если музыка должна играть
+if (isMusicPlaying) {
+    bgMusic.play().catch(e => console.log("Ждем клика"));
+}
+
+// Запускаем музыку при любом клике на странице
+document.addEventListener('click', () => {
+    if (!bgMusic.paused) return; // Уже играет
+    if (isMusicPlaying) {
+        bgMusic.play().catch(e => console.log(e));
+    } else {
+        bgMusic.play().catch(e => console.log(e));
+        isMusicPlaying = true;
+        localStorage.setItem('musicPlaying', 'true');
+    }
+}, { once: true });
+
 setInterval(() => {
     if (!bgMusic.paused) {
         localStorage.setItem('musicIndex', currentTrackIndex);
@@ -41,15 +58,7 @@ bgMusic.addEventListener('ended', () => {
     bgMusic.play().catch(e => console.log(e));
 });
 
-document.addEventListener('click', () => {
-    if (!isMusicPlaying) {
-        bgMusic.play().catch(e => console.log(e));
-        isMusicPlaying = true;
-        localStorage.setItem('musicPlaying', 'true');
-    }
-}, { once: true });
-
-// --- ОСТАЛЬНОЙ КОД ---
+// --- СТАРЫЙ КОД ---
 function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
     const el = document.getElementById(screenId);
