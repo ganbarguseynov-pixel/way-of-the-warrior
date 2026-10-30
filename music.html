@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<script>
+const playlist = [
+    '01. Shadow Fight Song.mp3', '02- The Training Room.mp3', '03. TECHNO-SYNDROME 12\' MI...',
+    '04 - The Blade Dance.mp3', '05 - The Vengeance.mp3', '06 - The Forest of Death.mp3',
+    '07 - The Ninja in the Night.mp3', '09 - The Fat Boss.mp3', '10 - The Final Boss.mp3',
+    '11 - The Master of the Skills.mp3', '13 - Ronin.mp3', '14 - The Deadly Smoke.mp3',
+    '15 - Old Sensei.mp3', '16 - The Battle Ship.mp3', '17 - The Shadow Lady.mp3',
+    '18 - The Flower Battlefield.mp3', '22 - Bridge to the Other Side.mp3',
+    '25 - Burning Town.mp3', '27 - The Hive.mp3', '29 - The Factory.mp3', '30 - The Flying Rocks.mp3'
+];
+const winSound = '12. Scroll Win 02.mp3';
+const levelUpSound = '07. Scroll Draw 01.mp3';
+const levelDownSound = '09. Scroll Lose 01.mp3';
+
+let audio = new Audio();
+let currentIndex = Math.floor(Math.random() * playlist.length);
+let isPlaying = false;
+
+audio.src = playlist[currentIndex];
+audio.volume = 0.5;
+
+audio.addEventListener('ended', () => {
+    currentIndex = (currentIndex + 1) % playlist.length;
+    audio.src = playlist[currentIndex];
+    if (isPlaying) audio.play();
+});
+
+window.addEventListener('message', (event) => {
+    const command = event.data;
+    if (command === 'play') { audio.play().catch(e => console.log('Ждем клика')); isPlaying = true; }
+    else if (command === 'pause') { audio.pause(); isPlaying = false; }
+    else if (command === 'next') { currentIndex = (currentIndex + 1) % playlist.length; audio.src = playlist[currentIndex]; audio.play().catch(e => console.log('Ждем клика')); isPlaying = true; }
+    else if (command === 'win') { audio.pause(); const s = new Audio(winSound); s.play(); s.onended = () => { audio.play(); }; }
+    else if (command === 'levelup') { audio.pause(); const s = new Audio(levelUpSound); s.play(); s.onended = () => { audio.play(); }; }
+    else if (command === 'leveldown') { audio.pause(); const s = new Audio(levelDownSound); s.play(); s.onended = () => { audio.play(); }; }
+});
+</script>
+</body>
+</html>
