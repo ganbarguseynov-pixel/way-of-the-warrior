@@ -61,22 +61,22 @@ LOCAL_NAMES = [p["name"] for p in LOCAL_DB]
 def translate_to_english(query):
     if re.search('[a-zA-Z]', query):
         return query
-    dictionary = { 
-        'яблоко': 'apple', 'банан': 'banana', 'мохито': 'mojito', 'адреналин': 'adrenaline', 
-        'курица': 'chicken', 'рис': 'rice', 'яйцо': 'egg', 'яйца': 'eggs', 'пицца': 'pizza', 
-        'бургер': 'burger', 'молоко': 'milk', 'сыр': 'cheese', 'творог': 'cottage cheese', 
-        'гречка': 'buckwheat', 'овсянка': 'oatmeal', 'макароны': 'pasta', 'хлеб': 'bread', 
-        'кофе': 'coffee', 'чай': 'tea', 'кола': 'cola', 'сок': 'juice', 'шоколад': 'chocolate', 
-        'печенье': 'cookie', 'апельсин': 'orange', 'помидор': 'tomato', 'огурец': 'cucumber', 
-        'картофель': 'potato', 'лосось': 'salmon', 'свинина': 'pork', 'говядина': 'beef', 
-        'индейка': 'turkey', 'салат': 'salad', 'авокадо': 'avocado', 'груша': 'pear', 
-        'киви': 'kiwi', 'мандарин': 'tangerine', 'арбуз': 'watermelon', 'дыня': 'melon', 
-        'виноград': 'grapes', 'клубника': 'strawberry', 'малина': 'raspberry', 
-        'черника': 'blueberry', 'грибы': 'mushrooms', 'сметана': 'sour cream', 
-        'масло': 'butter', 'сахар': 'sugar', 'мед': 'honey', 'орехи': 'nuts', 
-        'суши': 'sushi', 'роллы': 'rolls', 'чипсы': 'chips', 'сникерс': 'snickers', 
-        'марс': 'mars', 'йогурт': 'yogurt', 'теос': 'teos', 'зеро': 'zero', 
-        'кола зеро': 'coca-cola zero', 'кола зеро': 'coca cola zero'
+    dictionary = {
+        'яблоко': 'apple', 'банан': 'banana', 'мохито': 'mojito', 'адреналин': 'adrenaline',
+        'курица': 'chicken', 'рис': 'rice', 'яйцо': 'egg', 'яйца': 'eggs', 'пицца': 'pizza',
+        'бургер': 'burger', 'молоко': 'milk', 'сыр': 'cheese', 'творог': 'cottage cheese',
+        'гречка': 'buckwheat', 'овсянка': 'oatmeal', 'макароны': 'pasta', 'хлеб': 'bread',
+        'кофе': 'coffee', 'чай': 'tea', 'кола': 'cola', 'сок': 'juice', 'шоколад': 'chocolate',
+        'печенье': 'cookie', 'апельсин': 'orange', 'помидор': 'tomato', 'огурец': 'cucumber',
+        'картофель': 'potato', 'лосось': 'salmon', 'свинина': 'pork', 'говядина': 'beef',
+        'индейка': 'turkey', 'салат': 'salad', 'авокадо': 'avocado', 'груша': 'pear',
+        'киви': 'kiwi', 'мандарин': 'tangerine', 'арбуз': 'watermelon', 'дыня': 'melon',
+        'виноград': 'grapes', 'клубника': 'strawberry', 'малина': 'raspberry',
+        'черника': 'blueberry', 'грибы': 'mushrooms', 'сметана': 'sour cream',
+        'масло': 'butter', 'сахар': 'sugar', 'мед': 'honey', 'орехи': 'nuts',
+        'суши': 'sushi', 'роллы': 'rolls', 'чипсы': 'chips', 'сникерс': 'snickers',
+        'марс': 'mars', 'йогурт': 'yogurt', 'теос': 'teos', 'зеро': 'zero',
+        'кола зеро': 'coca-cola zero'
     }
     words = query.lower().split()
     if query.lower() in dictionary:
@@ -101,7 +101,7 @@ def search_food():
     query = request.args.get('q', '').strip()
     if not query:
         return jsonify({"products": []})
-    
+
     results = []
     best_match = process.extractOne(query, LOCAL_NAMES, scorer=fuzz.WRatio, score_cutoff=60)
     if best_match:
@@ -173,21 +173,7 @@ def search_by_barcode():
 
 @app.route('/scan_barcode', methods=['POST'])
 def scan_barcode():
-    if 'image' not in request.files:
-        return jsonify({"error": "No image"}), 400
-    file = request.files['image']
-    try:
-        from pyzbar.pyzbar import decode
-        from PIL import Image as PILImage
-        img = PILImage.open(io.BytesIO(file.read()))
-        decoded = decode(img)
-        if decoded:
-            barcode = decoded[0].data.decode('utf-8')
-            return jsonify({"barcode": barcode})
-        return jsonify({"error": "Barcode not found"}), 404
-    except Exception as e:
-        print(f"Barcode scan error: {e}")
-        return jsonify({"error": "Scan failed"}), 500
+    return jsonify({"error": "Barcode scanning via camera temporarily disabled"}), 503
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
@@ -200,7 +186,6 @@ def analyze_photo():
     except:
         return jsonify({"error": "Invalid image"}), 400
 
-    # 1. ПРОБУЕМ LOGMEAL
     if LOGMEAL_TOKEN:
         try:
             img_byte_arr = io.BytesIO()
@@ -212,38 +197,53 @@ def analyze_photo():
             if lm_response.status_code == 200:
                 lm_data = lm_response.json()
                 if 'foodType' in lm_data and 'name' in lm_data['foodType']:
-                    # LogMeal возвращает название на английском, переводим на русский (если нужно)
-                    # Но LogMeal редко ошибается, так что оставляем как есть.
-                    return jsonify({"food": lm_data['foodType']['name'], "calories": 250, "protein": 15, "fat": 10, "carbs": 30})
+                    return jsonify({"food": lm_data['foodType']['name'], "calories": 250, "protein": 15, "fat": 10, "carbs": 30, "description": "Определено через LogMeal"})
         except Exception as e:
             print(f"LogMeal error: {e}")
 
-    # 2. ПРОБУЕМ GEMINI (С ЖЕСТКИМ ТРЕБОВАНИЕМ РУССКОГО)
     if GEMINI_API_KEY:
         try:
             prompt = """
-            Определи, что за еда на фото.
-            Если на упаковке есть текст на английском (например, бренд или название), напиши это название на английском.
-            В остальных случаях ВСЕГДА пиши название еды на РУССКОМ языке.
-            Формат ответа: Название | Калории | Белки | Жиры | Углеводы.
+            Ты — профессиональный диетолог. Твоя задача — определить еду на фото.
+            
+            ПРАВИЛА:
+            1. Если на упаковке есть бренд или название на английском языке, напиши это название как есть (на английском), но остальное описание — на русском.
+            2. В остальных случаях ВСЕГДА пиши название еды на РУССКОМ языке.
+            3. Обязательно напиши краткое описание продукта (например, "Жареная куриная грудка с овощами").
+            4. Дай точные данные БЖУ и калорий на 100 грамм.
+            
+            Формат ответа (строго через вертикальную черту |):
+            Название | Калории | Белки | Жиры | Углеводы | Описание
+            
+            Пример 1: Куриная грудка | 165 | 31 | 3.6 | 0 | Жареная куриная грудка без кожи.
+            Пример 2: Snickers | 500 | 10 | 25 | 60 | Шоколадный батончик с карамелью и арахисом.
             """
+            
             response = client.models.generate_content(
                 model='gemini-2.0-flash',
                 contents=[types.Part.from_bytes(data=image_data, mime_type='image/jpeg'), prompt]
             )
+            
             parts = [p.strip() for p in response.text.strip().split('|')]
-            if len(parts) >= 5:
+            
+            if len(parts) >= 6:
+                cal = int(re.sub(r'\D', '', parts[1])) if re.search(r'\d', parts[1]) else 250
+                prot = int(re.sub(r'\D', '', parts[2])) if re.search(r'\d', parts[2]) else 15
+                fat = int(re.sub(r'\D', '', parts[3])) if re.search(r'\d', parts[3]) else 10
+                carb = int(re.sub(r'\D', '', parts[4])) if re.search(r'\d', parts[4]) else 30
+                
                 return jsonify({
                     "food": parts[0],
-                    "calories": int(''.join(filter(str.isdigit, parts[1]))) if any(c.isdigit() for c in parts[1]) else 250,
-                    "protein": int(''.join(filter(str.isdigit, parts[2]))) if any(c.isdigit() for c in parts[2]) else 15,
-                    "fat": int(''.join(filter(str.isdigit, parts[3]))) if any(c.isdigit() for c in parts[3]) else 10,
-                    "carbs": int(''.join(filter(str.isdigit, parts[4]))) if any(c.isdigit() for c in parts[4]) else 30
+                    "calories": cal,
+                    "protein": prot,
+                    "fat": fat,
+                    "carbs": carb,
+                    "description": parts[5]
                 })
         except Exception as e:
             print(f"Gemini error: {e}")
 
-    return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
+    return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": ""})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
