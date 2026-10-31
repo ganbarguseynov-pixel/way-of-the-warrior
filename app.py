@@ -28,7 +28,6 @@ def analyze_photo():
     except:
         return jsonify({"error": "Invalid image"}), 400
     
-    # 1. ПРОБУЕМ LOGMEAL
     if LOGMEAL_TOKEN:
         try:
             img_byte_arr = io.BytesIO()
@@ -44,7 +43,6 @@ def analyze_photo():
         except Exception as e:
             print(f"LogMeal error: {e}")
 
-    # 2. ПРОБУЕМ GEMINI
     if GEMINI_API_KEY:
         try:
             prompt = "What food is in this image? Answer in one short phrase in Russian. Also estimate calories, protein, fat, and carbs. Format: Food name | Calories | Protein | Fat | Carbs"
@@ -66,41 +64,46 @@ def analyze_photo():
 
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
-# --- НОВАЯ ФУНКЦИЯ ПОИСКА (ДОБАВЛЕНА) ---
+# --- УЛУЧШЕННЫЙ ПОИСК С ПОЛНЫМ ОПИСАНИЕМ ---
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q', '').strip()
     if not query:
         return jsonify({"products": []})
     
-    result = try_search_off(query)
+    products = try_search_off(query)
     
-    if not result and any(c in 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя' for c in query.lower()):
+    if not products and any(c in 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя' for c in query.lower()):
         eng_query = translate_food(query)
         if eng_query:
-            result = try_search_off(eng_query)
+            products = try_search_off(eng_query)
     
-    return jsonify({"products": result})
+    return jsonify({"products": products})
 
 def try_search_off(query):
     try:
         headers = {'User-Agent': 'SportApp/1.0 (contact@example.com)'}
-        url = f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={query}&search_simple=1&action=process&json=1&page_size=3"
-        response = requests.get(url, headers=headers, timeout=10)
+        url = f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={query}&search_simple=1&action=process&json=1&page_size=5"
+        response = requests.get(url, headers=headers, timeout=15)
         data = response.json()
         
         products = []
         if 'products' in data:
             for product in data['products']:
-                if product.get('product_name'):
+                name = product.get('product_name')
+                if name:
                     nutrients = product.get('nutriments', {})
+                    image_url = product.get('image_front_small_url') or product.get('image_url') or ''
+                    
                     products.append({
-                        "product_name": product.get('product_name'),
-                        "nutrients": {
-                            "proteins": nutrients.get('proteins_100g', 0),
-                            "fat": nutrients.get('fat_100g', 0),
-                            "carbohydrates": nutrients.get('carbohydrates_100g', 0)
-                        }
+                        "product_name": name,
+                        "image_url": image_url,
+                        "calories_100g": nutrients.get('energy-kcal_100g', 0),
+                        "proteins_100g": nutrients.get('proteins_100g', 0),
+                        "fat_100g": nutrients.get('fat_100g', 0),
+                        "carbs_100g": nutrients.get('carbohydrates_100g', 0),
+                        "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан',
+                        "description": product.get('generic_name_ru') or product.get('generic_name') or ''
                     })
         return products
     except Exception as e:
@@ -112,7 +115,8 @@ def translate_food(rus_word):
         'яблоко': 'apple', 'банан': 'banana', 'йогурт': 'yogurt', 'молоко': 'milk',
         'хлеб': 'bread', 'курица': 'chicken', 'рис': 'rice', 'яйцо': 'egg',
         'сыр': 'cheese', 'мясо': 'meat', 'рыба': 'fish', 'овсянка': 'oatmeal',
-        'творог': 'cottage cheese', 'сок': 'juice', 'вода': 'water'
+        'творог': 'cottage cheese', 'сок': 'juice', 'вода': 'water',
+        'кофе': 'coffee', 'чай': 'tea', 'шоколад': 'chocolate', 'печенье': 'cookie'
     }
     return dictionary.get(rus_word.lower())
 
