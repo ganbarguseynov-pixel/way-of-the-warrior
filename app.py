@@ -13,7 +13,7 @@ CORS(app)
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
-# --- ЛОКАЛЬНАЯ БАЗА (ПРОСТЫЕ ПРОДУКТЫ) ---
+# --- ЛОКАЛЬНАЯ БАЗА (С КАРТИНКАМИ) ---
 LOCAL_DB = [
     {"name": "Куриная грудка", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
     {"name": "Яйцо", "cal": 155, "prot": 13, "fat": 11, "carb": 1.1, "img": "https://images.unsplash.com/photo-1506976785307-8732e854ad03?w=200"},
@@ -67,8 +67,6 @@ LOCAL_DB = [
     {"name": "Роллы", "cal": 180, "prot": 7, "fat": 4, "carb": 30, "img": "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=200"}
 ]
 
-LOCAL_NAMES = [p["name"] for p in LOCAL_DB]
-
 def translate_to_english(query):
     if re.search('[a-zA-Z]', query):
         return query
@@ -104,29 +102,6 @@ def search_food():
         except Exception as e:
             print(f"Search error: {e}")
     return jsonify({"products": results})
-
-# --- РАСПОЗНАВАНИЕ ШТРИХ-КОДА НА СЕРВЕРЕ ---
-@app.route('/scan_barcode', methods=['POST'])
-def scan_barcode():
-    if 'image' not in request.files:
-        return jsonify({"error": "No image"}), 400
-    
-    file = request.files['image']
-    try:
-        # Пытаемся распознать штрих-код через pyzbar (нужно добавить в requirements)
-        from pyzbar.pyzbar import decode
-        from PIL import Image as PILImage
-        img = PILImage.open(io.BytesIO(file.read()))
-        decoded = decode(img)
-        
-        if decoded:
-            barcode = decoded[0].data.decode('utf-8')
-            return jsonify({"barcode": barcode})
-        else:
-            return jsonify({"error": "Barcode not found"}), 404
-    except Exception as e:
-        print(f"Barcode scan error: {e}")
-        return jsonify({"error": "Scan failed"}), 500
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
