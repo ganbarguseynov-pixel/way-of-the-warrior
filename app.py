@@ -7,20 +7,23 @@ import requests
 import openfoodfacts
 import re
 from rapidfuzz import process, fuzz
-from openai import OpenAI
+from google import genai
+from google.genai import types
 
 app = Flask(__name__)
 CORS(app)
 
-# Твой новый ключ от Ofox
-OFOX_API_KEY = "sk-of-KYmtpJrHbBawbsEYSIQzzwKgyIPzgDgUvxowKBjTgOMiYzTwKjAZ0qsxcKEpZPpx"
+OFOX_API_KEY = "sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPmKOuTmo"
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
-# Подключаемся к Ofox
-client = OpenAI(
+# Подключаемся к Ofox через официальную библиотеку Google
+client = genai.Client(
     api_key=OFOX_API_KEY,
-    base_url="https://api.ofox.ai/v1"
+    http_options={
+        "base_url": "https://api.ofox.ai/gemini",
+        "api_version": "v1beta",
+    }
 )
 
 LOCAL_DB = [
@@ -194,39 +197,29 @@ def analyze_photo():
         image.save(img_byte_arr, format='JPEG', quality=75)
         compressed_image_data = img_byte_arr.getvalue()
 
-        # Кодируем фото в base64 для отправки
-        import base64
-        base64_image = base64.b64encode(compressed_image_data).decode('utf-8')
-
         prompt = """
         Ты — профессиональный диетолог. Твоя задача — определить еду на фото.
         
         ПРАВИЛА:
         1. Если на упаковке есть бренд или название на английском языке, напиши это название как есть (на английском), но остальное описание — на русском.
         2. В остальных случаях ВСЕГДА пиши название еды на РУССКОМ языке.
-        3. Обязательно напиши краткое описание продукта.
+        3. Обязательно напиши краткое описание продукта (например, "Жареная куриная грудка с овощами").
         4. Дай точные данные БЖУ и калорий на 100 грамм.
         
         Формат ответа (строго через вертикальную черту |):
         Название | Калории | Белки | Жиры | Углеводы | Описание
+        
+        Пример 1: Куриная грудка | 165 | 31 | 3.6 | 0 | Жареная куриная грудка без кожи.
+        Пример 2: Snickers | 500 | 10 | 25 | 60 | Шоколадный батончик с карамелью и арахисом.
         """
-
-        # Отправляем в Ofox (формат OpenAI)
-        response = client.chat.completions.create(
-            model="gemini-3.8-flash",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
-                    ]
-                }
-            ]
+        
+        # Отправляем в Ofox (через нативную библиотеку Google)
+        response = client.models.generate_content(
+            model='gemini-3.8-flash',
+            contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
         )
-
-        response_text = response.choices[0].message.content
-        parts = [p.strip() for p in response_text.strip().split('|')]
+        
+        parts = [p.strip() for p in response.text.strip().split('|')]
         
         if len(parts) >= 6:
             cal = int(re.sub(r'\D', '', parts[1])) if re.search(r'\d', parts[1]) else 250
