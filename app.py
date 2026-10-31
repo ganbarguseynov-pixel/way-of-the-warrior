@@ -12,6 +12,7 @@ CORS(app)
 
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+CALORIE_NINJAS_API_KEY = os.environ.get("CALORIE_NINJAS_API_KEY")
 
 if GEMINI_API_KEY:
     client = genai.Client(api_key=GEMINI_API_KEY)
@@ -64,61 +65,36 @@ def analyze_photo():
 
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
-# --- УЛУЧШЕННЫЙ ПОИСК С ПОЛНЫМ ОПИСАНИЕМ ---
+# --- ПОИСК ЧЕРЕЗ CALORIE NINJAS ---
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q', '').strip()
-    if not query:
+    if not query or not CALORIE_NINJAS_API_KEY:
         return jsonify({"products": []})
     
-    products = try_search_off(query)
-    
-    if not products and any(c in 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя' for c in query.lower()):
-        eng_query = translate_food(query)
-        if eng_query:
-            products = try_search_off(eng_query)
-    
-    return jsonify({"products": products})
-
-def try_search_off(query):
     try:
-        headers = {'User-Agent': 'SportApp/1.0 (contact@example.com)'}
-        url = f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={query}&search_simple=1&action=process&json=1&page_size=5"
-        response = requests.get(url, headers=headers, timeout=15)
+        headers = {'X-Api-Key': CALORIE_NINJAS_API_KEY}
+        url = f"https://api.calorieninjas.com/v1/nutrition?query={query}"
+        response = requests.get(url, headers=headers, timeout=10)
         data = response.json()
         
         products = []
-        if 'products' in data:
-            for product in data['products']:
-                name = product.get('product_name')
-                if name:
-                    nutrients = product.get('nutriments', {})
-                    image_url = product.get('image_front_small_url') or product.get('image_url') or ''
-                    
-                    products.append({
-                        "product_name": name,
-                        "image_url": image_url,
-                        "calories_100g": nutrients.get('energy-kcal_100g', 0),
-                        "proteins_100g": nutrients.get('proteins_100g', 0),
-                        "fat_100g": nutrients.get('fat_100g', 0),
-                        "carbs_100g": nutrients.get('carbohydrates_100g', 0),
-                        "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан',
-                        "description": product.get('generic_name_ru') or product.get('generic_name') or ''
-                    })
-        return products
+        if 'items' in data:
+            for item in data['items']:
+                products.append({
+                    "product_name": item.get('name', 'Неизвестно'),
+                    "image_url": "",  # У CalorieNinjas нет картинок
+                    "calories_100g": item.get('calories', 0),
+                    "proteins_100g": item.get('protein_g', 0),
+                    "fat_100g": item.get('fat_total_g', 0),
+                    "carbs_100g": item.get('carbohydrates_total_g', 0),
+                    "ingredients": "Данные предоставлены CalorieNinjas",
+                    "description": ""
+                })
+        return jsonify({"products": products})
     except Exception as e:
         print(f"Search error: {e}")
-        return []
-
-def translate_food(rus_word):
-    dictionary = {
-        'яблоко': 'apple', 'банан': 'banana', 'йогурт': 'yogurt', 'молоко': 'milk',
-        'хлеб': 'bread', 'курица': 'chicken', 'рис': 'rice', 'яйцо': 'egg',
-        'сыр': 'cheese', 'мясо': 'meat', 'рыба': 'fish', 'овсянка': 'oatmeal',
-        'творог': 'cottage cheese', 'сок': 'juice', 'вода': 'water',
-        'кофе': 'coffee', 'чай': 'tea', 'шоколад': 'chocolate', 'печенье': 'cookie'
-    }
-    return dictionary.get(rus_word.lower())
+        return jsonify({"products": []})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
