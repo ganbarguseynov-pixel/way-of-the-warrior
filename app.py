@@ -17,7 +17,7 @@ def search_food():
         return jsonify({"products": []})
     
     try:
-        # Ищем статью в русской Википедии (с User-Agent, чтобы не блокировали)
+        # Ищем статью в русской Википедии (с правильным заголовком)
         url = "https://ru.wikipedia.org/w/api.php"
         params = {
             "action": "query",
@@ -27,8 +27,16 @@ def search_food():
             "utf8": 1,
             "srlimit": 3
         }
-        headers = {'User-Agent': 'SportApp/1.0 (contact@example.com)'} 
+        # ЭТА СТРОКА ВАЖНА: Википедия требует User-Agent
+        headers = {'User-Agent': 'SportApp/1.0 (https://github.com/ganbarguseynov-pixel/way-of-the-warrior; contact@example.com)'} 
+        
         response = requests.get(url, params=params, headers=headers, timeout=10)
+        
+        # Если Википедия вернула не JSON, а HTML (ошибку) — мы это поймаем
+        if response.status_code != 200:
+            print(f"Wiki error: {response.status_code}")
+            return jsonify({"products": []})
+            
         data = response.json()
         
         products = []
