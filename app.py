@@ -15,7 +15,7 @@ LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
-# --- ЛОКАЛЬНАЯ БАЗА ---
+# --- ЛОКАЛЬНАЯ БАЗА (ОСТАЕТСЯ БЕЗ ИЗМЕНЕНИЙ) ---
 LOCAL_DB = [
     {"name": "Курица", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
     {"name": "Куриная грудка", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
@@ -78,6 +78,23 @@ def translate_to_english(query):
     translated = [dictionary.get(w, w) for w in words]
     return ' '.join(translated)
 
+# --- НОВАЯ ФУНКЦИЯ: ПОИСК КАРТИНКИ В NK IMAGES (БЕЗ КЛЮЧА) ---
+def get_food_image(query):
+    try:
+        url = "https://nkimages.com/api/public/images"
+        params = {
+            "source": "clawhub",
+            "q": query,
+            "per_page": 1
+        }
+        response = requests.get(url, params=params, timeout=5)
+        data = response.json()
+        if data.get("success") and data.get("data"):
+            return data["data"][0]["url"]
+    except Exception as e:
+        print(f"NK Images error: {e}")
+    return ""
+
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q', '').strip()
@@ -86,7 +103,7 @@ def search_food():
     
     results = []
     
-    # 1. ЛОКАЛЬНАЯ БАЗА (Fuzzy)
+    # 1. ЛОКАЛЬНАЯ БАЗА
     best_match = process.extractOne(query, LOCAL_NAMES, scorer=fuzz.WRatio, score_cutoff=60)
     if best_match:
         matched_name = best_match[0]
@@ -104,7 +121,7 @@ def search_food():
                 })
                 break
 
-    # 2. OPEN FOOD FACTS (Бренды)
+    # 2. OPEN FOOD FACTS
     if len(results) == 0:
         eng_query = translate_to_english(query)
         try:
@@ -128,7 +145,7 @@ def search_food():
         except Exception as e:
             print(f"OFF error: {e}")
 
-    # 3. USDA (Простые продукты без бренда)
+    # 3. USDA
     if len(results) == 0 and USDA_API_KEY:
         eng_query = translate_to_english(query)
         try:
@@ -152,22 +169,19 @@ def search_food():
         except Exception as e:
             print(f"USDA error: {e}")
 
-    # 4. FRUITYVICE (Фрукты)
+    # 4. FRUITYVICE
     if len(results) == 0:
         eng_query = translate_to_english(query)
         try:
-            # Fruityvice не требует ключа, просто ищем фрукт по имени
             url = f"https://www.fruityvice.com/api/fruit/{eng_query}"
             response = requests.get(url, timeout=10)
-            
             if response.status_code == 200:
                 data = response.json()
-                # Fruityvice отдает данные в структуре: nutritions: {calories, protein, fat, carbohydrates}
                 nut = data.get('nutritions', {})
                 if nut.get('calories') is not None:
                     results.append({
                         "product_name": data.get('name', eng_query),
-                        "image_url": "", # У Fruityvice нет картинок
+                        "image_url": "",
                         "calories_100g": round(nut.get('calories', 0), 1),
                         "proteins_100g": round(nut.get('protein', 0), 1),
                         "fat_100g": round(nut.get('fat', 0), 1),
@@ -177,6 +191,11 @@ def search_food():
                     })
         except Exception as e:
             print(f"Fruityvice error: {e}")
+
+    # 5. ЕСЛИ НЕТ КАРТИНКИ, ИЩЕМ В NK IMAGES (ЭТО МЫ ДОБАВИЛИ)
+    for product in results:
+        if not product["image_url"]:
+            product["image_url"] = get_food_image(product["product_name"])
 
     return jsonify({"products": results})
 
