@@ -13,17 +13,14 @@ from google.genai import types
 app = Flask(__name__)
 CORS(app)
 
-# Берем ключ из настроек Render (Environment)
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+OFOX_API_KEY = "sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPmKOuTmo"
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
-client = None
-if GEMINI_API_KEY:
-    try:
-        client = genai.Client(api_key=GEMINI_API_KEY)
-    except Exception as e:
-        print(f"Ошибка Gemini: {e}")
+client = genai.Client(
+    api_key=OFOX_API_KEY,
+    http_options={"base_url": "https://api.ofox.ai/gemini", "api_version": "v1beta"}
+)
 
 LOCAL_DB = [
     {"name": "Курица", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
@@ -87,18 +84,6 @@ def translate_to_english(query):
     translated = [dictionary.get(w, w) for w in words]
     return ' '.join(translated)
 
-def get_food_image(query):
-    try:
-        url = "https://nkimages.com/api/public/images"
-        params = {"source": "clawhub", "q": query, "per_page": 1}
-        response = requests.get(url, params=params, timeout=5)
-        data = response.json()
-        if data.get("success") and data.get("data"):
-            return data["data"][0]["url"]
-    except Exception as e:
-        print(f"NK Images error: {e}")
-    return ""
-
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q', '').strip()
@@ -117,7 +102,7 @@ def search_food():
     if len(results) == 0:
         eng_query = translate_to_english(query)
         try:
-            api_results = api.product.text_search(eng_query, page_size=5)
+            api_results = api.product.text_search(eng_query, page_size=10)
             if api_results and 'products' in api_results:
                 for product in api_results['products']:
                     name = product.get('product_name')
@@ -130,7 +115,7 @@ def search_food():
     if len(results) == 0 and USDA_API_KEY:
         eng_query = translate_to_english(query)
         try:
-            url = f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={USDA_API_KEY}&query={eng_query}&pageSize=3"
+            url = f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={USDA_API_KEY}&query={eng_query}&pageSize=5"
             response = requests.get(url, timeout=10)
             data = response.json()
             if 'foods' in data:
@@ -138,22 +123,6 @@ def search_food():
                     nutrients = {n['nutrientName']: n['value'] for n in food.get('foodNutrients', [])}
                     results.append({"product_name": food.get('description', 'Без названия'), "image_url": "", "calories_100g": round(nutrients.get('Energy', 0), 1), "proteins_100g": round(nutrients.get('Protein', 0), 1), "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1), "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1), "ingredients": "Данные USDA FoodData Central", "description": ""})
         except Exception as e: print(f"USDA error: {e}")
-
-    if len(results) == 0:
-        eng_query = translate_to_english(query)
-        try:
-            url = f"https://www.fruityvice.com/api/fruit/{eng_query}"
-            response = requests.get(url, timeout=10)
-            if response.status_code == 200:
-                data = response.json()
-                nut = data.get('nutritions', {})
-                if nut.get('calories') is not None:
-                    results.append({"product_name": data.get('name', eng_query), "image_url": "", "calories_100g": round(nut.get('calories', 0), 1), "proteins_100g": round(nut.get('protein', 0), 1), "fat_100g": round(nut.get('fat', 0), 1), "carbs_100g": round(nut.get('carbohydrates', 0), 1), "ingredients": "Данные Fruityvice", "description": ""})
-        except Exception as e: print(f"Fruityvice error: {e}")
-
-    for product in results:
-        if not product["image_url"]:
-            product["image_url"] = get_food_image(product["product_name"])
 
     return jsonify({"products": results})
 
@@ -174,9 +143,41 @@ def search_by_barcode():
         print(f"Barcode error: {e}")
         return jsonify({"products": []})
 
+# --- НОВЫЙ ЭНДПОИНТ: Распознавание штрих-кода через Gemini ---
 @app.route('/scan_barcode', methods=['POST'])
 def scan_barcode():
-    return jsonify({"error": "Barcode scanning via camera temporarily disabled"}), 503
+    if 'image' not in request.files:
+        return jsonify({"error": "No image"}), 400
+    file = request.files['image']
+    
+    try:
+        image_data = file.read()
+        image = Image.open(io.BytesIO(image_data)).convert("RGB")
+        
+        img_byte_arr = io.BytesIO()
+        image.thumbnail((800, 800))
+        image.save(img_byte_arr, format='JPEG', quality=75)
+        compressed_image_data = img_byte_arr.getvalue()
+
+        prompt = "Найди на этом фото штрих-код и напиши только его цифры. Ничего больше не пиши. Если штрих-кода нет, напиши 'Нет'."
+        
+        response = client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
+        )
+        
+        barcode_text = response.text.strip()
+        # Очищаем от лишних символов, оставляем только цифры
+        barcode_digits = re.sub(r'\D', '', barcode_text)
+        
+        if len(barcode_digits) >= 8:
+            return jsonify({"barcode": barcode_digits})
+        else:
+            return jsonify({"error": "Barcode not found"}), 404
+            
+    except Exception as e:
+        print(f"Gemini Barcode error: {e}")
+        return jsonify({"error": "Scan failed"}), 500
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
@@ -188,9 +189,6 @@ def analyze_photo():
         image = Image.open(io.BytesIO(image_data)).convert("RGB")
     except:
         return jsonify({"food": "Ошибка", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Не удалось прочитать фото. Попробуйте другое."}), 400
-
-    if not client:
-        return jsonify({"food": "Ошибка", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ не настроен на сервере."})
 
     try:
         img_byte_arr = io.BytesIO()
@@ -212,7 +210,7 @@ def analyze_photo():
         """
         
         response = client.models.generate_content(
-            model='gemini-2.0-flash',
+            model='gemini-1.5-flash',
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
         )
         
@@ -236,8 +234,8 @@ def analyze_photo():
             return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ не смог разобрать, что на фото."})
             
     except Exception as e:
-        print(f"Gemini error: {e}")
-        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Не удалось распознать фото. Попробуйте позже."})
+        print(f"Ofox error: {e}")
+        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Ошибка при обращении к ИИ."})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
