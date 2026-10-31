@@ -137,7 +137,7 @@ def search_food():
     if not query:
         return jsonify({"products": []})
 
-    # ПРОВЕРЯЕМ КЭШ (если этот запрос уже искали, отдаем сразу)
+    # ПРОВЕРЯЕМ КЭШ
     cache_key = query.lower()
     if cache_key in SEARCH_CACHE:
         print(f"Из кэша: {query}")
@@ -199,7 +199,7 @@ def search_food():
         if not product["image_url"]:
             product["image_url"] = get_food_image(product["product_name"])
 
-    # СОХРАНЯЕМ РЕЗУЛЬТАТ В КЭШ (чтобы в следующий раз не искать)
+    # СОХРАНЯЕМ В КЭШ
     if results:
         SEARCH_CACHE[cache_key] = results
 
