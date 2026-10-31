@@ -17,13 +17,9 @@ OFOX_API_KEY = "sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPm
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
-# Подключаемся к Ofox через официальную библиотеку Google
 client = genai.Client(
     api_key=OFOX_API_KEY,
-    http_options={
-        "base_url": "https://api.ofox.ai/gemini",
-        "api_version": "v1beta",
-    }
+    http_options={"base_url": "https://api.ofox.ai/gemini", "api_version": "v1beta"}
 )
 
 LOCAL_DB = [
@@ -100,6 +96,45 @@ def get_food_image(query):
         print(f"NK Images error: {e}")
     return ""
 
+# --- НОВАЯ ФУНКЦИЯ: Поиск в Dietly ---
+def search_dietly(query):
+    try:
+        response = requests.get(
+            'https://api.getdietly.com/search',
+            params={'q': query, 'limit': 3},
+            timeout=10
+        )
+        if response.status_code != 200:
+            return []
+        
+        foods = response.json() # Это массив, а не объект
+        results = []
+        for food in foods:
+            # У Dietly все БЖУ на 100г
+            cal = food.get('calories_kcal')
+            prot = food.get('protein_g')
+            fat = food.get('fat_g')
+            carb = food.get('carbs_g')
+            
+            # Пропускаем, если нет калорий (пустая запись)
+            if cal is None:
+                continue
+
+            results.append({
+                "product_name": food.get('name', 'Без названия'),
+                "image_url": food.get('image_thumb_url') or food.get('image_url') or '',
+                "calories_100g": round(cal, 1) if cal is not None else 0,
+                "proteins_100g": round(prot, 1) if prot is not None else 0,
+                "fat_100g": round(fat, 1) if fat is not None else 0,
+                "carbs_100g": round(carb, 1) if carb is not None else 0,
+                "ingredients": "Данные Dietly (4.7 млн продуктов)",
+                "description": ""
+            })
+        return results
+    except Exception as e:
+        print(f"Dietly error: {e}")
+        return []
+
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q', '').strip()
@@ -152,6 +187,12 @@ def search_food():
                     results.append({"product_name": data.get('name', eng_query), "image_url": "", "calories_100g": round(nut.get('calories', 0), 1), "proteins_100g": round(nut.get('protein', 0), 1), "fat_100g": round(nut.get('fat', 0), 1), "carbs_100g": round(nut.get('carbohydrates', 0), 1), "ingredients": "Данные Fruityvice", "description": ""})
         except Exception as e: print(f"Fruityvice error: {e}")
 
+    # --- ЕСЛИ ВСЁ ПУСТО, ИДЕМ В DIETLY ---
+    if len(results) == 0:
+        eng_query = translate_to_english(query)
+        print(f"Поиск в Dietly: {eng_query}")
+        results = search_dietly(eng_query)
+
     for product in results:
         if not product["image_url"]:
             product["image_url"] = get_food_image(product["product_name"])
@@ -182,16 +223,15 @@ def scan_barcode():
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
     if 'image' not in request.files:
-        return jsonify({"error": "No image provided"}), 400
+        return jsonify({"food": "Ошибка", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Фото не загружено. Попробуйте еще раз."}), 400
     file = request.files['image']
     try:
         image_data = file.read()
         image = Image.open(io.BytesIO(image_data)).convert("RGB")
     except:
-        return jsonify({"error": "Invalid image"}), 400
+        return jsonify({"food": "Ошибка", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Не удалось прочитать фото. Попробуйте другое."}), 400
 
     try:
-        # Сжимаем фото
         img_byte_arr = io.BytesIO()
         image.thumbnail((800, 800))
         image.save(img_byte_arr, format='JPEG', quality=75)
@@ -213,7 +253,6 @@ def analyze_photo():
         Пример 2: Snickers | 500 | 10 | 25 | 60 | Шоколадный батончик с карамелью и арахисом.
         """
         
-        # Отправляем в Ofox (через нативную библиотеку Google)
         response = client.models.generate_content(
             model='gemini-3.8-flash',
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
@@ -236,11 +275,22 @@ def analyze_photo():
                 "description": parts[5]
             })
         else:
-            return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ ответил не по формату"})
+            return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ не смог разобрать, что на фото. Попробуйте сделать снимок ближе."})
             
     except Exception as e:
         print(f"Ofox error: {e}")
-        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": str(e)})
+        error_text = str(e)
+        
+        if "401" in error_text or "402" in error_text:
+            msg = "На сервере закончились средства для распознавания. Администратору нужно пополнить баланс."
+        elif "503" in error_text or "429" in error_text:
+            msg = "Нейросеть сейчас перегружена (слишком много желающих). Подождите 10-15 секунд и попробуйте снова."
+        elif "safety" in error_text.lower():
+            msg = "ИИ не смог распознать это фото (возможно, это не еда). Попробуйте другое."
+        else:
+            msg = "Не удалось распознать фото из-за технической ошибки. Попробуйте позже."
+
+        return jsonify({"food": "Ошибка", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": msg})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
