@@ -10,37 +10,48 @@ CORS(app)
 
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 
-# --- ЛОКАЛЬНАЯ БАЗА (БОЛЬШАЯ) ---
-PRODUCTS_DB = [
-    {"name": "Яблоко", "cal": 52, "prot": 0.3, "fat": 0.2, "carb": 14},
-    {"name": "Банан", "cal": 89, "prot": 1.1, "fat": 0.3, "carb": 23},
-    {"name": "Апельсин", "cal": 47, "prot": 0.9, "fat": 0.1, "carb": 12},
-    {"name": "Помидор", "cal": 18, "prot": 0.9, "fat": 0.2, "carb": 3.9},
-    {"name": "Огурец", "cal": 15, "prot": 0.7, "fat": 0.1, "carb": 3.6},
-    {"name": "Картофель", "cal": 87, "prot": 2, "fat": 0.1, "carb": 20},
-    {"name": "Йогурт", "cal": 60, "prot": 5, "fat": 3, "carb": 4},
-    {"name": "Молоко", "cal": 52, "prot": 2.9, "fat": 2.5, "carb": 4.7},
-    {"name": "Сыр", "cal": 402, "prot": 25, "fat": 33, "carb": 1.3},
-    {"name": "Творог", "cal": 121, "prot": 17, "fat": 5, "carb": 3},
-    {"name": "Куриная грудка", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0},
-    {"name": "Лосось", "cal": 208, "prot": 20, "fat": 13, "carb": 0},
-    {"name": "Яйцо", "cal": 155, "prot": 13, "fat": 11, "carb": 1.1},
-    {"name": "Рис", "cal": 130, "prot": 2.7, "fat": 0.3, "carb": 28},
-    {"name": "Гречка", "cal": 110, "prot": 4, "fat": 1, "carb": 20},
-    {"name": "Овсянка", "cal": 88, "prot": 3, "fat": 1.7, "carb": 15},
-    {"name": "Макароны", "cal": 131, "prot": 5, "fat": 1.1, "carb": 25},
-    {"name": "Хлеб", "cal": 265, "prot": 9, "fat": 3.2, "carb": 49},
-    {"name": "Кофе", "cal": 2, "prot": 0.1, "fat": 0, "carb": 0},
-    {"name": "Чай", "cal": 1, "prot": 0, "fat": 0, "carb": 0},
-    {"name": "Кола", "cal": 42, "prot": 0, "fat": 0, "carb": 10.6},
-    {"name": "Сок", "cal": 45, "prot": 0.7, "fat": 0.2, "carb": 10.4},
-    {"name": "Пицца", "cal": 266, "prot": 11, "fat": 10, "carb": 33},
-    {"name": "Бургер", "cal": 295, "prot": 15, "fat": 12, "carb": 30},
-    {"name": "Мохито", "cal": 45, "prot": 0.1, "fat": 0, "carb": 11},
-    {"name": "Мохито клубничное", "cal": 50, "prot": 0.2, "fat": 0, "carb": 12},
-    {"name": "Шоколад", "cal": 546, "prot": 4.9, "fat": 31, "carb": 61},
-    {"name": "Печенье", "cal": 417, "prot": 5, "fat": 15, "carb": 65}
-]
+# --- ПОИСК ЧЕРЕЗ ВИКИПЕДИЮ ---
+@app.route('/search', methods=['GET'])
+def search_food():
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify({"products": []})
+    
+    try:
+        # Ищем статью в русской Википедии
+        url = "https://ru.wikipedia.org/w/api.php"
+        params = {
+            "action": "query",
+            "list": "search",
+            "srsearch": query,
+            "format": "json",
+            "utf8": 1,
+            "srlimit": 3
+        }
+        headers = {'User-Agent': 'SportApp/1.0 (contact@example.com)'}
+        response = requests.get(url, params=params, headers=headers, timeout=10)
+        data = response.json()
+        
+        products = []
+        if 'query' in data and 'search' in data['query']:
+            for item in data['query']['search']:
+                title = item['title']
+                snippet = item['snippet'].replace('<span class="searchmatch">', '').replace('</span>', '')
+                
+                products.append({
+                    "product_name": title,
+                    "image_url": "",
+                    "calories_100g": 0, # Википедия не дает калории
+                    "proteins_100g": 0,
+                    "fat_100g": 0,
+                    "carbs_100g": 0,
+                    "ingredients": snippet,
+                    "description": "Данные из Википедии. Калории уточняются."
+                })
+        return jsonify({"products": products})
+    except Exception as e:
+        print(f"Search error: {e}")
+        return jsonify({"products": []})
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
@@ -68,28 +79,6 @@ def analyze_photo():
         except Exception as e:
             print(f"LogMeal error: {e}")
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
-
-@app.route('/search', methods=['GET'])
-def search_food():
-    query = request.args.get('q', '').strip().lower()
-    if not query:
-        return jsonify({"products": []})
-    
-    results = []
-    for p in PRODUCTS_DB:
-        # Ищем совпадение (поиск подстроки)
-        if query in p["name"].lower():
-            results.append({
-                "product_name": p["name"],
-                "image_url": "",
-                "calories_100g": p["cal"],
-                "proteins_100g": p["prot"],
-                "fat_100g": p["fat"],
-                "carbs_100g": p["carb"],
-                "ingredients": "Локальная база",
-                "description": ""
-            })
-    return jsonify({"products": results})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
