@@ -12,7 +12,6 @@
 .modal-content { background: #1c1c1e; border-radius: 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; padding: 20px; box-sizing: border-box; position: relative; }
 .modal-close { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 20px; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; }
 
-/* Стили для контейнера камеры штрих-кода */
 #barcode-camera-container { position: relative; width: 100%; height: 60vh; border-radius: 16px; overflow: hidden; margin-bottom: 20px; background: #000; display: flex; flex-direction: column; justify-content: space-between; }
 #barcode-camera-video { width: 100%; height: 100%; object-fit: cover; display: block; background-color: #000; }
 #barcode-camera-controls { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; z-index: 5; }
@@ -21,7 +20,6 @@
 #barcode-close-camera-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 5; display: flex; align-items: center; justify-content: center; }
 #barcode-switch-camera-btn { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 5; display: flex; align-items: center; justify-content: center; }
 
-/* Новые стили для красивого отображения результата по центру */
 .result-card { background: #1c1c1e; padding: 25px 20px; border-radius: 16px; margin-top: 20px; text-align: center; }
 .result-title { margin-top: 0; color: var(--accent-color); font-size: 24px; word-break: break-word; line-height: 1.2; }
 .result-desc { color: #8e8e93; font-size: 15px; margin-bottom: 20px; line-height: 1.4; padding: 0 10px; }
@@ -66,7 +64,6 @@
 <button class="btn" id="remove-photo-btn" style="display: none; background-color: #ff3b30; color: white; margin-bottom: 10px;" onclick="resetCameraScreen()">❌ Удалить фото</button>
 <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px; font-size: 18px;">🤖 ИИ анализирует фото...</div>
 
-<!-- БЛОК РЕЗУЛЬТАТА С ЦЕНТРИРОВАНИЕМ -->
 <div id="food-result" style="display: none;" class="result-card">
     <h2 id="food-name" class="result-title">Название</h2>
     <p id="food-desc" class="result-desc">Описание...</p>
@@ -177,7 +174,6 @@ async function searchFood() {
     }
 }
 
-// --- ШТРИХ-КОД (РУЧНОЙ ВВОД) ---
 async function searchByBarcode() {
     const code = document.getElementById('barcode-input').value.trim();
     if (!code) {
@@ -204,7 +200,6 @@ async function searchByBarcode() {
     }
 }
 
-// --- ШТРИХ-КОД (КАМЕРА) ---
 let barcodeStream = null;
 let barcodeFacingMode = "environment";
 
@@ -299,7 +294,6 @@ async function handleBarcodeImage(event) {
     event.target.value = "";
 }
 
-// --- МОДАЛЬНОЕ ОКНО ---
 function openFoodModal(index) {
     const food = window.foodList[index];
     selectedFoodData = food;
@@ -327,7 +321,6 @@ function confirmFoodSelection() {
     document.getElementById('search-result').innerHTML = '';
 }
 
-// --- КАМЕРА ДЛЯ ФОТО ЕДЫ ---
 let videoStream = null;
 let currentFacingMode = "environment";
 
@@ -393,16 +386,26 @@ async function handleImage(event) {
     await sendPhotoToServer(file);
 }
 
+// Здесь мы добавили больше времени на ответ (60 секунд), чтобы сервер успел проснуться
 async function sendPhotoToServer(file) {
     document.getElementById('loading-spinner').style.display = 'block';
     document.getElementById('food-result').style.display = 'none';
+    
+    // Создаем "прерыватель" на 60 секунд
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); 
+
     const formData = new FormData();
     formData.append('image', file);
     try {
-        const response = await fetch(`${AI_SERVER_URL}/analyze`, { method: 'POST', body: formData });
+        const response = await fetch(`${AI_SERVER_URL}/analyze`, { 
+            method: 'POST', 
+            body: formData,
+            signal: controller.signal 
+        });
         const data = await response.json();
         document.getElementById('loading-spinner').style.display = 'none';
-        if (data.food !== "Не удалось распознать") {
+        if (data.food !== "Не удалось распознать" && data.food !== "Ошибка ИИ") {
             document.getElementById('food-result').style.display = 'block';
             document.getElementById('food-name').innerText = data.food;
             document.getElementById('food-desc').innerText = data.description || "Описание отсутствует";
@@ -411,13 +414,16 @@ async function sendPhotoToServer(file) {
             document.getElementById('food-fat').innerText = data.fat + " г";
             document.getElementById('food-carbs').innerText = data.carbs + " г";
         } else {
-            tg.showAlert("ИИ не смог распознать еду.");
+            tg.showAlert(data.description || "ИИ не смог распознать еду.");
             resetCameraScreen();
         }
     } catch (error) {
         document.getElementById('loading-spinner').style.display = 'none';
-        tg.showAlert("Сервер просыпается.");
+        // Если за 60 секунд не ответил — значит либо сервер спит, либо ошибка сети
+        tg.showAlert("Сервер не отвечает. Попробуйте еще раз через минуту.");
         resetCameraScreen();
+    } finally {
+        clearTimeout(timeoutId);
     }
 }
 
