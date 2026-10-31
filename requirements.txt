@@ -4,4 +4,4 @@ Pillow
 requests
 flask-cors
 openfoodfacts
-rapidfuzz
+pyzbar
