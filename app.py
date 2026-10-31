@@ -7,23 +7,21 @@ import requests
 import openfoodfacts
 import re
 from rapidfuzz import process, fuzz
-from google import genai
-from google.genai import types
+from openai import OpenAI
 
 app = Flask(__name__)
 CORS(app)
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# Твой новый ключ от Ofox
+OFOX_API_KEY = "sk-of-KYmtpJrHbBawbsEYSIQzzwKgyIPzgDgUvxowKBjTgOMiYzTwKjAZ0qsxcKEpZPpx"
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
-client = None
-if GEMINI_API_KEY:
-    try:
-        client = genai.Client(api_key=GEMINI_API_KEY)
-        print("Gemini подключен успешно!")
-    except Exception as e:
-        print(f"Ошибка подключения Gemini: {e}")
+# Подключаемся к Ofox
+client = OpenAI(
+    api_key=OFOX_API_KEY,
+    base_url="https://api.ofox.ai/v1"
+)
 
 LOCAL_DB = [
     {"name": "Курица", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
@@ -189,15 +187,16 @@ def analyze_photo():
     except:
         return jsonify({"error": "Invalid image"}), 400
 
-    if not client:
-        return jsonify({"food": "Ошибка: ИИ не настроен", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Проверьте API ключ Gemini"})
-
     try:
-        # Сжимаем фото, чтобы не убить память сервера
+        # Сжимаем фото
         img_byte_arr = io.BytesIO()
         image.thumbnail((800, 800))
         image.save(img_byte_arr, format='JPEG', quality=75)
         compressed_image_data = img_byte_arr.getvalue()
+
+        # Кодируем фото в base64 для отправки
+        import base64
+        base64_image = base64.b64encode(compressed_image_data).decode('utf-8')
 
         prompt = """
         Ты — профессиональный диетолог. Твоя задача — определить еду на фото.
@@ -205,23 +204,29 @@ def analyze_photo():
         ПРАВИЛА:
         1. Если на упаковке есть бренд или название на английском языке, напиши это название как есть (на английском), но остальное описание — на русском.
         2. В остальных случаях ВСЕГДА пиши название еды на РУССКОМ языке.
-        3. Обязательно напиши краткое описание продукта (например, "Жареная куриная грудка с овощами").
+        3. Обязательно напиши краткое описание продукта.
         4. Дай точные данные БЖУ и калорий на 100 грамм.
         
         Формат ответа (строго через вертикальную черту |):
         Название | Калории | Белки | Жиры | Углеводы | Описание
-        
-        Пример 1: Куриная грудка | 165 | 31 | 3.6 | 0 | Жареная куриная грудка без кожи.
-        Пример 2: Snickers | 500 | 10 | 25 | 60 | Шоколадный батончик с карамелью и арахисом.
         """
-        
-        # Отправляем в Gemini (без всяких LogMeal)
-        response = client.models.generate_content(
-            model='gemini-3.8-flash',
-            contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
+
+        # Отправляем в Ofox (формат OpenAI)
+        response = client.chat.completions.create(
+            model="gemini-3.8-flash",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                    ]
+                }
+            ]
         )
-        
-        parts = [p.strip() for p in response.text.strip().split('|')]
+
+        response_text = response.choices[0].message.content
+        parts = [p.strip() for p in response_text.strip().split('|')]
         
         if len(parts) >= 6:
             cal = int(re.sub(r'\D', '', parts[1])) if re.search(r'\d', parts[1]) else 250
@@ -241,8 +246,8 @@ def analyze_photo():
             return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ ответил не по формату"})
             
     except Exception as e:
-        print(f"Gemini error: {e}")
-        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Попробуйте позже."})
+        print(f"Ofox error: {e}")
+        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": str(e)})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
