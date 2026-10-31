@@ -13,10 +13,12 @@ from google.genai import types
 app = Flask(__name__)
 CORS(app)
 
+# Твой ключ от Ofox
 OFOX_API_KEY = "sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPmKOuTmo"
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
+# Подключаемся к Ofox
 client = genai.Client(
     api_key=OFOX_API_KEY,
     http_options={"base_url": "https://api.ofox.ai/gemini", "api_version": "v1beta"}
@@ -107,16 +109,14 @@ def search_dietly(query):
         if response.status_code != 200:
             return []
         
-        foods = response.json() # Это массив, а не объект
+        foods = response.json()
         results = []
         for food in foods:
-            # У Dietly все БЖУ на 100г
             cal = food.get('calories_kcal')
             prot = food.get('protein_g')
             fat = food.get('fat_g')
             carb = food.get('carbs_g')
             
-            # Пропускаем, если нет калорий (пустая запись)
             if cal is None:
                 continue
 
