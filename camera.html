@@ -61,10 +61,15 @@
 
 <!-- ВКЛАДКА ШТРИХ-КОДА -->
 <div id="tab-barcode" class="tab-content">
-    <p style="text-align: center; color: #8e8e93; margin-bottom: 20px;">Выберите фото штрих-кода из галереи</p>
+    <p style="text-align: center; color: #8e8e93; margin-bottom: 20px;">Сделайте фото штрих-кода или выберите из галереи</p>
     
+    <!-- Кнопка для камеры (capture) -->
+    <input type="file" id="barcode-input-camera" accept="image/*" capture="environment" style="display: none;" onchange="handleBarcodeImage(event)">
+    <button class="btn" style="margin-bottom: 10px;" onclick="document.getElementById('barcode-input-camera').click()">📷 Сфотографировать</button>
+    
+    <!-- Кнопка для галереи -->
     <input type="file" id="barcode-input-gallery" accept="image/*" style="display: none;" onchange="handleBarcodeImage(event)">
-    <button class="btn" onclick="document.getElementById('barcode-input-gallery').click()">🖼️ Загрузить фото штрих-кода</button>
+    <button class="btn" style="background-color: #2c2c2e; color: white;" onclick="document.getElementById('barcode-input-gallery').click()">🖼️ Выбрать из галереи</button>
 
     <div id="barcode-result" style="margin-top: 20px; text-align: center; font-size: 18px; font-weight: bold;"></div>
 </div>
