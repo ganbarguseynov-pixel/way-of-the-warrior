@@ -41,7 +41,7 @@ def analyze_photo():
 
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
-# --- ПОИСК ЧЕРЕЗ GEMINI (РАЗБИВКА НА ИНГРЕДИЕНТЫ) ---
+# --- ПОИСК ЧЕРЕЗ GEMINI (ВОЗВРАТ К РАБОЧЕЙ ВЕРСИИ) ---
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q', '').strip()
@@ -51,17 +51,14 @@ def search_food():
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
         
-        # Просим ИИ разбить на ингредиенты и найти каждый
         prompt = f"""
-        Пользователь ищет: "{query}".
-        Разбей этот запрос на основные ингредиенты (максимум 3).
-        Найди калории и БЖУ для каждого ингредиента (на 100г).
-        Верни ответ СТРОГО в формате JSON-массива:
+        Найди информацию о продукте: "{query}".
+        Верни ответ строго в формате JSON-массива (без markdown, без лишнего текста):
         [
-          {{"name": "Ингредиент 1", "calories": 100, "protein": 10, "fat": 5, "carbs": 20}},
-          {{"name": "Ингредиент 2", "calories": 150, "protein": 5, "fat": 2, "carbs": 30}}
+          {{"name": "Название 1", "calories": 100, "protein": 10, "fat": 5, "carbs": 20}},
+          {{"name": "Название 2", "calories": 150, "protein": 5, "fat": 2, "carbs": 30}}
         ]
-        Если это не еда (например, "автомобиль"), верни [].
+        Если продукт не найден, верни [].
         """
         
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -69,23 +66,29 @@ def search_food():
         data = response.json()
         
         if 'error' in data:
+            print(f"Google API Error: {data['error']}")
             return jsonify({"products": []})
         
         text = data['candidates'][0]['content']['parts'][0]['text']
         text = text.replace('```json', '').replace('```', '').strip()
         
-        result_list = json.loads(text)
+        # Пытаемся распарсить массив
+        try:
+            result_list = json.loads(text)
+        except:
+            # Если ИИ вернул не массив, а объект - оборачиваем в массив
+            result_list = [json.loads(text)]
         
         products = []
         for item in result_list:
             products.append({
-                "product_name": item.get("name"),
+                "product_name": item.get("name", "Неизвестно"),
                 "image_url": "",
                 "calories_100g": item.get("calories", 0),
                 "proteins_100g": item.get("protein", 0),
                 "fat_100g": item.get("fat", 0),
                 "carbs_100g": item.get("carbs", 0),
-                "ingredients": f"Ингредиент для: {query}",
+                "ingredients": f"Данные ИИ для: {query}",
                 "description": ""
             })
             
