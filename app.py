@@ -18,7 +18,6 @@ OFOX_API_KEY = "sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPm
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
-# Подключаемся к Ofox
 client = genai.Client(
     api_key=OFOX_API_KEY,
     http_options={"base_url": "https://api.ofox.ai/gemini", "api_version": "v1beta"}
@@ -98,43 +97,6 @@ def get_food_image(query):
         print(f"NK Images error: {e}")
     return ""
 
-# --- НОВАЯ ФУНКЦИЯ: Поиск в Dietly ---
-def search_dietly(query):
-    try:
-        response = requests.get(
-            'https://api.getdietly.com/search',
-            params={'q': query, 'limit': 3},
-            timeout=10
-        )
-        if response.status_code != 200:
-            return []
-        
-        foods = response.json()
-        results = []
-        for food in foods:
-            cal = food.get('calories_kcal')
-            prot = food.get('protein_g')
-            fat = food.get('fat_g')
-            carb = food.get('carbs_g')
-            
-            if cal is None:
-                continue
-
-            results.append({
-                "product_name": food.get('name', 'Без названия'),
-                "image_url": food.get('image_thumb_url') or food.get('image_url') or '',
-                "calories_100g": round(cal, 1) if cal is not None else 0,
-                "proteins_100g": round(prot, 1) if prot is not None else 0,
-                "fat_100g": round(fat, 1) if fat is not None else 0,
-                "carbs_100g": round(carb, 1) if carb is not None else 0,
-                "ingredients": "Данные Dietly (4.7 млн продуктов)",
-                "description": ""
-            })
-        return results
-    except Exception as e:
-        print(f"Dietly error: {e}")
-        return []
-
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q', '').strip()
@@ -186,12 +148,6 @@ def search_food():
                 if nut.get('calories') is not None:
                     results.append({"product_name": data.get('name', eng_query), "image_url": "", "calories_100g": round(nut.get('calories', 0), 1), "proteins_100g": round(nut.get('protein', 0), 1), "fat_100g": round(nut.get('fat', 0), 1), "carbs_100g": round(nut.get('carbohydrates', 0), 1), "ingredients": "Данные Fruityvice", "description": ""})
         except Exception as e: print(f"Fruityvice error: {e}")
-
-    # --- ЕСЛИ ВСЁ ПУСТО, ИДЕМ В DIETLY ---
-    if len(results) == 0:
-        eng_query = translate_to_english(query)
-        print(f"Поиск в Dietly: {eng_query}")
-        results = search_dietly(eng_query)
 
     for product in results:
         if not product["image_url"]:
