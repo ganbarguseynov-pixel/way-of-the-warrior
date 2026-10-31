@@ -61,9 +61,11 @@
 
 <!-- ВКЛАДКА ШТРИХ-КОДА -->
 <div id="tab-barcode" class="tab-content">
-    <p style="text-align: center; color: #8e8e93; margin-bottom: 20px;">Сделайте фото штрих-кода продукта</p>
-    <input type="file" id="barcode-input" accept="image/*" capture="environment" style="display: none;" onchange="handleBarcodeImage(event)">
-    <button class="btn" onclick="document.getElementById('barcode-input').click()">📷 Сканировать штрих-код</button>
+    <p style="text-align: center; color: #8e8e93; margin-bottom: 20px;">Выберите фото штрих-кода из галереи</p>
+    
+    <input type="file" id="barcode-input-gallery" accept="image/*" style="display: none;" onchange="handleBarcodeImage(event)">
+    <button class="btn" onclick="document.getElementById('barcode-input-gallery').click()">🖼️ Загрузить фото штрих-кода</button>
+
     <div id="barcode-result" style="margin-top: 20px; text-align: center; font-size: 18px; font-weight: bold;"></div>
 </div>
 </div>
@@ -129,7 +131,7 @@ async function searchFood() {
     }
 }
 
-// --- ШТРИХ-КОД (ЧЕРЕЗ КАМЕРУ ТЕЛЕФОНА) ---
+// --- ШТРИХ-КОД ---
 async function handleBarcodeImage(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -141,13 +143,11 @@ async function handleBarcodeImage(event) {
     formData.append('image', file);
     
     try {
-        // Отправляем фото на сервер для распознавания
         const response = await fetch(`${AI_SERVER_URL}/scan_barcode`, { method: 'POST', body: formData });
         const data = await response.json();
         
         if (data.barcode) {
             resultDiv.innerText = `Найден: ${data.barcode}. Загрузка...`;
-            // Ищем продукт по штрих-коду
             const productResponse = await fetch(`${AI_SERVER_URL}/barcode?code=${data.barcode}`);
             const productData = await productResponse.json();
             
