@@ -12,9 +12,10 @@ app = Flask(__name__)
 CORS(app)
 
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
+USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
-# --- РАСШИРЕННАЯ ЛОКАЛЬНАЯ БАЗА (С КАРТИНКАМИ) ---
+# --- ЛОКАЛЬНАЯ БАЗА (С КАРТИНКАМИ) ---
 LOCAL_DB = [
     {"name": "Курица", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
     {"name": "Куриная грудка", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
@@ -23,6 +24,7 @@ LOCAL_DB = [
     {"name": "Мохито", "cal": 45, "prot": 0.1, "fat": 0, "carb": 11, "img": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=200"},
     {"name": "Адреналин", "cal": 45, "prot": 0, "fat": 0, "carb": 11, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
     {"name": "Йогурт", "cal": 60, "prot": 5, "fat": 3, "carb": 4, "img": "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=200"},
+    {"name": "Кола", "cal": 42, "prot": 0, "fat": 0, "carb": 10.6, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
     {"name": "Салат", "cal": 15, "prot": 1.4, "fat": 0.2, "carb": 2.9, "img": "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?w=200"},
     {"name": "Банан", "cal": 89, "prot": 1.1, "fat": 0.3, "carb": 23, "img": "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=200"},
     {"name": "Яблоко", "cal": 52, "prot": 0.3, "fat": 0.2, "carb": 14, "img": "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200"},
@@ -38,7 +40,6 @@ LOCAL_DB = [
     {"name": "Хлеб", "cal": 265, "prot": 9, "fat": 3.2, "carb": 49, "img": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200"},
     {"name": "Кофе", "cal": 2, "prot": 0.1, "fat": 0, "carb": 0, "img": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200"},
     {"name": "Чай", "cal": 1, "prot": 0, "fat": 0, "carb": 0, "img": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=200"},
-    {"name": "Кола", "cal": 42, "prot": 0, "fat": 0, "carb": 10.6, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
     {"name": "Сок", "cal": 45, "prot": 0.7, "fat": 0.2, "carb": 10.4, "img": "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=200"},
     {"name": "Шоколад", "cal": 546, "prot": 4.9, "fat": 31, "carb": 61, "img": "https://images.unsplash.com/photo-1511381939415-e44015466834?w=200"},
     {"name": "Апельсин", "cal": 47, "prot": 0.9, "fat": 0.1, "carb": 12, "img": "https://images.unsplash.com/photo-1547514701-42782101795e?w=200"},
@@ -66,9 +67,8 @@ def search_food():
     
     results = []
     
-    # 1. ИЩЕМ В ЛОКАЛЬНОЙ БАЗЕ (Fuzzy Search - находит даже с опечатками)
+    # 1. ЛОКАЛЬНАЯ БАЗА (Fuzzy)
     best_match = process.extractOne(query, LOCAL_NAMES, scorer=fuzz.WRatio, score_cutoff=60)
-    
     if best_match:
         matched_name = best_match[0]
         for p in LOCAL_DB:
@@ -85,7 +85,31 @@ def search_food():
                 })
                 break
 
-    # 2. ЕСЛИ НЕТ, ИДЕМ В OPEN FOOD FACTS
+    # 2. ЕСЛИ НЕТ, ИДЕМ В USDA (ДЛЯ ПРОСТЫХ ПРОДУКТОВ)
+    if len(results) == 0 and USDA_API_KEY:
+        eng_query = translate_to_english(query)
+        try:
+            url = f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={USDA_API_KEY}&query={eng_query}&pageSize=3"
+            response = requests.get(url, timeout=10)
+            data = response.json()
+            
+            if 'foods' in data:
+                for food in data['foods']:
+                    nutrients = {n['nutrientName']: n['value'] for n in food.get('foodNutrients', [])}
+                    results.append({
+                        "product_name": food.get('description', 'Без названия'),
+                        "image_url": "", # У USDA нет картинок
+                        "calories_100g": round(nutrients.get('Energy', 0), 1),
+                        "proteins_100g": round(nutrients.get('Protein', 0), 1),
+                        "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1),
+                        "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1),
+                        "ingredients": "Данные USDA FoodData Central",
+                        "description": ""
+                    })
+        except Exception as e:
+            print(f"USDA error: {e}")
+
+    # 3. ЕСЛИ НЕТ, ИДЕМ В OPEN FOOD FACTS (ДЛЯ БРЕНДОВ)
     if len(results) == 0:
         eng_query = translate_to_english(query)
         try:
@@ -107,7 +131,8 @@ def search_food():
                         "description": "Данные Open Food Facts"
                     })
         except Exception as e:
-            print(f"Search error: {e}")
+            print(f"OFF error: {e}")
+    
     return jsonify({"products": results})
 
 @app.route('/analyze', methods=['POST'])
