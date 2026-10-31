@@ -5,6 +5,7 @@ import io
 import os
 import requests
 import json
+import re
 
 app = Flask(__name__)
 CORS(app)
@@ -41,7 +42,7 @@ def analyze_photo():
 
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
-# --- ПОИСК ЧЕРЕЗ GEMINI (ВОЗВРАТ К РАБОЧЕЙ ВЕРСИИ) ---
+# --- ПОИСК ЧЕРЕЗ GEMINI (СТАБИЛЬНЫЙ) ---
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q', '').strip()
@@ -53,10 +54,11 @@ def search_food():
         
         prompt = f"""
         Найди информацию о продукте: "{query}".
-        Верни ответ строго в формате JSON-массива (без markdown, без лишнего текста):
+        Верни ответ СТРОГО в формате JSON-массива (без markdown, без кавычек вокруг ответа):
         [
-          {{"name": "Название 1", "calories": 100, "protein": 10, "fat": 5, "carbs": 20}},
-          {{"name": "Название 2", "calories": 150, "protein": 5, "fat": 2, "carbs": 30}}
+          {{"name": "Название на русском", "calories": 100, "protein": 10, "fat": 5, "carbs": 20}},
+          {{"name": "Альтернатива 1", "calories": 150, "protein": 5, "fat": 2, "carbs": 30}},
+          {{"name": "Альтернатива 2", "calories": 200, "protein": 0, "fat": 0, "carbs": 50}}
         ]
         Если продукт не найден, верни [].
         """
@@ -70,14 +72,16 @@ def search_food():
             return jsonify({"products": []})
         
         text = data['candidates'][0]['content']['parts'][0]['text']
-        text = text.replace('```json', '').replace('```', '').strip()
         
-        # Пытаемся распарсить массив
-        try:
-            result_list = json.loads(text)
-        except:
-            # Если ИИ вернул не массив, а объект - оборачиваем в массив
-            result_list = [json.loads(text)]
+        # ОЧИСТКА: убираем markdown, кавычки, пробелы
+        text = text.replace('```json', '').replace('```', '').strip()
+        # Ищем начало массива [ и конец ]
+        start = text.find('[')
+        end = text.rfind(']')
+        if start != -1 and end != -1:
+            text = text[start:end+1]
+        
+        result_list = json.loads(text)
         
         products = []
         for item in result_list:
@@ -88,7 +92,7 @@ def search_food():
                 "proteins_100g": item.get("protein", 0),
                 "fat_100g": item.get("fat", 0),
                 "carbs_100g": item.get("carbs", 0),
-                "ingredients": f"Данные ИИ для: {query}",
+                "ingredients": f"Данные ИИ",
                 "description": ""
             })
             
