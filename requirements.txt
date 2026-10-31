@@ -3,3 +3,4 @@ gunicorn
 Pillow
 requests
 flask-cors
+openfoodfacts
