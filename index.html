@@ -8,6 +8,57 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="style.css">
+<style>
+/* Дополнительные стили для компактной панели */
+.compact-panel {
+    background: rgba(28, 28, 30, 0.85);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+.compact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 5px;
+    text-align: center;
+}
+.compact-val {
+    font-size: 13px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+.compact-val span {
+    font-size: 10px;
+    color: #8e8e93;
+    font-weight: normal;
+}
+.compact-label {
+    font-size: 9px;
+    color: #8e8e93;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+.compact-food-list {
+    max-height: 80px;
+    overflow-y: auto;
+    margin-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 8px;
+}
+.compact-food-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255,255,255,0.05);
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    font-size: 11px;
+}
+</style>
 </head>
 <body class="male-theme">
 
@@ -50,24 +101,33 @@
 </div>
 <div class="bottom-panel">
 
-<!-- ПАНЕЛЬ ПИТАНИЯ (УМЕНЬШЕННАЯ) -->
-<div style="background: rgba(28, 28, 30, 0.9); border-radius: 12px; padding: 10px; margin-bottom: 10px; border: 1px solid #2c2c2e; backdrop-filter: blur(10px);">
-    <h4 style="margin-top: 0; margin-bottom: 8px; text-align: center; color: var(--hint-color); font-size: 10px; text-transform: uppercase;">Съедено за сегодня</h4>
+<!-- НОВАЯ КОМПАКТНАЯ ПАНЕЛЬ -->
+<div class="compact-panel">
+    <h4 style="margin: 0 0 8px 0; text-align: center; color: #fff; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Съедено за сегодня</h4>
     
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; margin-bottom: 8px;">
-        <div><div style="font-size: 14px; font-weight: bold; color: var(--accent-color);" id="eaten-cal">0</div><div style="font-size: 9px; color: var(--hint-color);">Ккал</div></div>
-        <div><div style="font-size: 14px; font-weight: bold;" id="eaten-prot">0</div><div style="font-size: 9px; color: var(--hint-color);">Белки</div></div>
-        <div><div style="font-size: 14px; font-weight: bold;" id="eaten-fat">0</div><div style="font-size: 9px; color: var(--hint-color);">Жиры</div></div>
-        <div><div style="font-size: 14px; font-weight: bold;" id="eaten-carb">0</div><div style="font-size: 9px; color: var(--hint-color);">Углев.</div></div>
-    </div>
-    
-    <div style="font-size: 10px; color: #8e8e93; text-align: center; margin-bottom: 8px;">
-        Норма: <span id="norm-cal">0</span> | Б: <span id="norm-prot">0</span> | Ж: <span id="norm-fat">0</span> | У: <span id="norm-carb">0</span>
+    <div class="compact-grid">
+        <div>
+            <div class="compact-val" style="color: var(--accent-color);"><span id="eaten-cal">0</span> <span style="font-size: 10px; color: #8e8e93;">/</span> <span id="norm-cal" style="color: #fff;">0</span></div>
+            <div class="compact-label">Ккал</div>
+        </div>
+        <div>
+            <div class="compact-val"><span id="eaten-prot">0</span> <span style="font-size: 10px; color: #8e8e93;">/</span> <span id="norm-prot" style="color: #fff;">0</span></div>
+            <div class="compact-label">Белки</div>
+        </div>
+        <div>
+            <div class="compact-val"><span id="eaten-fat">0</span> <span style="font-size: 10px; color: #8e8e93;">/</span> <span id="norm-fat" style="color: #fff;">0</span></div>
+            <div class="compact-label">Жиры</div>
+        </div>
+        <div>
+            <div class="compact-val"><span id="eaten-carb">0</span> <span style="font-size: 10px; color: #8e8e93;">/</span> <span id="norm-carb" style="color: #fff;">0</span></div>
+            <div class="compact-label">Углев.</div>
+        </div>
     </div>
 
-    <div id="today-food-list" style="max-height: 90px; overflow-y: auto; border-top: 1px solid #3a3a3c; padding-top: 5px;"></div>
+    <!-- СПИСОК ПРОДУКТОВ -->
+    <div id="today-food-list" class="compact-food-list"></div>
 
-    <button class="btn" style="background-color: rgba(255,59,48,0.8); color: white; padding: 6px; font-size: 11px; margin-top: 8px;" onclick="clearTodayFood()">Очистить</button>
+    <button class="btn" style="background-color: rgba(255,59,48,0.8); color: white; padding: 6px; font-size: 11px; margin-top: 8px; border-radius: 8px;" onclick="clearTodayFood()">Очистить</button>
 </div>
 
 <div class="action-grid">
@@ -109,7 +169,6 @@
 <button class="btn" style="padding: 12px; font-size: 15px;" onclick="saveProfile()">Сохранить</button>
 </div>
 
-<!-- БЛОК ТЕСТА ТРЯСКИ -->
 <div style="background: #1c1c1e; padding: 15px; border-radius: 16px;">
 <h3 style="margin-top: 0; font-size: 16px;">Тест датчиков</h3>
 <p style="color: #8e8e93; font-size: 13px; margin-bottom: 10px;">Проверь, видит ли Telegram тряску телефона.</p>
