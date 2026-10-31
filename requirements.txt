@@ -5,3 +5,4 @@ requests
 flask-cors
 openfoodfacts
 rapidfuzz
+google-genai
