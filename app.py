@@ -18,10 +18,15 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
+# Проверка, что ключ на месте, чтобы сервер не падал при старте
+client = None
 if GEMINI_API_KEY:
-    client = genai.Client(api_key=GEMINI_API_KEY)
+    try:
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        print("Gemini подключен успешно!")
+    except Exception as e:
+        print(f"Ошибка подключения Gemini: {e}")
 
-# --- ЛОКАЛЬНАЯ БАЗА ---
 LOCAL_DB = [
     {"name": "Курица", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
     {"name": "Куриная грудка", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
@@ -186,64 +191,54 @@ def analyze_photo():
     except:
         return jsonify({"error": "Invalid image"}), 400
 
-    if LOGMEAL_TOKEN:
-        try:
-            img_byte_arr = io.BytesIO()
-            image.save(img_byte_arr, format='JPEG')
-            img_byte_arr = img_byte_arr.getvalue()
-            files = {'image': ('food.jpg', img_byte_arr, 'image/jpeg')}
-            headers = {'Authorization': f'Bearer {LOGMEAL_TOKEN}'}
-            lm_response = requests.post('https://api.logmeal.es/v2/image/recognition/type', headers=headers, files=files, timeout=10)
-            if lm_response.status_code == 200:
-                lm_data = lm_response.json()
-                if 'foodType' in lm_data and 'name' in lm_data['foodType']:
-                    return jsonify({"food": lm_data['foodType']['name'], "calories": 250, "protein": 15, "fat": 10, "carbs": 30, "description": "Определено через LogMeal"})
-        except Exception as e:
-            print(f"LogMeal error: {e}")
+    # Если Gemini не подключен, выдаем ошибку
+    if not client:
+        return jsonify({"food": "Ошибка: ИИ не настроен", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Проверьте API ключ Gemini"})
 
-    if GEMINI_API_KEY:
-        try:
-            prompt = """
-            Ты — профессиональный диетолог. Твоя задача — определить еду на фото.
+    try:
+        prompt = """
+        Ты — профессиональный диетолог. Твоя задача — определить еду на фото.
+        
+        ПРАВИЛА:
+        1. Если на упаковке есть бренд или название на английском языке, напиши это название как есть (на английском), но остальное описание — на русском.
+        2. В остальных случаях ВСЕГДА пиши название еды на РУССКОМ языке.
+        3. Обязательно напиши краткое описание продукта (например, "Жареная куриная грудка с овощами").
+        4. Дай точные данные БЖУ и калорий на 100 грамм.
+        
+        Формат ответа (строго через вертикальную черту |):
+        Название | Калории | Белки | Жиры | Углеводы | Описание
+        
+        Пример 1: Куриная грудка | 165 | 31 | 3.6 | 0 | Жареная куриная грудка без кожи.
+        Пример 2: Snickers | 500 | 10 | 25 | 60 | Шоколадный батончик с карамелью и арахисом.
+        """
+        
+        response = client.models.generate_content(
+            model='gemini-2.0-flash',
+            contents=[types.Part.from_bytes(data=image_data, mime_type='image/jpeg'), prompt]
+        )
+        
+        parts = [p.strip() for p in response.text.strip().split('|')]
+        
+        if len(parts) >= 6:
+            cal = int(re.sub(r'\D', '', parts[1])) if re.search(r'\d', parts[1]) else 250
+            prot = int(re.sub(r'\D', '', parts[2])) if re.search(r'\d', parts[2]) else 15
+            fat = int(re.sub(r'\D', '', parts[3])) if re.search(r'\d', parts[3]) else 10
+            carb = int(re.sub(r'\D', '', parts[4])) if re.search(r'\d', parts[4]) else 30
             
-            ПРАВИЛА:
-            1. Если на упаковке есть бренд или название на английском языке, напиши это название как есть (на английском), но остальное описание — на русском.
-            2. В остальных случаях ВСЕГДА пиши название еды на РУССКОМ языке.
-            3. Обязательно напиши краткое описание продукта (например, "Жареная куриная грудка с овощами").
-            4. Дай точные данные БЖУ и калорий на 100 грамм.
+            return jsonify({
+                "food": parts[0],
+                "calories": cal,
+                "protein": prot,
+                "fat": fat,
+                "carbs": carb,
+                "description": parts[5]
+            })
+        else:
+            return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ ответил не по формату"})
             
-            Формат ответа (строго через вертикальную черту |):
-            Название | Калории | Белки | Жиры | Углеводы | Описание
-            
-            Пример 1: Куриная грудка | 165 | 31 | 3.6 | 0 | Жареная куриная грудка без кожи.
-            Пример 2: Snickers | 500 | 10 | 25 | 60 | Шоколадный батончик с карамелью и арахисом.
-            """
-            
-            response = client.models.generate_content(
-                model='gemini-2.0-flash',
-                contents=[types.Part.from_bytes(data=image_data, mime_type='image/jpeg'), prompt]
-            )
-            
-            parts = [p.strip() for p in response.text.strip().split('|')]
-            
-            if len(parts) >= 6:
-                cal = int(re.sub(r'\D', '', parts[1])) if re.search(r'\d', parts[1]) else 250
-                prot = int(re.sub(r'\D', '', parts[2])) if re.search(r'\d', parts[2]) else 15
-                fat = int(re.sub(r'\D', '', parts[3])) if re.search(r'\d', parts[3]) else 10
-                carb = int(re.sub(r'\D', '', parts[4])) if re.search(r'\d', parts[4]) else 30
-                
-                return jsonify({
-                    "food": parts[0],
-                    "calories": cal,
-                    "protein": prot,
-                    "fat": fat,
-                    "carbs": carb,
-                    "description": parts[5]
-                })
-        except Exception as e:
-            print(f"Gemini error: {e}")
-
-    return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": ""})
+    except Exception as e:
+        print(f"Gemini error: {e}")
+        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": str(e)})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
