@@ -65,16 +65,19 @@ def analyze_photo():
 
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
-# --- ПОИСК ЧЕРЕЗ CALORIE NINJAS ---
+# --- ПОИСК ЧЕРЕЗ CALORIE NINJAS (С ПЕРЕВОДОМ) ---
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q', '').strip()
     if not query or not CALORIE_NINJAS_API_KEY:
         return jsonify({"products": []})
     
+    # Переводим запрос на английский (CalorieNinjas понимает только его)
+    eng_query = translate_to_english(query)
+    
     try:
         headers = {'X-Api-Key': CALORIE_NINJAS_API_KEY}
-        url = f"https://api.calorieninjas.com/v1/nutrition?query={query}"
+        url = f"https://api.calorieninjas.com/v1/nutrition?query={eng_query}"
         response = requests.get(url, headers=headers, timeout=10)
         data = response.json()
         
@@ -83,18 +86,47 @@ def search_food():
             for item in data['items']:
                 products.append({
                     "product_name": item.get('name', 'Неизвестно'),
-                    "image_url": "",  # У CalorieNinjas нет картинок
+                    "image_url": "",
                     "calories_100g": item.get('calories', 0),
                     "proteins_100g": item.get('protein_g', 0),
                     "fat_100g": item.get('fat_total_g', 0),
                     "carbs_100g": item.get('carbohydrates_total_g', 0),
-                    "ingredients": "Данные предоставлены CalorieNinjas",
+                    "ingredients": "Данные CalorieNinjas",
                     "description": ""
                 })
         return jsonify({"products": products})
     except Exception as e:
         print(f"Search error: {e}")
         return jsonify({"products": []})
+
+def translate_to_english(word):
+    # Простой словарь для популярных продуктов
+    dictionary = {
+        'йогурт': 'yogurt',
+        'яблоко': 'apple',
+        'банан': 'banana',
+        'молоко': 'milk',
+        'хлеб': 'bread',
+        'курица': 'chicken',
+        'рис': 'rice',
+        'яйцо': 'egg',
+        'сыр': 'cheese',
+        'мясо': 'meat',
+        'рыба': 'fish',
+        'овсянка': 'oatmeal',
+        'творог': 'cottage cheese',
+        'сок': 'juice',
+        'вода': 'water',
+        'кофе': 'coffee',
+        'чай': 'tea',
+        'шоколад': 'chocolate',
+        'печенье': 'cookie',
+        'макароны': 'pasta',
+        'картофель': 'potato',
+        'помидор': 'tomato',
+        'огурец': 'cucumber'
+    }
+    return dictionary.get(word.lower(), word)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
