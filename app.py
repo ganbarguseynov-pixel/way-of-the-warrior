@@ -15,7 +15,7 @@ LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
-# --- ЛОКАЛЬНАЯ БАЗА (ОСТАЕТСЯ БЕЗ ИЗМЕНЕНИЙ) ---
+# --- ЛОКАЛЬНАЯ БАЗА ---
 LOCAL_DB = [
     {"name": "Курица", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
     {"name": "Куриная грудка", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
@@ -78,7 +78,7 @@ def translate_to_english(query):
     translated = [dictionary.get(w, w) for w in words]
     return ' '.join(translated)
 
-# --- НОВАЯ ФУНКЦИЯ: ПОИСК КАРТИНКИ В NK IMAGES (БЕЗ КЛЮЧА) ---
+# --- ФУНКЦИЯ ПОИСКА КАРТИНКИ В NK IMAGES ---
 def get_food_image(query):
     try:
         url = "https://nkimages.com/api/public/images"
@@ -192,12 +192,44 @@ def search_food():
         except Exception as e:
             print(f"Fruityvice error: {e}")
 
-    # 5. ЕСЛИ НЕТ КАРТИНКИ, ИЩЕМ В NK IMAGES (ЭТО МЫ ДОБАВИЛИ)
+    # 5. ЕСЛИ НЕТ КАРТИНКИ, ИЩЕМ В NK IMAGES
     for product in results:
         if not product["image_url"]:
             product["image_url"] = get_food_image(product["product_name"])
 
     return jsonify({"products": results})
+
+# --- НОВАЯ ФУНКЦИЯ: ПОИСК ПО ШТРИХ-КОДУ ---
+@app.route('/barcode', methods=['GET'])
+def search_by_barcode():
+    barcode = request.args.get('code', '').strip()
+    if not barcode:
+        return jsonify({"products": []})
+    
+    try:
+        # Ищем продукт по штрих-коду в Open Food Facts
+        product = api.product.get(barcode)
+        
+        if product and product.get('product_name'):
+            nutrients = product.get('nutriments', {})
+            image_url = product.get('image_front_small_url') or product.get('image_url') or ''
+            
+            result = {
+                "product_name": product.get('product_name'),
+                "image_url": image_url,
+                "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1),
+                "proteins_100g": round(nutrients.get('proteins_100g', 0), 1),
+                "fat_100g": round(nutrients.get('fat_100g', 0), 1),
+                "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1),
+                "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан',
+                "description": "Найдено по штрих-коду"
+            }
+            return jsonify({"products": [result]})
+        else:
+            return jsonify({"products": []})
+    except Exception as e:
+        print(f"Barcode error: {e}")
+        return jsonify({"products": []})
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
