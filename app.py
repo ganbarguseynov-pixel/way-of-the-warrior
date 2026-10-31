@@ -143,7 +143,6 @@ def search_by_barcode():
         print(f"Barcode error: {e}")
         return jsonify({"products": []})
 
-# --- НОВЫЙ ЭНДПОИНТ: Распознавание штрих-кода через Gemini ---
 @app.route('/scan_barcode', methods=['POST'])
 def scan_barcode():
     if 'image' not in request.files:
@@ -162,12 +161,11 @@ def scan_barcode():
         prompt = "Найди на этом фото штрих-код и напиши только его цифры. Ничего больше не пиши. Если штрих-кода нет, напиши 'Нет'."
         
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='google/gemini-3.8-flash',
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
         )
         
         barcode_text = response.text.strip()
-        # Очищаем от лишних символов, оставляем только цифры
         barcode_digits = re.sub(r'\D', '', barcode_text)
         
         if len(barcode_digits) >= 8:
@@ -210,7 +208,7 @@ def analyze_photo():
         """
         
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='google/gemini-3.8-flash',
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
         )
         
@@ -235,7 +233,7 @@ def analyze_photo():
             
     except Exception as e:
         print(f"Ofox error: {e}")
-        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Ошибка при обращении к ИИ."})
+        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": f"Ошибка: {str(e)}"})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
