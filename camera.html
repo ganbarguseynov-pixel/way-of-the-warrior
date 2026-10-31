@@ -11,6 +11,89 @@
     .modal.active { display: flex; }
     .modal-content { background: #1c1c1e; border-radius: 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; padding: 20px; box-sizing: border-box; position: relative; }
     .modal-close { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 20px; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; }
+
+    /* Стили для контейнера камеры штрих-кода */
+    #barcode-camera-container {
+        position: relative;
+        width: 100%;
+        height: 60vh; /* Ограничиваем высоту, как у камеры для еды */
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    #barcode-camera-video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        background-color: #000;
+    }
+
+    #barcode-camera-controls {
+        position: absolute;
+        bottom: 20px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 5;
+    }
+
+    #barcode-capture-btn {
+        width: 75px;
+        height: 75px;
+        border-radius: 50%;
+        background: white;
+        border: 5px solid rgba(0,0,0,0.2);
+        cursor: pointer;
+    }
+
+    #barcode-capture-btn:active {
+        transform: scale(0.95);
+        background: #ddd;
+    }
+
+    #barcode-close-camera-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+        cursor: pointer;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #barcode-switch-camera-btn {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+        cursor: pointer;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 </style>
 </head>
 <body>
@@ -74,7 +157,7 @@
     </div>
     <button class="btn" onclick="searchByBarcode()">🔎 Найти по штрих-коду</button>
 
-    <!-- Контейнер для камеры штрих-кода (с кнопкой захвата) -->
+    <!-- Контейнер для камеры штрих-кода (теперь маленький, с кнопкой) -->
     <div id="barcode-camera-container" style="display: none;">
         <button id="barcode-switch-camera-btn" onclick="switchBarcodeCamera()">🔄</button>
         <button id="barcode-close-camera-btn" onclick="resetBarcodeScreen()">✖</button>
@@ -181,7 +264,7 @@ async function searchByBarcode() {
     }
 }
 
-// --- ШТРИХ-КОД (КАМЕРА) С ВЫСОКИМ КАЧЕСТВОМ ---
+// --- ШТРИХ-КОД (КАМЕРА) ---
 let barcodeStream = null;
 let barcodeFacingMode = "environment";
 
@@ -190,7 +273,6 @@ async function startBarcodeCamera() {
         document.getElementById('barcode-buttons').style.display = 'none';
         document.getElementById('barcode-camera-container').style.display = 'flex';
         
-        // Запрашиваем камеру с высоким разрешением (1080p)
         barcodeStream = await navigator.mediaDevices.getUserMedia({ 
             video: { 
                 facingMode: barcodeFacingMode,
@@ -212,7 +294,6 @@ async function switchBarcodeCamera() {
     await startBarcodeCamera();
 }
 
-// КНОПКА СФОТОГРАФИРОВАТЬ
 function takeBarcodePhoto() {
     if (!barcodeStream) return;
     const video = document.getElementById('barcode-camera-video');
