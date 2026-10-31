@@ -6,6 +6,7 @@ import os
 import requests
 import openfoodfacts
 import re
+import time
 from rapidfuzz import process, fuzz
 from google import genai
 from google.genai import types
@@ -194,10 +195,9 @@ def analyze_photo():
         return jsonify({"food": "Ошибка: ИИ не настроен", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Проверьте API ключ Gemini"})
 
     try:
-        # --- СЖАТИЕ ФОТО (чтобы не убить память сервера) ---
         img_byte_arr = io.BytesIO()
-        image.thumbnail((800, 800))  # Уменьшаем фото до 800px
-        image.save(img_byte_arr, format='JPEG', quality=75) # Сжимаем качество
+        image.thumbnail((800, 800))
+        image.save(img_byte_arr, format='JPEG', quality=75)
         compressed_image_data = img_byte_arr.getvalue()
 
         prompt = """
@@ -216,10 +216,23 @@ def analyze_photo():
         Пример 2: Snickers | 500 | 10 | 25 | 60 | Шоколадный батончик с карамелью и арахисом.
         """
         
-        response = client.models.generate_content(
-            model='gemini-3.8-flash',
-            contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
-        )
+        # --- ЛОГИКА ПОВТОРОВ ПРИ ОШИБКЕ 503 ---
+        response = None
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = client.models.generate_content(
+                    model='gemini-3.8-flash',
+                    contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
+                )
+                break  # Если успешно, выходим из цикла
+            except Exception as e:
+                if "503" in str(e) and attempt < max_retries - 1:
+                    wait_time = 2 ** (attempt + 1)  # Ждем 2, потом 4 секунды
+                    print(f"Модель перегружена, ждем {wait_time} сек...")
+                    time.sleep(wait_time)
+                else:
+                    raise e # Если не 503 или попытки кончились, выбрасываем ошибку
         
         parts = [p.strip() for p in response.text.strip().split('|')]
         
@@ -242,7 +255,7 @@ def analyze_photo():
             
     except Exception as e:
         print(f"Gemini error: {e}")
-        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": str(e)})
+        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Модель перегружена. Попробуйте через минуту."})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
