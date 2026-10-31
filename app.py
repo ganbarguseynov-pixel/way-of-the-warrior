@@ -194,6 +194,12 @@ def analyze_photo():
         return jsonify({"food": "Ошибка: ИИ не настроен", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Проверьте API ключ Gemini"})
 
     try:
+        # --- СЖАТИЕ ФОТО (чтобы не убить память сервера) ---
+        img_byte_arr = io.BytesIO()
+        image.thumbnail((800, 800))  # Уменьшаем фото до 800px
+        image.save(img_byte_arr, format='JPEG', quality=75) # Сжимаем качество
+        compressed_image_data = img_byte_arr.getvalue()
+
         prompt = """
         Ты — профессиональный диетолог. Твоя задача — определить еду на фото.
         
@@ -212,7 +218,7 @@ def analyze_photo():
         
         response = client.models.generate_content(
             model='gemini-3.8-flash',
-            contents=[types.Part.from_bytes(data=image_data, mime_type='image/jpeg'), prompt]
+            contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
         )
         
         parts = [p.strip() for p in response.text.strip().split('|')]
