@@ -9,7 +9,38 @@ app = Flask(__name__)
 CORS(app)
 
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
-CALORIE_NINJAS_API_KEY = os.environ.get("CALORIE_NINJAS_API_KEY")
+
+# --- ЛОКАЛЬНАЯ БАЗА (БОЛЬШАЯ) ---
+PRODUCTS_DB = [
+    {"name": "Яблоко", "cal": 52, "prot": 0.3, "fat": 0.2, "carb": 14},
+    {"name": "Банан", "cal": 89, "prot": 1.1, "fat": 0.3, "carb": 23},
+    {"name": "Апельсин", "cal": 47, "prot": 0.9, "fat": 0.1, "carb": 12},
+    {"name": "Помидор", "cal": 18, "prot": 0.9, "fat": 0.2, "carb": 3.9},
+    {"name": "Огурец", "cal": 15, "prot": 0.7, "fat": 0.1, "carb": 3.6},
+    {"name": "Картофель", "cal": 87, "prot": 2, "fat": 0.1, "carb": 20},
+    {"name": "Йогурт", "cal": 60, "prot": 5, "fat": 3, "carb": 4},
+    {"name": "Молоко", "cal": 52, "prot": 2.9, "fat": 2.5, "carb": 4.7},
+    {"name": "Сыр", "cal": 402, "prot": 25, "fat": 33, "carb": 1.3},
+    {"name": "Творог", "cal": 121, "prot": 17, "fat": 5, "carb": 3},
+    {"name": "Куриная грудка", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0},
+    {"name": "Лосось", "cal": 208, "prot": 20, "fat": 13, "carb": 0},
+    {"name": "Яйцо", "cal": 155, "prot": 13, "fat": 11, "carb": 1.1},
+    {"name": "Рис", "cal": 130, "prot": 2.7, "fat": 0.3, "carb": 28},
+    {"name": "Гречка", "cal": 110, "prot": 4, "fat": 1, "carb": 20},
+    {"name": "Овсянка", "cal": 88, "prot": 3, "fat": 1.7, "carb": 15},
+    {"name": "Макароны", "cal": 131, "prot": 5, "fat": 1.1, "carb": 25},
+    {"name": "Хлеб", "cal": 265, "prot": 9, "fat": 3.2, "carb": 49},
+    {"name": "Кофе", "cal": 2, "prot": 0.1, "fat": 0, "carb": 0},
+    {"name": "Чай", "cal": 1, "prot": 0, "fat": 0, "carb": 0},
+    {"name": "Кола", "cal": 42, "prot": 0, "fat": 0, "carb": 10.6},
+    {"name": "Сок", "cal": 45, "prot": 0.7, "fat": 0.2, "carb": 10.4},
+    {"name": "Пицца", "cal": 266, "prot": 11, "fat": 10, "carb": 33},
+    {"name": "Бургер", "cal": 295, "prot": 15, "fat": 12, "carb": 30},
+    {"name": "Мохито", "cal": 45, "prot": 0.1, "fat": 0, "carb": 11},
+    {"name": "Мохито клубничное", "cal": 50, "prot": 0.2, "fat": 0, "carb": 12},
+    {"name": "Шоколад", "cal": 546, "prot": 4.9, "fat": 31, "carb": 61},
+    {"name": "Печенье", "cal": 417, "prot": 5, "fat": 15, "carb": 65}
+]
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
@@ -40,49 +71,25 @@ def analyze_photo():
 
 @app.route('/search', methods=['GET'])
 def search_food():
-    query = request.args.get('q', '').strip()
-    if not query or not CALORIE_NINJAS_API_KEY:
+    query = request.args.get('q', '').strip().lower()
+    if not query:
         return jsonify({"products": []})
     
-    # Умный перевод для русских слов
-    eng_query = translate_to_english(query)
-    
-    try:
-        headers = {'X-Api-Key': CALORIE_NINJAS_API_KEY}
-        url = f"https://api.calorieninjas.com/v1/nutrition?query={eng_query}"
-        response = requests.get(url, headers=headers, timeout=10)
-        data = response.json()
-        
-        products = []
-        if 'items' in data:
-            for item in data['items']:
-                products.append({
-                    "product_name": item.get('name', 'Неизвестно'),
-                    "image_url": "",
-                    "calories_100g": item.get('calories', 0),
-                    "proteins_100g": item.get('protein_g', 0),
-                    "fat_100g": item.get('fat_total_g', 0),
-                    "carbs_100g": item.get('carbohydrates_total_g', 0),
-                    "ingredients": "Данные CalorieNinjas",
-                    "description": ""
-                })
-        return jsonify({"products": products})
-    except Exception as e:
-        print(f"Search error: {e}")
-        return jsonify({"products": []})
-
-def translate_to_english(word):
-    dictionary = {
-        'яблоко': 'apple', 'банан': 'banana', 'йогурт': 'yogurt', 'молоко': 'milk',
-        'хлеб': 'bread', 'курица': 'chicken', 'рис': 'rice', 'яйцо': 'egg',
-        'сыр': 'cheese', 'мясо': 'meat', 'рыба': 'fish', 'овсянка': 'oatmeal',
-        'творог': 'cottage cheese', 'сок': 'juice', 'вода': 'water',
-        'кофе': 'coffee', 'чай': 'tea', 'шоколад': 'chocolate', 'печенье': 'cookie',
-        'пицца': 'pizza', 'бургер': 'burger', 'мохито': 'mojito', 'кола': 'cola'
-    }
-    words = word.lower().split()
-    translated = [dictionary.get(w, w) for w in words]
-    return ' '.join(translated)
+    results = []
+    for p in PRODUCTS_DB:
+        # Ищем совпадение (поиск подстроки)
+        if query in p["name"].lower():
+            results.append({
+                "product_name": p["name"],
+                "image_url": "",
+                "calories_100g": p["cal"],
+                "proteins_100g": p["prot"],
+                "fat_100g": p["fat"],
+                "carbs_100g": p["carb"],
+                "ingredients": "Локальная база",
+                "description": ""
+            })
+    return jsonify({"products": results})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
