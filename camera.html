@@ -63,9 +63,9 @@
 <div id="tab-barcode" class="tab-content">
     <p style="text-align: center; color: #8e8e93; margin-bottom: 20px;">Сфотографируйте штрих-код продукта</p>
     
-    <!-- Кнопки для штрих-кода (используем системную камеру) -->
     <div id="barcode-buttons">
-        <input type="file" id="barcode-camera-input" accept="image/*" capture="environment" style="display: none;" onchange="handleBarcodeImage(event)">
+        <!-- Принудительно просим камеру через accept -->
+        <input type="file" id="barcode-camera-input" accept="image/*;capture=camera" style="display: none;" onchange="handleBarcodeImage(event)">
         <button class="btn" style="margin-bottom: 10px;" onclick="document.getElementById('barcode-camera-input').click()">📷 Сфотографировать штрих-код</button>
         
         <input type="file" id="barcode-gallery-input" accept="image/*" style="display: none;" onchange="handleBarcodeImage(event)">
@@ -110,6 +110,11 @@ function switchTab(tabName) {
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(`tab-${tabName}`).classList.add('active');
     event.target.classList.add('active');
+    
+    // ВАЖНО: Принудительно останавливаем все камеры при переключении вкладок
+    stopCamera();
+    stopBarcodeCamera();
+    
     if (tabName === 'photo') resetCameraScreen();
 }
 
@@ -137,7 +142,7 @@ async function searchFood() {
     }
 }
 
-// --- ШТРИХ-КОД (СИСТЕМНАЯ КАМЕРА) ---
+// --- ШТРИХ-КОД (ЧЕРЕЗ ФАЙЛОВЫЙ ИНПУТ С ПРИНУДИТЕЛЬНОЙ КАМЕРОЙ) ---
 async function handleBarcodeImage(event) {
     const file = event.target.files[0];
     if (!file) return;
