@@ -17,9 +17,13 @@ OFOX_API_KEY = "sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPm
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
+# Подключаемся к Ofox через официальную библиотеку
 client = genai.Client(
     api_key=OFOX_API_KEY,
-    http_options={"base_url": "https://api.ofox.ai/gemini", "api_version": "v1beta"}
+    http_options={
+        "base_url": "https://api.ofox.ai/gemini",
+        "api_version": "v1beta",
+    }
 )
 
 LOCAL_DB = [
@@ -154,14 +158,15 @@ def scan_barcode():
         image = Image.open(io.BytesIO(image_data)).convert("RGB")
         
         img_byte_arr = io.BytesIO()
-        image.thumbnail((800, 800))
-        image.save(img_byte_arr, format='JPEG', quality=75)
+        image.thumbnail((1000, 1000))
+        image.save(img_byte_arr, format='JPEG', quality=85)
         compressed_image_data = img_byte_arr.getvalue()
 
-        prompt = "Найди на этом фото штрих-код и напиши только его цифры. Ничего больше не пиши. Если штрих-кода нет, напиши 'Нет'."
+        prompt = "Найди на этом фото штрих-код. Напиши ТОЛЬКО его цифры. Если не видно, напиши 'НЕТ'."
         
+        # ИЗМЕНЕНО: Используем точное имя модели из документации Ofox
         response = client.models.generate_content(
-            model='google/gemini-3.8-flash',
+            model='gemini-3.1-flash-lite',
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
         )
         
@@ -180,13 +185,13 @@ def scan_barcode():
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
     if 'image' not in request.files:
-        return jsonify({"food": "Ошибка", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Фото не загружено. Попробуйте еще раз."}), 400
+        return jsonify({"food": "Ошибка", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Фото не загружено."}), 400
     file = request.files['image']
     try:
         image_data = file.read()
         image = Image.open(io.BytesIO(image_data)).convert("RGB")
     except:
-        return jsonify({"food": "Ошибка", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Не удалось прочитать фото. Попробуйте другое."}), 400
+        return jsonify({"food": "Ошибка", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Не удалось прочитать фото."}), 400
 
     try:
         img_byte_arr = io.BytesIO()
@@ -195,20 +200,19 @@ def analyze_photo():
         compressed_image_data = img_byte_arr.getvalue()
 
         prompt = """
-        Ты — профессиональный диетолог. Твоя задача — определить еду на фото.
-        
+        Ты — профессиональный диетолог. Определи еду на фото.
         ПРАВИЛА:
-        1. Если на упаковке есть бренд или название на английском языке, напиши это название как есть (на английском), но остальное описание — на русском.
-        2. В остальных случаях ВСЕГДА пиши название еды на РУССКОМ языке.
-        3. Обязательно напиши краткое описание продукта.
-        4. Дай точные данные БЖУ и калорий на 100 грамм.
+        1. Если на упаковке бренд на английском, пиши его на английском, остальное — на русском.
+        2. В остальных случаях ВСЕГДА на русском.
+        3. Напиши краткое описание.
+        4. Дай БЖУ и калории на 100 грамм.
         
-        Формат ответа (строго через вертикальную черту |):
-        Название | Калории | Белки | Жиры | Углеводы | Описание
+        Формат: Название | Калории | Белки | Жиры | Углеводы | Описание
         """
         
+        # ИЗМЕНЕНО: Используем точное имя модели из документации Ofox
         response = client.models.generate_content(
-            model='google/gemini-3.8-flash',
+            model='gemini-3.1-flash-lite',
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
         )
         
@@ -220,16 +224,9 @@ def analyze_photo():
             fat = int(re.sub(r'\D', '', parts[3])) if re.search(r'\d', parts[3]) else 10
             carb = int(re.sub(r'\D', '', parts[4])) if re.search(r'\d', parts[4]) else 30
             
-            return jsonify({
-                "food": parts[0],
-                "calories": cal,
-                "protein": prot,
-                "fat": fat,
-                "carbs": carb,
-                "description": parts[5]
-            })
+            return jsonify({"food": parts[0], "calories": cal, "protein": prot, "fat": fat, "carbs": carb, "description": parts[5]})
         else:
-            return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ не смог разобрать, что на фото."})
+            return jsonify({"food": "Не удалось", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ не разобрал."})
             
     except Exception as e:
         print(f"Ofox error: {e}")
