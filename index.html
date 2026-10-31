@@ -49,11 +49,12 @@
 <p class="xp-text" id="xp-text">0 / 100 XP</p>
 </div>
 <div class="bottom-panel">
-<!-- НОВЫЙ БЛОК СТАТИСТИКИ -->
+
+<!-- ПАНЕЛЬ ПИТАНИЯ -->
 <div style="background: #1c1c1e; border-radius: 16px; padding: 15px; margin-bottom: 15px; border: 1px solid #2c2c2e;">
     <h4 style="margin-top: 0; text-align: center; color: var(--hint-color); font-size: 12px; text-transform: uppercase;">Съедено за сегодня</h4>
     
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; text-align: center;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; text-align: center; margin-bottom: 15px;">
         <div>
             <div style="font-size: 18px; font-weight: bold; color: var(--accent-color);" id="eaten-cal">0</div>
             <div style="font-size: 10px; color: var(--hint-color);">Ккал</div>
@@ -72,14 +73,19 @@
         </div>
     </div>
     
-    <div style="margin-top: 10px; font-size: 11px; color: #8e8e93; text-align: center;">
+    <div style="font-size: 11px; color: #8e8e93; text-align: center; margin-bottom: 15px;">
         Норма: <span id="norm-cal">0</span> ккал | Б: <span id="norm-prot">0</span> | Ж: <span id="norm-fat">0</span> | У: <span id="norm-carb">0</span>
     </div>
-    <button class="btn" style="background-color: #ff3b30; color: white; padding: 8px; font-size: 12px; margin-top: 10px; opacity: 0.8;" onclick="clearTodayFood()">Очистить сегодняшний прием</button>
+
+    <!-- СПИСОК СЪЕДЕННОГО -->
+    <div id="today-food-list" style="max-height: 150px; overflow-y: auto; border-top: 1px solid #2c2c2e; padding-top: 10px;">
+        <!-- Сюда будут добавляться продукты -->
+    </div>
+
+    <button class="btn" style="background-color: #ff3b30; color: white; padding: 8px; font-size: 12px; margin-top: 10px; opacity: 0.8;" onclick="clearTodayFood()">Очистить весь список</button>
 </div>
 
 <div class="stats-row" style="display: none;">
-<!-- Скрыли старые кнопки, так как они теперь в новом блоке -->
 <div class="stat-box"><p>Норма</p><h3 id="calories-norm">0 ккал</h3></div>
 <div class="stat-box"><p>Сожжено</p><h3 id="burned-total">0 ккал</h3></div>
 </div>
