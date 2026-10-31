@@ -17,7 +17,6 @@ OFOX_API_KEY = "sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPm
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
-# Подключаемся к Ofox через официальную библиотеку
 client = genai.Client(
     api_key=OFOX_API_KEY,
     http_options={
@@ -162,9 +161,9 @@ def scan_barcode():
         image.save(img_byte_arr, format='JPEG', quality=85)
         compressed_image_data = img_byte_arr.getvalue()
 
-        prompt = "Найди на этом фото штрих-код. Напиши ТОЛЬКО его цифры. Если не видно, напиши 'НЕТ'."
+        # Короткий промпт для скорости
+        prompt = "Найди штрих-код. Напиши только цифры или 'НЕТ'."
         
-        # ИЗМЕНЕНО: Используем точное имя модели из документации Ofox
         response = client.models.generate_content(
             model='gemini-3.1-flash-lite',
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
@@ -199,18 +198,16 @@ def analyze_photo():
         image.save(img_byte_arr, format='JPEG', quality=75)
         compressed_image_data = img_byte_arr.getvalue()
 
+        # Убрали описание из промпта для экономии токенов и скорости
         prompt = """
-        Ты — профессиональный диетолог. Определи еду на фото.
-        ПРАВИЛА:
+        Ты — диетолог. Определи еду на фото.
         1. Если на упаковке бренд на английском, пиши его на английском, остальное — на русском.
         2. В остальных случаях ВСЕГДА на русском.
-        3. Напиши краткое описание.
-        4. Дай БЖУ и калории на 100 грамм.
+        3. Дай БЖУ и калории на 100 грамм.
         
-        Формат: Название | Калории | Белки | Жиры | Углеводы | Описание
+        Формат: Название | Калории | Белки | Жиры | Углеводы
         """
         
-        # ИЗМЕНЕНО: Используем точное имя модели из документации Ofox
         response = client.models.generate_content(
             model='gemini-3.1-flash-lite',
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
@@ -218,13 +215,21 @@ def analyze_photo():
         
         parts = [p.strip() for p in response.text.strip().split('|')]
         
-        if len(parts) >= 6:
+        # Теперь проверяем 5 частей (без описания)
+        if len(parts) >= 5:
             cal = int(re.sub(r'\D', '', parts[1])) if re.search(r'\d', parts[1]) else 250
             prot = int(re.sub(r'\D', '', parts[2])) if re.search(r'\d', parts[2]) else 15
             fat = int(re.sub(r'\D', '', parts[3])) if re.search(r'\d', parts[3]) else 10
             carb = int(re.sub(r'\D', '', parts[4])) if re.search(r'\d', parts[4]) else 30
             
-            return jsonify({"food": parts[0], "calories": cal, "protein": prot, "fat": fat, "carbs": carb, "description": parts[5]})
+            return jsonify({
+                "food": parts[0], 
+                "calories": cal, 
+                "protein": prot, 
+                "fat": fat, 
+                "carbs": carb, 
+                "description": "Краткие данные" # Заглушка, чтобы фронт не ругался
+            })
         else:
             return jsonify({"food": "Не удалось", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ не разобрал."})
             
