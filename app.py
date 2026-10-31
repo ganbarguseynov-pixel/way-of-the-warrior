@@ -18,7 +18,6 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
-# Проверка, что ключ на месте, чтобы сервер не падал при старте
 client = None
 if GEMINI_API_KEY:
     try:
@@ -191,7 +190,6 @@ def analyze_photo():
     except:
         return jsonify({"error": "Invalid image"}), 400
 
-    # Если Gemini не подключен, выдаем ошибку
     if not client:
         return jsonify({"food": "Ошибка: ИИ не настроен", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Проверьте API ключ Gemini"})
 
@@ -213,7 +211,7 @@ def analyze_photo():
         """
         
         response = client.models.generate_content(
-            model='gemini-2.0-flash',
+            model='gemini-3.8-flash',
             contents=[types.Part.from_bytes(data=image_data, mime_type='image/jpeg'), prompt]
         )
         
