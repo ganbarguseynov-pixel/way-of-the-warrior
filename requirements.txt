@@ -5,3 +5,4 @@ requests
 flask-cors
 openfoodfacts
 pyzbar
+opencv-python-headless
