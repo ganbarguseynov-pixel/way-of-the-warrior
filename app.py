@@ -18,13 +18,11 @@ OFOX_API_KEY = "sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPm
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
+# Подключаемся к Ofox
 client = genai.Client(
     api_key=OFOX_API_KEY,
     http_options={"base_url": "https://api.ofox.ai/gemini", "api_version": "v1beta"}
 )
-
-# --- КЭШ ДЛЯ ПОИСКА (чтобы не тратить лимиты) ---
-SEARCH_CACHE = {}
 
 LOCAL_DB = [
     {"name": "Курица", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
@@ -100,6 +98,7 @@ def get_food_image(query):
         print(f"NK Images error: {e}")
     return ""
 
+# --- НОВАЯ ФУНКЦИЯ: Поиск в Dietly ---
 def search_dietly(query):
     try:
         response = requests.get(
@@ -114,15 +113,20 @@ def search_dietly(query):
         results = []
         for food in foods:
             cal = food.get('calories_kcal')
+            prot = food.get('protein_g')
+            fat = food.get('fat_g')
+            carb = food.get('carbs_g')
+            
             if cal is None:
                 continue
+
             results.append({
                 "product_name": food.get('name', 'Без названия'),
                 "image_url": food.get('image_thumb_url') or food.get('image_url') or '',
                 "calories_100g": round(cal, 1) if cal is not None else 0,
-                "proteins_100g": round(food.get('protein_g', 0), 1),
-                "fat_100g": round(food.get('fat_g', 0), 1),
-                "carbs_100g": round(food.get('carbs_g', 0), 1),
+                "proteins_100g": round(prot, 1) if prot is not None else 0,
+                "fat_100g": round(fat, 1) if fat is not None else 0,
+                "carbs_100g": round(carb, 1) if carb is not None else 0,
                 "ingredients": "Данные Dietly (4.7 млн продуктов)",
                 "description": ""
             })
@@ -136,12 +140,6 @@ def search_food():
     query = request.args.get('q', '').strip()
     if not query:
         return jsonify({"products": []})
-
-    # ПРОВЕРЯЕМ КЭШ
-    cache_key = query.lower()
-    if cache_key in SEARCH_CACHE:
-        print(f"Из кэша: {query}")
-        return jsonify({"products": SEARCH_CACHE[cache_key]})
 
     results = []
     best_match = process.extractOne(query, LOCAL_NAMES, scorer=fuzz.WRatio, score_cutoff=60)
@@ -198,10 +196,6 @@ def search_food():
     for product in results:
         if not product["image_url"]:
             product["image_url"] = get_food_image(product["product_name"])
-
-    # СОХРАНЯЕМ В КЭШ
-    if results:
-        SEARCH_CACHE[cache_key] = results
 
     return jsonify({"products": results})
 
