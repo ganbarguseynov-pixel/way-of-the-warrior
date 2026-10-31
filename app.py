@@ -10,55 +10,81 @@ CORS(app)
 
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 
+# --- ЛОКАЛЬНАЯ БАЗА (ГДЕ ЕСТЬ ТОЧНЫЕ КАЛОРИИ) ---
+LOCAL_DB = [
+    {"name": "Банан", "cal": 89, "prot": 1.1, "fat": 0.3, "carb": 23},
+    {"name": "Яблоко", "cal": 52, "prot": 0.3, "fat": 0.2, "carb": 14},
+    {"name": "Мохито", "cal": 45, "prot": 0.1, "fat": 0, "carb": 11},
+    {"name": "Куриная грудка", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0},
+    {"name": "Рис", "cal": 130, "prot": 2.7, "fat": 0.3, "carb": 28},
+    {"name": "Яйцо", "cal": 155, "prot": 13, "fat": 11, "carb": 1.1},
+    {"name": "Пицца", "cal": 266, "prot": 11, "fat": 10, "carb": 33},
+    {"name": "Бургер", "cal": 295, "prot": 15, "fat": 12, "carb": 30},
+]
+
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q', '').strip()
     if not query:
         return jsonify({"products": []})
     
-    try:
-        # Ищем статью в русской Википедии (с правильным заголовком)
-        url = "https://ru.wikipedia.org/w/api.php"
-        params = {
-            "action": "query",
-            "list": "search",
-            "srsearch": query,
-            "format": "json",
-            "utf8": 1,
-            "srlimit": 3
-        }
-        # ЭТА СТРОКА ВАЖНА: Википедия требует User-Agent
-        headers = {'User-Agent': 'SportApp/1.0 (https://github.com/ganbarguseynov-pixel/way-of-the-warrior; contact@example.com)'} 
-        
-        response = requests.get(url, params=params, headers=headers, timeout=10)
-        
-        # Если Википедия вернула не JSON, а HTML (ошибку) — мы это поймаем
-        if response.status_code != 200:
-            print(f"Wiki error: {response.status_code}")
-            return jsonify({"products": []})
+    results = []
+    query_lower = query.lower()
+    
+    # 1. ИЩЕМ В ЛОКАЛЬНОЙ БАЗЕ (точные калории)
+    for p in LOCAL_DB:
+        if query_lower in p["name"].lower():
+            results.append({
+                "product_name": p["name"],
+                "image_url": "",
+                "calories_100g": p["cal"],
+                "proteins_100g": p["prot"],
+                "fat_100g": p["fat"],
+                "carbs_100g": p["carb"],
+                "ingredients": "Точные данные из базы приложения",
+                "description": ""
+            })
+
+    # 2. ЕСЛИ НЕ НАШЛИ, ИДЕМ В ВИКИПЕДИЮ (описание + картинка)
+    if len(results) == 0:
+        try:
+            url = "https://ru.wikipedia.org/w/api.php"
+            params = {
+                "action": "query",
+                "generator": "search",
+                "gsrsearch": query,
+                "gsrlimit": 2,
+                "prop": "pageimages|extracts",
+                "exintro": 1,
+                "explaintext": 1,
+                "pithumbsize": 200,
+                "format": "json",
+                "utf8": 1
+            }
+            headers = {'User-Agent': 'SportApp/1.0 (contact@example.com)'}
+            response = requests.get(url, params=params, headers=headers, timeout=10)
+            data = response.json()
             
-        data = response.json()
-        
-        products = []
-        if 'query' in data and 'search' in data['query']:
-            for item in data['query']['search']:
-                title = item['title']
-                snippet = item['snippet'].replace('<span class="searchmatch">', '').replace('</span>', '')
-                
-                products.append({
-                    "product_name": title,
-                    "image_url": "",
-                    "calories_100g": 0, 
-                    "proteins_100g": 0,
-                    "fat_100g": 0,
-                    "carbs_100g": 0,
-                    "ingredients": snippet,
-                    "description": "Данные из Википедии. Калории уточняются."
-                })
-        return jsonify({"products": products})
-    except Exception as e:
-        print(f"Search error: {e}")
-        return jsonify({"products": []})
+            if 'query' in data and 'pages' in data['query']:
+                for page_id, page in data['query']['pages'].items():
+                    title = page.get('title', 'Без названия')
+                    extract = page.get('extract', 'Описание отсутствует.')
+                    image_url = page.get('thumbnail', {}).get('source', '')
+                    
+                    results.append({
+                        "product_name": title,
+                        "image_url": image_url,
+                        "calories_100g": 0, # В википедии нет калорий
+                        "proteins_100g": 0,
+                        "fat_100g": 0,
+                        "carbs_100g": 0,
+                        "ingredients": extract,
+                        "description": "Данные из Википедии"
+                    })
+        except Exception as e:
+            print(f"Wiki error: {e}")
+
+    return jsonify({"products": results})
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
