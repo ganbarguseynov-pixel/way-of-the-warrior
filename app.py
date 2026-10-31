@@ -4,18 +4,32 @@ from PIL import Image
 import io
 import os
 import requests
-import openfoodfacts
+import re
 
 app = Flask(__name__)
 CORS(app)
 
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 
-# Создаем клиент Open Food Facts (с обязательным User-Agent)
-api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
+# Локальная база для простых продуктов (банан, яблоко и т.д.)
+LOCAL_DB = [
+    {"name": "Банан", "cal": 89, "prot": 1.1, "fat": 0.3, "carb": 23},
+    {"name": "Яблоко", "cal": 52, "prot": 0.3, "fat": 0.2, "carb": 14},
+    {"name": "Мохито", "cal": 45, "prot": 0.1, "fat": 0, "carb": 11},
+    {"name": "Салат", "cal": 15, "prot": 1.4, "fat": 0.2, "carb": 2.9},
+    {"name": "Куриная грудка", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0},
+    {"name": "Рис", "cal": 130, "prot": 2.7, "fat": 0.3, "carb": 28},
+    {"name": "Яйцо", "cal": 155, "prot": 13, "fat": 11, "carb": 1.1},
+    {"name": "Пицца", "cal": 266, "prot": 11, "fat": 10, "carb": 33},
+    {"name": "Бургер", "cal": 295, "prot": 15, "fat": 12, "carb": 30},
+    {"name": "Adrenaline", "cal": 45, "prot": 0, "fat": 0, "carb": 11}, # Английский вариант
+]
 
 def translate_to_english(query):
-    # Расширенный словарь для перевода
+    # Если запрос содержит латиницу, переводить не нужно
+    if re.search('[a-zA-Z]', query):
+        return query
+
     dictionary = {
         'яблоко': 'apple', 'банан': 'banana', 'мохито': 'mojito', 'адреналин': 'adrenaline',
         'курица': 'chicken', 'рис': 'rice', 'яйцо': 'egg', 'пицца': 'pizza', 'бургер': 'burger',
@@ -28,7 +42,8 @@ def translate_to_english(query):
         'мандарин': 'tangerine', 'арбуз': 'watermelon', 'дыня': 'melon', 'виноград': 'grapes',
         'клубника': 'strawberry', 'малина': 'raspberry', 'черника': 'blueberry', 'грибы': 'mushrooms',
         'сметана': 'sour cream', 'масло': 'butter', 'сахар': 'sugar', 'мед': 'honey', 'орехи': 'nuts',
-        'суши': 'sushi', 'роллы': 'rolls', 'чипсы': 'chips', 'сникерс': 'snickers', 'марс': 'mars'
+        'суши': 'sushi', 'роллы': 'rolls', 'чипсы': 'chips', 'сникерс': 'snickers', 'марс': 'mars',
+        'клубничное': 'strawberry', 'клубничный': 'strawberry', 'йогурт': 'yogurt', 'теос': 'teos'
     }
     words = query.lower().split()
     translated = [dictionary.get(w, w) for w in words]
@@ -40,40 +55,52 @@ def search_food():
     if not query:
         return jsonify({"products": []})
     
-    eng_query = translate_to_english(query)
+    results = []
+    query_lower = query.lower()
     
-    try:
-        # Ищем через официальную библиотеку
-        results = api.product.text_search(eng_query, page_size=5)
-        
-        products = []
-        if results and 'products' in results:
-            for product in results['products']:
-                name = product.get('product_name')
-                if not name:
-                    continue
-                
-                nutrients = product.get('nutriments', {})
-                # Картинка (фронтальная или обычная)
-                image_url = product.get('image_front_small_url') or product.get('image_url') or ''
-                
-                products.append({
-                    "product_name": name,
-                    "image_url": image_url,
-                    "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1),
-                    "proteins_100g": round(nutrients.get('proteins_100g', 0), 1),
-                    "fat_100g": round(nutrients.get('fat_100g', 0), 1),
-                    "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1),
-                    "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан',
-                    "description": "Данные Open Food Facts"
-                })
-        return jsonify({"products": products})
-    except Exception as e:
-        print(f"Search error: {e}")
-        return jsonify({"products": []})
+    # 1. ЛОКАЛЬНАЯ БАЗА
+    for p in LOCAL_DB:
+        if query_lower in p["name"].lower():
+            results.append({
+                "product_name": p["name"],
+                "image_url": "",
+                "calories_100g": p["cal"],
+                "proteins_100g": p["prot"],
+                "fat_100g": p["fat"],
+                "carbs_100g": p["carb"],
+                "ingredients": "Точные данные из базы приложения",
+                "description": ""
+            })
+
+    # 2. DIETLY API (БЕЗ КЛЮЧА)
+    if len(results) == 0:
+        eng_query = translate_to_english(query)
+        try:
+            url = f"https://api.getdietly.com/search?q={eng_query}&limit=5"
+            headers = {'User-Agent': 'SportApp/1.0 (contact@example.com)'}
+            response = requests.get(url, headers=headers, timeout=10)
+            data = response.json()
+            
+            if isinstance(data, list):
+                for item in data:
+                    results.append({
+                        "product_name": item.get('name', 'Неизвестно'),
+                        "image_url": item.get('image_url', ''),
+                        "calories_100g": item.get('calories', 0),
+                        "proteins_100g": item.get('protein_g', 0),
+                        "fat_100g": item.get('fat_g', 0),
+                        "carbs_100g": item.get('carbs_g', 0),
+                        "ingredients": "Данные DietlyAPI",
+                        "description": ""
+                    })
+        except Exception as e:
+            print(f"Dietly error: {e}")
+
+    return jsonify({"products": results})
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
+    # ... (этот код остается без изменений) ...
     if 'image' not in request.files:
         return jsonify({"error": "No image provided"}), 400
     file = request.files['image']
