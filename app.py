@@ -7,13 +7,19 @@ import requests
 import openfoodfacts
 import re
 from rapidfuzz import process, fuzz
+from google import genai
+from google.genai import types
 
 app = Flask(__name__)
 CORS(app)
 
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
+
+if GEMINI_API_KEY:
+    client = genai.Client(api_key=GEMINI_API_KEY)
 
 # --- ЛОКАЛЬНАЯ БАЗА ---
 LOCAL_DB = [
@@ -78,15 +84,10 @@ def translate_to_english(query):
     translated = [dictionary.get(w, w) for w in words]
     return ' '.join(translated)
 
-# --- ФУНКЦИЯ ПОИСКА КАРТИНКИ В NK IMAGES ---
 def get_food_image(query):
     try:
         url = "https://nkimages.com/api/public/images"
-        params = {
-            "source": "clawhub",
-            "q": query,
-            "per_page": 1
-        }
+        params = {"source": "clawhub", "q": query, "per_page": 1}
         response = requests.get(url, params=params, timeout=5)
         data = response.json()
         if data.get("success") and data.get("data"):
@@ -102,26 +103,14 @@ def search_food():
         return jsonify({"products": []})
     
     results = []
-    
-    # 1. ЛОКАЛЬНАЯ БАЗА
     best_match = process.extractOne(query, LOCAL_NAMES, scorer=fuzz.WRatio, score_cutoff=60)
     if best_match:
         matched_name = best_match[0]
         for p in LOCAL_DB:
             if p["name"] == matched_name:
-                results.append({
-                    "product_name": p["name"],
-                    "image_url": p["img"],
-                    "calories_100g": p["cal"],
-                    "proteins_100g": p["prot"],
-                    "fat_100g": p["fat"],
-                    "carbs_100g": p["carb"],
-                    "ingredients": "Точные данные",
-                    "description": ""
-                })
+                results.append({"product_name": p["name"], "image_url": p["img"], "calories_100g": p["cal"], "proteins_100g": p["prot"], "fat_100g": p["fat"], "carbs_100g": p["carb"], "ingredients": "Точные данные", "description": ""})
                 break
 
-    # 2. OPEN FOOD FACTS
     if len(results) == 0:
         eng_query = translate_to_english(query)
         try:
@@ -132,44 +121,21 @@ def search_food():
                     if not name: continue
                     nutrients = product.get('nutriments', {})
                     image_url = product.get('image_front_small_url') or product.get('image_url') or ''
-                    results.append({
-                        "product_name": name,
-                        "image_url": image_url,
-                        "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1),
-                        "proteins_100g": round(nutrients.get('proteins_100g', 0), 1),
-                        "fat_100g": round(nutrients.get('fat_100g', 0), 1),
-                        "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1),
-                        "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан',
-                        "description": "Данные Open Food Facts"
-                    })
-        except Exception as e:
-            print(f"OFF error: {e}")
+                    results.append({"product_name": name, "image_url": image_url, "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1), "proteins_100g": round(nutrients.get('proteins_100g', 0), 1), "fat_100g": round(nutrients.get('fat_100g', 0), 1), "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1), "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан', "description": "Данные Open Food Facts"})
+        except Exception as e: print(f"OFF error: {e}")
 
-    # 3. USDA
     if len(results) == 0 and USDA_API_KEY:
         eng_query = translate_to_english(query)
         try:
             url = f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={USDA_API_KEY}&query={eng_query}&pageSize=3"
             response = requests.get(url, timeout=10)
             data = response.json()
-            
             if 'foods' in data:
                 for food in data['foods']:
                     nutrients = {n['nutrientName']: n['value'] for n in food.get('foodNutrients', [])}
-                    results.append({
-                        "product_name": food.get('description', 'Без названия'),
-                        "image_url": "",
-                        "calories_100g": round(nutrients.get('Energy', 0), 1),
-                        "proteins_100g": round(nutrients.get('Protein', 0), 1),
-                        "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1),
-                        "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1),
-                        "ingredients": "Данные USDA FoodData Central",
-                        "description": ""
-                    })
-        except Exception as e:
-            print(f"USDA error: {e}")
+                    results.append({"product_name": food.get('description', 'Без названия'), "image_url": "", "calories_100g": round(nutrients.get('Energy', 0), 1), "proteins_100g": round(nutrients.get('Protein', 0), 1), "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1), "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1), "ingredients": "Данные USDA FoodData Central", "description": ""})
+        except Exception as e: print(f"USDA error: {e}")
 
-    # 4. FRUITYVICE
     if len(results) == 0:
         eng_query = translate_to_english(query)
         try:
@@ -179,57 +145,49 @@ def search_food():
                 data = response.json()
                 nut = data.get('nutritions', {})
                 if nut.get('calories') is not None:
-                    results.append({
-                        "product_name": data.get('name', eng_query),
-                        "image_url": "",
-                        "calories_100g": round(nut.get('calories', 0), 1),
-                        "proteins_100g": round(nut.get('protein', 0), 1),
-                        "fat_100g": round(nut.get('fat', 0), 1),
-                        "carbs_100g": round(nut.get('carbohydrates', 0), 1),
-                        "ingredients": "Данные Fruityvice",
-                        "description": ""
-                    })
-        except Exception as e:
-            print(f"Fruityvice error: {e}")
+                    results.append({"product_name": data.get('name', eng_query), "image_url": "", "calories_100g": round(nut.get('calories', 0), 1), "proteins_100g": round(nut.get('protein', 0), 1), "fat_100g": round(nut.get('fat', 0), 1), "carbs_100g": round(nut.get('carbohydrates', 0), 1), "ingredients": "Данные Fruityvice", "description": ""})
+        except Exception as e: print(f"Fruityvice error: {e}")
 
-    # 5. ЕСЛИ НЕТ КАРТИНКИ, ИЩЕМ В NK IMAGES
     for product in results:
         if not product["image_url"]:
             product["image_url"] = get_food_image(product["product_name"])
 
     return jsonify({"products": results})
 
-# --- НОВАЯ ФУНКЦИЯ: ПОИСК ПО ШТРИХ-КОДУ ---
 @app.route('/barcode', methods=['GET'])
 def search_by_barcode():
     barcode = request.args.get('code', '').strip()
     if not barcode:
         return jsonify({"products": []})
-    
     try:
-        # Ищем продукт по штрих-коду в Open Food Facts
         product = api.product.get(barcode)
-        
         if product and product.get('product_name'):
             nutrients = product.get('nutriments', {})
             image_url = product.get('image_front_small_url') or product.get('image_url') or ''
-            
-            result = {
-                "product_name": product.get('product_name'),
-                "image_url": image_url,
-                "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1),
-                "proteins_100g": round(nutrients.get('proteins_100g', 0), 1),
-                "fat_100g": round(nutrients.get('fat_100g', 0), 1),
-                "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1),
-                "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан',
-                "description": "Найдено по штрих-коду"
-            }
+            result = {"product_name": product.get('product_name'), "image_url": image_url, "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1), "proteins_100g": round(nutrients.get('proteins_100g', 0), 1), "fat_100g": round(nutrients.get('fat_100g', 0), 1), "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1), "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан', "description": "Найдено по штрих-коду"}
             return jsonify({"products": [result]})
-        else:
-            return jsonify({"products": []})
+        return jsonify({"products": []})
     except Exception as e:
         print(f"Barcode error: {e}")
         return jsonify({"products": []})
+
+@app.route('/scan_barcode', methods=['POST'])
+def scan_barcode():
+    if 'image' not in request.files:
+        return jsonify({"error": "No image"}), 400
+    file = request.files['image']
+    try:
+        from pyzbar.pyzbar import decode
+        from PIL import Image as PILImage
+        img = PILImage.open(io.BytesIO(file.read()))
+        decoded = decode(img)
+        if decoded:
+            barcode = decoded[0].data.decode('utf-8')
+            return jsonify({"barcode": barcode})
+        return jsonify({"error": "Barcode not found"}), 404
+    except Exception as e:
+        print(f"Barcode scan error: {e}")
+        return jsonify({"error": "Scan failed"}), 500
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
@@ -241,6 +199,8 @@ def analyze_photo():
         image = Image.open(io.BytesIO(image_data)).convert("RGB")
     except:
         return jsonify({"error": "Invalid image"}), 400
+
+    # 1. ПРОБУЕМ LOGMEAL
     if LOGMEAL_TOKEN:
         try:
             img_byte_arr = io.BytesIO()
@@ -252,9 +212,37 @@ def analyze_photo():
             if lm_response.status_code == 200:
                 lm_data = lm_response.json()
                 if 'foodType' in lm_data and 'name' in lm_data['foodType']:
+                    # LogMeal возвращает название на английском, переводим на русский (если нужно)
+                    # Но LogMeal редко ошибается, так что оставляем как есть.
                     return jsonify({"food": lm_data['foodType']['name'], "calories": 250, "protein": 15, "fat": 10, "carbs": 30})
         except Exception as e:
             print(f"LogMeal error: {e}")
+
+    # 2. ПРОБУЕМ GEMINI (С ЖЕСТКИМ ТРЕБОВАНИЕМ РУССКОГО)
+    if GEMINI_API_KEY:
+        try:
+            prompt = """
+            Определи, что за еда на фото.
+            Если на упаковке есть текст на английском (например, бренд или название), напиши это название на английском.
+            В остальных случаях ВСЕГДА пиши название еды на РУССКОМ языке.
+            Формат ответа: Название | Калории | Белки | Жиры | Углеводы.
+            """
+            response = client.models.generate_content(
+                model='gemini-2.0-flash',
+                contents=[types.Part.from_bytes(data=image_data, mime_type='image/jpeg'), prompt]
+            )
+            parts = [p.strip() for p in response.text.strip().split('|')]
+            if len(parts) >= 5:
+                return jsonify({
+                    "food": parts[0],
+                    "calories": int(''.join(filter(str.isdigit, parts[1]))) if any(c.isdigit() for c in parts[1]) else 250,
+                    "protein": int(''.join(filter(str.isdigit, parts[2]))) if any(c.isdigit() for c in parts[2]) else 15,
+                    "fat": int(''.join(filter(str.isdigit, parts[3]))) if any(c.isdigit() for c in parts[3]) else 10,
+                    "carbs": int(''.join(filter(str.isdigit, parts[4]))) if any(c.isdigit() for c in parts[4]) else 30
+                })
+        except Exception as e:
+            print(f"Gemini error: {e}")
+
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
 if __name__ == '__main__':
