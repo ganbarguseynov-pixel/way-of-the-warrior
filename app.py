@@ -12,7 +12,6 @@ CORS(app)
 
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-CALORIE_NINJAS_API_KEY = os.environ.get("CALORIE_NINJAS_API_KEY")
 
 if GEMINI_API_KEY:
     client = genai.Client(api_key=GEMINI_API_KEY)
@@ -65,33 +64,34 @@ def analyze_photo():
 
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
-# --- ПОИСК ЧЕРЕЗ CALORIE NINJAS (С ПЕРЕВОДОМ) ---
+# --- ПОИСК ЧЕРЕЗ DIETLYAPI (БЕЗ КЛЮЧА, ПО IP) ---
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q', '').strip()
-    if not query or not CALORIE_NINJAS_API_KEY:
+    if not query:
         return jsonify({"products": []})
     
-    # Переводим запрос на английский (CalorieNinjas понимает только его)
+    # Переводим запрос на английский (Dietly лучше ищет по-английски)
     eng_query = translate_to_english(query)
     
     try:
-        headers = {'X-Api-Key': CALORIE_NINJAS_API_KEY}
-        url = f"https://api.calorieninjas.com/v1/nutrition?query={eng_query}"
-        response = requests.get(url, headers=headers, timeout=10)
+        # DietlyAPI не требует ключа для поиска (работает по IP)
+        url = f"https://api.getdietly.com/search?q={eng_query}&limit=5"
+        response = requests.get(url, timeout=15)
         data = response.json()
         
         products = []
-        if 'items' in data:
-            for item in data['items']:
+        # Dietly возвращает массив напрямую
+        if isinstance(data, list):
+            for item in data:
                 products.append({
                     "product_name": item.get('name', 'Неизвестно'),
-                    "image_url": "",
+                    "image_url": item.get('image_url', ''),
                     "calories_100g": item.get('calories', 0),
                     "proteins_100g": item.get('protein_g', 0),
-                    "fat_100g": item.get('fat_total_g', 0),
-                    "carbs_100g": item.get('carbohydrates_total_g', 0),
-                    "ingredients": "Данные CalorieNinjas",
+                    "fat_100g": item.get('fat_g', 0),
+                    "carbs_100g": item.get('carbs_g', 0),
+                    "ingredients": "Данные DietlyAPI",
                     "description": ""
                 })
         return jsonify({"products": products})
@@ -100,31 +100,12 @@ def search_food():
         return jsonify({"products": []})
 
 def translate_to_english(word):
-    # Простой словарь для популярных продуктов
     dictionary = {
-        'йогурт': 'yogurt',
-        'яблоко': 'apple',
-        'банан': 'banana',
-        'молоко': 'milk',
-        'хлеб': 'bread',
-        'курица': 'chicken',
-        'рис': 'rice',
-        'яйцо': 'egg',
-        'сыр': 'cheese',
-        'мясо': 'meat',
-        'рыба': 'fish',
-        'овсянка': 'oatmeal',
-        'творог': 'cottage cheese',
-        'сок': 'juice',
-        'вода': 'water',
-        'кофе': 'coffee',
-        'чай': 'tea',
-        'шоколад': 'chocolate',
-        'печенье': 'cookie',
-        'макароны': 'pasta',
-        'картофель': 'potato',
-        'помидор': 'tomato',
-        'огурец': 'cucumber'
+        'йогурт': 'yogurt', 'яблоко': 'apple', 'банан': 'banana', 'молоко': 'milk',
+        'хлеб': 'bread', 'курица': 'chicken', 'рис': 'rice', 'яйцо': 'egg',
+        'сыр': 'cheese', 'мясо': 'meat', 'рыба': 'fish', 'овсянка': 'oatmeal',
+        'творог': 'cottage cheese', 'сок': 'juice', 'вода': 'water',
+        'кофе': 'coffee', 'чай': 'tea', 'шоколад': 'chocolate', 'печенье': 'cookie'
     }
     return dictionary.get(word.lower(), word)
 
