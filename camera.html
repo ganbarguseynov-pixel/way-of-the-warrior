@@ -7,93 +7,27 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="stylesheet" href="style.css">
 <style>
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-    .modal.active { display: flex; }
-    .modal-content { background: #1c1c1e; border-radius: 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; padding: 20px; box-sizing: border-box; position: relative; }
-    .modal-close { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 20px; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; }
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+.modal.active { display: flex; }
+.modal-content { background: #1c1c1e; border-radius: 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; padding: 20px; box-sizing: border-box; position: relative; }
+.modal-close { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 20px; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; }
 
-    /* Стили для контейнера камеры штрих-кода */
-    #barcode-camera-container {
-        position: relative;
-        width: 100%;
-        height: 60vh; /* Ограничиваем высоту, как у камеры для еды */
-        border-radius: 16px;
-        overflow: hidden;
-        margin-bottom: 20px;
-        background: #000;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
+/* Стили для контейнера камеры штрих-кода */
+#barcode-camera-container { position: relative; width: 100%; height: 60vh; border-radius: 16px; overflow: hidden; margin-bottom: 20px; background: #000; display: flex; flex-direction: column; justify-content: space-between; }
+#barcode-camera-video { width: 100%; height: 100%; object-fit: cover; display: block; background-color: #000; }
+#barcode-camera-controls { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; z-index: 5; }
+#barcode-capture-btn { width: 75px; height: 75px; border-radius: 50%; background: white; border: 5px solid rgba(0,0,0,0.2); cursor: pointer; }
+#barcode-capture-btn:active { transform: scale(0.95); background: #ddd; }
+#barcode-close-camera-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 5; display: flex; align-items: center; justify-content: center; }
+#barcode-switch-camera-btn { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 5; display: flex; align-items: center; justify-content: center; }
 
-    #barcode-camera-video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-        background-color: #000;
-    }
-
-    #barcode-camera-controls {
-        position: absolute;
-        bottom: 20px;
-        left: 0;
-        right: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 5;
-    }
-
-    #barcode-capture-btn {
-        width: 75px;
-        height: 75px;
-        border-radius: 50%;
-        background: white;
-        border: 5px solid rgba(0,0,0,0.2);
-        cursor: pointer;
-    }
-
-    #barcode-capture-btn:active {
-        transform: scale(0.95);
-        background: #ddd;
-    }
-
-    #barcode-close-camera-btn {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: rgba(0,0,0,0.6);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        font-size: 20px;
-        cursor: pointer;
-        z-index: 5;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    #barcode-switch-camera-btn {
-        position: absolute;
-        top: 15px;
-        left: 15px;
-        background: rgba(0,0,0,0.6);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        font-size: 20px;
-        cursor: pointer;
-        z-index: 5;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+/* Новые стили для красивого отображения результата по центру */
+.result-card { background: #1c1c1e; padding: 25px 20px; border-radius: 16px; margin-top: 20px; text-align: center; }
+.result-title { margin-top: 0; color: var(--accent-color); font-size: 24px; word-break: break-word; line-height: 1.2; }
+.result-desc { color: #8e8e93; font-size: 15px; margin-bottom: 20px; line-height: 1.4; padding: 0 10px; }
+.macro-box { background: #2c2c2e; padding: 15px; border-radius: 12px; display: inline-block; width: 100%; max-width: 300px; margin: 0 auto; }
+.macro-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 16px; padding: 0 10px; }
+.macro-row:last-child { margin-bottom: 0; }
 </style>
 </head>
 <body>
@@ -131,65 +65,71 @@
 <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
 <button class="btn" id="remove-photo-btn" style="display: none; background-color: #ff3b30; color: white; margin-bottom: 10px;" onclick="resetCameraScreen()">❌ Удалить фото</button>
 <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px; font-size: 18px;">🤖 ИИ анализирует фото...</div>
-<div id="food-result" style="display: none; background: #1c1c1e; padding: 20px; border-radius: 16px; margin-top: 20px;">
-<h2 id="food-name" style="margin-top: 0; color: var(--accent-color);">Название</h2>
-<div class="nutrition-row"><span>Калории:</span> <b id="food-calories">0 ккал</b></div>
-<div class="nutrition-row"><span>Белки:</span> <b id="food-protein">0 г</b></div>
-<div class="nutrition-row"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
-<div class="nutrition-row"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
-<button class="btn" style="background-color: #34c759; color: white; margin-top: 15px;" onclick="saveXPAndGoBack()">Добавить (+20 XP)</button>
-<button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 10px;" onclick="resetCameraScreen()">Отмена</button>
+
+<!-- БЛОК РЕЗУЛЬТАТА С ЦЕНТРИРОВАНИЕМ -->
+<div id="food-result" style="display: none;" class="result-card">
+    <h2 id="food-name" class="result-title">Название</h2>
+    <p id="food-desc" class="result-desc">Описание...</p>
+    
+    <div class="macro-box">
+        <div class="macro-row"><span>Калории:</span> <b id="food-calories">0 ккал</b></div>
+        <div class="macro-row"><span>Белки:</span> <b id="food-protein">0 г</b></div>
+        <div class="macro-row"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
+        <div class="macro-row"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
+    </div>
+
+    <button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="saveXPAndGoBack()">Добавить (+20 XP)</button>
+    <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 10px;" onclick="resetCameraScreen()">Отмена</button>
 </div>
 </div>
 
 <!-- ВКЛАДКА ШТРИХ-КОДА -->
 <div id="tab-barcode" class="tab-content">
-    <p style="text-align: center; color: #8e8e93; margin-bottom: 20px;">Сфотографируйте штрих-код или введите вручную</p>
-    
-    <div id="barcode-buttons">
-        <button class="btn" style="margin-bottom: 10px;" onclick="startBarcodeCamera()">📷 Открыть камеру</button>
-        <input type="file" id="barcode-gallery-input" accept="image/*" style="display: none;" onchange="handleBarcodeImage(event)">
-        <button class="btn" style="background-color: #2c2c2e; color: white; margin-bottom: 10px;" onclick="document.getElementById('barcode-gallery-input').click()">🖼️ Выбрать из галереи</button>
-    </div>
+<p style="text-align: center; color: #8e8e93; margin-bottom: 20px;">Сфотографируйте штрих-код или введите вручную</p>
 
-    <div class="form-group" style="margin-top: 20px;">
-        <input type="number" id="barcode-input" placeholder="Или введите штрих-код вручную">
-    </div>
-    <button class="btn" onclick="searchByBarcode()">🔎 Найти по штрих-коду</button>
+<div id="barcode-buttons">
+<button class="btn" style="margin-bottom: 10px;" onclick="startBarcodeCamera()">📷 Открыть камеру</button>
+<input type="file" id="barcode-gallery-input" accept="image/*" style="display: none;" onchange="handleBarcodeImage(event)">
+<button class="btn" style="background-color: #2c2c2e; color: white; margin-bottom: 10px;" onclick="document.getElementById('barcode-gallery-input').click()">🖼️ Выбрать из галереи</button>
+</div>
 
-    <!-- Контейнер для камеры штрих-кода (теперь маленький, с кнопкой) -->
-    <div id="barcode-camera-container" style="display: none;">
-        <button id="barcode-switch-camera-btn" onclick="switchBarcodeCamera()">🔄</button>
-        <button id="barcode-close-camera-btn" onclick="resetBarcodeScreen()">✖</button>
-        <video id="barcode-camera-video" autoplay playsinline></video>
-        <div id="barcode-camera-controls">
-            <button id="barcode-capture-btn" onclick="takeBarcodePhoto()"></button>
-        </div>
-    </div>
+<div class="form-group" style="margin-top: 20px;">
+<input type="number" id="barcode-input" placeholder="Или введите штрих-код вручную">
+</div>
+<button class="btn" onclick="searchByBarcode()">🔎 Найти по штрих-коду</button>
 
-    <div id="barcode-result" style="margin-top: 20px; text-align: center; font-size: 18px; font-weight: bold;"></div>
+<div id="barcode-camera-container" style="display: none;">
+<button id="barcode-switch-camera-btn" onclick="switchBarcodeCamera()">🔄</button>
+<button id="barcode-close-camera-btn" onclick="resetBarcodeScreen()">✖</button>
+<video id="barcode-camera-video" autoplay playsinline></video>
+<div id="barcode-camera-controls">
+<button id="barcode-capture-btn" onclick="takeBarcodePhoto()"></button>
+</div>
+</div>
+
+<div id="barcode-result" style="margin-top: 20px; text-align: center; font-size: 18px; font-weight: bold;"></div>
 </div>
 </div>
 
 <!-- МОДАЛЬНОЕ ОКНО -->
 <div id="food-modal" class="modal">
-    <div class="modal-content">
-        <button class="modal-close" onclick="closeModal()">✖</button>
-        <img id="modal-image" src="" style="width: 100%; height: 200px; object-fit: contain; background: #2c2c2e; border-radius: 12px; margin-bottom: 15px; display: none;">
-        <h2 id="modal-name" style="color: var(--accent-color); margin-top: 0;">Название</h2>
-        <div style="background: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-            <h4 style="margin-top: 0;">На 100 грамм:</h4>
-            <div class="nutrition-row"><span>Калории:</span> <b id="modal-calories">0 ккал</b></div>
-            <div class="nutrition-row"><span>Белки:</span> <b id="modal-protein">0 г</b></div>
-            <div class="nutrition-row"><span>Жиры:</span> <b id="modal-fat">0 г</b></div>
-            <div class="nutrition-row"><span>Углеводы:</span> <b id="modal-carbs">0 г</b></div>
-        </div>
-        <div style="margin-bottom: 20px;">
-            <h4 style="margin-bottom: 5px;">Описание:</h4>
-            <p id="modal-desc" style="color: #8e8e93; font-size: 14px; margin: 0;">Описание отсутствует.</p>
-        </div>
-        <button class="btn" style="background-color: #34c759; color: white;" onclick="confirmFoodSelection()">✅ Выбрать это</button>
-    </div>
+<div class="modal-content">
+<button class="modal-close" onclick="closeModal()">✖</button>
+<img id="modal-image" src="" style="width: 100%; height: 200px; object-fit: contain; background: #2c2c2e; border-radius: 12px; margin-bottom: 15px; display: none;">
+<h2 id="modal-name" style="color: var(--accent-color); margin-top: 0; text-align: center;">Название</h2>
+<div style="background: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+<h4 style="margin-top: 0;">На 100 грамм:</h4>
+<div class="nutrition-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Калории:</span> <b id="modal-calories">0 ккал</b></div>
+<div class="nutrition-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Белки:</span> <b id="modal-protein">0 г</b></div>
+<div class="nutrition-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Жиры:</span> <b id="modal-fat">0 г</b></div>
+<div class="nutrition-row" style="display: flex; justify-content: space-between;"><span>Углеводы:</span> <b id="modal-carbs">0 г</b></div>
+</div>
+<div style="margin-bottom: 20px;">
+<h4 style="margin-bottom: 5px;">Описание:</h4>
+<p id="modal-desc" style="color: #8e8e93; font-size: 14px; margin: 0;">Описание отсутствует.</p>
+</div>
+<button class="btn" style="background-color: #34c759; color: white;" onclick="confirmFoodSelection()">✅ Выбрать это</button>
+</div>
 </div>
 
 <script>
@@ -203,12 +143,12 @@ window.foodList = [];
 function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById(`tab-${tabName}`).classList.add('active');
+    document.getElementById('tab-' + tabName).classList.add('active');
     event.target.classList.add('active');
-    
+
     stopCamera();
     stopBarcodeCamera();
-    
+
     if (tabName === 'photo') resetCameraScreen();
     if (tabName === 'barcode') resetBarcodeScreen();
 }
@@ -272,15 +212,15 @@ async function startBarcodeCamera() {
     try {
         document.getElementById('barcode-buttons').style.display = 'none';
         document.getElementById('barcode-camera-container').style.display = 'flex';
-        
-        barcodeStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
+
+        barcodeStream = await navigator.mediaDevices.getUserMedia({
+            video: {
                 facingMode: barcodeFacingMode,
                 width: { ideal: 1920 },
                 height: { ideal: 1080 }
-            } 
+            }
         });
-        
+
         document.getElementById('barcode-camera-video').srcObject = barcodeStream;
     } catch (err) {
         tg.showAlert("Ошибка камеры для штрих-кода.");
@@ -302,7 +242,7 @@ function takeBarcodePhoto() {
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
     stopBarcodeCamera();
-    
+
     canvas.toBlob(async function(blob) {
         const file = new File([blob], "barcode.jpg", { type: "image/jpeg" });
         await sendBarcodeToServer(file);
@@ -323,19 +263,19 @@ function resetBarcodeScreen() {
 async function sendBarcodeToServer(file) {
     const resultDiv = document.getElementById('barcode-result');
     resultDiv.innerText = "Распознавание штрих-кода...";
-    
+
     const formData = new FormData();
     formData.append('image', file);
-    
+
     try {
         const response = await fetch(`${AI_SERVER_URL}/scan_barcode`, { method: 'POST', body: formData });
         const data = await response.json();
-        
+
         if (data.barcode) {
             resultDiv.innerText = `Найден: ${data.barcode}. Загрузка...`;
             const productResponse = await fetch(`${AI_SERVER_URL}/barcode?code=${data.barcode}`);
             const productData = await productResponse.json();
-            
+
             if (productData.products && productData.products.length > 0) {
                 window.foodList = productData.products;
                 openFoodModal(0);
@@ -349,7 +289,7 @@ async function sendBarcodeToServer(file) {
     } catch (e) {
         resultDiv.innerText = "Ошибка сервера.";
     }
-    resetBarcodeScreen(); 
+    resetBarcodeScreen();
 }
 
 async function handleBarcodeImage(event) {
@@ -378,6 +318,7 @@ function confirmFoodSelection() {
     if (!selectedFoodData) return;
     document.getElementById('food-result').style.display = 'block';
     document.getElementById('food-name').innerText = selectedFoodData.product_name;
+    document.getElementById('food-desc').innerText = selectedFoodData.ingredients || "Описание отсутствует";
     document.getElementById('food-calories').innerText = (selectedFoodData.calories_100g || 0) + " ккал/100г";
     document.getElementById('food-protein').innerText = (selectedFoodData.proteins_100g || 0) + " г";
     document.getElementById('food-fat').innerText = (selectedFoodData.fat_100g || 0) + " г";
@@ -464,6 +405,7 @@ async function sendPhotoToServer(file) {
         if (data.food !== "Не удалось распознать") {
             document.getElementById('food-result').style.display = 'block';
             document.getElementById('food-name').innerText = data.food;
+            document.getElementById('food-desc').innerText = data.description || "Описание отсутствует";
             document.getElementById('food-calories').innerText = data.calories + " ккал";
             document.getElementById('food-protein').innerText = data.protein + " г";
             document.getElementById('food-fat').innerText = data.fat + " г";
