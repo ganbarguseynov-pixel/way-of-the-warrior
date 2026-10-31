@@ -191,7 +191,7 @@ def analyze_photo():
     except:
         return jsonify({"error": "Invalid image"}), 400
 
-    # 1. ПРОБУЕМ GEMINI (с повторами)
+    # 1. ПРОБУЕМ GEMINI
     if client:
         try:
             img_byte_arr = io.BytesIO()
@@ -240,7 +240,7 @@ def analyze_photo():
         except Exception as e:
             print(f"Gemini error: {e}. Переключаемся на LogMeal.")
 
-    # 2. ПРОБУЕМ LOGMEAL (если Gemini упал)
+    # 2. ПРОБУЕМ LOGMEAL (РЕЗЕРВ)
     if LOGMEAL_TOKEN:
         try:
             img_byte_arr = io.BytesIO()
@@ -264,7 +264,6 @@ def analyze_photo():
         except Exception as e:
             print(f"LogMeal error: {e}")
 
-    # 3. ЕСЛИ ВСЁ УПАЛО
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Все ИИ перегружены. Попробуйте позже."})
 
 if __name__ == '__main__':
