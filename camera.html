@@ -121,10 +121,6 @@
 <div class="nutrition-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Жиры:</span> <b id="modal-fat">0 г</b></div>
 <div class="nutrition-row" style="display: flex; justify-content: space-between;"><span>Углеводы:</span> <b id="modal-carbs">0 г</b></div>
 </div>
-<div style="margin-bottom: 20px;">
-<h4 style="margin-bottom: 5px;">Описание:</h4>
-<p id="modal-desc" style="color: #8e8e93; font-size: 14px; margin: 0;">Описание отсутствует.</p>
-</div>
 <button class="btn" style="background-color: #34c759; color: white;" onclick="confirmFoodSelection()">✅ Выбрать это</button>
 </div>
 </div>
@@ -302,21 +298,29 @@ function openFoodModal(index) {
     document.getElementById('modal-protein').innerText = (food.proteins_100g || 0) + " г";
     document.getElementById('modal-fat').innerText = (food.fat_100g || 0) + " г";
     document.getElementById('modal-carbs').innerText = (food.carbs_100g || 0) + " г";
-    document.getElementById('modal-desc').innerText = food.ingredients;
     const imgElement = document.getElementById('modal-image');
     if (food.image_url) { imgElement.src = food.image_url; imgElement.style.display = 'block'; } else { imgElement.style.display = 'none'; }
     document.getElementById('food-modal').classList.add('active');
 }
 function closeModal() { document.getElementById('food-modal').classList.remove('active'); }
+
 function confirmFoodSelection() {
     if (!selectedFoodData) return;
+    
+    // Сохраняем в дневник питания
+    let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
+    todayFood.push(selectedFoodData);
+    localStorage.setItem('todayFood', JSON.stringify(todayFood));
+
+    // Показываем карточку
     document.getElementById('food-result').style.display = 'block';
     document.getElementById('food-name').innerText = selectedFoodData.product_name;
-    document.getElementById('food-desc').innerText = selectedFoodData.ingredients || "Описание отсутствует";
+    document.getElementById('food-desc').innerText = "Добавлено в дневник питания!";
     document.getElementById('food-calories').innerText = (selectedFoodData.calories_100g || 0) + " ккал/100г";
     document.getElementById('food-protein').innerText = (selectedFoodData.proteins_100g || 0) + " г";
     document.getElementById('food-fat').innerText = (selectedFoodData.fat_100g || 0) + " г";
     document.getElementById('food-carbs').innerText = (selectedFoodData.carbs_100g || 0) + " г";
+    
     closeModal();
     document.getElementById('search-result').innerHTML = '';
 }
@@ -395,10 +399,21 @@ async function sendPhotoToServer(file) {
         const response = await fetch(`${AI_SERVER_URL}/analyze`, { method: 'POST', body: formData });
         const data = await response.json();
         document.getElementById('loading-spinner').style.display = 'none';
+        
         if (data.food !== "Не удалось распознать" && data.food !== "Ошибка ИИ") {
+            // Превращаем ответ ИИ в объект для корзины
+            selectedFoodData = {
+                product_name: data.food,
+                calories_100g: data.calories,
+                proteins_100g: data.protein,
+                fat_100g: data.fat,
+                carbs_100g: data.carbs
+            };
+            window.foodList = [selectedFoodData]; // Кладем в массив
+            
             document.getElementById('food-result').style.display = 'block';
             document.getElementById('food-name').innerText = data.food;
-            document.getElementById('food-desc').innerText = data.description || "Описание отсутствует";
+            document.getElementById('food-desc').innerText = "Нажми 'Добавить', чтобы сохранить в дневник.";
             document.getElementById('food-calories').innerText = data.calories + " ккал";
             document.getElementById('food-protein').innerText = data.protein + " г";
             document.getElementById('food-fat').innerText = data.fat + " г";
