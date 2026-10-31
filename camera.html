@@ -7,44 +7,16 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="stylesheet" href="style.css">
 <style>
-    /* Стили для модального окна */
     .modal {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8);
-        z-index: 1000;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-        box-sizing: border-box;
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
     }
-    .modal.active {
-        display: flex;
-    }
+    .modal.active { display: flex; }
     .modal-content {
-        background: #1c1c1e;
-        border-radius: 20px;
-        width: 100%;
-        max-width: 400px;
-        max-height: 90vh;
-        overflow-y: auto;
-        padding: 20px;
-        box-sizing: border-box;
-        position: relative;
+        background: #1c1c1e; border-radius: 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; padding: 20px; box-sizing: border-box; position: relative;
     }
     .modal-close {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: rgba(255,255,255,0.1);
-        border: none;
-        color: white;
-        font-size: 20px;
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-        cursor: pointer;
+        position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 20px; width: 35px; height: 35px; border-radius: 50%; cursor: pointer;
     }
 </style>
 </head>
@@ -102,11 +74,10 @@
 </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО С ХАРАКТЕРИСТИКАМИ -->
+<!-- МОДАЛЬНОЕ ОКНО -->
 <div id="food-modal" class="modal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeModal()">✖</button>
-        <img id="modal-image" src="" style="width: 100%; height: 200px; object-fit: contain; background: #2c2c2e; border-radius: 12px; margin-bottom: 15px;">
         <h2 id="modal-name" style="color: var(--accent-color); margin-top: 0;">Название</h2>
         
         <div style="background: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
@@ -118,7 +89,7 @@
         </div>
 
         <div style="margin-bottom: 20px;">
-            <h4 style="margin-bottom: 5px;">Описание / Состав:</h4>
+            <h4 style="margin-bottom: 5px;">Описание:</h4>
             <p id="modal-desc" style="color: #8e8e93; font-size: 14px; margin: 0;">Описание отсутствует.</p>
         </div>
 
@@ -132,6 +103,7 @@ const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
 let selectedFoodData = null;
+window.foodList = [];
 
 function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -151,18 +123,10 @@ async function searchFood() {
         const data = await response.json();
         
         if (data.products && data.products.length > 0) {
+            window.foodList = data.products;
             let html = '';
             data.products.forEach((p, index) => {
-                let imgHtml = p.image_url 
-                    ? `<img src="${p.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 15px;">` 
-                    : `<div style="width: 50px; height: 50px; background: #2c2c2e; border-radius: 8px; margin-right: 15px;"></div>`;
-                
-                // Сохраняем данные в глобальный массив, чтобы потом открыть модалку
-                window.foodList = window.foodList || [];
-                window.foodList[index] = p;
-
                 html += `<div class="leaderboard-item" style="cursor: pointer; margin-bottom: 10px;" onclick="openFoodModal(${index})">
-                    ${imgHtml}
                     <div class="user-info">
                         <p style="margin:0; font-weight:bold; font-size:15px;">${p.product_name}</p>
                         <p style="margin:0; font-size:12px; color:#8e8e93;">${p.calories_100g || 0} ккал на 100г</p>
@@ -171,7 +135,7 @@ async function searchFood() {
             });
             resultDiv.innerHTML = html;
         } else {
-            resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ничего не найдено. Попробуйте другое название.</p>';
+            resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ничего не найдено.</p>';
         }
     } catch (e) {
         resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ошибка связи с сервером</p>';
@@ -182,18 +146,12 @@ function openFoodModal(index) {
     const food = window.foodList[index];
     selectedFoodData = food;
 
-    document.getElementById('modal-image').src = food.image_url || '';
-    document.getElementById('modal-image').style.display = food.image_url ? 'block' : 'none';
     document.getElementById('modal-name').innerText = food.product_name;
     document.getElementById('modal-calories').innerText = (food.calories_100g || 0) + " ккал";
     document.getElementById('modal-protein').innerText = (food.proteins_100g || 0) + " г";
     document.getElementById('modal-fat').innerText = (food.fat_100g || 0) + " г";
     document.getElementById('modal-carbs').innerText = (food.carbs_100g || 0) + " г";
-    
-    // Состав или описание
-    let desc = food.ingredients;
-    if (desc === 'Состав не указан' && food.description) desc = food.description;
-    document.getElementById('modal-desc').innerText = desc;
+    document.getElementById('modal-desc').innerText = food.ingredients;
 
     document.getElementById('food-modal').classList.add('active');
 }
@@ -205,7 +163,6 @@ function closeModal() {
 function confirmFoodSelection() {
     if (!selectedFoodData) return;
 
-    // Заполняем основной блок результата
     document.getElementById('food-result').style.display = 'block';
     document.getElementById('food-name').innerText = selectedFoodData.product_name;
     document.getElementById('food-calories').innerText = (selectedFoodData.calories_100g || 0) + " ккал/100г";
@@ -213,7 +170,6 @@ function confirmFoodSelection() {
     document.getElementById('food-fat').innerText = (selectedFoodData.fat_100g || 0) + " г";
     document.getElementById('food-carbs').innerText = (selectedFoodData.carbs_100g || 0) + " г";
 
-    // Закрываем модалку и очищаем поиск
     closeModal();
     document.getElementById('search-result').innerHTML = '';
 }
