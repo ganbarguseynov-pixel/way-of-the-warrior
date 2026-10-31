@@ -66,6 +66,56 @@ def analyze_photo():
 
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
+# --- НОВАЯ ФУНКЦИЯ ПОИСКА (ДОБАВЛЕНА) ---
+@app.route('/search', methods=['GET'])
+def search_food():
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify({"products": []})
+    
+    result = try_search_off(query)
+    
+    if not result and any(c in 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя' for c in query.lower()):
+        eng_query = translate_food(query)
+        if eng_query:
+            result = try_search_off(eng_query)
+    
+    return jsonify({"products": result})
+
+def try_search_off(query):
+    try:
+        headers = {'User-Agent': 'SportApp/1.0 (contact@example.com)'}
+        url = f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={query}&search_simple=1&action=process&json=1&page_size=3"
+        response = requests.get(url, headers=headers, timeout=10)
+        data = response.json()
+        
+        products = []
+        if 'products' in data:
+            for product in data['products']:
+                if product.get('product_name'):
+                    nutrients = product.get('nutriments', {})
+                    products.append({
+                        "product_name": product.get('product_name'),
+                        "nutrients": {
+                            "proteins": nutrients.get('proteins_100g', 0),
+                            "fat": nutrients.get('fat_100g', 0),
+                            "carbohydrates": nutrients.get('carbohydrates_100g', 0)
+                        }
+                    })
+        return products
+    except Exception as e:
+        print(f"Search error: {e}")
+        return []
+
+def translate_food(rus_word):
+    dictionary = {
+        'яблоко': 'apple', 'банан': 'banana', 'йогурт': 'yogurt', 'молоко': 'milk',
+        'хлеб': 'bread', 'курица': 'chicken', 'рис': 'rice', 'яйцо': 'egg',
+        'сыр': 'cheese', 'мясо': 'meat', 'рыба': 'fish', 'овсянка': 'oatmeal',
+        'творог': 'cottage cheese', 'сок': 'juice', 'вода': 'water'
+    }
+    return dictionary.get(rus_word.lower())
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
