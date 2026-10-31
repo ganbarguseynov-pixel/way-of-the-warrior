@@ -26,8 +26,8 @@ client = genai.Client(
 )
 
 # --- УМНЫЙ КЭШ (чтобы не тратить токены и лимиты) ---
-SEARCH_CACHE = {}  # Кэш для текстового поиска
-BARCODE_CACHE = {} # Кэш для штрих-кодов
+SEARCH_CACHE = {}
+BARCODE_CACHE = {}
 
 LOCAL_DB = [
     {"name": "Курица", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
@@ -97,7 +97,6 @@ def search_food():
     if not query:
         return jsonify({"products": []})
 
-    # 1. ПРОВЕРЯЕМ КЭШ ПОИСКА (если искали раньше - отдаем мгновенно)
     cache_key = query.lower()
     if cache_key in SEARCH_CACHE:
         print(f"Из кэша: {query}")
@@ -137,7 +136,6 @@ def search_food():
                     results.append({"product_name": food.get('description', 'Без названия'), "image_url": "", "calories_100g": round(nutrients.get('Energy', 0), 1), "proteins_100g": round(nutrients.get('Protein', 0), 1), "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1), "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1), "ingredients": "Данные USDA FoodData Central", "description": ""})
         except Exception as e: print(f"USDA error: {e}")
 
-    # Сохраняем результат поиска в кэш
     if results:
         SEARCH_CACHE[cache_key] = results
 
@@ -149,7 +147,6 @@ def search_by_barcode():
     if not barcode:
         return jsonify({"products": []})
         
-    # 1. ПРОВЕРЯЕМ КЭШ ШТРИХ-КОДОВ
     if barcode in BARCODE_CACHE:
         print(f"Штрих-код из кэша: {barcode}")
         return jsonify({"products": BARCODE_CACHE[barcode]})
@@ -161,7 +158,6 @@ def search_by_barcode():
             image_url = product.get('image_front_small_url') or product.get('image_url') or ''
             result = {"product_name": product.get('product_name'), "image_url": image_url, "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1), "proteins_100g": round(nutrients.get('proteins_100g', 0), 1), "fat_100g": round(nutrients.get('fat_100g', 0), 1), "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1), "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан', "description": "Найдено по штрих-коду"}
             
-            # Сохраняем в кэш
             BARCODE_CACHE[barcode] = [result]
             return jsonify({"products": [result]})
         return jsonify({"products": []})
@@ -220,13 +216,12 @@ def analyze_photo():
         image.save(img_byte_arr, format='JPEG', quality=75)
         compressed_image_data = img_byte_arr.getvalue()
 
+        # Ультимативный промпт
         prompt = """
-        Ты — диетолог. Определи еду на фото.
-        1. Если на упаковке бренд на английском, пиши его на английском, остальное — на русском.
-        2. В остальных случаях ВСЕГДА на русском.
-        3. Дай БЖУ и калории на 100 грамм.
-        
-        Формат: Название | Калории | Белки | Жиры | Углеводы
+        Выведи ТОЛЬКО название продукта и БЖУ.
+        Без приветствий, без описаний, без лишних слов.
+        Строго в формате: Название | Калории | Белки | Жиры | Углеводы
+        Пример: Чизбургер | 285 | 18 | 19 | 12
         """
         
         response = client.models.generate_content(
@@ -234,7 +229,9 @@ def analyze_photo():
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
         )
         
-        parts = [p.strip() for p in response.text.strip().split('|')]
+        # Очищаем от звездочек и прочего мусора
+        clean_text = re.sub(r'[*#_]', '', response.text.strip())
+        parts = [p.strip() for p in clean_text.split('|')]
         
         if len(parts) >= 5:
             cal = int(re.sub(r'\D', '', parts[1])) if re.search(r'\d', parts[1]) else 250
@@ -248,7 +245,7 @@ def analyze_photo():
                 "protein": prot, 
                 "fat": fat, 
                 "carbs": carb, 
-                "description": "Краткие данные"
+                "description": "" # Оставляем пустым, чтобы на экране не было текста
             })
         else:
             return jsonify({"food": "Не удалось", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ не разобрал."})
