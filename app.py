@@ -4,36 +4,13 @@ from PIL import Image
 import io
 import os
 import requests
+import json
 
 app = Flask(__name__)
 CORS(app)
 
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
-
-# --- ЛОКАЛЬНАЯ БАЗА ПРОДУКТОВ ---
-# (Название, Калории, Белки, Жиры, Углеводы)
-PRODUCTS_DB = [
-    {"name": "Яблоко", "cal": 52, "prot": 0.3, "fat": 0.2, "carb": 14},
-    {"name": "Банан", "cal": 89, "prot": 1.1, "fat": 0.3, "carb": 23},
-    {"name": "Йогурт (натуральный)", "cal": 60, "prot": 5, "fat": 3, "carb": 4},
-    {"name": "Молоко (2.5%)", "cal": 52, "prot": 2.9, "fat": 2.5, "carb": 4.7},
-    {"name": "Куриная грудка", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0},
-    {"name": "Яйцо куриное", "cal": 155, "prot": 13, "fat": 11, "carb": 1.1},
-    {"name": "Рис (варёный)", "cal": 130, "prot": 2.7, "fat": 0.3, "carb": 28},
-    {"name": "Гречка (варёная)", "cal": 110, "prot": 4, "fat": 1, "carb": 20},
-    {"name": "Хлеб белый", "cal": 265, "prot": 9, "fat": 3.2, "carb": 49},
-    {"name": "Сыр (твёрдый)", "cal": 402, "prot": 25, "fat": 33, "carb": 1.3},
-    {"name": "Творог (5%)", "cal": 121, "prot": 17, "fat": 5, "carb": 3},
-    {"name": "Овсянка (на воде)", "cal": 88, "prot": 3, "fat": 1.7, "carb": 15},
-    {"name": "Картофель (варёный)", "cal": 87, "prot": 2, "fat": 0.1, "carb": 20},
-    {"name": "Помидор", "cal": 18, "prot": 0.9, "fat": 0.2, "carb": 3.9},
-    {"name": "Огурец", "cal": 15, "prot": 0.7, "fat": 0.1, "carb": 3.6},
-    {"name": "Апельсин", "cal": 47, "prot": 0.9, "fat": 0.1, "carb": 12},
-    {"name": "Лосось", "cal": 208, "prot": 20, "fat": 13, "carb": 0},
-    {"name": "Макароны (варёные)", "cal": 131, "prot": 5, "fat": 1.1, "carb": 25},
-    {"name": "Кофе (без сахара)", "cal": 2, "prot": 0.1, "fat": 0, "carb": 0},
-    {"name": "Чай (без сахара)", "cal": 1, "prot": 0, "fat": 0, "carb": 0}
-]
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
@@ -64,29 +41,58 @@ def analyze_photo():
 
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
-# --- ПОИСК ПО ЛОКАЛЬНОЙ БАЗЕ ---
+# --- ПОИСК ЧЕРЕЗ GEMINI (РАЗБИВКА НА ИНГРЕДИЕНТЫ) ---
 @app.route('/search', methods=['GET'])
 def search_food():
-    query = request.args.get('q', '').strip().lower()
-    if not query:
+    query = request.args.get('q', '').strip()
+    if not query or not GEMINI_API_KEY:
         return jsonify({"products": []})
     
-    results = []
-    for p in PRODUCTS_DB:
-        # Ищем совпадение по названию (частичное)
-        if query in p["name"].lower():
-            results.append({
-                "product_name": p["name"],
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+        
+        # Просим ИИ разбить на ингредиенты и найти каждый
+        prompt = f"""
+        Пользователь ищет: "{query}".
+        Разбей этот запрос на основные ингредиенты (максимум 3).
+        Найди калории и БЖУ для каждого ингредиента (на 100г).
+        Верни ответ СТРОГО в формате JSON-массива:
+        [
+          {{"name": "Ингредиент 1", "calories": 100, "protein": 10, "fat": 5, "carbs": 20}},
+          {{"name": "Ингредиент 2", "calories": 150, "protein": 5, "fat": 2, "carbs": 30}}
+        ]
+        Если это не еда (например, "автомобиль"), верни [].
+        """
+        
+        payload = {"contents": [{"parts": [{"text": prompt}]}]}
+        response = requests.post(url, json=payload, timeout=20)
+        data = response.json()
+        
+        if 'error' in data:
+            return jsonify({"products": []})
+        
+        text = data['candidates'][0]['content']['parts'][0]['text']
+        text = text.replace('```json', '').replace('```', '').strip()
+        
+        result_list = json.loads(text)
+        
+        products = []
+        for item in result_list:
+            products.append({
+                "product_name": item.get("name"),
                 "image_url": "",
-                "calories_100g": p["cal"],
-                "proteins_100g": p["prot"],
-                "fat_100g": p["fat"],
-                "carbs_100g": p["carb"],
-                "ingredients": "Данные из локальной базы",
+                "calories_100g": item.get("calories", 0),
+                "proteins_100g": item.get("protein", 0),
+                "fat_100g": item.get("fat", 0),
+                "carbs_100g": item.get("carbs", 0),
+                "ingredients": f"Ингредиент для: {query}",
                 "description": ""
             })
             
-    return jsonify({"products": results})
+        return jsonify({"products": products})
+    except Exception as e:
+        print(f"Search error: {e}")
+        return jsonify({"products": []})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
