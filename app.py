@@ -4,20 +4,17 @@ from PIL import Image
 import io
 import os
 import requests
-import json
-import re
 
 app = Flask(__name__)
 CORS(app)
 
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+CALORIE_NINJAS_API_KEY = os.environ.get("CALORIE_NINJAS_API_KEY")
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
     if 'image' not in request.files:
         return jsonify({"error": "No image provided"}), 400
-    
     file = request.files['image']
     try:
         image_data = file.read()
@@ -39,67 +36,53 @@ def analyze_photo():
                     return jsonify({"food": lm_data['foodType']['name'], "calories": 250, "protein": 15, "fat": 10, "carbs": 30})
         except Exception as e:
             print(f"LogMeal error: {e}")
-
     return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0})
 
-# --- ПОИСК ЧЕРЕЗ GEMINI (СТАБИЛЬНЫЙ) ---
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q', '').strip()
-    if not query or not GEMINI_API_KEY:
+    if not query or not CALORIE_NINJAS_API_KEY:
         return jsonify({"products": []})
     
+    # Умный перевод для русских слов
+    eng_query = translate_to_english(query)
+    
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
-        
-        prompt = f"""
-        Найди информацию о продукте: "{query}".
-        Верни ответ СТРОГО в формате JSON-массива (без markdown, без кавычек вокруг ответа):
-        [
-          {{"name": "Название на русском", "calories": 100, "protein": 10, "fat": 5, "carbs": 20}},
-          {{"name": "Альтернатива 1", "calories": 150, "protein": 5, "fat": 2, "carbs": 30}},
-          {{"name": "Альтернатива 2", "calories": 200, "protein": 0, "fat": 0, "carbs": 50}}
-        ]
-        Если продукт не найден, верни [].
-        """
-        
-        payload = {"contents": [{"parts": [{"text": prompt}]}]}
-        response = requests.post(url, json=payload, timeout=20)
+        headers = {'X-Api-Key': CALORIE_NINJAS_API_KEY}
+        url = f"https://api.calorieninjas.com/v1/nutrition?query={eng_query}"
+        response = requests.get(url, headers=headers, timeout=10)
         data = response.json()
         
-        if 'error' in data:
-            print(f"Google API Error: {data['error']}")
-            return jsonify({"products": []})
-        
-        text = data['candidates'][0]['content']['parts'][0]['text']
-        
-        # ОЧИСТКА: убираем markdown, кавычки, пробелы
-        text = text.replace('```json', '').replace('```', '').strip()
-        # Ищем начало массива [ и конец ]
-        start = text.find('[')
-        end = text.rfind(']')
-        if start != -1 and end != -1:
-            text = text[start:end+1]
-        
-        result_list = json.loads(text)
-        
         products = []
-        for item in result_list:
-            products.append({
-                "product_name": item.get("name", "Неизвестно"),
-                "image_url": "",
-                "calories_100g": item.get("calories", 0),
-                "proteins_100g": item.get("protein", 0),
-                "fat_100g": item.get("fat", 0),
-                "carbs_100g": item.get("carbs", 0),
-                "ingredients": f"Данные ИИ",
-                "description": ""
-            })
-            
+        if 'items' in data:
+            for item in data['items']:
+                products.append({
+                    "product_name": item.get('name', 'Неизвестно'),
+                    "image_url": "",
+                    "calories_100g": item.get('calories', 0),
+                    "proteins_100g": item.get('protein_g', 0),
+                    "fat_100g": item.get('fat_total_g', 0),
+                    "carbs_100g": item.get('carbohydrates_total_g', 0),
+                    "ingredients": "Данные CalorieNinjas",
+                    "description": ""
+                })
         return jsonify({"products": products})
     except Exception as e:
         print(f"Search error: {e}")
         return jsonify({"products": []})
+
+def translate_to_english(word):
+    dictionary = {
+        'яблоко': 'apple', 'банан': 'banana', 'йогурт': 'yogurt', 'молоко': 'milk',
+        'хлеб': 'bread', 'курица': 'chicken', 'рис': 'rice', 'яйцо': 'egg',
+        'сыр': 'cheese', 'мясо': 'meat', 'рыба': 'fish', 'овсянка': 'oatmeal',
+        'творог': 'cottage cheese', 'сок': 'juice', 'вода': 'water',
+        'кофе': 'coffee', 'чай': 'tea', 'шоколад': 'chocolate', 'печенье': 'cookie',
+        'пицца': 'pizza', 'бургер': 'burger', 'мохито': 'mojito', 'кола': 'cola'
+    }
+    words = word.lower().split()
+    translated = [dictionary.get(w, w) for w in words]
+    return ' '.join(translated)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
