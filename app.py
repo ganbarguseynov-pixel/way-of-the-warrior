@@ -196,8 +196,8 @@ def analyze_photo():
 
     try:
         img_byte_arr = io.BytesIO()
-        image.thumbnail((800, 800))
-        image.save(img_byte_arr, format='JPEG', quality=75)
+        image.thumbnail((600, 600))  # Еще сильнее сжимаем
+        image.save(img_byte_arr, format='JPEG', quality=70)
         compressed_image_data = img_byte_arr.getvalue()
 
         prompt = """
@@ -217,7 +217,7 @@ def analyze_photo():
         """
         
         response = None
-        max_retries = 4
+        max_retries = 2 # Уменьшили количество попыток
         for attempt in range(max_retries):
             try:
                 response = client.models.generate_content(
@@ -228,7 +228,7 @@ def analyze_photo():
             except Exception as e:
                 error_str = str(e)
                 if ("503" in error_str or "429" in error_str) and attempt < max_retries - 1:
-                    wait_time = 5 * (attempt + 1)
+                    wait_time = 4 # Фиксированная задержка
                     print(f"Ошибка {error_str[:20]}... Ждем {wait_time} сек...")
                     time.sleep(wait_time)
                 else:
@@ -255,7 +255,7 @@ def analyze_photo():
             
     except Exception as e:
         print(f"Gemini error: {e}")
-        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Попробуйте через минуту."})
+        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Слишком много запросов. Подождите 1 минуту и попробуйте снова."})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
