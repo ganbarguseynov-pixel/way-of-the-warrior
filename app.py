@@ -4,45 +4,51 @@ from PIL import Image
 import io
 import os
 import requests
+import openfoodfacts
 import re
+from rapidfuzz import process, fuzz
 
 app = Flask(__name__)
 CORS(app)
 
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
+api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
-# --- РАСШИРЕННАЯ ЛОКАЛЬНАЯ БАЗА (ЧТОБЫ КУРИЦА И ЯЙЦА БЫЛИ ТОЧНО) ---
+# --- РАСШИРЕННАЯ ЛОКАЛЬНАЯ БАЗА (С КАРТИНКАМИ) ---
 LOCAL_DB = [
     {"name": "Курица", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
     {"name": "Куриная грудка", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
     {"name": "Яйцо", "cal": 155, "prot": 13, "fat": 11, "carb": 1.1, "img": "https://images.unsplash.com/photo-1506976785307-8732e854ad03?w=200"},
     {"name": "Яйца", "cal": 155, "prot": 13, "fat": 11, "carb": 1.1, "img": "https://images.unsplash.com/photo-1506976785307-8732e854ad03?w=200"},
-    {"name": "Говядина", "cal": 250, "prot": 26, "fat": 15, "carb": 0, "img": "https://images.unsplash.com/photo-1603048297172-c92544798d5a?w=200"},
-    {"name": "Свинина", "cal": 242, "prot": 27, "fat": 14, "carb": 0, "img": "https://images.unsplash.com/photo-1602470520998-f4a52199a3d6?w=200"},
-    {"name": "Индейка", "cal": 189, "prot": 29, "fat": 7, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
-    {"name": "Лосось", "cal": 208, "prot": 20, "fat": 13, "carb": 0, "img": "https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=200"},
+    {"name": "Мохито", "cal": 45, "prot": 0.1, "fat": 0, "carb": 11, "img": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=200"},
+    {"name": "Адреналин", "cal": 45, "prot": 0, "fat": 0, "carb": 11, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
+    {"name": "Йогурт", "cal": 60, "prot": 5, "fat": 3, "carb": 4, "img": "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=200"},
+    {"name": "Салат", "cal": 15, "prot": 1.4, "fat": 0.2, "carb": 2.9, "img": "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?w=200"},
+    {"name": "Банан", "cal": 89, "prot": 1.1, "fat": 0.3, "carb": 23, "img": "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=200"},
+    {"name": "Яблоко", "cal": 52, "prot": 0.3, "fat": 0.2, "carb": 14, "img": "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200"},
     {"name": "Рис", "cal": 130, "prot": 2.7, "fat": 0.3, "carb": 28, "img": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=200"},
+    {"name": "Пицца", "cal": 266, "prot": 11, "fat": 10, "carb": 33, "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200"},
+    {"name": "Бургер", "cal": 295, "prot": 15, "fat": 12, "carb": 30, "img": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200"},
+    {"name": "Молоко", "cal": 52, "prot": 2.9, "fat": 2.5, "carb": 4.7, "img": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200"},
+    {"name": "Сыр", "cal": 402, "prot": 25, "fat": 33, "carb": 1.3, "img": "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=200"},
+    {"name": "Творог", "cal": 121, "prot": 17, "fat": 5, "carb": 3, "img": "https://images.unsplash.com/photo-1559561853-08451507cbe7?w=200"},
     {"name": "Гречка", "cal": 110, "prot": 4, "fat": 1, "carb": 20, "img": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=200"},
     {"name": "Овсянка", "cal": 88, "prot": 3, "fat": 1.7, "carb": 15, "img": "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?w=200"},
     {"name": "Макароны", "cal": 131, "prot": 5, "fat": 1.1, "carb": 25, "img": "https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=200"},
     {"name": "Хлеб", "cal": 265, "prot": 9, "fat": 3.2, "carb": 49, "img": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200"},
-    {"name": "Молоко", "cal": 52, "prot": 2.9, "fat": 2.5, "carb": 4.7, "img": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200"},
-    {"name": "Сыр", "cal": 402, "prot": 25, "fat": 33, "carb": 1.3, "img": "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=200"},
-    {"name": "Творог", "cal": 121, "prot": 17, "fat": 5, "carb": 3, "img": "https://images.unsplash.com/photo-1559561853-08451507cbe7?w=200"},
-    {"name": "Сметана", "cal": 206, "prot": 2.4, "fat": 20, "carb": 3, "img": "https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=200"},
-    {"name": "Салат", "cal": 15, "prot": 1.4, "fat": 0.2, "carb": 2.9, "img": "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?w=200"},
-    {"name": "Банан", "cal": 89, "prot": 1.1, "fat": 0.3, "carb": 23, "img": "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=200"},
-    {"name": "Яблоко", "cal": 52, "prot": 0.3, "fat": 0.2, "carb": 14, "img": "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200"},
-    {"name": "Помидор", "cal": 18, "prot": 0.9, "fat": 0.2, "carb": 3.9, "img": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=200"},
-    {"name": "Огурец", "cal": 15, "prot": 0.7, "fat": 0.1, "carb": 3.6, "img": "https://images.unsplash.com/photo-1604977042946-1eecc30f269e?w=200"},
-    {"name": "Картофель", "cal": 87, "prot": 2, "fat": 0.1, "carb": 20, "img": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=200"},
-    {"name": "Апельсин", "cal": 47, "prot": 0.9, "fat": 0.1, "carb": 12, "img": "https://images.unsplash.com/photo-1547514701-42782101795e?w=200"},
-    {"name": "Арбуз", "cal": 30, "prot": 0.6, "fat": 0.2, "carb": 8, "img": "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=200"},
     {"name": "Кофе", "cal": 2, "prot": 0.1, "fat": 0, "carb": 0, "img": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200"},
     {"name": "Чай", "cal": 1, "prot": 0, "fat": 0, "carb": 0, "img": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=200"},
     {"name": "Кола", "cal": 42, "prot": 0, "fat": 0, "carb": 10.6, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
+    {"name": "Сок", "cal": 45, "prot": 0.7, "fat": 0.2, "carb": 10.4, "img": "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=200"},
     {"name": "Шоколад", "cal": 546, "prot": 4.9, "fat": 31, "carb": 61, "img": "https://images.unsplash.com/photo-1511381939415-e44015466834?w=200"},
+    {"name": "Апельсин", "cal": 47, "prot": 0.9, "fat": 0.1, "carb": 12, "img": "https://images.unsplash.com/photo-1547514701-42782101795e?w=200"},
+    {"name": "Помидор", "cal": 18, "prot": 0.9, "fat": 0.2, "carb": 3.9, "img": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=200"},
+    {"name": "Огурец", "cal": 15, "prot": 0.7, "fat": 0.1, "carb": 3.6, "img": "https://images.unsplash.com/photo-1604977042946-1eecc30f269e?w=200"},
+    {"name": "Картофель", "cal": 87, "prot": 2, "fat": 0.1, "carb": 20, "img": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=200"},
+    {"name": "Арбуз", "cal": 30, "prot": 0.6, "fat": 0.2, "carb": 8, "img": "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=200"},
 ]
+
+LOCAL_NAMES = [p["name"] for p in LOCAL_DB]
 
 def translate_to_english(query):
     if re.search('[a-zA-Z]', query):
@@ -59,41 +65,49 @@ def search_food():
         return jsonify({"products": []})
     
     results = []
-    normalized_query = re.sub(r'[\s\-]', '', query.lower())
     
-    # 1. ЛОКАЛЬНАЯ БАЗА (точные данные)
-    for p in LOCAL_DB:
-        if normalized_query in re.sub(r'[\s\-]', '', p["name"].lower()):
-            results.append({"product_name": p["name"], "image_url": p["img"], "calories_100g": p["cal"], "proteins_100g": p["prot"], "fat_100g": p["fat"], "carbs_100g": p["carb"], "ingredients": "Точные данные", "description": ""})
+    # 1. ИЩЕМ В ЛОКАЛЬНОЙ БАЗЕ (Fuzzy Search - находит даже с опечатками)
+    best_match = process.extractOne(query, LOCAL_NAMES, scorer=fuzz.WRatio, score_cutoff=60)
     
-    # 2. ЕСЛИ НЕТ, ИДЕМ В DIETLY API (МЯГКИЙ ПОИСК, БЕЗ КЛЮЧА)
+    if best_match:
+        matched_name = best_match[0]
+        for p in LOCAL_DB:
+            if p["name"] == matched_name:
+                results.append({
+                    "product_name": p["name"],
+                    "image_url": p["img"],
+                    "calories_100g": p["cal"],
+                    "proteins_100g": p["prot"],
+                    "fat_100g": p["fat"],
+                    "carbs_100g": p["carb"],
+                    "ingredients": "Точные данные",
+                    "description": ""
+                })
+                break
+
+    # 2. ЕСЛИ НЕТ, ИДЕМ В OPEN FOOD FACTS
     if len(results) == 0:
         eng_query = translate_to_english(query)
         try:
-            url = f"https://api.getdietly.com/search?q={eng_query}&limit=5"
-            headers = {'User-Agent': 'SportApp/1.0 (contact@example.com)'}
-            response = requests.get(url, headers=headers, timeout=10)
-            data = response.json()
-            
-            if isinstance(data, list):
-                for item in data:
-                    # Пропускаем, если БЖУ нет вообще (чтобы не было нулей)
-                    if item.get('calories_kcal') is None and item.get('protein_g') is None:
-                        continue
-                        
+            api_results = api.product.text_search(eng_query, page_size=5)
+            if api_results and 'products' in api_results:
+                for product in api_results['products']:
+                    name = product.get('product_name')
+                    if not name: continue
+                    nutrients = product.get('nutriments', {})
+                    image_url = product.get('image_front_small_url') or product.get('image_url') or ''
                     results.append({
-                        "product_name": item.get('name', 'Неизвестно'),
-                        "image_url": item.get('image_url', ''),
-                        "calories_100g": item.get('calories_kcal', 0) or 0,
-                        "proteins_100g": item.get('protein_g', 0) or 0,
-                        "fat_100g": item.get('fat_g', 0) or 0,
-                        "carbs_100g": item.get('carbs_g', 0) or 0,
-                        "ingredients": "Данные DietlyAPI",
-                        "description": ""
+                        "product_name": name,
+                        "image_url": image_url,
+                        "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1),
+                        "proteins_100g": round(nutrients.get('proteins_100g', 0), 1),
+                        "fat_100g": round(nutrients.get('fat_100g', 0), 1),
+                        "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1),
+                        "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан',
+                        "description": "Данные Open Food Facts"
                     })
         except Exception as e:
-            print(f"Dietly error: {e}")
-
+            print(f"Search error: {e}")
     return jsonify({"products": results})
 
 @app.route('/analyze', methods=['POST'])
