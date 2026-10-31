@@ -10,7 +10,6 @@ CORS(app)
 
 LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 
-# --- ПОИСК ЧЕРЕЗ ВИКИПЕДИЮ ---
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q', '').strip()
@@ -18,7 +17,7 @@ def search_food():
         return jsonify({"products": []})
     
     try:
-        # Ищем статью в русской Википедии
+        # Ищем статью в русской Википедии (с User-Agent, чтобы не блокировали)
         url = "https://ru.wikipedia.org/w/api.php"
         params = {
             "action": "query",
@@ -28,7 +27,7 @@ def search_food():
             "utf8": 1,
             "srlimit": 3
         }
-        headers = {'User-Agent': 'SportApp/1.0 (contact@example.com)'}
+        headers = {'User-Agent': 'SportApp/1.0 (contact@example.com)'} 
         response = requests.get(url, params=params, headers=headers, timeout=10)
         data = response.json()
         
@@ -41,7 +40,7 @@ def search_food():
                 products.append({
                     "product_name": title,
                     "image_url": "",
-                    "calories_100g": 0, # Википедия не дает калории
+                    "calories_100g": 0, 
                     "proteins_100g": 0,
                     "fat_100g": 0,
                     "carbs_100g": 0,
