@@ -63,20 +63,13 @@
 <div id="tab-barcode" class="tab-content">
     <p style="text-align: center; color: #8e8e93; margin-bottom: 20px;">Сфотографируйте штрих-код продукта</p>
     
-    <!-- Кнопки для штрих-кода -->
+    <!-- Кнопки для штрих-кода (используем системную камеру) -->
     <div id="barcode-buttons">
-        <button class="btn" style="margin-bottom: 10px;" onclick="startCamera('barcode')">📷 Сфотографировать штрих-код</button>
+        <input type="file" id="barcode-camera-input" accept="image/*" capture="environment" style="display: none;" onchange="handleBarcodeImage(event)">
+        <button class="btn" style="margin-bottom: 10px;" onclick="document.getElementById('barcode-camera-input').click()">📷 Сфотографировать штрих-код</button>
+        
+        <input type="file" id="barcode-gallery-input" accept="image/*" style="display: none;" onchange="handleBarcodeImage(event)">
         <button class="btn" style="background-color: #2c2c2e; color: white;" onclick="document.getElementById('barcode-gallery-input').click()">🖼️ Выбрать из галереи</button>
-    </div>
-
-    <input type="file" id="barcode-gallery-input" accept="image/*" style="display: none;" onchange="handleBarcodeImage(event)">
-
-    <!-- Контейнер для камеры штрих-кода -->
-    <div id="barcode-camera-container" style="display: none;">
-        <button id="barcode-switch-camera-btn" onclick="switchBarcodeCamera()">🔄</button>
-        <button id="barcode-close-camera-btn" onclick="resetBarcodeScreen()">✖</button>
-        <video id="barcode-camera-video" autoplay playsinline></video>
-        <div id="barcode-camera-controls"><button id="barcode-capture-btn" onclick="takeBarcodePhoto()"></button></div>
     </div>
 
     <div id="barcode-result" style="margin-top: 20px; text-align: center; font-size: 18px; font-weight: bold;"></div>
@@ -118,7 +111,6 @@ function switchTab(tabName) {
     document.getElementById(`tab-${tabName}`).classList.add('active');
     event.target.classList.add('active');
     if (tabName === 'photo') resetCameraScreen();
-    if (tabName === 'barcode') resetBarcodeScreen();
 }
 
 async function searchFood() {
@@ -145,56 +137,11 @@ async function searchFood() {
     }
 }
 
-// --- ШТРИХ-КОД (КАМЕРА) ---
-let barcodeStream = null;
-let barcodeFacingMode = "environment";
-
-async function startBarcodeCamera() {
-    try {
-        document.getElementById('barcode-buttons').style.display = 'none';
-        document.getElementById('barcode-camera-container').style.display = 'flex';
-        barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: barcodeFacingMode } });
-        document.getElementById('barcode-camera-video').srcObject = barcodeStream;
-    } catch (err) {
-        tg.showAlert("Ошибка камеры для штрих-кода.");
-        resetBarcodeScreen();
-    }
-}
-
-async function switchBarcodeCamera() {
-    barcodeFacingMode = barcodeFacingMode === "environment" ? "user" : "environment";
-    stopBarcodeCamera();
-    await startBarcodeCamera();
-}
-
-function takeBarcodePhoto() {
-    if (!barcodeStream) return;
-    const video = document.getElementById('barcode-camera-video');
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    stopBarcodeCamera();
+// --- ШТРИХ-КОД (СИСТЕМНАЯ КАМЕРА) ---
+async function handleBarcodeImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
     
-    canvas.toBlob(async function(blob) {
-        const file = new File([blob], "barcode.jpg", { type: "image/jpeg" });
-        await sendBarcodeToServer(file);
-    }, 'image/jpeg', 0.9);
-}
-
-function stopBarcodeCamera() {
-    if (barcodeStream) { barcodeStream.getTracks().forEach(track => track.stop()); barcodeStream = null; }
-    document.getElementById('barcode-camera-container').style.display = 'none';
-}
-
-function resetBarcodeScreen() {
-    stopBarcodeCamera();
-    document.getElementById('barcode-buttons').style.display = 'block';
-    document.getElementById('barcode-result').innerText = "";
-}
-
-// --- ОТПРАВКА ШТРИХ-КОДА НА СЕРВЕР ---
-async function sendBarcodeToServer(file) {
     const resultDiv = document.getElementById('barcode-result');
     resultDiv.innerText = "Распознавание штрих-кода...";
     
@@ -223,15 +170,7 @@ async function sendBarcodeToServer(file) {
     } catch (e) {
         resultDiv.innerText = "Ошибка сервера.";
     }
-    resetBarcodeScreen(); // Возвращаем кнопки
-}
-
-// --- ШТРИХ-КОД (ГАЛЕРЕЯ) ---
-async function handleBarcodeImage(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    await sendBarcodeToServer(file);
-    event.target.value = "";
+    event.target.value = ""; 
 }
 
 // --- МОДАЛЬНОЕ ОКНО ---
@@ -261,7 +200,7 @@ function confirmFoodSelection() {
     document.getElementById('search-result').innerHTML = '';
 }
 
-// --- КАМЕРА ДЛЯ ФОТО ЕДЫ ---
+// --- КАМЕРА ДЛЯ ФОТО ЕДЫ (getUserMedia) ---
 let videoStream = null;
 let currentFacingMode = "environment";
 
