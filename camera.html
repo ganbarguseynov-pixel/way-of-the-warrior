@@ -69,13 +69,11 @@
         <button class="btn" style="background-color: #2c2c2e; color: white; margin-bottom: 10px;" onclick="document.getElementById('barcode-gallery-input').click()">🖼️ Выбрать из галереи</button>
     </div>
 
-    <!-- Ручной ввод -->
     <div class="form-group" style="margin-top: 20px;">
         <input type="number" id="barcode-input" placeholder="Или введите штрих-код вручную">
     </div>
     <button class="btn" onclick="searchByBarcode()">🔎 Найти по штрих-коду</button>
 
-    <!-- Контейнер для камеры штрих-кода -->
     <div id="barcode-camera-container" style="display: none;">
         <button id="barcode-switch-camera-btn" onclick="switchBarcodeCamera()">🔄</button>
         <button id="barcode-close-camera-btn" onclick="resetBarcodeScreen()">✖</button>
@@ -122,7 +120,6 @@ function switchTab(tabName) {
     document.getElementById(`tab-${tabName}`).classList.add('active');
     event.target.classList.add('active');
     
-    // Останавливаем ВСЕ камеры при переключении
     stopCamera();
     stopBarcodeCamera();
     
@@ -154,7 +151,6 @@ async function searchFood() {
     }
 }
 
-// --- ШТРИХ-КОД (РУЧНОЙ ВВОД) ---
 async function searchByBarcode() {
     const code = document.getElementById('barcode-input').value.trim();
     if (!code) {
@@ -181,7 +177,6 @@ async function searchByBarcode() {
     }
 }
 
-// --- ШТРИХ-КОД (КАМЕРА) ---
 let barcodeStream = null;
 let barcodeFacingMode = "environment";
 
@@ -268,7 +263,6 @@ async function handleBarcodeImage(event) {
     event.target.value = "";
 }
 
-// --- МОДАЛЬНОЕ ОКНО ---
 function openFoodModal(index) {
     const food = window.foodList[index];
     selectedFoodData = food;
@@ -295,7 +289,6 @@ function confirmFoodSelection() {
     document.getElementById('search-result').innerHTML = '';
 }
 
-// --- КАМЕРА ДЛЯ ФОТО ЕДЫ ---
 let videoStream = null;
 let currentFacingMode = "environment";
 
