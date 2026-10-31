@@ -6,7 +6,6 @@ import os
 import requests
 import openfoodfacts
 import re
-import time
 from rapidfuzz import process, fuzz
 from google import genai
 from google.genai import types
@@ -14,7 +13,6 @@ from google.genai import types
 app = Flask(__name__)
 CORS(app)
 
-LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
@@ -195,9 +193,10 @@ def analyze_photo():
         return jsonify({"food": "Ошибка: ИИ не настроен", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Проверьте API ключ Gemini"})
 
     try:
+        # Сжимаем фото, чтобы не убить память сервера
         img_byte_arr = io.BytesIO()
-        image.thumbnail((600, 600))  # Еще сильнее сжимаем
-        image.save(img_byte_arr, format='JPEG', quality=70)
+        image.thumbnail((800, 800))
+        image.save(img_byte_arr, format='JPEG', quality=75)
         compressed_image_data = img_byte_arr.getvalue()
 
         prompt = """
@@ -216,23 +215,11 @@ def analyze_photo():
         Пример 2: Snickers | 500 | 10 | 25 | 60 | Шоколадный батончик с карамелью и арахисом.
         """
         
-        response = None
-        max_retries = 2 # Уменьшили количество попыток
-        for attempt in range(max_retries):
-            try:
-                response = client.models.generate_content(
-                    model='gemini-3.8-flash',
-                    contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
-                )
-                break
-            except Exception as e:
-                error_str = str(e)
-                if ("503" in error_str or "429" in error_str) and attempt < max_retries - 1:
-                    wait_time = 4 # Фиксированная задержка
-                    print(f"Ошибка {error_str[:20]}... Ждем {wait_time} сек...")
-                    time.sleep(wait_time)
-                else:
-                    raise e
+        # Отправляем в Gemini (без всяких LogMeal)
+        response = client.models.generate_content(
+            model='gemini-3.8-flash',
+            contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
+        )
         
         parts = [p.strip() for p in response.text.strip().split('|')]
         
@@ -255,7 +242,7 @@ def analyze_photo():
             
     except Exception as e:
         print(f"Gemini error: {e}")
-        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Слишком много запросов. Подождите 1 минуту и попробуйте снова."})
+        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Попробуйте позже."})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
