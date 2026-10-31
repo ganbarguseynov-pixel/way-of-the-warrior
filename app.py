@@ -15,7 +15,7 @@ LOGMEAL_TOKEN = os.environ.get("LOGMEAL_TOKEN")
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
-# --- ЛОКАЛЬНАЯ БАЗА (С КАРТИНКАМИ) ---
+# --- ЛОКАЛЬНАЯ БАЗА ---
 LOCAL_DB = [
     {"name": "Курица", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
     {"name": "Куриная грудка", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
@@ -25,6 +25,7 @@ LOCAL_DB = [
     {"name": "Адреналин", "cal": 45, "prot": 0, "fat": 0, "carb": 11, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
     {"name": "Йогурт", "cal": 60, "prot": 5, "fat": 3, "carb": 4, "img": "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=200"},
     {"name": "Кола", "cal": 42, "prot": 0, "fat": 0, "carb": 10.6, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
+    {"name": "Кола Зеро", "cal": 0, "prot": 0, "fat": 0, "carb": 0, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
     {"name": "Салат", "cal": 15, "prot": 1.4, "fat": 0.2, "carb": 2.9, "img": "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?w=200"},
     {"name": "Банан", "cal": 89, "prot": 1.1, "fat": 0.3, "carb": 23, "img": "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=200"},
     {"name": "Яблоко", "cal": 52, "prot": 0.3, "fat": 0.2, "carb": 14, "img": "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200"},
@@ -54,8 +55,26 @@ LOCAL_NAMES = [p["name"] for p in LOCAL_DB]
 def translate_to_english(query):
     if re.search('[a-zA-Z]', query):
         return query
-    dictionary = { 'яблоко': 'apple', 'банан': 'banana', 'мохито': 'mojito', 'адреналин': 'adrenaline', 'курица': 'chicken', 'рис': 'rice', 'яйцо': 'egg', 'яйца': 'eggs', 'пицца': 'pizza', 'бургер': 'burger', 'молоко': 'milk', 'сыр': 'cheese', 'творог': 'cottage cheese', 'гречка': 'buckwheat', 'овсянка': 'oatmeal', 'макароны': 'pasta', 'хлеб': 'bread', 'кофе': 'coffee', 'чай': 'tea', 'кола': 'cola', 'сок': 'juice', 'шоколад': 'chocolate', 'печенье': 'cookie', 'апельсин': 'orange', 'помидор': 'tomato', 'огурец': 'cucumber', 'картофель': 'potato', 'лосось': 'salmon', 'свинина': 'pork', 'говядина': 'beef', 'индейка': 'turkey', 'салат': 'salad', 'авокадо': 'avocado', 'груша': 'pear', 'киви': 'kiwi', 'мандарин': 'tangerine', 'арбуз': 'watermelon', 'дыня': 'melon', 'виноград': 'grapes', 'клубника': 'strawberry', 'малина': 'raspberry', 'черника': 'blueberry', 'грибы': 'mushrooms', 'сметана': 'sour cream', 'масло': 'butter', 'сахар': 'sugar', 'мед': 'honey', 'орехи': 'nuts', 'суши': 'sushi', 'роллы': 'rolls', 'чипсы': 'chips', 'сникерс': 'snickers', 'марс': 'mars', 'йогурт': 'yogurt', 'теос': 'teos' }
+    dictionary = { 
+        'яблоко': 'apple', 'банан': 'banana', 'мохито': 'mojito', 'адреналин': 'adrenaline', 
+        'курица': 'chicken', 'рис': 'rice', 'яйцо': 'egg', 'яйца': 'eggs', 'пицца': 'pizza', 
+        'бургер': 'burger', 'молоко': 'milk', 'сыр': 'cheese', 'творог': 'cottage cheese', 
+        'гречка': 'buckwheat', 'овсянка': 'oatmeal', 'макароны': 'pasta', 'хлеб': 'bread', 
+        'кофе': 'coffee', 'чай': 'tea', 'кола': 'cola', 'сок': 'juice', 'шоколад': 'chocolate', 
+        'печенье': 'cookie', 'апельсин': 'orange', 'помидор': 'tomato', 'огурец': 'cucumber', 
+        'картофель': 'potato', 'лосось': 'salmon', 'свинина': 'pork', 'говядина': 'beef', 
+        'индейка': 'turkey', 'салат': 'salad', 'авокадо': 'avocado', 'груша': 'pear', 
+        'киви': 'kiwi', 'мандарин': 'tangerine', 'арбуз': 'watermelon', 'дыня': 'melon', 
+        'виноград': 'grapes', 'клубника': 'strawberry', 'малина': 'raspberry', 
+        'черника': 'blueberry', 'грибы': 'mushrooms', 'сметана': 'sour cream', 
+        'масло': 'butter', 'сахар': 'sugar', 'мед': 'honey', 'орехи': 'nuts', 
+        'суши': 'sushi', 'роллы': 'rolls', 'чипсы': 'chips', 'сникерс': 'snickers', 
+        'марс': 'mars', 'йогурт': 'yogurt', 'теос': 'teos', 'зеро': 'zero', 
+        'кола зеро': 'coca-cola zero', 'кола зеро': 'coca cola zero'
+    }
     words = query.lower().split()
+    if query.lower() in dictionary:
+        return dictionary[query.lower()]
     translated = [dictionary.get(w, w) for w in words]
     return ' '.join(translated)
 
@@ -85,31 +104,7 @@ def search_food():
                 })
                 break
 
-    # 2. ЕСЛИ НЕТ, ИДЕМ В USDA (ДЛЯ ПРОСТЫХ ПРОДУКТОВ)
-    if len(results) == 0 and USDA_API_KEY:
-        eng_query = translate_to_english(query)
-        try:
-            url = f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={USDA_API_KEY}&query={eng_query}&pageSize=3"
-            response = requests.get(url, timeout=10)
-            data = response.json()
-            
-            if 'foods' in data:
-                for food in data['foods']:
-                    nutrients = {n['nutrientName']: n['value'] for n in food.get('foodNutrients', [])}
-                    results.append({
-                        "product_name": food.get('description', 'Без названия'),
-                        "image_url": "", # У USDA нет картинок
-                        "calories_100g": round(nutrients.get('Energy', 0), 1),
-                        "proteins_100g": round(nutrients.get('Protein', 0), 1),
-                        "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1),
-                        "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1),
-                        "ingredients": "Данные USDA FoodData Central",
-                        "description": ""
-                    })
-        except Exception as e:
-            print(f"USDA error: {e}")
-
-    # 3. ЕСЛИ НЕТ, ИДЕМ В OPEN FOOD FACTS (ДЛЯ БРЕНДОВ)
+    # 2. OPEN FOOD FACTS (Бренды)
     if len(results) == 0:
         eng_query = translate_to_english(query)
         try:
@@ -132,7 +127,57 @@ def search_food():
                     })
         except Exception as e:
             print(f"OFF error: {e}")
-    
+
+    # 3. USDA (Простые продукты без бренда)
+    if len(results) == 0 and USDA_API_KEY:
+        eng_query = translate_to_english(query)
+        try:
+            url = f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={USDA_API_KEY}&query={eng_query}&pageSize=3"
+            response = requests.get(url, timeout=10)
+            data = response.json()
+            
+            if 'foods' in data:
+                for food in data['foods']:
+                    nutrients = {n['nutrientName']: n['value'] for n in food.get('foodNutrients', [])}
+                    results.append({
+                        "product_name": food.get('description', 'Без названия'),
+                        "image_url": "",
+                        "calories_100g": round(nutrients.get('Energy', 0), 1),
+                        "proteins_100g": round(nutrients.get('Protein', 0), 1),
+                        "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1),
+                        "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1),
+                        "ingredients": "Данные USDA FoodData Central",
+                        "description": ""
+                    })
+        except Exception as e:
+            print(f"USDA error: {e}")
+
+    # 4. FRUITYVICE (Фрукты)
+    if len(results) == 0:
+        eng_query = translate_to_english(query)
+        try:
+            # Fruityvice не требует ключа, просто ищем фрукт по имени
+            url = f"https://www.fruityvice.com/api/fruit/{eng_query}"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                # Fruityvice отдает данные в структуре: nutritions: {calories, protein, fat, carbohydrates}
+                nut = data.get('nutritions', {})
+                if nut.get('calories') is not None:
+                    results.append({
+                        "product_name": data.get('name', eng_query),
+                        "image_url": "", # У Fruityvice нет картинок
+                        "calories_100g": round(nut.get('calories', 0), 1),
+                        "proteins_100g": round(nut.get('protein', 0), 1),
+                        "fat_100g": round(nut.get('fat', 0), 1),
+                        "carbs_100g": round(nut.get('carbohydrates', 0), 1),
+                        "ingredients": "Данные Fruityvice",
+                        "description": ""
+                    })
+        except Exception as e:
+            print(f"Fruityvice error: {e}")
+
     return jsonify({"products": results})
 
 @app.route('/analyze', methods=['POST'])
