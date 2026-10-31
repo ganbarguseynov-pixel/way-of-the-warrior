@@ -36,50 +36,45 @@
 </div>
 
 <div id="dashboard-screen" class="screen">
-<video id="character-video" class="video-background" autoplay loop muted playsinline></video>
+<video id="character-video" class="video-background" loop muted playsinline></video>
 <div class="overlay">
-<div style="display: flex; justify-content: space-between; position: absolute; top: 0px; left: 0px; right: 0px; z-index: 30; padding: 5px 10px;">
-<button class="btn" style="background-color: rgba(44,44,46,0.7); color: white; width: auto; padding: 8px 15px; font-size: 13px; margin: 0;" onclick="openProfileSettings()">⚙️ Настройки</button>
-<button class="btn" style="background-color: rgba(255,59,48,0.2); color: #ff3b30; width: auto; padding: 8px 15px; font-size: 13px; margin: 0; border: 1px solid #ff3b30;" onclick="logout()">Выйти</button>
+<div style="display: flex; justify-content: space-between; position: absolute; top: 0px; left: 0px; right: 0px; z-index: 30; padding: 10px 15px;">
+<button class="btn" style="background-color: rgba(44,44,46,0.7); color: white; width: auto; padding: 6px 12px; font-size: 12px; margin: 0;" onclick="openProfileSettings()">⚙️ Настройки</button>
+<button class="btn" style="background-color: rgba(255,59,48,0.2); color: #ff3b30; width: auto; padding: 6px 12px; font-size: 12px; margin: 0; border: 1px solid #ff3b30;" onclick="logout()">Выйти</button>
 </div>
-<div class="top-info">
-<div class="character-level" id="char-level">Уровень 1</div>
-<div class="character-title" id="char-title">Странник</div>
+<div class="top-info" style="margin-top: 40px;">
+<div class="character-level" id="char-level" style="font-size: 12px;">Уровень 1</div>
+<div class="character-title" id="char-title" style="font-size: 26px;">Странник</div>
 <div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
-<p class="xp-text" id="xp-text">0 / 100 XP</p>
+<p class="xp-text" id="xp-text" style="font-size: 11px;">0 / 100 XP</p>
 </div>
 <div class="bottom-panel">
 
-<!-- НОВАЯ ПАНЕЛЬ ПИТАНИЯ -->
-<div style="background: #1c1c1e; border-radius: 16px; padding: 15px; margin-bottom: 15px; border: 1px solid #2c2c2e;">
-    <h4 style="margin-top: 0; text-align: center; color: var(--hint-color); font-size: 12px; text-transform: uppercase;">Съедено за сегодня</h4>
+<!-- ПАНЕЛЬ ПИТАНИЯ (УМЕНЬШЕННАЯ) -->
+<div style="background: rgba(28, 28, 30, 0.9); border-radius: 12px; padding: 10px; margin-bottom: 10px; border: 1px solid #2c2c2e; backdrop-filter: blur(10px);">
+    <h4 style="margin-top: 0; margin-bottom: 8px; text-align: center; color: var(--hint-color); font-size: 10px; text-transform: uppercase;">Съедено за сегодня</h4>
     
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; text-align: center; margin-bottom: 15px;">
-        <div><div style="font-size: 18px; font-weight: bold; color: var(--accent-color);" id="eaten-cal">0</div><div style="font-size: 10px; color: var(--hint-color);">Ккал</div></div>
-        <div><div style="font-size: 18px; font-weight: bold;" id="eaten-prot">0</div><div style="font-size: 10px; color: var(--hint-color);">Белки</div></div>
-        <div><div style="font-size: 18px; font-weight: bold;" id="eaten-fat">0</div><div style="font-size: 10px; color: var(--hint-color);">Жиры</div></div>
-        <div><div style="font-size: 18px; font-weight: bold;" id="eaten-carb">0</div><div style="font-size: 10px; color: var(--hint-color);">Углев.</div></div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; margin-bottom: 8px;">
+        <div><div style="font-size: 14px; font-weight: bold; color: var(--accent-color);" id="eaten-cal">0</div><div style="font-size: 9px; color: var(--hint-color);">Ккал</div></div>
+        <div><div style="font-size: 14px; font-weight: bold;" id="eaten-prot">0</div><div style="font-size: 9px; color: var(--hint-color);">Белки</div></div>
+        <div><div style="font-size: 14px; font-weight: bold;" id="eaten-fat">0</div><div style="font-size: 9px; color: var(--hint-color);">Жиры</div></div>
+        <div><div style="font-size: 14px; font-weight: bold;" id="eaten-carb">0</div><div style="font-size: 9px; color: var(--hint-color);">Углев.</div></div>
     </div>
     
-    <div style="font-size: 11px; color: #8e8e93; text-align: center; margin-bottom: 15px;">
-        Норма: <span id="norm-cal">0</span> ккал | Б: <span id="norm-prot">0</span> | Ж: <span id="norm-fat">0</span> | У: <span id="norm-carb">0</span>
+    <div style="font-size: 10px; color: #8e8e93; text-align: center; margin-bottom: 8px;">
+        Норма: <span id="norm-cal">0</span> | Б: <span id="norm-prot">0</span> | Ж: <span id="norm-fat">0</span> | У: <span id="norm-carb">0</span>
     </div>
 
-    <div id="today-food-list" style="max-height: 150px; overflow-y: auto; border-top: 1px solid #2c2c2e; padding-top: 10px;"></div>
+    <div id="today-food-list" style="max-height: 90px; overflow-y: auto; border-top: 1px solid #3a3a3c; padding-top: 5px;"></div>
 
-    <button class="btn" style="background-color: #ff3b30; color: white; padding: 8px; font-size: 12px; margin-top: 10px; opacity: 0.8;" onclick="clearTodayFood()">Очистить весь список</button>
-</div>
-
-<div class="stats-row" style="display: none;">
-<div class="stat-box"><p>Норма</p><h3 id="calories-norm">0 ккал</h3></div>
-<div class="stat-box"><p>Сожжено</p><h3 id="burned-total">0 ккал</h3></div>
+    <button class="btn" style="background-color: rgba(255,59,48,0.8); color: white; padding: 6px; font-size: 11px; margin-top: 8px;" onclick="clearTodayFood()">Очистить</button>
 </div>
 
 <div class="action-grid">
-<button class="action-btn" onclick="window.location.href='camera.html'"><h3>📸</h3><p>Еда</p></button>
-<button class="action-btn" onclick="window.location.href='workout.html'"><h3>💪</h3><p>Треня</p></button>
-<button class="action-btn" onclick="window.location.href='timer.html'"><h3>⏱</h3><p>Таймер</p></button>
-<button class="action-btn" onclick="window.location.href='leaderboard.html'"><h3>🏆</h3><p>Рейтинг</p></button>
+<button class="action-btn" onclick="window.location.href='camera.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 4px;">📸</h3><p style="font-size: 10px;">Еда</p></button>
+<button class="action-btn" onclick="window.location.href='workout.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 4px;">💪</h3><p style="font-size: 10px;">Треня</p></button>
+<button class="action-btn" onclick="window.location.href='timer.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 4px;">⏱</h3><p style="font-size: 10px;">Таймер</p></button>
+<button class="action-btn" onclick="window.location.href='leaderboard.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 4px;">🏆</h3><p style="font-size: 10px;">Рейтинг</p></button>
 </div>
 </div>
 </div>
@@ -88,16 +83,40 @@
 <div id="profile-settings-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
-<h1 style="text-align: center; margin-bottom: 30px;">Настройки профиля</h1>
-<div style="background: #1c1c1e; padding: 20px; border-radius: 16px;">
-<h3 style="margin-top: 0;">Изменить данные</h3>
-<div class="form-group"><label>Возраст</label><input type="number" id="age" placeholder="25"></div>
-<div class="form-group"><label>Вес (кг)</label><input type="number" id="weight" placeholder="70"></div>
-<div class="form-group"><label>Рост (см)</label><input type="number" id="height" placeholder="175"></div>
-<div class="form-group"><label>Пол</label><select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
-<div class="form-group"><label>Цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
-<button class="btn" onclick="saveProfile()">Сохранить</button>
+<h1 style="text-align: center; margin-bottom: 20px;">Настройки профиля</h1>
+
+<div id="link-section" style="background: #1c1c1e; padding: 15px; border-radius: 16px; margin-bottom: 15px;">
+<h3 style="margin-top: 0; font-size: 16px;" id="link-title">Привязка аккаунта</h3>
+<p style="color: #8e8e93; font-size: 13px; margin-bottom: 10px;" id="link-desc">Привяжите второй способ входа.</p>
+<div id="link-email-form">
+<div class="form-group" style="margin-bottom: 10px;"><input type="email" id="link-email" placeholder="your@email.com" style="padding: 10px;"></div>
+<div class="form-group" style="margin-bottom: 10px;"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)" style="padding: 10px;"></div>
+<button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkEmailToTelegram()">Привязать Email</button>
 </div>
+<div id="link-tg-form" style="display: none;">
+<p style="font-size: 13px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b id="current-tg-id">неизвестно</b></p>
+<button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkTelegramToEmail()">Подтвердить привязку</button>
+</div>
+</div>
+
+<div style="background: #1c1c1e; padding: 15px; border-radius: 16px; margin-bottom: 15px;">
+<h3 style="margin-top: 0; font-size: 16px;">Изменить данные</h3>
+<div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Возраст</label><input type="number" id="age" placeholder="25" style="padding: 10px;"></div>
+<div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Вес (кг)</label><input type="number" id="weight" placeholder="70" style="padding: 10px;"></div>
+<div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Рост (см)</label><input type="number" id="height" placeholder="175" style="padding: 10px;"></div>
+<div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Пол</label><select id="gender" style="padding: 10px;"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
+<div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Цель</label><select id="goal" style="padding: 10px;"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
+<button class="btn" style="padding: 12px; font-size: 15px;" onclick="saveProfile()">Сохранить</button>
+</div>
+
+<!-- БЛОК ТЕСТА ТРЯСКИ -->
+<div style="background: #1c1c1e; padding: 15px; border-radius: 16px;">
+<h3 style="margin-top: 0; font-size: 16px;">Тест датчиков</h3>
+<p style="color: #8e8e93; font-size: 13px; margin-bottom: 10px;">Проверь, видит ли Telegram тряску телефона.</p>
+<button id="test-shake-btn" class="btn" style="background-color: #007aff; color: white; padding: 12px; font-size: 15px;" onclick="startShakeTest()">📳 Начать тест</button>
+<button id="stop-shake-btn" class="btn" style="background-color: #ff3b30; color: white; display: none; padding: 12px; font-size: 15px;" onclick="stopShakeTest()">🛑 СТОП</button>
+</div>
+
 </div>
 </div>
 <script src="quotes.js"></script>
