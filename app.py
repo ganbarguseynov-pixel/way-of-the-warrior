@@ -191,71 +191,81 @@ def analyze_photo():
     except:
         return jsonify({"error": "Invalid image"}), 400
 
-    if not client:
-        return jsonify({"food": "Ошибка: ИИ не настроен", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Проверьте API ключ Gemini"})
+    # 1. ПРОБУЕМ GEMINI (с повторами)
+    if client:
+        try:
+            img_byte_arr = io.BytesIO()
+            image.thumbnail((800, 800))
+            image.save(img_byte_arr, format='JPEG', quality=75)
+            compressed_image_data = img_byte_arr.getvalue()
 
-    try:
-        img_byte_arr = io.BytesIO()
-        image.thumbnail((800, 800))
-        image.save(img_byte_arr, format='JPEG', quality=75)
-        compressed_image_data = img_byte_arr.getvalue()
+            prompt = """
+            Ты — профессиональный диетолог. Твоя задача — определить еду на фото.
+            
+            ПРАВИЛА:
+            1. Если на упаковке есть бренд или название на английском языке, напиши это название как есть (на английском), но остальное описание — на русском.
+            2. В остальных случаях ВСЕГДА пиши название еды на РУССКОМ языке.
+            3. Обязательно напиши краткое описание продукта (например, "Жареная куриная грудка с овощами").
+            4. Дай точные данные БЖУ и калорий на 100 грамм.
+            
+            Формат ответа (строго через вертикальную черту |):
+            Название | Калории | Белки | Жиры | Углеводы | Описание
+            
+            Пример 1: Куриная грудка | 165 | 31 | 3.6 | 0 | Жареная куриная грудка без кожи.
+            Пример 2: Snickers | 500 | 10 | 25 | 60 | Шоколадный батончик с карамелью и арахисом.
+            """
+            
+            response = None
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    response = client.models.generate_content(
+                        model='gemini-3.8-flash',
+                        contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
+                    )
+                    break
+                except Exception as e:
+                    if "503" in str(e) and attempt < max_retries - 1:
+                        time.sleep(2 ** (attempt + 1))
+                    else:
+                        raise e
+            
+            parts = [p.strip() for p in response.text.strip().split('|')]
+            if len(parts) >= 6:
+                cal = int(re.sub(r'\D', '', parts[1])) if re.search(r'\d', parts[1]) else 250
+                prot = int(re.sub(r'\D', '', parts[2])) if re.search(r'\d', parts[2]) else 15
+                fat = int(re.sub(r'\D', '', parts[3])) if re.search(r'\d', parts[3]) else 10
+                carb = int(re.sub(r'\D', '', parts[4])) if re.search(r'\d', parts[4]) else 30
+                return jsonify({"food": parts[0], "calories": cal, "protein": prot, "fat": fat, "carbs": carb, "description": parts[5]})
+        except Exception as e:
+            print(f"Gemini error: {e}. Переключаемся на LogMeal.")
 
-        prompt = """
-        Ты — профессиональный диетолог. Твоя задача — определить еду на фото.
-        
-        ПРАВИЛА:
-        1. Если на упаковке есть бренд или название на английском языке, напиши это название как есть (на английском), но остальное описание — на русском.
-        2. В остальных случаях ВСЕГДА пиши название еды на РУССКОМ языке.
-        3. Обязательно напиши краткое описание продукта (например, "Жареная куриная грудка с овощами").
-        4. Дай точные данные БЖУ и калорий на 100 грамм.
-        
-        Формат ответа (строго через вертикальную черту |):
-        Название | Калории | Белки | Жиры | Углеводы | Описание
-        
-        Пример 1: Куриная грудка | 165 | 31 | 3.6 | 0 | Жареная куриная грудка без кожи.
-        Пример 2: Snickers | 500 | 10 | 25 | 60 | Шоколадный батончик с карамелью и арахисом.
-        """
-        
-        # --- ЛОГИКА ПОВТОРОВ ПРИ ОШИБКЕ 503 ---
-        response = None
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                response = client.models.generate_content(
-                    model='gemini-3.8-flash',
-                    contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
-                )
-                break  # Если успешно, выходим из цикла
-            except Exception as e:
-                if "503" in str(e) and attempt < max_retries - 1:
-                    wait_time = 2 ** (attempt + 1)  # Ждем 2, потом 4 секунды
-                    print(f"Модель перегружена, ждем {wait_time} сек...")
-                    time.sleep(wait_time)
-                else:
-                    raise e # Если не 503 или попытки кончились, выбрасываем ошибку
-        
-        parts = [p.strip() for p in response.text.strip().split('|')]
-        
-        if len(parts) >= 6:
-            cal = int(re.sub(r'\D', '', parts[1])) if re.search(r'\d', parts[1]) else 250
-            prot = int(re.sub(r'\D', '', parts[2])) if re.search(r'\d', parts[2]) else 15
-            fat = int(re.sub(r'\D', '', parts[3])) if re.search(r'\d', parts[3]) else 10
-            carb = int(re.sub(r'\D', '', parts[4])) if re.search(r'\d', parts[4]) else 30
+    # 2. ПРОБУЕМ LOGMEAL (если Gemini упал)
+    if LOGMEAL_TOKEN:
+        try:
+            img_byte_arr = io.BytesIO()
+            image.save(img_byte_arr, format='JPEG')
+            img_byte_arr = img_byte_arr.getvalue()
+            files = {'image': ('food.jpg', img_byte_arr, 'image/jpeg')}
+            headers = {'Authorization': f'Bearer {LOGMEAL_TOKEN}'}
+            lm_response = requests.post('https://api.logmeal.es/v2/image/recognition/type', headers=headers, files=files, timeout=15)
             
-            return jsonify({
-                "food": parts[0],
-                "calories": cal,
-                "protein": prot,
-                "fat": fat,
-                "carbs": carb,
-                "description": parts[5]
-            })
-        else:
-            return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ ответил не по формату"})
-            
-    except Exception as e:
-        print(f"Gemini error: {e}")
-        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Модель перегружена. Попробуйте через минуту."})
+            if lm_response.status_code == 200:
+                lm_data = lm_response.json()
+                if 'foodType' in lm_data and 'name' in lm_data['foodType']:
+                    return jsonify({
+                        "food": lm_data['foodType']['name'], 
+                        "calories": 250, 
+                        "protein": 15, 
+                        "fat": 10, 
+                        "carbs": 30, 
+                        "description": "Распознано резервным ИИ (LogMeal). Примерные данные."
+                    })
+        except Exception as e:
+            print(f"LogMeal error: {e}")
+
+    # 3. ЕСЛИ ВСЁ УПАЛО
+    return jsonify({"food": "Не удалось распознать", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Все ИИ перегружены. Попробуйте позже."})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
