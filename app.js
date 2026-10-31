@@ -206,13 +206,6 @@ function updateDashboard() {
     if (!currentProfileData) return;
     const norm = calculateNutrition(currentProfileData);
     
-    if (document.getElementById('norm-cal')) {
-        document.getElementById('norm-cal').innerText = norm.calories;
-        document.getElementById('norm-prot').innerText = norm.protein;
-        document.getElementById('norm-fat').innerText = norm.fat;
-        document.getElementById('norm-carb').innerText = norm.carbs;
-    }
-
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
     let eatenCal = 0, eatenProt = 0, eatenFat = 0, eatenCarb = 0;
     
@@ -223,12 +216,29 @@ function updateDashboard() {
         eatenCarb += parseFloat(food.carbs_100g || 0);
     });
 
-    if (document.getElementById('eaten-cal')) {
-        document.getElementById('eaten-cal').innerText = Math.round(eatenCal);
-        document.getElementById('eaten-prot').innerText = Math.round(eatenProt);
-        document.getElementById('eaten-fat').innerText = Math.round(eatenFat);
-        document.getElementById('eaten-carb').innerText = Math.round(eatenCarb);
+    if (document.getElementById('norm-cal')) {
+        document.getElementById('norm-cal').innerText = norm.calories;
+        document.getElementById('norm-prot').innerText = norm.protein;
+        document.getElementById('norm-fat').innerText = norm.fat;
+        document.getElementById('norm-carb').innerText = norm.carbs;
     }
+
+    const setValue = (id, eaten, normVal) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerText = Math.round(eaten);
+            if (eaten > normVal) {
+                el.style.color = '#ff3b30'; // Красный, если превысил
+            } else {
+                el.style.color = '#fff'; // Белый, если в норме
+            }
+        }
+    };
+
+    setValue('eaten-cal', eatenCal, norm.calories);
+    setValue('eaten-prot', eatenProt, norm.protein);
+    setValue('eaten-fat', eatenFat, norm.fat);
+    setValue('eaten-carb', eatenCarb, norm.carbs);
     
     renderTodayFoodList(todayFood);
 }
@@ -245,8 +255,8 @@ function renderTodayFoodList(todayFood) {
     let html = '';
     todayFood.forEach((food, index) => {
         html += `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; background: #2c2c2e; padding: 4px 8px; border-radius: 6px;">
-            <div style="font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%;">${food.product_name}</div>
+        <div class="compact-food-item">
+            <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%;">${food.product_name}</div>
             <button onclick="deleteFoodItem(${index})" style="background: none; border: none; color: #ff3b30; font-size: 14px; cursor: pointer; padding: 0;">✖</button>
         </div>`;
     });
