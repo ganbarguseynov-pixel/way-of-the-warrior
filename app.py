@@ -214,8 +214,9 @@ def analyze_photo():
         image.save(img_byte_arr, format='JPEG', quality=75)
         compressed_image_data = img_byte_arr.getvalue()
 
+        # МАКСИМАЛЬНО ЖЕСТКИЙ ПРОМПТ
         prompt = """
-        Ты — калькулятор калорий. Никаких вступлений.
+        Ты — калькулятор калорий. Никаких вступлений, приветствий и лишних слов.
         Выведи СТРОГО в таком формате:
         Название | Калории | Белки | Жиры | Углеводы
         
@@ -227,6 +228,7 @@ def analyze_photo():
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
         )
         
+        # Очищаем от звездочек и прочего мусора
         clean_text = re.sub(r'[*#_]', '', response.text.strip())
         parts = [p.strip() for p in clean_text.split('|')]
         
@@ -236,7 +238,14 @@ def analyze_photo():
             fat = int(re.sub(r'\D', '', parts[3])) if re.search(r'\d', parts[3]) else 10
             carb = int(re.sub(r'\D', '', parts[4])) if re.search(r'\d', parts[4]) else 30
             
-            return jsonify({"food": parts[0], "calories": cal, "protein": prot, "fat": fat, "carbs": carb, "description": ""})
+            return jsonify({
+                "food": parts[0], 
+                "calories": cal, 
+                "protein": prot, 
+                "fat": fat, 
+                "carbs": carb, 
+                "description": "" 
+            })
         else:
             return jsonify({"food": "Не удалось", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ не разобрал."})
             
