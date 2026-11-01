@@ -122,10 +122,9 @@
 <div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Рост (см)</label><input type="number" id="height" placeholder="175" style="padding: 10px;"></div>
 <div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Пол</label><select id="gender" style="padding: 10px;"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
 <div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Цель</label><select id="goal" style="padding: 10px;"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
-<button class="btn" style="padding: 12px; font-size: 15px;" onclick="saveProfile()">Сохранить</button>
 </div>
 
-<!-- НОВЫЙ БЛОК: РУЧНАЯ НОРМА -->
+<!-- БЛОК: РУЧНАЯ НОРМА -->
 <div style="background: #1c1c1e; padding: 15px; border-radius: 16px; margin-bottom: 15px;">
 <h3 style="margin-top: 0; font-size: 16px;">Своя норма (опционально)</h3>
 <p style="color: #8e8e93; font-size: 12px; margin-bottom: 10px;">Если хотите задать норму вручную, впишите цифры ниже. Если оставить пустым — норма посчитается по формуле.</p>
@@ -136,6 +135,9 @@
     <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Углеводы (г)</label><input type="number" id="custom-carbs" placeholder="Напр. 200" style="padding: 10px;"></div>
 </div>
 </div>
+
+<!-- ОДНА ОБЩАЯ КНОПКА СОХРАНИТЬ -->
+<button class="btn" style="padding: 15px; font-size: 16px; background-color: var(--accent-color); color: #000; margin-bottom: 15px;" onclick="saveProfile()">Сохранить все данные</button>
 
 <div style="background: #1c1c1e; padding: 15px; border-radius: 16px;">
 <h3 style="margin-top: 0; font-size: 16px;">Тест датчиков</h3>
