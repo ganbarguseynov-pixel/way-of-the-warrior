@@ -40,14 +40,12 @@
 <button class="tab-btn" onclick="switchTab('barcode')">📊 Штрих-код</button>
 </div>
 
-<!-- ВКЛАДКА ПОИСКА -->
 <div id="tab-search" class="tab-content active">
 <div class="form-group"><input type="text" id="food-search-input" placeholder="Введите название"></div>
 <button class="btn" onclick="searchFood()">Найти</button>
 <div id="search-result" style="margin-top: 20px;"></div>
 </div>
 
-<!-- ВКЛАДКА ФОТО -->
 <div id="tab-photo" class="tab-content">
 <div id="photo-buttons">
 <button class="btn" onclick="startCamera('food')">📷 Сделать фото</button>
@@ -66,21 +64,17 @@
 
 <div id="food-result" style="display: none;" class="result-card">
     <h2 id="food-name" class="result-title">Название</h2>
-    <p id="food-desc" class="result-desc">Описание...</p>
-    
     <div class="macro-box">
         <div class="macro-row"><span>Калории:</span> <b id="food-calories">0 ккал</b></div>
         <div class="macro-row"><span>Белки:</span> <b id="food-protein">0 г</b></div>
         <div class="macro-row"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
         <div class="macro-row"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
     </div>
-
-    <button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="saveXPAndGoBack()">Добавить (+20 XP)</button>
+    <button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="saveFoodAndGoBack()">Добавить (+20 XP)</button>
     <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 10px;" onclick="resetCameraScreen()">Отмена</button>
 </div>
 </div>
 
-<!-- ВКЛАДКА ШТРИХ-КОДА -->
 <div id="tab-barcode" class="tab-content">
 <p style="text-align: center; color: #8e8e93; margin-bottom: 20px;">Сфотографируйте штрих-код или введите вручную</p>
 
@@ -108,7 +102,6 @@
 </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО -->
 <div id="food-modal" class="modal">
 <div class="modal-content">
 <button class="modal-close" onclick="closeModal()">✖</button>
@@ -307,15 +300,13 @@ function closeModal() { document.getElementById('food-modal').classList.remove('
 function confirmFoodSelection() {
     if (!selectedFoodData) return;
     
-    // Сохраняем в дневник питания
+    // УНИВЕРСАЛЬНОЕ СОХРАНЕНИЕ (и для поиска, и для штрих-кода)
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
     todayFood.push(selectedFoodData);
     localStorage.setItem('todayFood', JSON.stringify(todayFood));
 
-    // Показываем карточку
     document.getElementById('food-result').style.display = 'block';
     document.getElementById('food-name').innerText = selectedFoodData.product_name;
-    document.getElementById('food-desc').innerText = "Добавлено в дневник питания!";
     document.getElementById('food-calories').innerText = (selectedFoodData.calories_100g || 0) + " ккал/100г";
     document.getElementById('food-protein').innerText = (selectedFoodData.proteins_100g || 0) + " г";
     document.getElementById('food-fat').innerText = (selectedFoodData.fat_100g || 0) + " г";
@@ -323,6 +314,7 @@ function confirmFoodSelection() {
     
     closeModal();
     document.getElementById('search-result').innerHTML = '';
+    tg.showAlert("Добавлено в дневник питания!");
 }
 
 let videoStream = null;
@@ -401,7 +393,6 @@ async function sendPhotoToServer(file) {
         document.getElementById('loading-spinner').style.display = 'none';
         
         if (data.food !== "Не удалось распознать" && data.food !== "Ошибка ИИ") {
-            // Превращаем ответ ИИ в объект для корзины
             selectedFoodData = {
                 product_name: data.food,
                 calories_100g: data.calories,
@@ -409,11 +400,9 @@ async function sendPhotoToServer(file) {
                 fat_100g: data.fat,
                 carbs_100g: data.carbs
             };
-            window.foodList = [selectedFoodData]; // Кладем в массив
             
             document.getElementById('food-result').style.display = 'block';
             document.getElementById('food-name').innerText = data.food;
-            document.getElementById('food-desc').innerText = "Нажми 'Добавить', чтобы сохранить в дневник.";
             document.getElementById('food-calories').innerText = data.calories + " ккал";
             document.getElementById('food-protein').innerText = data.protein + " г";
             document.getElementById('food-fat').innerText = data.fat + " г";
@@ -429,7 +418,13 @@ async function sendPhotoToServer(file) {
     }
 }
 
-function saveXPAndGoBack() {
+function saveFoodAndGoBack() {
+    if (!selectedFoodData) return;
+    
+    let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
+    todayFood.push(selectedFoodData);
+    localStorage.setItem('todayFood', JSON.stringify(todayFood));
+
     localStorage.setItem('pendingXP', '20');
     window.location.href = 'index.html';
 }
