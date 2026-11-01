@@ -19,15 +19,12 @@ api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
 client = genai.Client(
     api_key=OFOX_API_KEY,
-    http_options={
-        "base_url": "https://api.ofox.ai/gemini",
-        "api_version": "v1beta",
-    }
+    http_options={"base_url": "https://api.ofox.ai/gemini", "api_version": "v1beta"}
 )
 
-# --- УМНЫЙ КЭШ (чтобы не тратить токены и лимиты) ---
 SEARCH_CACHE = {}
 BARCODE_CACHE = {}
+DEFAULT_IMG = "https://cdn-icons-png.flaticon.com/512/3081/3081986.png"
 
 LOCAL_DB = [
     {"name": "Курица", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
@@ -83,7 +80,7 @@ def translate_to_english(query):
         'масло': 'butter', 'сахар': 'sugar', 'мед': 'honey', 'орехи': 'nuts',
         'суши': 'sushi', 'роллы': 'rolls', 'чипсы': 'chips', 'сникерс': 'snickers',
         'марс': 'mars', 'йогурт': 'yogurt', 'теос': 'teos', 'зеро': 'zero',
-        'кола зеро': 'coca-cola zero'
+        'кола зеро': 'coca-cola zero', 'кефир': 'kefir'
     }
     words = query.lower().split()
     if query.lower() in dictionary:
@@ -99,7 +96,6 @@ def search_food():
 
     cache_key = query.lower()
     if cache_key in SEARCH_CACHE:
-        print(f"Из кэша: {query}")
         return jsonify({"products": SEARCH_CACHE[cache_key]})
 
     results = []
@@ -120,7 +116,7 @@ def search_food():
                     name = product.get('product_name')
                     if not name: continue
                     nutrients = product.get('nutriments', {})
-                    image_url = product.get('image_front_small_url') or product.get('image_url') or ''
+                    image_url = product.get('image_front_small_url') or product.get('image_url') or DEFAULT_IMG
                     results.append({"product_name": name, "image_url": image_url, "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1), "proteins_100g": round(nutrients.get('proteins_100g', 0), 1), "fat_100g": round(nutrients.get('fat_100g', 0), 1), "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1), "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан', "description": "Данные Open Food Facts"})
         except Exception as e: print(f"OFF error: {e}")
 
@@ -133,8 +129,11 @@ def search_food():
             if 'foods' in data:
                 for food in data['foods']:
                     nutrients = {n['nutrientName']: n['value'] for n in food.get('foodNutrients', [])}
-                    results.append({"product_name": food.get('description', 'Без названия'), "image_url": "", "calories_100g": round(nutrients.get('Energy', 0), 1), "proteins_100g": round(nutrients.get('Protein', 0), 1), "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1), "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1), "ingredients": "Данные USDA FoodData Central", "description": ""})
+                    results.append({"product_name": food.get('description', 'Без названия'), "image_url": DEFAULT_IMG, "calories_100g": round(nutrients.get('Energy', 0), 1), "proteins_100g": round(nutrients.get('Protein', 0), 1), "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1), "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1), "ingredients": "Данные USDA FoodData Central", "description": ""})
         except Exception as e: print(f"USDA error: {e}")
+
+    for p in results:
+        if not p["image_url"]: p["image_url"] = DEFAULT_IMG
 
     if results:
         SEARCH_CACHE[cache_key] = results
@@ -148,14 +147,13 @@ def search_by_barcode():
         return jsonify({"products": []})
         
     if barcode in BARCODE_CACHE:
-        print(f"Штрих-код из кэша: {barcode}")
         return jsonify({"products": BARCODE_CACHE[barcode]})
 
     try:
         product = api.product.get(barcode)
         if product and product.get('product_name'):
             nutrients = product.get('nutriments', {})
-            image_url = product.get('image_front_small_url') or product.get('image_url') or ''
+            image_url = product.get('image_front_small_url') or product.get('image_url') or DEFAULT_IMG
             result = {"product_name": product.get('product_name'), "image_url": image_url, "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1), "proteins_100g": round(nutrients.get('proteins_100g', 0), 1), "fat_100g": round(nutrients.get('fat_100g', 0), 1), "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1), "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан', "description": "Найдено по штрих-коду"}
             
             BARCODE_CACHE[barcode] = [result]
@@ -216,11 +214,11 @@ def analyze_photo():
         image.save(img_byte_arr, format='JPEG', quality=75)
         compressed_image_data = img_byte_arr.getvalue()
 
-        # Ультимативный промпт
         prompt = """
-        Выведи ТОЛЬКО название продукта и БЖУ.
-        Без приветствий, без описаний, без лишних слов.
-        Строго в формате: Название | Калории | Белки | Жиры | Углеводы
+        Ты — калькулятор калорий. Никаких вступлений.
+        Выведи СТРОГО в таком формате:
+        Название | Калории | Белки | Жиры | Углеводы
+        
         Пример: Чизбургер | 285 | 18 | 19 | 12
         """
         
@@ -229,7 +227,6 @@ def analyze_photo():
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
         )
         
-        # Очищаем от звездочек и прочего мусора
         clean_text = re.sub(r'[*#_]', '', response.text.strip())
         parts = [p.strip() for p in clean_text.split('|')]
         
@@ -239,14 +236,7 @@ def analyze_photo():
             fat = int(re.sub(r'\D', '', parts[3])) if re.search(r'\d', parts[3]) else 10
             carb = int(re.sub(r'\D', '', parts[4])) if re.search(r'\d', parts[4]) else 30
             
-            return jsonify({
-                "food": parts[0], 
-                "calories": cal, 
-                "protein": prot, 
-                "fat": fat, 
-                "carbs": carb, 
-                "description": "" # Оставляем пустым, чтобы на экране не было текста
-            })
+            return jsonify({"food": parts[0], "calories": cal, "protein": prot, "fat": fat, "carbs": carb, "description": ""})
         else:
             return jsonify({"food": "Не удалось", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ не разобрал."})
             
