@@ -28,7 +28,8 @@
 </head>
 <body>
 <div class="inner-screen">
-<button class="back-btn" onclick="window.location.href='index.html'">← Назад в приложение</button>
+<!-- ЖЕСТКАЯ ССЫЛКА НА ГЛАВНУЮ -->
+<button class="back-btn" onclick="window.location.replace('index.html')">← Назад в приложение</button>
 <h1 style="text-align: center;">Анализ еды</h1>
 <div class="tabs">
 <button class="tab-btn active" onclick="switchTab('search')">🔍 Поиск</button>
@@ -162,7 +163,7 @@ async function startBarcodeCamera() {
     try {
         document.getElementById('barcode-buttons').style.display = 'none';
         document.getElementById('barcode-camera-container').style.display = 'flex';
-        barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: barcodeFacingMode } }); // Убрал высокое разрешение, теперь стандартное
+        barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: barcodeFacingMode } });
         document.getElementById('barcode-camera-video').srcObject = barcodeStream;
     } catch (err) { tg.showAlert("Ошибка камеры."); resetBarcodeScreen(); }
 }
@@ -182,7 +183,7 @@ function takeBarcodePhoto() {
     canvas.toBlob(async function(blob) {
         const file = new File([blob], "barcode.jpg", { type: "image/jpeg" });
         await sendBarcodeToServer(file);
-    }, 'image/jpeg', 0.8); // Вернул качество 0.8 как у фото
+    }, 'image/jpeg', 0.8);
 }
 
 function stopBarcodeCamera() {
@@ -357,7 +358,7 @@ function saveFoodAndGoBack() {
         saveFoodToCloud(todayFood);
     }
     localStorage.setItem('pendingXP', '20');
-    window.location.href = 'index.html';
+    window.location.replace('index.html'); // ПРИНУДИТЕЛЬНЫЙ ПЕРЕХОД
 }
 </script>
 </body>
