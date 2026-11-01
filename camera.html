@@ -28,7 +28,6 @@
 </head>
 <body>
 <div class="inner-screen">
-<!-- ЖЕСТКАЯ ССЫЛКА НА ГЛАВНУЮ -->
 <button class="back-btn" onclick="window.location.replace('index.html')">← Назад в приложение</button>
 <h1 style="text-align: center;">Анализ еды</h1>
 <div class="tabs">
@@ -358,7 +357,7 @@ function saveFoodAndGoBack() {
         saveFoodToCloud(todayFood);
     }
     localStorage.setItem('pendingXP', '20');
-    window.location.replace('index.html'); // ПРИНУДИТЕЛЬНЫЙ ПЕРЕХОД
+    window.location.replace('index.html');
 }
 </script>
 </body>
