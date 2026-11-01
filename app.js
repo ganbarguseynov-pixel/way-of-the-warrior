@@ -185,9 +185,7 @@ const levelsData = {
 let currentXP = 0, totalBurnedCalories = 0, userGender = 'male';
 let currentProfileData = null;
 
-// Обновленная функция расчета нормы (теперь проверяет ручной ввод)
 function calculateNutrition(profile) {
-    // Если пользователь ввел свою норму, берем её
     if (profile.custom_calories && profile.custom_calories > 0) {
         return {
             calories: parseInt(profile.custom_calories),
@@ -197,7 +195,6 @@ function calculateNutrition(profile) {
         };
     }
 
-    // Иначе считаем по формуле
     let bmr = profile.gender === 'male' 
         ? (10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5)
         : (10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161);
@@ -289,6 +286,43 @@ function clearTodayFood() {
     }
 }
 
+function openCustomNormModal() {
+    if (!currentProfileData) return;
+    document.getElementById('modal-calories').value = currentProfileData.custom_calories || '';
+    document.getElementById('modal-protein').value = currentProfileData.custom_protein || '';
+    document.getElementById('modal-fat').value = currentProfileData.custom_fat || '';
+    document.getElementById('modal-carbs').value = currentProfileData.custom_carbs || '';
+    document.getElementById('norm-modal').classList.add('active');
+}
+
+function closeCustomNormModal() {
+    document.getElementById('norm-modal').classList.remove('active');
+}
+
+function saveCustomNormFromModal() {
+    if (!currentProfileData) return;
+    
+    const c = document.getElementById('modal-calories').value;
+    const p = document.getElementById('modal-protein').value;
+    const f = document.getElementById('modal-fat').value;
+    const u = document.getElementById('modal-carbs').value;
+
+    currentProfileData.custom_calories = c;
+    currentProfileData.custom_protein = p;
+    currentProfileData.custom_fat = f;
+    currentProfileData.custom_carbs = u;
+
+    localStorage.setItem('cachedProfile', JSON.stringify(currentProfileData));
+    
+    const tgId = localStorage.getItem('tgId');
+    const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
+    const name = localStorage.getItem('userName') || "Атлет";
+    saveProgressToCloud(tgId, email, name, currentProfileData, currentXP, totalBurnedCalories);
+
+    updateDashboard();
+    closeCustomNormModal();
+}
+
 function renderProfile(profile) {
     currentProfileData = profile;
     userGender = profile.gender || 'male';
@@ -378,8 +412,6 @@ function openProfileSettings() {
         document.getElementById('height').value = p.height || '';
         document.getElementById('gender').value = p.gender || 'male';
         document.getElementById('goal').value = p.goal || 'lose';
-        
-        // Заполняем кастомную норму
         document.getElementById('custom-calories').value = p.custom_calories || '';
         document.getElementById('custom-protein').value = p.custom_protein || '';
         document.getElementById('custom-fat').value = p.custom_fat || '';
@@ -480,10 +512,7 @@ async function saveProfile() {
 
     if (!age || !weight || !height) { tg.showAlert("Заполни все поля!"); return; }
     
-    const profile = { 
-        age, gender, weight, height, goal,
-        custom_calories, custom_protein, custom_fat, custom_carbs
-    };
+    const profile = { age, gender, weight, height, goal, custom_calories, custom_protein, custom_fat, custom_carbs };
     
     localStorage.setItem('cachedProfile', JSON.stringify(profile));
     const tgId = localStorage.getItem('tgId');
@@ -502,7 +531,6 @@ async function logout() {
     }
 }
 
-// --- ТЕСТ ТРЯСКИ С КНОПКОЙ СТОП ---
 let isShakeTesting = false;
 let maxShakeValue = 0;
 
