@@ -508,8 +508,11 @@ async function saveProfile() {
 }
 
 async function logout() {
-    // Мы убрали localStorage.clear(), чтобы не сбрасывать привязки
-    if (confirm("Выйти из аккаунта?")) { 
+    if (confirm("Выйти из аккаунта? Прогресс сохранен.")) { 
+        localStorage.removeItem('cachedProfile');
+        localStorage.removeItem('cachedXP');
+        localStorage.removeItem('cachedBurned');
+        localStorage.removeItem('loginType');
         await supabaseClient.auth.signOut(); 
         location.reload(); 
     }
