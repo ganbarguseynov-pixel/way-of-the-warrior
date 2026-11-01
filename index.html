@@ -9,13 +9,19 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="style.css">
 <style>
-.compact-panel { background: rgba(28, 28, 30, 0.85); border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.compact-panel { background: rgba(28, 28, 30, 0.85); border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); position: relative; }
 .compact-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; }
 .compact-val { font-size: 13px; font-weight: bold; white-space: nowrap; }
 .compact-val span { font-size: 10px; color: #8e8e93; font-weight: normal; }
 .compact-label { font-size: 9px; color: #8e8e93; text-transform: uppercase; margin-top: 2px; }
 .compact-food-list { max-height: 80px; overflow-y: auto; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; }
 .compact-food-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; margin-bottom: 4px; font-size: 11px; }
+
+/* Стили для всплывающего окна */
+.custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+.custom-modal.active { display: flex; }
+.custom-modal-content { background: #1c1c1e; border-radius: 16px; padding: 20px; width: 100%; max-width: 320px; box-sizing: border-box; position: relative; }
+.custom-modal-close { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 18px; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 </style>
 </head>
 <body class="male-theme">
@@ -60,7 +66,11 @@
 <div class="bottom-panel">
 
 <div class="compact-panel">
-    <h4 style="margin: 0 0 8px 0; text-align: center; color: #fff; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Съедено за сегодня</h4>
+    <!-- Кнопка редактирования и заголовок -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h4 style="margin: 0; color: #fff; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Съедено за сегодня</h4>
+        <button onclick="openCustomNormModal()" style="background: rgba(52, 199, 89, 0.2); border: 1px solid #34c759; color: #34c759; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer;">✎ Ред.</button>
+    </div>
     
     <div class="compact-grid">
         <div>
@@ -96,6 +106,23 @@
 </div>
 </div>
 
+<!-- ВСПЛЫВАЮЩЕЕ ОКНО РЕДАКТИРОВАНИЯ НОРМЫ -->
+<div id="norm-modal" class="custom-modal">
+<div class="custom-modal-content">
+    <button class="custom-modal-close" onclick="closeCustomNormModal()">✖</button>
+    <h3 style="margin-top: 0; text-align: center; font-size: 16px;">Своя норма</h3>
+    <p style="color: #8e8e93; font-size: 11px; text-align: center; margin-bottom: 15px;">Впиши свои цифры. Если оставить пустым, будет считаться по формуле.</p>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="form-group" style="margin: 0;"><label style="font-size: 11px;">Калории</label><input type="number" id="modal-calories" placeholder="2000" style="padding: 8px;"></div>
+        <div class="form-group" style="margin: 0;"><label style="font-size: 11px;">Белки (г)</label><input type="number" id="modal-protein" placeholder="150" style="padding: 8px;"></div>
+        <div class="form-group" style="margin: 0;"><label style="font-size: 11px;">Жиры (г)</label><input type="number" id="modal-fat" placeholder="70" style="padding: 8px;"></div>
+        <div class="form-group" style="margin: 0;"><label style="font-size: 11px;">Углеводы (г)</label><input type="number" id="modal-carbs" placeholder="200" style="padding: 8px;"></div>
+    </div>
+    <button class="btn" style="padding: 10px; font-size: 14px; margin-top: 15px; background-color: var(--accent-color); color: #000;" onclick="saveCustomNormFromModal()">Сохранить</button>
+</div>
+</div>
+
 <div id="profile-settings-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
@@ -124,7 +151,6 @@
 <div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Цель</label><select id="goal" style="padding: 10px;"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
 </div>
 
-<!-- БЛОК: РУЧНАЯ НОРМА -->
 <div style="background: #1c1c1e; padding: 15px; border-radius: 16px; margin-bottom: 15px;">
 <h3 style="margin-top: 0; font-size: 16px;">Своя норма (опционально)</h3>
 <p style="color: #8e8e93; font-size: 12px; margin-bottom: 10px;">Если хотите задать норму вручную, впишите цифры ниже. Если оставить пустым — норма посчитается по формуле.</p>
@@ -136,7 +162,6 @@
 </div>
 </div>
 
-<!-- ОДНА ОБЩАЯ КНОПКА СОХРАНИТЬ -->
 <button class="btn" style="padding: 15px; font-size: 16px; background-color: var(--accent-color); color: #000; margin-bottom: 15px;" onclick="saveProfile()">Сохранить все данные</button>
 
 <div style="background: #1c1c1e; padding: 15px; border-radius: 16px;">
