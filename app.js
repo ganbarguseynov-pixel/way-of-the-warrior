@@ -185,7 +185,19 @@ const levelsData = {
 let currentXP = 0, totalBurnedCalories = 0, userGender = 'male';
 let currentProfileData = null;
 
+// Обновленная функция расчета нормы (теперь проверяет ручной ввод)
 function calculateNutrition(profile) {
+    // Если пользователь ввел свою норму, берем её
+    if (profile.custom_calories && profile.custom_calories > 0) {
+        return {
+            calories: parseInt(profile.custom_calories),
+            protein: parseInt(profile.custom_protein) || 0,
+            fat: parseInt(profile.custom_fat) || 0,
+            carbs: parseInt(profile.custom_carbs) || 0
+        };
+    }
+
+    // Иначе считаем по формуле
     let bmr = profile.gender === 'male' 
         ? (10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5)
         : (10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161);
@@ -228,9 +240,9 @@ function updateDashboard() {
         if (el) {
             el.innerText = Math.round(eaten);
             if (eaten > normVal) {
-                el.style.color = '#ff3b30'; // Красный, если превысил
+                el.style.color = '#ff3b30';
             } else {
-                el.style.color = '#fff'; // Белый, если в норме
+                el.style.color = '#fff';
             }
         }
     };
@@ -366,6 +378,12 @@ function openProfileSettings() {
         document.getElementById('height').value = p.height || '';
         document.getElementById('gender').value = p.gender || 'male';
         document.getElementById('goal').value = p.goal || 'lose';
+        
+        // Заполняем кастомную норму
+        document.getElementById('custom-calories').value = p.custom_calories || '';
+        document.getElementById('custom-protein').value = p.custom_protein || '';
+        document.getElementById('custom-fat').value = p.custom_fat || '';
+        document.getElementById('custom-carbs').value = p.custom_carbs || '';
     }
     openScreen('profile-settings-screen');
 }
@@ -454,8 +472,19 @@ async function saveProfile() {
     const weight = document.getElementById('weight').value;
     const height = document.getElementById('height').value;
     const goal = document.getElementById('goal').value;
+    
+    const custom_calories = document.getElementById('custom-calories').value;
+    const custom_protein = document.getElementById('custom-protein').value;
+    const custom_fat = document.getElementById('custom-fat').value;
+    const custom_carbs = document.getElementById('custom-carbs').value;
+
     if (!age || !weight || !height) { tg.showAlert("Заполни все поля!"); return; }
-    const profile = { age: age, gender: gender, weight: weight, height: height, goal: goal };
+    
+    const profile = { 
+        age, gender, weight, height, goal,
+        custom_calories, custom_protein, custom_fat, custom_carbs
+    };
+    
     localStorage.setItem('cachedProfile', JSON.stringify(profile));
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
@@ -466,15 +495,6 @@ async function saveProfile() {
 }
 
 async function logout() {
-    const tgId = localStorage.getItem('tgId');
-    const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
-    const profile = JSON.parse(localStorage.getItem('cachedProfile'));
-    const xp = parseInt(localStorage.getItem('cachedXP') || 0);
-    const burned = parseInt(localStorage.getItem('cachedBurned') || 0);
-    const name = localStorage.getItem('userName') || "Атлет";
-    if (profile && (tgId || email)) {
-        await saveProgressToCloud(tgId, email, name, profile, xp, burned);
-    }
     if (confirm("Выйти из аккаунта? Прогресс сохранен.")) {
         localStorage.clear();
         await supabaseClient.auth.signOut();
@@ -488,7 +508,6 @@ let maxShakeValue = 0;
 
 async function startShakeTest() {
     if (isShakeTesting) return;
-
     if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
         try {
             const permission = await DeviceMotionEvent.requestPermission();
@@ -501,13 +520,10 @@ async function startShakeTest() {
             return;
         }
     }
-
     isShakeTesting = true;
     maxShakeValue = 0;
-
     document.getElementById('test-shake-btn').style.display = 'none';
     document.getElementById('stop-shake-btn').style.display = 'block';
-
     window.addEventListener('devicemotion', function(event) {
         if (!isShakeTesting) return;
         const acc = event.accelerationIncludingGravity;
@@ -517,7 +533,6 @@ async function startShakeTest() {
             if (shakeValue > maxShakeValue) maxShakeValue = shakeValue;
         }
     });
-
     tg.showAlert("Тряси телефон! Когда закончишь — нажми СТОП.");
 }
 
