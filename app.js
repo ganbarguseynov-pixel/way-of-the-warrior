@@ -1,536 +1,258 @@
-const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
-const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-const tg = window.Telegram.WebApp;
-tg.ready(); tg.expand();
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from PIL import Image
+import io
+import os
+import requests
+import openfoodfacts
+import re
+from rapidfuzz import process, fuzz
+from google import genai
+from google.genai import types
 
-function openScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-    const el = document.getElementById(screenId);
-    if (el) el.classList.add('active');
-}
+app = Flask(__name__)
+CORS(app)
 
-function closeScreen(screenId) {
-    document.getElementById(screenId).classList.remove('active');
-    if (localStorage.getItem('cachedProfile')) {
-        document.getElementById('dashboard-screen').classList.add('active');
-    } else {
-        document.getElementById('auth-screen').classList.add('active');
+OFOX_API_KEY = "sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPmKOuTmo"
+USDA_API_KEY = os.environ.get("USDA_API_KEY")
+api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
+
+client = genai.Client(
+    api_key=OFOX_API_KEY,
+    http_options={"base_url": "https://api.ofox.ai/gemini", "api_version": "v1beta"}
+)
+
+SEARCH_CACHE = {}
+BARCODE_CACHE = {}
+DEFAULT_IMG = "https://cdn-icons-png.flaticon.com/512/3081/3081986.png"
+
+LOCAL_DB = [
+    {"name": "Курица", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
+    {"name": "Куриная грудка", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
+    {"name": "Яйцо", "cal": 155, "prot": 13, "fat": 11, "carb": 1.1, "img": "https://images.unsplash.com/photo-1506976785307-8732e854ad03?w=200"},
+    {"name": "Яйца", "cal": 155, "prot": 13, "fat": 11, "carb": 1.1, "img": "https://images.unsplash.com/photo-1506976785307-8732e854ad03?w=200"},
+    {"name": "Мохито", "cal": 45, "prot": 0.1, "fat": 0, "carb": 11, "img": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=200"},
+    {"name": "Адреналин", "cal": 45, "prot": 0, "fat": 0, "carb": 11, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
+    {"name": "Йогурт", "cal": 60, "prot": 5, "fat": 3, "carb": 4, "img": "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=200"},
+    {"name": "Кола", "cal": 42, "prot": 0, "fat": 0, "carb": 10.6, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
+    {"name": "Кола Зеро", "cal": 0, "prot": 0, "fat": 0, "carb": 0, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
+    {"name": "Салат", "cal": 15, "prot": 1.4, "fat": 0.2, "carb": 2.9, "img": "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?w=200"},
+    {"name": "Банан", "cal": 89, "prot": 1.1, "fat": 0.3, "carb": 23, "img": "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=200"},
+    {"name": "Яблоко", "cal": 52, "prot": 0.3, "fat": 0.2, "carb": 14, "img": "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200"},
+    {"name": "Рис", "cal": 130, "prot": 2.7, "fat": 0.3, "carb": 28, "img": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=200"},
+    {"name": "Пицца", "cal": 266, "prot": 11, "fat": 10, "carb": 33, "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200"},
+    {"name": "Бургер", "cal": 295, "prot": 15, "fat": 12, "carb": 30, "img": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200"},
+    {"name": "Молоко", "cal": 52, "prot": 2.9, "fat": 2.5, "carb": 4.7, "img": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200"},
+    {"name": "Сыр", "cal": 402, "prot": 25, "fat": 33, "carb": 1.3, "img": "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=200"},
+    {"name": "Творог", "cal": 121, "prot": 17, "fat": 5, "carb": 3, "img": "https://images.unsplash.com/photo-1559561853-08451507cbe7?w=200"},
+    {"name": "Гречка", "cal": 110, "prot": 4, "fat": 1, "carb": 20, "img": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=200"},
+    {"name": "Овсянка", "cal": 88, "prot": 3, "fat": 1.7, "carb": 15, "img": "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?w=200"},
+    {"name": "Макароны", "cal": 131, "prot": 5, "fat": 1.1, "carb": 25, "img": "https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=200"},
+    {"name": "Хлеб", "cal": 265, "prot": 9, "fat": 3.2, "carb": 49, "img": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200"},
+    {"name": "Кофе", "cal": 2, "prot": 0.1, "fat": 0, "carb": 0, "img": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200"},
+    {"name": "Чай", "cal": 1, "prot": 0, "fat": 0, "carb": 0, "img": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=200"},
+    {"name": "Сок", "cal": 45, "prot": 0.7, "fat": 0.2, "carb": 10.4, "img": "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=200"},
+    {"name": "Шоколад", "cal": 546, "prot": 4.9, "fat": 31, "carb": 61, "img": "https://images.unsplash.com/photo-1511381939415-e44015466834?w=200"},
+    {"name": "Апельсин", "cal": 47, "prot": 0.9, "fat": 0.1, "carb": 12, "img": "https://images.unsplash.com/photo-1547514701-42782101795e?w=200"},
+    {"name": "Помидор", "cal": 18, "prot": 0.9, "fat": 0.2, "carb": 3.9, "img": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=200"},
+    {"name": "Огурец", "cal": 15, "prot": 0.7, "fat": 0.1, "carb": 3.6, "img": "https://images.unsplash.com/photo-1604977042946-1eecc30f269e?w=200"},
+    {"name": "Картофель", "cal": 87, "prot": 2, "fat": 0.1, "carb": 20, "img": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=200"},
+    {"name": "Арбуз", "cal": 30, "prot": 0.6, "fat": 0.2, "carb": 8, "img": "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=200"},
+]
+
+LOCAL_NAMES = [p["name"] for p in LOCAL_DB]
+
+def translate_to_english(query):
+    if re.search('[a-zA-Z]', query):
+        return query
+    dictionary = {
+        'яблоко': 'apple', 'банан': 'banana', 'мохито': 'mojito', 'адреналин': 'adrenaline',
+        'курица': 'chicken', 'рис': 'rice', 'яйцо': 'egg', 'яйца': 'eggs', 'пицца': 'pizza',
+        'бургер': 'burger', 'молоко': 'milk', 'сыр': 'cheese', 'творог': 'cottage cheese',
+        'гречка': 'buckwheat', 'овсянка': 'oatmeal', 'макароны': 'pasta', 'хлеб': 'bread',
+        'кофе': 'coffee', 'чай': 'tea', 'кола': 'cola', 'сок': 'juice', 'шоколад': 'chocolate',
+        'печенье': 'cookie', 'апельсин': 'orange', 'помидор': 'tomato', 'огурец': 'cucumber',
+        'картофель': 'potato', 'лосось': 'salmon', 'свинина': 'pork', 'говядина': 'beef',
+        'индейка': 'turkey', 'салат': 'salad', 'авокадо': 'avocado', 'груша': 'pear',
+        'киви': 'kiwi', 'мандарин': 'tangerine', 'арбуз': 'watermelon', 'дыня': 'melon',
+        'виноград': 'grapes', 'клубника': 'strawberry', 'малина': 'raspberry',
+        'черника': 'blueberry', 'грибы': 'mushrooms', 'сметана': 'sour cream',
+        'масло': 'butter', 'сахар': 'sugar', 'мед': 'honey', 'орехи': 'nuts',
+        'суши': 'sushi', 'роллы': 'rolls', 'чипсы': 'chips', 'сникерс': 'snickers',
+        'марс': 'mars', 'йогурт': 'yogurt', 'теос': 'teos', 'зеро': 'zero',
+        'кола зеро': 'coca-cola zero', 'кефир': 'kefir'
     }
-}
+    words = query.lower().split()
+    if query.lower() in dictionary:
+        return dictionary[query.lower()]
+    translated = [dictionary.get(w, w) for w in words]
+    return ' '.join(translated)
 
-window.addEventListener('load', async () => {
-    const cachedProfile = localStorage.getItem('cachedProfile');
-    if (cachedProfile) {
-        renderProfile(JSON.parse(cachedProfile));
-    }
-    await syncFoodFromCloud();
-});
+@app.route('/search', methods=['GET'])
+def search_food():
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify({"products": []})
 
-async function loginWithTelegram() {
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        localStorage.setItem('loginType', 'telegram');
-        const tgId = tg.initDataUnsafe.user.id;
-        const tgName = tg.initDataUnsafe.user.first_name || "Атлет";
-        localStorage.setItem('tgId', tgId);
-        localStorage.setItem('userName', tgName);
+    cache_key = query.lower()
+    if cache_key in SEARCH_CACHE:
+        return jsonify({"products": SEARCH_CACHE[cache_key]})
 
-        const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId).maybeSingle();
+    results = []
+    best_match = process.extractOne(query, LOCAL_NAMES, scorer=fuzz.WRatio, score_cutoff=60)
+    if best_match:
+        matched_name = best_match[0]
+        for p in LOCAL_DB:
+            if p["name"] == matched_name:
+                results.append({"product_name": p["name"], "image_url": p["img"], "calories_100g": p["cal"], "proteins_100g": p["prot"], "fat_100g": p["fat"], "carbs_100g": p["carb"], "ingredients": "Точные данные", "description": ""})
+                break
 
-        if (data && data.profile) {
-            localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
-            localStorage.setItem('cachedXP', data.xp || 0);
-            localStorage.setItem('cachedBurned', data.burned || 0);
+    if len(results) == 0:
+        eng_query = translate_to_english(query)
+        try:
+            api_results = api.product.text_search(eng_query, page_size=10)
+            if api_results and 'products' in api_results:
+                for product in api_results['products']:
+                    name = product.get('product_name')
+                    if not name: continue
+                    nutrients = product.get('nutriments', {})
+                    image_url = product.get('image_front_small_url') or product.get('image_url') or DEFAULT_IMG
+                    results.append({"product_name": name, "image_url": image_url, "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1), "proteins_100g": round(nutrients.get('proteins_100g', 0), 1), "fat_100g": round(nutrients.get('fat_100g', 0), 1), "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1), "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан', "description": "Данные Open Food Facts"})
+        except Exception as e: print(f"OFF error: {e}")
+
+    if len(results) == 0 and USDA_API_KEY:
+        eng_query = translate_to_english(query)
+        try:
+            url = f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={USDA_API_KEY}&query={eng_query}&pageSize=5"
+            response = requests.get(url, timeout=10)
+            data = response.json()
+            if 'foods' in data:
+                for food in data['foods']:
+                    nutrients = {n['nutrientName']: n['value'] for n in food.get('foodNutrients', [])}
+                    results.append({"product_name": food.get('description', 'Без названия'), "image_url": DEFAULT_IMG, "calories_100g": round(nutrients.get('Energy', 0), 1), "proteins_100g": round(nutrients.get('Protein', 0), 1), "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1), "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1), "ingredients": "Данные USDA FoodData Central", "description": ""})
+        except Exception as e: print(f"USDA error: {e}")
+
+    for p in results:
+        if not p["image_url"]: p["image_url"] = DEFAULT_IMG
+
+    if results:
+        SEARCH_CACHE[cache_key] = results
+
+    return jsonify({"products": results})
+
+@app.route('/barcode', methods=['GET'])
+def search_by_barcode():
+    barcode = request.args.get('code', '').strip()
+    if not barcode:
+        return jsonify({"products": []})
+        
+    if barcode in BARCODE_CACHE:
+        return jsonify({"products": BARCODE_CACHE[barcode]})
+
+    try:
+        product = api.product.get(barcode)
+        if product and product.get('product_name'):
+            nutrients = product.get('nutriments', {})
+            image_url = product.get('image_front_small_url') or product.get('image_url') or DEFAULT_IMG
+            result = {"product_name": product.get('product_name'), "image_url": image_url, "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1), "proteins_100g": round(nutrients.get('proteins_100g', 0), 1), "fat_100g": round(nutrients.get('fat_100g', 0), 1), "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1), "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан', "description": "Найдено по штрих-коду"}
             
-            // Если в базе есть почта, подтягиваем её в память
-            if (data.email) {
-                localStorage.setItem('linkedEmail', data.email);
-                localStorage.setItem('currentEmail', data.email);
-            } else {
-                localStorage.removeItem('linkedEmail');
-                localStorage.removeItem('currentEmail');
-            }
+            BARCODE_CACHE[barcode] = [result]
+            return jsonify({"products": [result]})
+        return jsonify({"products": []})
+    except Exception as e:
+        print(f"Barcode error: {e}")
+        return jsonify({"products": []})
+
+@app.route('/scan_barcode', methods=['POST'])
+def scan_barcode():
+    if 'image' not in request.files:
+        return jsonify({"error": "No image"}), 400
+    file = request.files['image']
+    
+    try:
+        image_data = file.read()
+        image = Image.open(io.BytesIO(image_data)).convert("RGB")
+        
+        img_byte_arr = io.BytesIO()
+        image.thumbnail((1000, 1000))
+        image.save(img_byte_arr, format='JPEG', quality=85)
+        compressed_image_data = img_byte_arr.getvalue()
+
+        prompt = "Найди штрих-код. Напиши только цифры или 'НЕТ'."
+        
+        response = client.models.generate_content(
+            model='gemini-3.1-flash-lite',
+            contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
+        )
+        
+        barcode_text = response.text.strip()
+        barcode_digits = re.sub(r'\D', '', barcode_text)
+        
+        if len(barcode_digits) >= 8:
+            return jsonify({"barcode": barcode_digits})
+        else:
+            return jsonify({"error": "Barcode not found"}), 404
             
-            if (data.name) localStorage.setItem('userName', data.name);
-            if (data.food) localStorage.setItem('todayFood', JSON.stringify(data.food));
-        } else {
-            const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
-            localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
-            localStorage.setItem('cachedXP', 0);
-            localStorage.setItem('cachedBurned', 0);
-            await saveProgressToCloud(tgId, null, tgName, defaultProfile, 0, 0);
-        }
-        renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
-        await syncFoodFromCloud();
-    } else {
-        tg.showAlert("Откройте через Telegram!");
-    }
-}
+    except Exception as e:
+        print(f"Gemini Barcode error: {e}")
+        return jsonify({"error": "Scan failed"}), 500
 
-function showEmailForm() { openScreen('email-screen'); }
+@app.route('/analyze', methods=['POST'])
+def analyze_photo():
+    if 'image' not in request.files:
+        return jsonify({"food": "Ошибка", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Фото не загружено."}), 400
+    file = request.files['image']
+    try:
+        image_data = file.read()
+        image = Image.open(io.BytesIO(image_data)).convert("RGB")
+    except:
+        return jsonify({"food": "Ошибка", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Не удалось прочитать фото."}), 400
 
-async function handleEmailAuth() {
-    const email = document.getElementById('auth-email').value;
-    const password = document.getElementById('auth-password').value;
-    const btn = document.getElementById('email-submit-btn');
+    try:
+        img_byte_arr = io.BytesIO()
+        image.thumbnail((800, 800))
+        image.save(img_byte_arr, format='JPEG', quality=75)
+        compressed_image_data = img_byte_arr.getvalue()
 
-    if (!email || !password) { tg.showAlert("Заполните все поля!"); return; }
-    btn.innerText = "Загрузка...";
-    btn.disabled = true;
+        # МАКСИМАЛЬНО ЖЕСТКИЙ ПРОМПТ
+        prompt = """
+        Ты — калькулятор калорий. Никаких вступлений, приветствий и лишних слов.
+        Выведи СТРОГО в таком формате:
+        Название | Калории | Белки | Жиры | Углеводы
+        
+        Пример: Чизбургер | 285 | 18 | 19 | 12
+        """
+        
+        response = client.models.generate_content(
+            model='gemini-3.1-flash-lite',
+            contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
+        )
+        
+        # Очищаем от звездочек и прочего мусора
+        clean_text = re.sub(r'[*#_]', '', response.text.strip())
+        parts = [p.strip() for p in clean_text.split('|')]
+        
+        if len(parts) >= 5:
+            cal = int(re.sub(r'\D', '', parts[1])) if re.search(r'\d', parts[1]) else 250
+            prot = int(re.sub(r'\D', '', parts[2])) if re.search(r'\d', parts[2]) else 15
+            fat = int(re.sub(r'\D', '', parts[3])) if re.search(r'\d', parts[3]) else 10
+            carb = int(re.sub(r'\D', '', parts[4])) if re.search(r'\d', parts[4]) else 30
+            
+            return jsonify({
+                "food": parts[0], 
+                "calories": cal, 
+                "protein": prot, 
+                "fat": fat, 
+                "carbs": carb, 
+                "description": "" 
+            })
+        else:
+            return jsonify({"food": "Не удалось", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ не разобрал."})
+            
+    except Exception as e:
+        print(f"Ofox error: {e}")
+        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": f"Ошибка: {str(e)}"})
 
-    try {
-        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-        if (error) {
-            tg.showAlert(error.message.includes("Invalid login credentials") ? "Неверный Email или пароль." : "Ошибка входа: " + error.message);
-        } else {
-            tg.showAlert("Успешный вход!");
-            localStorage.setItem('loginType', 'email');
-            localStorage.setItem('currentEmail', email);
-            const emailName = email.split('@')[0];
-            localStorage.setItem('userName', emailName);
-
-            const { data: linkData } = await supabaseClient.from('user_links').select('*').eq('email', email).maybeSingle();
-
-            if (linkData && linkData.profile) {
-                localStorage.setItem('cachedProfile', JSON.stringify(linkData.profile));
-                localStorage.setItem('cachedXP', linkData.xp || 0);
-                localStorage.setItem('cachedBurned', linkData.burned || 0);
-                
-                // Если в базе есть Telegram ID, подтягиваем его в память
-                if (linkData.telegram_id) {
-                    localStorage.setItem('tgId', linkData.telegram_id);
-                } else {
-                    localStorage.removeItem('tgId');
-                }
-                
-                if (linkData.name) localStorage.setItem('userName', linkData.name);
-                if (linkData.food) localStorage.setItem('todayFood', JSON.stringify(linkData.food));
-            } else {
-                const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
-                localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
-                localStorage.setItem('cachedXP', 0);
-                localStorage.setItem('cachedBurned', 0);
-                await saveProgressToCloud(null, email, emailName, defaultProfile, 0, 0);
-            }
-            renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
-            await syncFoodFromCloud();
-        }
-    } catch (e) {
-        tg.showAlert("Ошибка сети.");
-    } finally {
-        btn.innerText = "Продолжить";
-        btn.disabled = false;
-    }
-}
-
-// --- СИНХРОНИЗАЦИЯ ЕДЫ ---
-async function syncFoodFromCloud() {
-    const tgId = localStorage.getItem('tgId');
-    const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
-    if (!tgId && !email) return;
-
-    let query = supabaseClient.from('user_links').select('food');
-    if (email) query = query.eq('email', email);
-    else if (tgId) query = query.eq('telegram_id', tgId);
-
-    const { data } = await query.maybeSingle();
-    if (data && data.food) {
-        localStorage.setItem('todayFood', JSON.stringify(data.food));
-        updateDashboard();
-    }
-}
-
-async function saveFoodToCloud(foodArray) {
-    const tgId = localStorage.getItem('tgId');
-    const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
-    if (!tgId && !email) return;
-
-    let query = supabaseClient.from('user_links').select('id');
-    if (email) query = query.eq('email', email);
-    else if (tgId) query = query.eq('telegram_id', tgId);
-
-    const { data } = await query.maybeSingle();
-    if (data) {
-        await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', data.id);
-    }
-}
-// -------------------------
-
-async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
-    try {
-        let currentTgId = tgId || localStorage.getItem('tgId');
-        let currentEmail = email || localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
-        let currentName = name || localStorage.getItem('userName') || "Атлет";
-
-        if (!currentTgId && !currentEmail) return;
-
-        let existingId = null;
-        if (currentTgId) {
-            const { data } = await supabaseClient.from('user_links').select('id').eq('telegram_id', currentTgId).maybeSingle();
-            if (data) existingId = data.id;
-        }
-        if (!existingId && currentEmail) {
-            const { data } = await supabaseClient.from('user_links').select('id').eq('email', currentEmail).maybeSingle();
-            if (data) existingId = data.id;
-        }
-
-        if (existingId) {
-            await supabaseClient.from('user_links').update({
-                profile: profile, xp: xp, burned: burned, name: currentName,
-                telegram_id: currentTgId || null, email: currentEmail || null
-            }).eq('id', existingId);
-        } else {
-            await supabaseClient.from('user_links').insert([{
-                telegram_id: currentTgId, email: currentEmail, profile: profile, xp: xp, burned: burned, name: currentName
-            }]);
-        }
-    } catch (e) {
-        console.log("Ошибка сохранения:", e);
-    }
-}
-
-async function syncProgressFromCloud(email, tgId) {
-    try {
-        let query = supabaseClient.from('user_links').select('*');
-        if (email) query = query.eq('email', email);
-        if (tgId) query = query.eq('telegram_id', tgId);
-
-        const { data } = await query.maybeSingle();
-        if (data && data.profile) {
-            localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
-            localStorage.setItem('cachedXP', data.xp || 0);
-            localStorage.setItem('cachedBurned', data.burned || 0);
-            if (data.name) localStorage.setItem('userName', data.name);
-            if (data.telegram_id) localStorage.setItem('tgId', data.telegram_id);
-            if (data.food) localStorage.setItem('todayFood', JSON.stringify(data.food));
-            renderProfile(data.profile);
-        }
-    } catch (e) {
-        console.log("Ошибка загрузки:", e);
-    }
-}
-
-const levelsData = {
-    male: [{ xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" }, { xp: 100, title: "Берсерк", video: "VID_20261028_173215_440.mp4" }],
-    female: [{ xp: 0, title: "Новичок", video: "VID_20261028_175618_746.mp4" }, { xp: 100, title: "Фурия", video: "VID_20261028_175631_701.mp4" }]
-};
-
-let currentXP = 0, totalBurnedCalories = 0, userGender = 'male';
-let currentProfileData = null;
-
-function calculateNutrition(profile) {
-    if (profile.custom_calories && profile.custom_calories > 0) {
-        return { calories: parseInt(profile.custom_calories), protein: parseInt(profile.custom_protein) || 0, fat: parseInt(profile.custom_fat) || 0, carbs: parseInt(profile.custom_carbs) || 0 };
-    }
-    let bmr = profile.gender === 'male' ? (10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) : (10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161);
-    let tdee = bmr * 1.375;
-    if (profile.goal === 'lose') tdee -= 500;
-    if (profile.goal === 'gain') tdee += 500;
-    return { calories: Math.round(tdee), protein: Math.round((tdee * 0.30) / 4), fat: Math.round((tdee * 0.30) / 9), carbs: Math.round((tdee * 0.40) / 4) };
-}
-
-function checkDayReset() {
-    const now = new Date();
-    const today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
-    if (localStorage.getItem('foodListDate') !== today) {
-        localStorage.setItem('todayFood', '[]');
-        localStorage.setItem('foodListDate', today);
-        saveFoodToCloud([]);
-    }
-}
-
-function updateDashboard() {
-    if (!currentProfileData) return;
-    checkDayReset();
-    const norm = calculateNutrition(currentProfileData);
-    let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
-    let eatenCal = 0, eatenProt = 0, eatenFat = 0, eatenCarb = 0;
-    todayFood.forEach(food => {
-        eatenCal += parseFloat(food.calories_100g || 0);
-        eatenProt += parseFloat(food.proteins_100g || 0);
-        eatenFat += parseFloat(food.fat_100g || 0);
-        eatenCarb += parseFloat(food.carbs_100g || 0);
-    });
-    if (document.getElementById('norm-cal')) {
-        document.getElementById('norm-cal').innerText = norm.calories;
-        document.getElementById('norm-prot').innerText = norm.protein;
-        document.getElementById('norm-fat').innerText = norm.fat;
-        document.getElementById('norm-carb').innerText = norm.carbs;
-    }
-    const setValue = (id, eaten, normVal) => {
-        const el = document.getElementById(id);
-        if (el) { el.innerText = Math.round(eaten); el.style.color = (eaten > normVal) ? '#ff3b30' : '#fff'; }
-    };
-    setValue('eaten-cal', eatenCal, norm.calories);
-    setValue('eaten-prot', eatenProt, norm.protein);
-    setValue('eaten-fat', eatenFat, norm.fat);
-    setValue('eaten-carb', eatenCarb, norm.carbs);
-    renderTodayFoodList(todayFood);
-}
-
-function renderTodayFoodList(todayFood) {
-    const listDiv = document.getElementById('today-food-list');
-    if (!listDiv) return;
-    if (todayFood.length === 0) { listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; font-size: 10px;">Пока ничего не съедено</p>'; return; }
-    let html = '';
-    todayFood.forEach((food, index) => {
-        html += `<div class="compact-food-item"><div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%;">${food.product_name}</div><button onclick="deleteFoodItem(${index})" style="background: none; border: none; color: #ff3b30; font-size: 14px; cursor: pointer; padding: 0;">✖</button></div>`;
-    });
-    listDiv.innerHTML = html;
-}
-
-function deleteFoodItem(index) {
-    let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
-    todayFood.splice(index, 1);
-    localStorage.setItem('todayFood', JSON.stringify(todayFood));
-    saveFoodToCloud(todayFood);
-    updateDashboard();
-}
-
-function clearTodayFood() {
-    if (confirm("Очистить весь список съеденного за сегодня?")) {
-        localStorage.setItem('todayFood', '[]');
-        saveFoodToCloud([]);
-        updateDashboard();
-    }
-}
-
-function openCustomNormModal() {
-    if (!currentProfileData) return;
-    document.getElementById('modal-calories').value = currentProfileData.custom_calories || '';
-    document.getElementById('modal-protein').value = currentProfileData.custom_protein || '';
-    document.getElementById('modal-fat').value = currentProfileData.custom_fat || '';
-    document.getElementById('modal-carbs').value = currentProfileData.custom_carbs || '';
-    document.getElementById('norm-modal').classList.add('active');
-}
-
-function closeCustomNormModal() { document.getElementById('norm-modal').classList.remove('active'); }
-
-function saveCustomNormFromModal() {
-    if (!currentProfileData) return;
-    currentProfileData.custom_calories = document.getElementById('modal-calories').value;
-    currentProfileData.custom_protein = document.getElementById('modal-protein').value;
-    currentProfileData.custom_fat = document.getElementById('modal-fat').value;
-    currentProfileData.custom_carbs = document.getElementById('modal-carbs').value;
-    localStorage.setItem('cachedProfile', JSON.stringify(currentProfileData));
-    saveProgressToCloud(localStorage.getItem('tgId'), localStorage.getItem('currentEmail'), localStorage.getItem('userName'), currentProfileData, currentXP, totalBurnedCalories);
-    updateDashboard();
-    closeCustomNormModal();
-}
-
-function renderProfile(profile) {
-    currentProfileData = profile;
-    userGender = profile.gender || 'male';
-    document.body.className = userGender === 'female' ? 'female-theme' : 'male-theme';
-    currentXP = parseInt(localStorage.getItem('cachedXP') || 0);
-    totalBurnedCalories = parseInt(localStorage.getItem('cachedBurned') || 0);
-    if (document.getElementById('burned-total')) document.getElementById('burned-total').innerText = totalBurnedCalories + " ккал";
-    updateDashboard();
-    updateCharacterUI();
-    openScreen('dashboard-screen');
-    setTimeout(() => {
-        const videoElement = document.getElementById('character-video');
-        if (videoElement) {
-            const levels = levelsData[userGender];
-            let newLevelIndex = 0;
-            for (let i = 0; i < levels.length; i++) { if (currentXP >= levels[i].xp) newLevelIndex = i; }
-            const currentLevel = levels[newLevelIndex];
-            if (videoElement.src.indexOf(currentLevel.video) === -1) {
-                videoElement.src = currentLevel.video;
-                videoElement.load();
-                videoElement.play().catch(e => console.log("Autoplay blocked"));
-            }
-        }
-    }, 1000);
-}
-
-function updateCharacterUI() {
-    const levels = levelsData[userGender];
-    let newLevelIndex = 0;
-    for (let i = 0; i < levels.length; i++) { if (currentXP >= levels[i].xp) newLevelIndex = i; }
-    const currentLevel = levels[newLevelIndex];
-    if (document.getElementById('char-level')) document.getElementById('char-level').innerText = "Уровень " + (newLevelIndex + 1);
-    if (document.getElementById('char-title')) document.getElementById('char-title').innerText = currentLevel.title;
-    if (document.getElementById('xp-text')) document.getElementById('xp-text').innerText = currentXP + " XP";
-    let nextLevelXp = 100;
-    if (newLevelIndex + 1 < levels.length) nextLevelXp = levels[newLevelIndex + 1].xp;
-    let percent = (currentXP / nextLevelXp) * 100;
-    if (percent > 100) percent = 100;
-    if (document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = percent + "%";
-}
-
-function openProfileSettings() {
-    const loginType = localStorage.getItem('loginType') || 'telegram';
-    if (loginType === 'telegram') {
-        document.getElementById('link-title').innerText = "Привязка Email";
-        document.getElementById('link-desc').innerText = "Привяжите Email, чтобы заходить с любого устройства.";
-        const linked = localStorage.getItem('linkedEmail');
-        if (linked) {
-            document.getElementById('link-email-form').innerHTML = `<p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ${linked}</p>
-<button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkEmail()">Отвязать Email</button>`;
-        } else {
-            document.getElementById('link-email-form').innerHTML = `
-<div class="form-group" style="margin-bottom: 10px;"><input type="email" id="link-email" placeholder="your@email.com" style="padding: 10px;"></div>
-<div class="form-group" style="margin-bottom: 10px;"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)" style="padding: 10px;"></div>
-<button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkEmailToTelegram()">Привязать Email</button>`;
-        }
-        document.getElementById('link-email-form').style.display = 'block';
-        document.getElementById('link-tg-form').style.display = 'none';
-    } else {
-        document.getElementById('link-title').innerText = "Привязка Telegram";
-        document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона.";
-        const tgId = localStorage.getItem('tgId');
-        if (tgId) {
-            document.getElementById('link-tg-form').innerHTML = `
-<p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ${tgId}</p>
-<button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkTelegram()">Отвязать Telegram</button>`;
-        } else {
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                document.getElementById('link-tg-form').innerHTML = `
-<p style="font-size: 14px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b>${tg.initDataUnsafe.user.id}</b></p>
-<button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkTelegramToEmail()">Привязать Telegram</button>`;
-            }
-        }
-        document.getElementById('link-email-form').style.display = 'none';
-        document.getElementById('link-tg-form').style.display = 'block';
-    }
-    const cachedProfile = localStorage.getItem('cachedProfile');
-    if (cachedProfile) {
-        const p = JSON.parse(cachedProfile);
-        document.getElementById('age').value = p.age || '';
-        document.getElementById('weight').value = p.weight || '';
-        document.getElementById('height').value = p.height || '';
-        document.getElementById('gender').value = p.gender || 'male';
-        document.getElementById('goal').value = p.goal || 'lose';
-        document.getElementById('custom-calories').value = p.custom_calories || '';
-        document.getElementById('custom-protein').value = p.custom_protein || '';
-        document.getElementById('custom-fat').value = p.custom_fat || '';
-        document.getElementById('custom-carbs').value = p.custom_carbs || '';
-    }
-    openScreen('profile-settings-screen');
-}
-
-async function linkEmailToTelegram() {
-    const email = document.getElementById('link-email').value;
-    const password = document.getElementById('link-password').value;
-    if (!email || !password) { tg.showAlert("Заполните Email и пароль!"); return; }
-    const { data: emailCheck } = await supabaseClient.from('user_links').select('telegram_id').eq('email', email).maybeSingle();
-    if (emailCheck && emailCheck.telegram_id && emailCheck.telegram_id !== tg.initDataUnsafe.user.id) {
-        tg.showAlert("Эта почта уже привязана к другому аккаунту Telegram!");
-        return;
-    }
-    try {
-        const { error } = await supabaseClient.auth.signUp({ email, password });
-        if (error && error.message !== "User already registered") {
-            tg.showAlert("Ошибка: " + error.message);
-        } else {
-            localStorage.setItem('linkedEmail', email);
-            localStorage.setItem('currentEmail', email);
-            const tgId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : localStorage.getItem('tgId');
-            const profile = JSON.parse(localStorage.getItem('cachedProfile'));
-            const xp = parseInt(localStorage.getItem('cachedXP') || 0);
-            const burned = parseInt(localStorage.getItem('cachedBurned') || 0);
-            const name = localStorage.getItem('userName') || "Атлет";
-            await saveProgressToCloud(tgId, email, name, profile, xp, burned);
-            tg.showAlert("Email успешно привязан!");
-            openProfileSettings();
-        }
-    } catch (e) { tg.showAlert("Ошибка сети."); }
-}
-
-async function linkTelegramToEmail() {
-    const tgId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : null;
-    const tgName = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.first_name : "Атлет";
-    const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
-    const profile = JSON.parse(localStorage.getItem('cachedProfile'));
-    const xp = parseInt(localStorage.getItem('cachedXP') || 0);
-    const burned = parseInt(localStorage.getItem('cachedBurned') || 0);
-    if (!tgId || !email) { tg.showAlert("Ошибка: не найден Email или Telegram ID."); return; }
-    const { data: tgCheck } = await supabaseClient.from('user_links').select('email').eq('telegram_id', tgId).maybeSingle();
-    if (tgCheck && tgCheck.email && tgCheck.email !== email) {
-        tg.showAlert("Этот Telegram уже привязан к другой почте!");
-        return;
-    }
-    const { data: emailCheck } = await supabaseClient.from('user_links').select('telegram_id').eq('email', email).maybeSingle();
-    if (emailCheck && emailCheck.telegram_id && emailCheck.telegram_id !== tgId) {
-        tg.showAlert("Эта почта уже привязана к другому Telegram!");
-        return;
-    }
-    await saveProgressToCloud(tgId, email, tgName, profile, xp, burned);
-    localStorage.setItem('tgId', tgId);
-    localStorage.setItem('userName', tgName);
-    tg.showAlert("Telegram успешно привязан!");
-    openProfileSettings();
-}
-
-async function unlinkEmail() {
-    if (!confirm("Отвязать Email? Прогресс останется в Telegram.")) return;
-    const tgId = localStorage.getItem('tgId');
-    if (tgId) {
-        const { data } = await supabaseClient.from('user_links').select('id').eq('telegram_id', tgId).maybeSingle();
-        if (data) await supabaseClient.from('user_links').update({ email: null }).eq('id', data.id);
-    }
-    localStorage.removeItem('linkedEmail');
-    localStorage.removeItem('currentEmail');
-    tg.showAlert("Email отвязан.");
-    openProfileSettings();
-}
-
-async function unlinkTelegram() {
-    if (!confirm("Отвязать Telegram? Прогресс останется в Email.")) return;
-    const email = localStorage.getItem('currentEmail');
-    if (email) {
-        const { data } = await supabaseClient.from('user_links').select('id').eq('email', email).maybeSingle();
-        if (data) await supabaseClient.from('user_links').update({ telegram_id: null }).eq('id', data.id);
-    }
-    localStorage.removeItem('tgId');
-    tg.showAlert("Telegram отвязан.");
-    openProfileSettings();
-}
-
-async function saveProfile() {
-    const age = document.getElementById('age').value;
-    const gender = document.getElementById('gender').value;
-    const weight = document.getElementById('weight').value;
-    const height = document.getElementById('height').value;
-    const goal = document.getElementById('goal').value;
-    const custom_calories = document.getElementById('custom-calories').value;
-    const custom_protein = document.getElementById('custom-protein').value;
-    const custom_fat = document.getElementById('custom-fat').value;
-    const custom_carbs = document.getElementById('custom-carbs').value;
-    if (!age || !weight || !height) { tg.showAlert("Заполни все поля!"); return; }
-    const profile = { age, gender, weight, height, goal, custom_calories, custom_protein, custom_fat, custom_carbs };
-    localStorage.setItem('cachedProfile', JSON.stringify(profile));
-    await saveProgressToCloud(localStorage.getItem('tgId'), localStorage.getItem('currentEmail'), localStorage.getItem('userName'), profile, currentXP, totalBurnedCalories);
-    renderProfile(profile);
-    tg.showAlert("Данные сохранены!");
-}
-
-async function logout() {
-    if (confirm("Выйти из аккаунта? Прогресс сохранен.")) { 
-        localStorage.removeItem('cachedProfile');
-        localStorage.removeItem('cachedXP');
-        localStorage.removeItem('cachedBurned');
-        localStorage.removeItem('loginType');
-        await supabaseClient.auth.signOut(); 
-        location.reload(); 
-    }
-}
-
-let isShakeTesting = false; let maxShakeValue = 0;
-async function startShakeTest() {
-    if (isShakeTesting) return;
-    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-        try { const permission = await DeviceMotionEvent.requestPermission(); if (permission !== 'granted') { tg.showAlert("Нет доступа."); return; } } catch (e) { return; }
-    }
-    isShakeTesting = true; maxShakeValue = 0;
-    document.getElementById('test-shake-btn').style.display = 'none'; document.getElementById('stop-shake-btn').style.display = 'block';
-    window.addEventListener('devicemotion', function(event) {
-        if (!isShakeTesting) return;
-        const acc = event.accelerationIncludingGravity;
-        if (acc) { const force = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0); if (Math.round(force) > maxShakeValue) maxShakeValue = Math.round(force); }
-    });
-    tg.showAlert("Тряси телефон!");
-}
-function stopShakeTest() { isShakeTesting = false; document.getElementById('test-shake-btn').style.display = 'block'; document.getElementById('stop-shake-btn').style.display = 'none'; tg.showAlert("Максимум: " + maxShakeValue); }
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
