@@ -211,8 +211,27 @@ function calculateNutrition(profile) {
     };
 }
 
+// НОВАЯ ФУНКЦИЯ СБРОСА ПО МЕСТНОМУ ВРЕМЕНИ
+function checkDayReset() {
+    // Получаем текущую дату в формате ДД.ММ.ГГГГ по часовому поясу телефона
+    const now = new Date();
+    const today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+    
+    const savedDate = localStorage.getItem('foodListDate');
+    
+    // Если дата изменилась (или её еще нет) — очищаем список
+    if (savedDate !== today) {
+        localStorage.setItem('todayFood', '[]');
+        localStorage.setItem('foodListDate', today);
+    }
+}
+
 function updateDashboard() {
     if (!currentProfileData) return;
+    
+    // Проверяем, не наступил ли новый день (по местному времени)
+    checkDayReset();
+
     const norm = calculateNutrition(currentProfileData);
     
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
