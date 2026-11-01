@@ -45,7 +45,7 @@
 <button class="btn" onclick="startCamera('food')">📷 Сделать фото</button>
 <button class="btn" style="background-color: #2c2c2e; color: white;" onclick="document.getElementById('gallery-input').click()">🖼️ Выбрать из галереи</button>
 </div>
-<input type="file" id="gallery-input" accept="image/" style="display: none;" onchange="handleImage(event)">
+<input type="file" id="gallery-input" accept="image/*" style="display: none;" onchange="handleImage(event)">
 <div id="camera-container" style="display: none;">
 <button id="switch-camera-btn" onclick="switchCamera()">🔄</button>
 <button id="close-camera-btn" onclick="resetCameraScreen()">✖</button>
@@ -56,22 +56,22 @@
 <button class="btn" id="remove-photo-btn" style="display: none; background-color: #ff3b30; color: white; margin-bottom: 10px;" onclick="resetCameraScreen()">❌ Удалить фото</button>
 <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px; font-size: 18px;">🤖 ИИ анализирует фото...</div>
 <div id="food-result" style="display: none;" class="result-card">
-<h2 id="food-name" class="result-title">Название</h2>
-<div class="macro-box">
-<div class="macro-row"><span>Калории:</span> <b id="food-calories">0 ккал</b></div>
-<div class="macro-row"><span>Белки:</span> <b id="food-protein">0 г</b></div>
-<div class="macro-row"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
-<div class="macro-row"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
-</div>
-<button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="saveFoodAndGoBack()">Добавить (+20 XP)</button>
-<button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 10px;" onclick="resetCameraScreen()">Отмена</button>
+    <h2 id="food-name" class="result-title">Название</h2>
+    <div class="macro-box">
+        <div class="macro-row"><span>Калории:</span> <b id="food-calories">0 ккал</b></div>
+        <div class="macro-row"><span>Белки:</span> <b id="food-protein">0 г</b></div>
+        <div class="macro-row"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
+        <div class="macro-row"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
+    </div>
+    <button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="saveFoodAndGoBack()">Добавить (+20 XP)</button>
+    <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 10px;" onclick="resetCameraScreen()">Отмена</button>
 </div>
 </div>
 <div id="tab-barcode" class="tab-content">
 <p style="text-align: center; color: #8e8e93; margin-bottom: 20px;">Сфотографируйте штрих-код или введите вручную</p>
 <div id="barcode-buttons">
 <button class="btn" style="margin-bottom: 10px;" onclick="startBarcodeCamera()">📷 Открыть камеру</button>
-<input type="file" id="barcode-gallery-input" accept="image/" style="display: none;" onchange="handleBarcodeImage(event)">
+<input type="file" id="barcode-gallery-input" accept="image/*" style="display: none;" onchange="handleBarcodeImage(event)">
 <button class="btn" style="background-color: #2c2c2e; color: white; margin-bottom: 10px;" onclick="document.getElementById('barcode-gallery-input').click()">🖼️ Выбрать из галереи</button>
 </div>
 <div class="form-group" style="margin-top: 20px;">
@@ -111,248 +111,253 @@ tg.ready(); tg.expand();
 let selectedFoodData = null; window.foodList = [];
 
 function switchTab(tabName) {
-document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-document.getElementById('tab-' + tabName).classList.add('active');
-event.target.classList.add('active');
-stopCamera(); stopBarcodeCamera();
-if (tabName === 'photo') resetCameraScreen();
-if (tabName === 'barcode') resetBarcodeScreen();
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tabName).classList.add('active');
+    event.target.classList.add('active');
+    stopCamera(); stopBarcodeCamera();
+    if (tabName === 'photo') resetCameraScreen();
+    if (tabName === 'barcode') resetBarcodeScreen();
 }
 
 async function searchFood() {
-const query = document.getElementById('food-search-input').value;
-if (!query) return;
-const resultDiv = document.getElementById('search-result');
-resultDiv.innerHTML = '<p style="text-align:center;">Поиск...</p>';
-try {
-const response = await fetch(${AI_SERVER_URL}/search?q=${encodeURIComponent(query)});
-const data = await response.json();
-if (data.products && data.products.length > 0) {
-window.foodList = data.products;
-let html = '';
-data.products.forEach((p, index) => {
-let imgHtml = p.image_url ? <img src="${p.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 15px;">:<div style="width: 50px; height: 50px; background: #2c2c2e; border-radius: 8px; margin-right: 15px;"></div>; html +=<div class="leaderboard-item" style="cursor: pointer; margin-bottom: 10px;" onclick="openFoodModal(${index})"&gt;${imgHtml}<div class="user-info"><p style="margin:0; font-weight:bold; font-size:15px;">${p.product_name}&lt;/p&gt;&lt;p style="margin:0; font-size:12px; color:#8e8e93;"&gt;${p.calories_100g || 0} ккал на 100г</p></div></div>`;
-});
-resultDiv.innerHTML = html;
-} else {
-resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ничего не найдено.</p>';
-}
-} catch (e) { resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ошибка связи</p>'; }
+    const query = document.getElementById('food-search-input').value;
+    if (!query) return;
+    const resultDiv = document.getElementById('search-result');
+    resultDiv.innerHTML = '<p style="text-align:center;">Поиск...</p>';
+    try {
+        const response = await fetch(`${AI_SERVER_URL}/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        if (data.products && data.products.length > 0) {
+            window.foodList = data.products;
+            let html = '';
+            data.products.forEach((p, index) => {
+                let imgHtml = p.image_url ? `<img src="${p.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 15px;">` : `<div style="width: 50px; height: 50px; background: #2c2c2e; border-radius: 8px; margin-right: 15px;"></div>`;
+                html += `<div class="leaderboard-item" style="cursor: pointer; margin-bottom: 10px;" onclick="openFoodModal(${index})">${imgHtml}<div class="user-info"><p style="margin:0; font-weight:bold; font-size:15px;">${p.product_name}</p><p style="margin:0; font-size:12px; color:#8e8e93;">${p.calories_100g || 0} ккал на 100г</p></div></div>`;
+            });
+            resultDiv.innerHTML = html;
+        } else {
+            resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ничего не найдено.</p>';
+        }
+    } catch (e) { resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ошибка связи</p>'; }
 }
 
 async function searchByBarcode() {
-const code = document.getElementById('barcode-input').value.trim();
-if (!code) { tg.showAlert("Введите штрих-код!"); return; }
-const resultDiv = document.getElementById('barcode-result');
-resultDiv.innerText = "Поиск...";
-try {
-const response = await fetch(``${AI_SERVER_URL}/barcode?code=${code});
-const data = await response.json();
-if (data.products && data.products.length > 0) {
-window.foodList = data.products; openFoodModal(0); resultDiv.innerText = "";
-} else { resultDiv.innerText = "Продукт не найден."; }
-} catch (e) { resultDiv.innerText = "Ошибка сервера."; }
+    const code = document.getElementById('barcode-input').value.trim();
+    if (!code) { tg.showAlert("Введите штрих-код!"); return; }
+    const resultDiv = document.getElementById('barcode-result');
+    resultDiv.innerText = "Поиск...";
+    try {
+        const response = await fetch(`${AI_SERVER_URL}/barcode?code=${code}`);
+        const data = await response.json();
+        if (data.products && data.products.length > 0) {
+            window.foodList = data.products; openFoodModal(0); resultDiv.innerText = "";
+        } else { resultDiv.innerText = "Продукт не найден."; }
+    } catch (e) { resultDiv.innerText = "Ошибка сервера."; }
 }
 
 let barcodeStream = null; let barcodeFacingMode = "environment";
 
 async function startBarcodeCamera() {
-try {
-document.getElementById('barcode-buttons').style.display = 'none';
-document.getElementById('barcode-camera-container').style.display = 'flex';
-barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: barcodeFacingMode } });
-document.getElementById('barcode-camera-video').srcObject = barcodeStream;
-} catch (err) { tg.showAlert("Ошибка камеры."); resetBarcodeScreen(); }
+    try {
+        document.getElementById('barcode-buttons').style.display = 'none';
+        document.getElementById('barcode-camera-container').style.display = 'flex';
+        barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: barcodeFacingMode } });
+        document.getElementById('barcode-camera-video').srcObject = barcodeStream;
+    } catch (err) { tg.showAlert("Ошибка камеры."); resetBarcodeScreen(); }
 }
 
 async function switchBarcodeCamera() {
-barcodeFacingMode = barcodeFacingMode === "environment" ? "user" : "environment";
-stopBarcodeCamera(); await startBarcodeCamera();
+    barcodeFacingMode = barcodeFacingMode === "environment" ? "user" : "environment";
+    stopBarcodeCamera(); await startBarcodeCamera();
 }
 
 function takeBarcodePhoto() {
-if (!barcodeStream) return;
-const video = document.getElementById('barcode-camera-video');
-const canvas = document.createElement('canvas');
-canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-canvas.getContext('2d').drawImage(video, 0, 0);
-stopBarcodeCamera();
-canvas.toBlob(async function(blob) {
-const file = new File([blob], "barcode.jpg", { type: "image/jpeg" });
-await sendBarcodeToServer(file);
-}, 'image/jpeg', 0.8);
+    if (!barcodeStream) return;
+    const video = document.getElementById('barcode-camera-video');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    stopBarcodeCamera();
+    canvas.toBlob(async function(blob) {
+        const file = new File([blob], "barcode.jpg", { type: "image/jpeg" });
+        await sendBarcodeToServer(file);
+    }, 'image/jpeg', 0.8);
 }
 
 function stopBarcodeCamera() {
-if (barcodeStream) { barcodeStream.getTracks().forEach(track => track.stop()); barcodeStream = null; }
-document.getElementById('barcode-camera-container').style.display = 'none';
+    if (barcodeStream) { barcodeStream.getTracks().forEach(track => track.stop()); barcodeStream = null; }
+    document.getElementById('barcode-camera-container').style.display = 'none';
 }
 
 function resetBarcodeScreen() {
-stopBarcodeCamera();
-document.getElementById('barcode-buttons').style.display = 'block';
-document.getElementById('barcode-result').innerText = "";
+    stopBarcodeCamera();
+    document.getElementById('barcode-buttons').style.display = 'block';
+    document.getElementById('barcode-result').innerText = "";
 }
 
 async function sendBarcodeToServer(file) {
-const resultDiv = document.getElementById('barcode-result');
-resultDiv.innerText = "Распознавание...";
-const formData = new FormData();
-formData.append('image', file);
-try {
-const response = await fetch(${AI_SERVER_URL}/scan_barcode`, { method: 'POST', body: formData }); const data = await response.json(); if (data.barcode) { resultDiv.innerText = `Найден: $`{data.barcode}. Загрузка...`; const productResponse = await fetch(${AI_SERVER_URL}/barcode?code=${data.barcode});
-const productData = await productResponse.json();
-if (productData.products && productData.products.length > 0) {
-window.foodList = productData.products;
-openFoodModal(0);
-resultDiv.innerText = "";
-} else { resultDiv.innerText = "Продукт не найден в базе."; }
-} else { resultDiv.innerText = "Штрих-код не распознан."; }
-} catch (e) { resultDiv.innerText = "Ошибка сервера."; }
-resetBarcodeScreen();
+    const resultDiv = document.getElementById('barcode-result');
+    resultDiv.innerText = "Распознавание...";
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+        const response = await fetch(`${AI_SERVER_URL}/scan_barcode`, { method: 'POST', body: formData });
+        const data = await response.json();
+        if (data.barcode) {
+            resultDiv.innerText = `Найден: ${data.barcode}. Загрузка...`;
+            const productResponse = await fetch(`${AI_SERVER_URL}/barcode?code=${data.barcode}`);
+            const productData = await productResponse.json();
+            if (productData.products && productData.products.length > 0) {
+                window.foodList = productData.products;
+                openFoodModal(0);
+                resultDiv.innerText = "";
+            } else { resultDiv.innerText = "Продукт не найден в базе."; }
+        } else { resultDiv.innerText = "Штрих-код не распознан."; }
+    } catch (e) { resultDiv.innerText = "Ошибка сервера."; }
+    resetBarcodeScreen();
 }
 
 async function handleBarcodeImage(event) {
-const file = event.target.files[0];
-if (!file) return;
-await sendBarcodeToServer(file);
-event.target.value = "";
+    const file = event.target.files[0];
+    if (!file) return;
+    await sendBarcodeToServer(file);
+    event.target.value = "";
 }
 
 function openFoodModal(index) {
-const food = window.foodList[index];
-selectedFoodData = food;
-document.getElementById('modal-name').innerText = food.product_name;
-document.getElementById('modal-calories').innerText = (food.calories_100g || 0) + " ккал";
-document.getElementById('modal-protein').innerText = (food.proteins_100g || 0) + " г";
-document.getElementById('modal-fat').innerText = (food.fat_100g || 0) + " г";
-document.getElementById('modal-carbs').innerText = (food.carbs_100g || 0) + " г";
-const imgElement = document.getElementById('modal-image');
-if (food.image_url) { imgElement.src = food.image_url; imgElement.style.display = 'block'; } else { imgElement.style.display = 'none'; }
-document.getElementById('food-modal').classList.add('active');
+    const food = window.foodList[index];
+    selectedFoodData = food;
+    document.getElementById('modal-name').innerText = food.product_name;
+    document.getElementById('modal-calories').innerText = (food.calories_100g || 0) + " ккал";
+    document.getElementById('modal-protein').innerText = (food.proteins_100g || 0) + " г";
+    document.getElementById('modal-fat').innerText = (food.fat_100g || 0) + " г";
+    document.getElementById('modal-carbs').innerText = (food.carbs_100g || 0) + " г";
+    const imgElement = document.getElementById('modal-image');
+    if (food.image_url) { imgElement.src = food.image_url; imgElement.style.display = 'block'; } else { imgElement.style.display = 'none'; }
+    document.getElementById('food-modal').classList.add('active');
 }
 function closeModal() { document.getElementById('food-modal').classList.remove('active'); }
 
 function confirmFoodSelection() {
-if (!selectedFoodData) return;
-let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
-todayFood.push(selectedFoodData);
-localStorage.setItem('todayFood', JSON.stringify(todayFood));
+    if (!selectedFoodData) return;
+    let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
+    todayFood.push(selectedFoodData);
+    localStorage.setItem('todayFood', JSON.stringify(todayFood));
 
-if (typeof saveFoodToCloud === 'function') {
-saveFoodToCloud(todayFood);
-}
+    if (typeof saveFoodToCloud === 'function') {
+        saveFoodToCloud(todayFood);
+    }
 
-document.getElementById('food-result').style.display = 'block';
-document.getElementById('food-name').innerText = selectedFoodData.product_name;
-document.getElementById('food-calories').innerText = (selectedFoodData.calories_100g || 0) + " ккал/100г";
-document.getElementById('food-protein').innerText = (selectedFoodData.proteins_100g || 0) + " г";
-document.getElementById('food-fat').innerText = (selectedFoodData.fat_100g || 0) + " г";
-document.getElementById('food-carbs').innerText = (selectedFoodData.carbs_100g || 0) + " г";
+    document.getElementById('food-result').style.display = 'block';
+    document.getElementById('food-name').innerText = selectedFoodData.product_name;
+    document.getElementById('food-calories').innerText = (selectedFoodData.calories_100g || 0) + " ккал/100г";
+    document.getElementById('food-protein').innerText = (selectedFoodData.proteins_100g || 0) + " г";
+    document.getElementById('food-fat').innerText = (selectedFoodData.fat_100g || 0) + " г";
+    document.getElementById('food-carbs').innerText = (selectedFoodData.carbs_100g || 0) + " г";
 
-closeModal();
-document.getElementById('search-result').innerHTML = '';
-tg.showAlert("Добавлено в дневник питания!");
+    closeModal();
+    document.getElementById('search-result').innerHTML = '';
+    tg.showAlert("Добавлено в дневник питания!");
 }
 
 let videoStream = null; let currentFacingMode = "environment";
 
 async function startCamera() {
-try {
-document.getElementById('photo-buttons').style.display = 'none';
-document.getElementById('camera-container').style.display = 'flex';
-videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
-document.getElementById('camera-video').srcObject = videoStream;
-} catch (err) { tg.showAlert("Ошибка камеры."); resetCameraScreen(); }
+    try {
+        document.getElementById('photo-buttons').style.display = 'none';
+        document.getElementById('camera-container').style.display = 'flex';
+        videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
+        document.getElementById('camera-video').srcObject = videoStream;
+    } catch (err) { tg.showAlert("Ошибка камеры."); resetCameraScreen(); }
 }
 
 async function switchCamera() {
-currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
-stopCamera(); await startCamera();
+    currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+    stopCamera(); await startCamera();
 }
 
 function takePhoto() {
-if (!videoStream) return;
-const video = document.getElementById('camera-video');
-const canvas = document.createElement('canvas');
-canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-canvas.getContext('2d').drawImage(video, 0, 0);
-stopCamera();
-canvas.toBlob(async function(blob) {
-const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-document.getElementById('photo-preview').src = URL.createObjectURL(blob);
-document.getElementById('photo-preview').style.display = 'block';
-document.getElementById('remove-photo-btn').style.display = 'block';
-await sendPhotoToServer(file);
-}, 'image/jpeg', 0.8);
+    if (!videoStream) return;
+    const video = document.getElementById('camera-video');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    stopCamera();
+    canvas.toBlob(async function(blob) {
+        const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+        document.getElementById('photo-preview').src = URL.createObjectURL(blob);
+        document.getElementById('photo-preview').style.display = 'block';
+        document.getElementById('remove-photo-btn').style.display = 'block';
+        await sendPhotoToServer(file);
+    }, 'image/jpeg', 0.8);
 }
 
 function stopCamera() {
-if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); videoStream = null; }
-document.getElementById('camera-container').style.display = 'none';
+    if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); videoStream = null; }
+    document.getElementById('camera-container').style.display = 'none';
 }
 
 function resetCameraScreen() {
-stopCamera();
-document.getElementById('photo-preview').style.display = 'none';
-document.getElementById('food-result').style.display = 'none';
-document.getElementById('photo-buttons').style.display = 'block';
-document.getElementById('remove-photo-btn').style.display = 'none';
-document.getElementById('loading-spinner').style.display = 'none';
-document.getElementById('gallery-input').value = "";
-document.getElementById('search-result').innerHTML = '';
-closeModal();
+    stopCamera();
+    document.getElementById('photo-preview').style.display = 'none';
+    document.getElementById('food-result').style.display = 'none';
+    document.getElementById('photo-buttons').style.display = 'block';
+    document.getElementById('remove-photo-btn').style.display = 'none';
+    document.getElementById('loading-spinner').style.display = 'none';
+    document.getElementById('gallery-input').value = "";
+    document.getElementById('search-result').innerHTML = '';
+    closeModal();
 }
 
 async function handleImage(event) {
-const file = event.target.files[0];
-if (!file) return;
-document.getElementById('photo-buttons').style.display = 'none';
-document.getElementById('photo-preview').src = URL.createObjectURL(file);
-document.getElementById('photo-preview').style.display = 'block';
-document.getElementById('remove-photo-btn').style.display = 'block';
-await sendPhotoToServer(file);
+    const file = event.target.files[0];
+    if (!file) return;
+    document.getElementById('photo-buttons').style.display = 'none';
+    document.getElementById('photo-preview').src = URL.createObjectURL(file);
+    document.getElementById('photo-preview').style.display = 'block';
+    document.getElementById('remove-photo-btn').style.display = 'block';
+    await sendPhotoToServer(file);
 }
 
 async function sendPhotoToServer(file) {
-document.getElementById('loading-spinner').style.display = 'block';
-document.getElementById('food-result').style.display = 'none';
-const formData = new FormData();
-formData.append('image', file);
-try {
-const response = await fetch(``${AI_SERVER_URL}/analyze`, { method: 'POST', body: formData });
-const data = await response.json();
-document.getElementById('loading-spinner').style.display = 'none';
-if (data.food !== "Не удалось распознать" && data.food !== "Ошибка ИИ") {
-selectedFoodData = { product_name: data.food, calories_100g: data.calories, proteins_100g: data.protein, fat_100g: data.fat, carbs_100g: data.carbs };
-document.getElementById('food-result').style.display = 'block';
-document.getElementById('food-name').innerText = data.food;
-document.getElementById('food-calories').innerText = data.calories + " ккал";
-document.getElementById('food-protein').innerText = data.protein + " г";
-document.getElementById('food-fat').innerText = data.fat + " г";
-document.getElementById('food-carbs').innerText = data.carbs + " г";
-} else {
-tg.showAlert(data.description || "ИИ не смог распознать еду.");
-resetCameraScreen();
-}
-} catch (error) {
-document.getElementById('loading-spinner').style.display = 'none';
-tg.showAlert("Сервер не отвечает.");
-resetCameraScreen();
-}
+    document.getElementById('loading-spinner').style.display = 'block';
+    document.getElementById('food-result').style.display = 'none';
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+        const response = await fetch(`${AI_SERVER_URL}/analyze`, { method: 'POST', body: formData });
+        const data = await response.json();
+        document.getElementById('loading-spinner').style.display = 'none';
+        if (data.food !== "Не удалось распознать" && data.food !== "Ошибка ИИ") {
+            selectedFoodData = { product_name: data.food, calories_100g: data.calories, proteins_100g: data.protein, fat_100g: data.fat, carbs_100g: data.carbs };
+            document.getElementById('food-result').style.display = 'block';
+            document.getElementById('food-name').innerText = data.food;
+            document.getElementById('food-calories').innerText = data.calories + " ккал";
+            document.getElementById('food-protein').innerText = data.protein + " г";
+            document.getElementById('food-fat').innerText = data.fat + " г";
+            document.getElementById('food-carbs').innerText = data.carbs + " г";
+        } else {
+            tg.showAlert(data.description || "ИИ не смог распознать еду.");
+            resetCameraScreen();
+        }
+    } catch (error) {
+        document.getElementById('loading-spinner').style.display = 'none';
+        tg.showAlert("Сервер не отвечает.");
+        resetCameraScreen();
+    }
 }
 
 function saveFoodAndGoBack() {
-if (!selectedFoodData) return;
-let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
-todayFood.push(selectedFoodData);
-localStorage.setItem('todayFood', JSON.stringify(todayFood));
-if (typeof saveFoodToCloud === 'function') {
-saveFoodToCloud(todayFood);
-}
-localStorage.setItem('pendingXP', '20');
-window.location.replace('index.html');
+    if (!selectedFoodData) return;
+    let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
+    todayFood.push(selectedFoodData);
+    localStorage.setItem('todayFood', JSON.stringify(todayFood));
+    if (typeof saveFoodToCloud === 'function') {
+        saveFoodToCloud(todayFood);
+    }
+    localStorage.setItem('pendingXP', '20');
+    window.location.replace('index.html');
 }
 </script>
 </body>
