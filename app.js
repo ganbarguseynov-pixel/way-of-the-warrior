@@ -118,7 +118,6 @@ async function handleEmailAuth() {
     }
 }
 
-// --- СИНХРОНИЗАЦИЯ ЕДЫ ---
 async function syncFoodFromCloud() {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
@@ -149,7 +148,6 @@ async function saveFoodToCloud(foodArray) {
         await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', data.id);
     }
 }
-// -------------------------
 
 async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
     try {
@@ -181,27 +179,6 @@ async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
         }
     } catch (e) {
         console.log("Ошибка сохранения:", e);
-    }
-}
-
-async function syncProgressFromCloud(email, tgId) {
-    try {
-        let query = supabaseClient.from('user_links').select('*');
-        if (email) query = query.eq('email', email);
-        if (tgId) query = query.eq('telegram_id', tgId);
-
-        const { data } = await query.maybeSingle();
-        if (data && data.profile) {
-            localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
-            localStorage.setItem('cachedXP', data.xp || 0);
-            localStorage.setItem('cachedBurned', data.burned || 0);
-            if (data.name) localStorage.setItem('userName', data.name);
-            if (data.telegram_id) localStorage.setItem('tgId', data.telegram_id);
-            if (data.food) localStorage.setItem('todayFood', JSON.stringify(data.food));
-            renderProfile(data.profile);
-        }
-    } catch (e) {
-        console.log("Ошибка загрузки:", e);
     }
 }
 
@@ -267,7 +244,6 @@ function renderTodayFoodList(todayFood) {
     const listDiv = document.getElementById('today-food-list');
     if (!listDiv) return;
     if (todayFood.length === 0) { listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; font-size: 10px;">Пока ничего не съедено</p>'; return; }
-    
     let html = '';
     todayFood.forEach((food, index) => {
         html += `<div class="compact-food-item"><div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%;">${food.product_name}</div><button onclick="deleteFoodItem(${index})" style="background: none; border: none; color: #ff3b30; font-size: 14px; cursor: pointer; padding: 0;">✖</button></div>`;
