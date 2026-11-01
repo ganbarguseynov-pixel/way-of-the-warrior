@@ -19,115 +19,12 @@ function closeScreen(screenId) {
     }
 }
 
-window.addEventListener('load', async () => {
-    const cachedProfile = localStorage.getItem('cachedProfile');
-    if (cachedProfile) {
-        renderProfile(JSON.parse(cachedProfile));
-        await syncFoodFromCloud();
-    } else {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session) {
-            localStorage.setItem('loginType', 'email');
-            localStorage.setItem('currentEmail', session.user.email);
-            await syncProgressFromCloud(session.user.email, null);
-        }
-    }
-});
-
-async function loginWithTelegram() {
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        localStorage.setItem('loginType', 'telegram');
-        const tgId = tg.initDataUnsafe.user.id;
-        const tgName = tg.initDataUnsafe.user.first_name || "Атлет";
-        localStorage.setItem('tgId', tgId);
-        localStorage.setItem('userName', tgName);
-
-        const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId).maybeSingle();
-
-        if (data && data.profile) {
-            localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
-            localStorage.setItem('cachedXP', data.xp || 0);
-            localStorage.setItem('cachedBurned', data.burned || 0);
-            if (data.email) {
-                localStorage.setItem('linkedEmail', data.email);
-                localStorage.setItem('currentEmail', data.email);
-            } else {
-                localStorage.removeItem('linkedEmail');
-                localStorage.removeItem('currentEmail');
-            }
-            if (data.name) localStorage.setItem('userName', data.name);
-            if (data.food) localStorage.setItem('todayFood', JSON.stringify(data.food));
-        } else {
-            const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
-            localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
-            localStorage.setItem('cachedXP', 0);
-            localStorage.setItem('cachedBurned', 0);
-            await saveProgressToCloud(tgId, null, tgName, defaultProfile, 0, 0);
-        }
-        renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
-        await syncFoodFromCloud();
-    } else {
-        tg.showAlert("Откройте через Telegram!");
-    }
-}
-
-function showEmailForm() { openScreen('email-screen'); }
-
-async function handleEmailAuth() {
-    const email = document.getElementById('auth-email').value;
-    const password = document.getElementById('auth-password').value;
-    const btn = document.getElementById('email-submit-btn');
-
-    if (!email || !password) { tg.showAlert("Заполните все поля!"); return; }
-    btn.innerText = "Загрузка...";
-    btn.disabled = true;
-
-    try {
-        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-        if (error) {
-            tg.showAlert(error.message.includes("Invalid login credentials") ? "Неверный Email или пароль." : "Ошибка входа: " + error.message);
-        } else {
-            tg.showAlert("Успешный вход!");
-            localStorage.setItem('loginType', 'email');
-            localStorage.setItem('currentEmail', email);
-            const emailName = email.split('@')[0];
-            localStorage.setItem('userName', emailName);
-
-            const { data: linkData } = await supabaseClient.from('user_links').select('*').eq('email', email).maybeSingle();
-
-            if (linkData && linkData.profile) {
-                localStorage.setItem('cachedProfile', JSON.stringify(linkData.profile));
-                localStorage.setItem('cachedXP', linkData.xp || 0);
-                localStorage.setItem('cachedBurned', linkData.burned || 0);
-                if (linkData.telegram_id) {
-                    localStorage.setItem('tgId', linkData.telegram_id);
-                } else {
-                    localStorage.removeItem('tgId');
-                }
-                if (linkData.name) localStorage.setItem('userName', linkData.name);
-                if (linkData.food) localStorage.setItem('todayFood', JSON.stringify(linkData.food));
-            } else {
-                const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
-                localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
-                localStorage.setItem('cachedXP', 0);
-                localStorage.setItem('cachedBurned', 0);
-                await saveProgressToCloud(null, email, emailName, defaultProfile, 0, 0);
-            }
-            renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
-            await syncFoodFromCloud();
-        }
-    } catch (e) {
-        tg.showAlert("Ошибка сети.");
-    } finally {
-        btn.innerText = "Продолжить";
-        btn.disabled = false;
-    }
-}
-
+// --- СИНХРОНИЗАЦИЯ ЕДЫ ---
+// Ищем пользователя по email или telegram_id, чтобы в любом случае найти его запись
 async function syncFoodFromCloud() {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
+    
     if (!tgId && !email) return;
 
     let query = supabaseClient.from('user_links').select('food');
@@ -153,6 +50,94 @@ async function saveFoodToCloud(foodArray) {
     const { data } = await query.maybeSingle();
     if (data) {
         await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', data.id);
+    }
+}
+// -------------------------
+
+window.addEventListener('load', async () => {
+    const cachedProfile = localStorage.getItem('cachedProfile');
+    if (cachedProfile) {
+        renderProfile(JSON.parse(cachedProfile));
+        await syncFoodFromCloud();
+    }
+});
+
+async function loginWithTelegram() {
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        localStorage.setItem('loginType', 'telegram');
+        const tgId = tg.initDataUnsafe.user.id;
+        const tgName = tg.initDataUnsafe.user.first_name || "Атлет";
+        localStorage.setItem('tgId', tgId);
+        localStorage.setItem('userName', tgName);
+
+        // Ищем по Telegram ID (если он привязан к почте, то найдет ту же строку)
+        const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId).maybeSingle();
+
+        if (data && data.profile) {
+            localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
+            localStorage.setItem('cachedXP', data.xp || 0);
+            localStorage.setItem('cachedBurned', data.burned || 0);
+            if (data.email) {
+                localStorage.setItem('linkedEmail', data.email);
+                localStorage.setItem('currentEmail', data.email);
+            }
+            if (data.name) localStorage.setItem('userName', data.name);
+            if (data.food) localStorage.setItem('todayFood', JSON.stringify(data.food));
+        } else {
+            const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
+            localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
+            await saveProgressToCloud(tgId, null, tgName, defaultProfile, 0, 0);
+        }
+        renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
+        await syncFoodFromCloud(); 
+    } else {
+        tg.showAlert("Откройте через Telegram!");
+    }
+}
+
+function showEmailForm() { openScreen('email-screen'); }
+
+async function handleEmailAuth() {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    const btn = document.getElementById('email-submit-btn');
+
+    if (!email || !password) { tg.showAlert("Заполните все поля!"); return; }
+    btn.innerText = "Загрузка...";
+    btn.disabled = true;
+
+    try {
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) {
+            tg.showAlert(error.message.includes("Invalid login credentials") ? "Неверный Email или пароль." : "Ошибка входа: " + error.message);
+        } else {
+            tg.showAlert("Успешный вход!");
+            localStorage.setItem('loginType', 'email');
+            localStorage.setItem('currentEmail', email);
+            localStorage.setItem('userName', email.split('@')[0]);
+
+            const { data: linkData } = await supabaseClient.from('user_links').select('*').eq('email', email).maybeSingle();
+
+            if (linkData && linkData.profile) {
+                localStorage.setItem('cachedProfile', JSON.stringify(linkData.profile));
+                localStorage.setItem('cachedXP', linkData.xp || 0);
+                localStorage.setItem('cachedBurned', linkData.burned || 0);
+                if (linkData.telegram_id) localStorage.setItem('tgId', linkData.telegram_id);
+                if (linkData.name) localStorage.setItem('userName', linkData.name);
+                if (linkData.food) localStorage.setItem('todayFood', JSON.stringify(linkData.food));
+            } else {
+                const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
+                localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
+                await saveProgressToCloud(null, email, email.split('@')[0], defaultProfile, 0, 0);
+            }
+            renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
+            await syncFoodFromCloud();
+        }
+    } catch (e) {
+        tg.showAlert("Ошибка сети.");
+    } finally {
+        btn.innerText = "Продолжить";
+        btn.disabled = false;
     }
 }
 
@@ -395,6 +380,7 @@ async function logout() {
     if (confirm("Выйти из аккаунта?")) { localStorage.clear(); await supabaseClient.auth.signOut(); location.reload(); }
 }
 
+// --- ТЕСТ ТРЯСКИ ---
 let isShakeTesting = false; let maxShakeValue = 0;
 async function startShakeTest() {
     if (isShakeTesting) return;
