@@ -269,7 +269,7 @@ if (!listDiv) return;
 if (todayFood.length === 0) { listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; font-size: 10px;">Пока ничего не съедено</p>'; return; }
 let html = '';
 todayFood.forEach((food, index) => {
-html += <div class="compact-food-item"&gt;&lt;div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%;"&gt;${food.product_name}</div><button onclick="deleteFoodItem(${index})" style="background: none; border: none; color: #ff3b30; font-size: 14px; cursor: pointer; padding: 0;"&gt;✖&lt;/button&gt;&lt;/div>;
+html += <div class="compact-food-item"><div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%;"> {index})" style="background: none; border: none; color: #ff3b30; font-size: 14px; cursor: pointer; padding: 0;">✖</button></div>;
 });
 listDiv.innerHTML = html;
 }
@@ -361,15 +361,13 @@ document.getElementById('link-title').innerText = "Привязка Email";
 document.getElementById('link-desc').innerText = "Привяжите Email, чтобы заходить с любого устройства.";
 const linked = localStorage.getItem('linkedEmail');
 if (linked) {
-document.getElementById('link-email-form').innerHTML = <p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;"&gt;✅ Email привязан: ${linked}</p>
-<button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkEmail()">Отвязать Email</button>; } else { document.getElementById('link-email-form').innerHTML =
-<div class="form-group" style="margin-bottom: 10px;"><input type="email" id="link-email" placeholder="your@email.com" style="padding: 10px;"></div>
-<div class="form-group" style="margin-bottom: 10px;"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)" style="padding: 10px;"></div>
-<button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkEmailToTelegram()">Привязать Email</button>; } document.getElementById('link-email-form').style.display = 'block'; document.getElementById('link-tg-form').style.display = 'none'; } else { document.getElementById('link-title').innerText = "Привязка Telegram"; document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона."; const tgId = localStorage.getItem('tgId'); if (tgId) { document.getElementById('link-tg-form').innerHTML =
-<p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ${tgId}&lt;/p&gt; &lt;button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkTelegram()"&gt;Отвязать Telegram&lt;/button>;
+document.getElementById('link-email-form').innerHTML = <p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Email привязан: latex
+{linked}&lt;/p&gt; &lt;button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkEmail()"&gt;Отвязать Email&lt;/button&gt;; } else { document.getElementById('link-email-form').innerHTML = &lt;div class="form-group" style="margin-bottom: 10px;"&gt;&lt;input type="email" id="link-email" placeholder="your@email.com" style="padding: 10px;"&gt;&lt;/div&gt; &lt;div class="form-group" style="margin-bottom: 10px;"&gt;&lt;input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)" style="padding: 10px;"&gt;&lt;/div&gt; &lt;button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkEmailToTelegram()"&gt;Привязать Email&lt;/button&gt;; } document.getElementById('link-email-form').style.display = 'block'; document.getElementById('link-tg-form').style.display = 'none'; } else { document.getElementById('link-title').innerText = "Привязка Telegram"; document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона."; const tgId = localStorage.getItem('tgId'); if (tgId) { document.getElementById('link-tg-form').innerHTML = &lt;p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;"&gt;✅ Telegram привязан: 
+
+{tgId}</p> <button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkTelegram()">Отвязать Telegram</button>;
 } else {
 if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-document.getElementById('link-tg-form').innerHTML = &lt;p style="font-size: 14px; color: #fff; margin-bottom: 10px;"&gt;Ваш Telegram ID: &lt;b&gt;${tg.initDataUnsafe.user.id}&lt;/b&gt;&lt;/p&gt; &lt;button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkTelegramToEmail()"&gt;Привязать Telegram&lt;/button>;
+document.getElementById('link-tg-form').innerHTML = <p style="font-size: 14px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b>${tg.initDataUnsafe.user.id}</b></p> <button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkTelegramToEmail()">Привязать Telegram</button>;
 }
 }
 document.getElementById('link-email-form').style.display = 'none';
@@ -507,4 +505,3 @@ if (acc) { const force = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(
 tg.showAlert("Тряси телефон!");
 }
 function stopShakeTest() { isShakeTesting = false; document.getElementById('test-shake-btn').style.display = 'block'; document.getElementById('stop-shake-btn').style.display = 'none'; tg.showAlert("Максимум: " + maxShakeValue); }
-
