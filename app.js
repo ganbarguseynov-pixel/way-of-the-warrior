@@ -41,6 +41,8 @@ async function loginWithTelegram() {
             localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
             localStorage.setItem('cachedXP', data.xp || 0);
             localStorage.setItem('cachedBurned', data.burned || 0);
+            
+            // Если в базе есть почта, подтягиваем её в память
             if (data.email) {
                 localStorage.setItem('linkedEmail', data.email);
                 localStorage.setItem('currentEmail', data.email);
@@ -48,6 +50,7 @@ async function loginWithTelegram() {
                 localStorage.removeItem('linkedEmail');
                 localStorage.removeItem('currentEmail');
             }
+            
             if (data.name) localStorage.setItem('userName', data.name);
             if (data.food) localStorage.setItem('todayFood', JSON.stringify(data.food));
         } else {
@@ -93,11 +96,14 @@ async function handleEmailAuth() {
                 localStorage.setItem('cachedProfile', JSON.stringify(linkData.profile));
                 localStorage.setItem('cachedXP', linkData.xp || 0);
                 localStorage.setItem('cachedBurned', linkData.burned || 0);
+                
+                // Если в базе есть Telegram ID, подтягиваем его в память
                 if (linkData.telegram_id) {
                     localStorage.setItem('tgId', linkData.telegram_id);
                 } else {
                     localStorage.removeItem('tgId');
                 }
+                
                 if (linkData.name) localStorage.setItem('userName', linkData.name);
                 if (linkData.food) localStorage.setItem('todayFood', JSON.stringify(linkData.food));
             } else {
@@ -502,7 +508,11 @@ async function saveProfile() {
 }
 
 async function logout() {
-    if (confirm("Выйти из аккаунта?")) { localStorage.clear(); await supabaseClient.auth.signOut(); location.reload(); }
+    // Мы убрали localStorage.clear(), чтобы не сбрасывать привязки
+    if (confirm("Выйти из аккаунта?")) { 
+        await supabaseClient.auth.signOut(); 
+        location.reload(); 
+    }
 }
 
 let isShakeTesting = false; let maxShakeValue = 0;
