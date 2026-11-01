@@ -111,25 +111,25 @@ const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 let selectedFoodData = null; window.foodList = [];
 
-// Подключение к Supabase прямо в camera.html
 const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
 const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-// Функция для сохранения в облако прямо отсюда
-async function saveFoodToCloudDirect(foodArray) {
+async function saveDirectlyToDB(foodArray) {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
-    if (!tgId && !email) return;
-
+    if (!tgId && !email) {
+        localStorage.setItem('todayFood', JSON.stringify(foodArray));
+        return;
+    }
     let query = supabaseClient.from('user_links').select('id');
     if (email) query = query.eq('email', email);
     else if (tgId) query = query.eq('telegram_id', tgId);
-
-    const { data } = await query.maybeSingle();
+    const { data, error } = await query.maybeSingle();
     if (data) {
         await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', data.id);
     }
+    localStorage.setItem('todayFood', JSON.stringify(foodArray));
 }
 
 function switchTab(tabName) {
@@ -265,17 +265,13 @@ function confirmFoodSelection() {
     if (!selectedFoodData) return;
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
     todayFood.push(selectedFoodData);
-    localStorage.setItem('todayFood', JSON.stringify(todayFood));
-    
-    saveFoodToCloudDirect(todayFood); // Сохраняем напрямую в базу
-
+    saveDirectlyToDB(todayFood);
     document.getElementById('food-result').style.display = 'block';
     document.getElementById('food-name').innerText = selectedFoodData.product_name;
     document.getElementById('food-calories').innerText = (selectedFoodData.calories_100g || 0) + " ккал/100г";
     document.getElementById('food-protein').innerText = (selectedFoodData.proteins_100g || 0) + " г";
     document.getElementById('food-fat').innerText = (selectedFoodData.fat_100g || 0) + " г";
     document.getElementById('food-carbs').innerText = (selectedFoodData.carbs_100g || 0) + " г";
-    
     closeModal();
     document.getElementById('search-result').innerHTML = '';
     tg.showAlert("Добавлено в дневник питания!");
@@ -372,10 +368,7 @@ function saveFoodAndGoBack() {
     if (!selectedFoodData) return;
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
     todayFood.push(selectedFoodData);
-    localStorage.setItem('todayFood', JSON.stringify(todayFood));
-    
-    saveFoodToCloudDirect(todayFood); // Сохраняем напрямую в базу
-
+    saveDirectlyToDB(todayFood);
     localStorage.setItem('pendingXP', '20');
     window.location.replace('index.html');
 }
