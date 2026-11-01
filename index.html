@@ -9,55 +9,13 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="style.css">
 <style>
-/* Дополнительные стили для компактной панели */
-.compact-panel {
-    background: rgba(28, 28, 30, 0.85);
-    border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 12px;
-    border: 1px solid rgba(255,255,255,0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-.compact-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 5px;
-    text-align: center;
-}
-.compact-val {
-    font-size: 13px;
-    font-weight: bold;
-    white-space: nowrap;
-}
-.compact-val span {
-    font-size: 10px;
-    color: #8e8e93;
-    font-weight: normal;
-}
-.compact-label {
-    font-size: 9px;
-    color: #8e8e93;
-    text-transform: uppercase;
-    margin-top: 2px;
-}
-.compact-food-list {
-    max-height: 80px;
-    overflow-y: auto;
-    margin-top: 10px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    padding-top: 8px;
-}
-.compact-food-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(255,255,255,0.05);
-    padding: 4px 8px;
-    border-radius: 6px;
-    margin-bottom: 4px;
-    font-size: 11px;
-}
+.compact-panel { background: rgba(28, 28, 30, 0.85); border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.compact-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; }
+.compact-val { font-size: 13px; font-weight: bold; white-space: nowrap; }
+.compact-val span { font-size: 10px; color: #8e8e93; font-weight: normal; }
+.compact-label { font-size: 9px; color: #8e8e93; text-transform: uppercase; margin-top: 2px; }
+.compact-food-list { max-height: 80px; overflow-y: auto; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; }
+.compact-food-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; margin-bottom: 4px; font-size: 11px; }
 </style>
 </head>
 <body class="male-theme">
@@ -101,7 +59,6 @@
 </div>
 <div class="bottom-panel">
 
-<!-- НОВАЯ КОМПАКТНАЯ ПАНЕЛЬ -->
 <div class="compact-panel">
     <h4 style="margin: 0 0 8px 0; text-align: center; color: #fff; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Съедено за сегодня</h4>
     
@@ -124,7 +81,6 @@
         </div>
     </div>
 
-    <!-- СПИСОК ПРОДУКТОВ -->
     <div id="today-food-list" class="compact-food-list"></div>
 
     <button class="btn" style="background-color: rgba(255,59,48,0.8); color: white; padding: 6px; font-size: 11px; margin-top: 8px; border-radius: 8px;" onclick="clearTodayFood()">Очистить</button>
@@ -167,6 +123,18 @@
 <div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Пол</label><select id="gender" style="padding: 10px;"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
 <div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Цель</label><select id="goal" style="padding: 10px;"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
 <button class="btn" style="padding: 12px; font-size: 15px;" onclick="saveProfile()">Сохранить</button>
+</div>
+
+<!-- НОВЫЙ БЛОК: РУЧНАЯ НОРМА -->
+<div style="background: #1c1c1e; padding: 15px; border-radius: 16px; margin-bottom: 15px;">
+<h3 style="margin-top: 0; font-size: 16px;">Своя норма (опционально)</h3>
+<p style="color: #8e8e93; font-size: 12px; margin-bottom: 10px;">Если хотите задать норму вручную, впишите цифры ниже. Если оставить пустым — норма посчитается по формуле.</p>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Калории</label><input type="number" id="custom-calories" placeholder="Напр. 2000" style="padding: 10px;"></div>
+    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Белки (г)</label><input type="number" id="custom-protein" placeholder="Напр. 150" style="padding: 10px;"></div>
+    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Жиры (г)</label><input type="number" id="custom-fat" placeholder="Напр. 70" style="padding: 10px;"></div>
+    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Углеводы (г)</label><input type="number" id="custom-carbs" placeholder="Напр. 200" style="padding: 10px;"></div>
+</div>
 </div>
 
 <div style="background: #1c1c1e; padding: 15px; border-radius: 16px;">
