@@ -4,8 +4,7 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
-// Твой email для жесткой привязки
-const MY_EMAIL = "ganbarguseynov@gmail.com";
+const MY_EMAIL = "ganbarguseynov@gmail.com"; // Твой email для синхронизации
 
 function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
@@ -37,7 +36,6 @@ async function loginWithTelegram() {
         localStorage.setItem('userName', tg.initDataUnsafe.user.first_name || "Атлет");
         localStorage.setItem('linkedEmail', MY_EMAIL);
         
-        // Загружаем профиль именно по твоему email
         const { data } = await supabaseClient.from('user_links').select('*').eq('email', MY_EMAIL).maybeSingle();
         
         if (data && data.profile) {
@@ -80,7 +78,6 @@ async function handleEmailAuth() {
     renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
 }
 
-// --- СИНХРОНИЗАЦИЯ СТРОГО ПО ТВОЕМУ EMAIL ---
 async function syncFoodFromCloud() {
     const { data } = await supabaseClient.from('user_links').select('food').eq('email', MY_EMAIL).maybeSingle();
     if (data && data.food) {
@@ -95,7 +92,6 @@ async function saveFoodToCloud(foodArray) {
         await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', data.id);
     }
 }
-// ----------------------------------------------
 
 async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
     let existingId = null;
