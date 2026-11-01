@@ -23,8 +23,15 @@ window.addEventListener('load', async () => {
     const cachedProfile = localStorage.getItem('cachedProfile');
     if (cachedProfile) {
         renderProfile(JSON.parse(cachedProfile));
+        await syncFoodFromCloud();
+    } else {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+            localStorage.setItem('loginType', 'email');
+            localStorage.setItem('currentEmail', session.user.email);
+            await syncProgressFromCloud(session.user.email, null);
+        }
     }
-    await syncFoodFromCloud();
 });
 
 async function loginWithTelegram() {
@@ -118,7 +125,6 @@ async function handleEmailAuth() {
     }
 }
 
-// --- СИНХРОНИЗАЦИЯ ЕДЫ ---
 async function syncFoodFromCloud() {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
@@ -149,7 +155,6 @@ async function saveFoodToCloud(foodArray) {
         await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', data.id);
     }
 }
-// -------------------------
 
 async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
     try {
@@ -355,132 +360,17 @@ function updateCharacterUI() {
 }
 
 function openProfileSettings() {
-    const loginType = localStorage.getItem('loginType') || 'telegram';
-    if (loginType === 'telegram') {
-        document.getElementById('link-title').innerText = "Привязка Email";
-        document.getElementById('link-desc').innerText = "Привяжите Email, чтобы заходить с любого устройства.";
-        const linked = localStorage.getItem('linkedEmail');
-        if (linked) {
-            document.getElementById('link-email-form').innerHTML = `<p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ${linked}</p>
-<button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkEmail()">Отвязать Email</button>`;
-        } else {
-            document.getElementById('link-email-form').innerHTML = `
-<div class="form-group" style="margin-bottom: 10px;"><input type="email" id="link-email" placeholder="your@email.com" style="padding: 10px;"></div>
-<div class="form-group" style="margin-bottom: 10px;"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)" style="padding: 10px;"></div>
-<button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkEmailToTelegram()">Привязать Email</button>`;
-        }
-        document.getElementById('link-email-form').style.display = 'block';
-        document.getElementById('link-tg-form').style.display = 'none';
-    } else {
-        document.getElementById('link-title').innerText = "Привязка Telegram";
-        document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона.";
-        const tgId = localStorage.getItem('tgId');
-        if (tgId) {
-            document.getElementById('link-tg-form').innerHTML = `
-<p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ${tgId}</p>
-<button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkTelegram()">Отвязать Telegram</button>`;
-        } else {
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                document.getElementById('link-tg-form').innerHTML = `
-<p style="font-size: 14px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b>${tg.initDataUnsafe.user.id}</b></p>
-<button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkTelegramToEmail()">Привязать Telegram</button>`;
-            }
-        }
-        document.getElementById('link-email-form').style.display = 'none';
-        document.getElementById('link-tg-form').style.display = 'block';
-    }
-    const cachedProfile = localStorage.getItem('cachedProfile');
-    if (cachedProfile) {
-        const p = JSON.parse(cachedProfile);
-        document.getElementById('age').value = p.age || '';
-        document.getElementById('weight').value = p.weight || '';
-        document.getElementById('height').value = p.height || '';
-        document.getElementById('gender').value = p.gender || 'male';
-        document.getElementById('goal').value = p.goal || 'lose';
-        document.getElementById('custom-calories').value = p.custom_calories || '';
-        document.getElementById('custom-protein').value = p.custom_protein || '';
-        document.getElementById('custom-fat').value = p.custom_fat || '';
-        document.getElementById('custom-carbs').value = p.custom_carbs || '';
-    }
+    const p = JSON.parse(localStorage.getItem('cachedProfile') || '{}');
+    document.getElementById('age').value = p.age || '';
+    document.getElementById('weight').value = p.weight || '';
+    document.getElementById('height').value = p.height || '';
+    document.getElementById('gender').value = p.gender || 'male';
+    document.getElementById('goal').value = p.goal || 'lose';
+    document.getElementById('custom-calories').value = p.custom_calories || '';
+    document.getElementById('custom-protein').value = p.custom_protein || '';
+    document.getElementById('custom-fat').value = p.custom_fat || '';
+    document.getElementById('custom-carbs').value = p.custom_carbs || '';
     openScreen('profile-settings-screen');
-}
-
-async function linkEmailToTelegram() {
-    const email = document.getElementById('link-email').value;
-    const password = document.getElementById('link-password').value;
-    if (!email || !password) { tg.showAlert("Заполните Email и пароль!"); return; }
-    const { data: emailCheck } = await supabaseClient.from('user_links').select('telegram_id').eq('email', email).maybeSingle();
-    if (emailCheck && emailCheck.telegram_id && emailCheck.telegram_id !== tg.initDataUnsafe.user.id) {
-        tg.showAlert("Эта почта уже привязана к другому аккаунту Telegram!");
-        return;
-    }
-    try {
-        const { error } = await supabaseClient.auth.signUp({ email, password });
-        if (error && error.message !== "User already registered") {
-            tg.showAlert("Ошибка: " + error.message);
-        } else {
-            localStorage.setItem('linkedEmail', email);
-            localStorage.setItem('currentEmail', email);
-            const tgId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : localStorage.getItem('tgId');
-            const profile = JSON.parse(localStorage.getItem('cachedProfile'));
-            const xp = parseInt(localStorage.getItem('cachedXP') || 0);
-            const burned = parseInt(localStorage.getItem('cachedBurned') || 0);
-            const name = localStorage.getItem('userName') || "Атлет";
-            await saveProgressToCloud(tgId, email, name, profile, xp, burned);
-            tg.showAlert("Email успешно привязан!");
-            openProfileSettings();
-        }
-    } catch (e) { tg.showAlert("Ошибка сети."); }
-}
-
-async function linkTelegramToEmail() {
-    const tgId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : null;
-    const tgName = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.first_name : "Атлет";
-    const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
-    const profile = JSON.parse(localStorage.getItem('cachedProfile'));
-    const xp = parseInt(localStorage.getItem('cachedXP') || 0);
-    const burned = parseInt(localStorage.getItem('cachedBurned') || 0);
-    if (!tgId || !email) { tg.showAlert("Ошибка: не найден Email или Telegram ID."); return; }
-    const { data: tgCheck } = await supabaseClient.from('user_links').select('email').eq('telegram_id', tgId).maybeSingle();
-    if (tgCheck && tgCheck.email && tgCheck.email !== email) {
-        tg.showAlert("Этот Telegram уже привязан к другой почте!");
-        return;
-    }
-    const { data: emailCheck } = await supabaseClient.from('user_links').select('telegram_id').eq('email', email).maybeSingle();
-    if (emailCheck && emailCheck.telegram_id && emailCheck.telegram_id !== tgId) {
-        tg.showAlert("Эта почта уже привязана к другому Telegram!");
-        return;
-    }
-    await saveProgressToCloud(tgId, email, tgName, profile, xp, burned);
-    localStorage.setItem('tgId', tgId);
-    localStorage.setItem('userName', tgName);
-    tg.showAlert("Telegram успешно привязан!");
-    openProfileSettings();
-}
-
-async function unlinkEmail() {
-    if (!confirm("Отвязать Email? Прогресс останется в Telegram.")) return;
-    const tgId = localStorage.getItem('tgId');
-    if (tgId) {
-        const { data } = await supabaseClient.from('user_links').select('id').eq('telegram_id', tgId).maybeSingle();
-        if (data) await supabaseClient.from('user_links').update({ email: null }).eq('id', data.id);
-    }
-    localStorage.removeItem('linkedEmail');
-    localStorage.removeItem('currentEmail');
-    tg.showAlert("Email отвязан.");
-    openProfileSettings();
-}
-
-async function unlinkTelegram() {
-    if (!confirm("Отвязать Telegram? Прогресс останется в Email.")) return;
-    const email = localStorage.getItem('currentEmail');
-    if (email) {
-        const { data } = await supabaseClient.from('user_links').select('id').eq('email', email).maybeSingle();
-        if (data) await supabaseClient.from('user_links').update({ telegram_id: null }).eq('id', data.id);
-    }
-    localStorage.removeItem('tgId');
-    tg.showAlert("Telegram отвязан.");
-    openProfileSettings();
 }
 
 async function saveProfile() {
