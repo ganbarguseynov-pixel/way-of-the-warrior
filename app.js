@@ -63,6 +63,7 @@ async function loginWithTelegram() {
             await saveProgressToCloud(tgId, null, tgName, defaultProfile, 0, 0);
         }
         renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
+        await syncFoodFromCloud();
     } else {
         tg.showAlert("Откройте через Telegram!");
     }
@@ -115,12 +116,49 @@ async function handleEmailAuth() {
                 await saveProgressToCloud(null, email, emailName, defaultProfile, 0, 0);
             }
             renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
+            await syncFoodFromCloud();
         }
     } catch (e) {
         tg.showAlert("Ошибка сети.");
     } finally {
         btn.innerText = "Продолжить";
         btn.disabled = false;
+    }
+}
+
+async function syncFoodFromCloud() {
+    const tgId = localStorage.getItem('tgId');
+    const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
+    if (!tgId && !email) return;
+
+    let query = supabaseClient.from('user_links').select('food');
+    if (email) query = query.eq('email', email);
+    else if (tgId) query = query.eq('telegram_id', tgId);
+    
+    const { data } = await query.maybeSingle();
+    if (data && data.food) {
+        localStorage.setItem('todayFood', JSON.stringify(data.food));
+        updateDashboard();
+    }
+}
+
+async function saveFoodToCloud(foodArray) {
+    const tgId = localStorage.getItem('tgId');
+    const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
+    if (!tgId && !email) return;
+
+    let existingId = null;
+    if (tgId) {
+        const { data } = await supabaseClient.from('user_links').select('id').eq('telegram_id', tgId).maybeSingle();
+        if (data) existingId = data.id;
+    }
+    if (!existingId && email) {
+        const { data } = await supabaseClient.from('user_links').select('id').eq('email', email).maybeSingle();
+        if (data) existingId = data.id;
+    }
+
+    if (existingId) {
+        await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', existingId);
     }
 }
 
@@ -171,6 +209,7 @@ async function syncProgressFromCloud(email, tgId) {
             if (data.name) localStorage.setItem('userName', data.name);
             if (data.telegram_id) localStorage.setItem('tgId', data.telegram_id);
             renderProfile(data.profile);
+            await syncFoodFromCloud();
         }
     } catch (e) {
         console.log("Ошибка загрузки:", e);
@@ -211,29 +250,23 @@ function calculateNutrition(profile) {
     };
 }
 
-// НОВАЯ ФУНКЦИЯ СБРОСА ПО МЕСТНОМУ ВРЕМЕНИ
 function checkDayReset() {
-    // Получаем текущую дату в формате ДД.ММ.ГГГГ по часовому поясу телефона
     const now = new Date();
     const today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
-    
     const savedDate = localStorage.getItem('foodListDate');
     
-    // Если дата изменилась (или её еще нет) — очищаем список
     if (savedDate !== today) {
         localStorage.setItem('todayFood', '[]');
         localStorage.setItem('foodListDate', today);
+        saveFoodToCloud([]);
     }
 }
 
 function updateDashboard() {
     if (!currentProfileData) return;
-    
-    // Проверяем, не наступил ли новый день (по местному времени)
     checkDayReset();
 
     const norm = calculateNutrition(currentProfileData);
-    
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
     let eatenCal = 0, eatenProt = 0, eatenFat = 0, eatenCarb = 0;
     
@@ -255,11 +288,7 @@ function updateDashboard() {
         const el = document.getElementById(id);
         if (el) {
             el.innerText = Math.round(eaten);
-            if (eaten > normVal) {
-                el.style.color = '#ff3b30';
-            } else {
-                el.style.color = '#fff';
-            }
+            el.style.color = (eaten > normVal) ? '#ff3b30' : '#fff';
         }
     };
 
@@ -295,12 +324,14 @@ function deleteFoodItem(index) {
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
     todayFood.splice(index, 1);
     localStorage.setItem('todayFood', JSON.stringify(todayFood));
+    saveFoodToCloud(todayFood);
     updateDashboard();
 }
 
 function clearTodayFood() {
     if (confirm("Очистить весь список съеденного за сегодня?")) {
         localStorage.setItem('todayFood', '[]');
+        saveFoodToCloud([]);
         updateDashboard();
     }
 }
