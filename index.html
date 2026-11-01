@@ -17,7 +17,6 @@
 .compact-food-list { max-height: 80px; overflow-y: auto; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; }
 .compact-food-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; margin-bottom: 4px; font-size: 11px; }
 
-/* Стили для всплывающего окна */
 .custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
 .custom-modal.active { display: flex; }
 .custom-modal-content { background: #1c1c1e; border-radius: 16px; padding: 20px; width: 100%; max-width: 320px; box-sizing: border-box; position: relative; }
@@ -66,7 +65,6 @@
 <div class="bottom-panel">
 
 <div class="compact-panel">
-    <!-- Кнопка редактирования и заголовок -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
         <h4 style="margin: 0; color: #fff; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Съедено за сегодня</h4>
         <button onclick="openCustomNormModal()" style="background: rgba(52, 199, 89, 0.2); border: 1px solid #34c759; color: #34c759; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer;">✎ Ред.</button>
@@ -106,7 +104,6 @@
 </div>
 </div>
 
-<!-- ВСПЛЫВАЮЩЕЕ ОКНО РЕДАКТИРОВАНИЯ НОРМЫ -->
 <div id="norm-modal" class="custom-modal">
 <div class="custom-modal-content">
     <button class="custom-modal-close" onclick="closeCustomNormModal()">✖</button>
