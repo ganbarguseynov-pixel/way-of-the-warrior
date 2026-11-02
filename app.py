@@ -8,24 +8,24 @@ import openfoodfacts
 import re
 from rapidfuzz import process, fuzz
 from google import genai
-from google.genai import types
+from google.genai import types 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app) 
 
 OFOX_API_KEY = os.environ.get("OFOX_API_KEY", "sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPmKOuTmo")
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
-api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
+api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)") 
 
 client = genai.Client(
     api_key=OFOX_API_KEY,
     http_options={"base_url": "https://api.ofox.ai/gemini", "api_version": "v1beta"}
-)
+) 
 
 SEARCH_CACHE = {}
 BARCODE_CACHE = {}
-# ИЗМЕНЕНО: Теперь вместо иконки корзины будет красивая картинка с едой
-DEFAULT_IMG = "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=200"
+# ВОТ ЗДЕСЬ ИЗМЕНЕНИЕ: Вместо иконки корзины теперь красивая еда
+DEFAULT_IMG = "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=200" 
 
 LOCAL_DB = [
     {"name": "Курица", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
@@ -59,9 +59,9 @@ LOCAL_DB = [
     {"name": "Огурец", "cal": 15, "prot": 0.7, "fat": 0.1, "carb": 3.6, "img": "https://images.unsplash.com/photo-1604977042946-1eecc30f269e?w=200"},
     {"name": "Картофель", "cal": 87, "prot": 2, "fat": 0.1, "carb": 20, "img": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=200"},
     {"name": "Арбуз", "cal": 30, "prot": 0.6, "fat": 0.2, "carb": 8, "img": "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=200"},
-]
+] 
 
-LOCAL_NAMES = [p["name"] for p in LOCAL_DB]
+LOCAL_NAMES = [p["name"] for p in LOCAL_DB] 
 
 def translate_to_english(query):
     if re.search('[a-zA-Z]', query):
@@ -87,17 +87,17 @@ def translate_to_english(query):
     if query.lower() in dictionary:
         return dictionary[query.lower()]
     translated = [dictionary.get(w, w) for w in words]
-    return ' '.join(translated)
+    return ' '.join(translated) 
 
 @app.route('/search', methods=['GET'])
 def search_food():
     query = request.args.get('q', '').strip()
     if not query:
-        return jsonify({"products": []})
+        return jsonify({"products": []}) 
 
     cache_key = query.lower()
     if cache_key in SEARCH_CACHE:
-        return jsonify({"products": SEARCH_CACHE[cache_key]})
+        return jsonify({"products": SEARCH_CACHE[cache_key]}) 
 
     results = []
     best_match = process.extractOne(query, LOCAL_NAMES, scorer=fuzz.WRatio, score_cutoff=60)
@@ -106,7 +106,7 @@ def search_food():
         for p in LOCAL_DB:
             if p["name"] == matched_name:
                 results.append({"product_name": p["name"], "image_url": p["img"], "calories_100g": p["cal"], "proteins_100g": p["prot"], "fat_100g": p["fat"], "carbs_100g": p["carb"], "ingredients": "Точные данные", "description": ""})
-                break
+                break 
 
     if len(results) == 0:
         eng_query = translate_to_english(query)
@@ -120,7 +120,7 @@ def search_food():
                     image_url = product.get('image_front_small_url') or product.get('image_url') or DEFAULT_IMG
                     results.append({"product_name": name, "image_url": image_url, "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1), "proteins_100g": round(nutrients.get('proteins_100g', 0), 1), "fat_100g": round(nutrients.get('fat_100g', 0), 1), "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1), "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан', "description": "Данные Open Food Facts"})
         except Exception as e:
-            print(f"OFF error: {e}")
+            print(f"OFF error: {e}") 
 
     if len(results) == 0 and USDA_API_KEY:
         eng_query = translate_to_english(query)
@@ -133,24 +133,24 @@ def search_food():
                     nutrients = {n['nutrientName']: n['value'] for n in food.get('foodNutrients', [])}
                     results.append({"product_name": food.get('description', 'Без названия'), "image_url": DEFAULT_IMG, "calories_100g": round(nutrients.get('Energy', 0), 1), "proteins_100g": round(nutrients.get('Protein', 0), 1), "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1), "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1), "ingredients": "Данные USDA FoodData Central", "description": ""})
         except Exception as e:
-            print(f"USDA error: {e}")
+            print(f"USDA error: {e}") 
 
     for p in results:
-        if not p["image_url"]: p["image_url"] = DEFAULT_IMG
+        if not p["image_url"]: p["image_url"] = DEFAULT_IMG 
 
     if results:
-        SEARCH_CACHE[cache_key] = results
+        SEARCH_CACHE[cache_key] = results 
 
-    return jsonify({"products": results})
+    return jsonify({"products": results}) 
 
 @app.route('/barcode', methods=['GET'])
 def search_by_barcode():
     barcode = request.args.get('code', '').strip()
     if not barcode:
-        return jsonify({"products": []})
+        return jsonify({"products": []}) 
 
     if barcode in BARCODE_CACHE:
-        return jsonify({"products": BARCODE_CACHE[barcode]})
+        return jsonify({"products": BARCODE_CACHE[barcode]}) 
 
     try:
         product = api.product.get(barcode)
@@ -163,41 +163,41 @@ def search_by_barcode():
         return jsonify({"products": []})
     except Exception as e:
         print(f"Barcode error: {e}")
-        return jsonify({"products": []})
+        return jsonify({"products": []}) 
 
 @app.route('/scan_barcode', methods=['POST'])
 def scan_barcode():
     if 'image' not in request.files:
         return jsonify({"error": "No image"}), 400
-    file = request.files['image']
+    file = request.files['image'] 
 
     try:
         image_data = file.read()
-        image = Image.open(io.BytesIO(image_data)).convert("RGB")
+        image = Image.open(io.BytesIO(image_data)).convert("RGB") 
 
         img_byte_arr = io.BytesIO()
         image.thumbnail((1000, 1000))
         image.save(img_byte_arr, format='JPEG', quality=85)
-        compressed_image_data = img_byte_arr.getvalue()
+        compressed_image_data = img_byte_arr.getvalue() 
 
-        prompt = "Найди штрих-код. Напиши только цифры или 'НЕТ'."
+        prompt = "Найди штрих-код. Напиши только цифры или 'НЕТ'." 
 
         response = client.models.generate_content(
             model='gemini-3.1-flash-lite',
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
-        )
+        ) 
 
         barcode_text = response.text.strip()
-        barcode_digits = re.sub(r'\D', '', barcode_text)
+        barcode_digits = re.sub(r'\D', '', barcode_text) 
 
         if len(barcode_digits) >= 8:
             return jsonify({"barcode": barcode_digits})
         else:
-            return jsonify({"error": "Barcode not found"}), 404
+            return jsonify({"error": "Barcode not found"}), 404 
 
     except Exception as e:
         print(f"Gemini Barcode error: {e}")
-        return jsonify({"error": "Scan failed"}), 500
+        return jsonify({"error": "Scan failed"}), 500 
 
 @app.route('/analyze', methods=['POST'])
 def analyze_photo():
@@ -208,48 +208,48 @@ def analyze_photo():
         image_data = file.read()
         image = Image.open(io.BytesIO(image_data)).convert("RGB")
     except:
-        return jsonify({"food": "Ошибка", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Не удалось прочитать фото."}), 400
+        return jsonify({"food": "Ошибка", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "Не удалось прочитать фото."}), 400 
 
     try:
         img_byte_arr = io.BytesIO()
         image.thumbnail((800, 800))
         image.save(img_byte_arr, format='JPEG', quality=75)
-        compressed_image_data = img_byte_arr.getvalue()
+        compressed_image_data = img_byte_arr.getvalue() 
 
-        prompt = """Ты — калькулятор калорий. Никаких вступлений, приветствий и рассуждений. 
-Оцени продукт на фото. Если это напиток, оцени стандартную порцию (стакан 200-250 мл). 
+        prompt = """Ты — калькулятор калорий. Никаких вступлений, приветствий и рассуждений.
+Оцени продукт на фото. Если это напиток, оцени стандартную порцию (стакан 200-250 мл).
 Если это еда, оцени стандартную порцию.
 Выведи СТРОГО ОДНУ строку в таком формате, без лишних слов:
-Название | Калории | Белки | Жиры | Углеводы
+Название | Калории | Белки | Жиры | Углеводы 
 
 Пример: Черный чай с сахаром | 20 | 0 | 0 | 5
 Пример: Банан | 89 | 1.1 | 0.3 | 23
-"""
+""" 
 
         response = client.models.generate_content(
             model='gemini-3.1-flash-lite',
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
-        )
+        ) 
 
-        clean_text = re.sub(r'[*#_]', '', response.text.strip())
-        
+        clean_text = re.sub(r'[*#_]', '', response.text.strip()) 
+
         lines = clean_text.split('\n')
         target_line = ""
         for line in lines:
             if '|' in line:
                 target_line = line
-                break
+                break 
 
         if not target_line:
-            target_line = clean_text
+            target_line = clean_text 
 
-        parts = [p.strip() for p in target_line.split('|')]
+        parts = [p.strip() for p in target_line.split('|')] 
 
         if len(parts) >= 5:
             cal = int(re.sub(r'\D', '', parts[1])) if re.search(r'\d', parts[1]) else 250
             prot = int(re.sub(r'\D', '', parts[2])) if re.search(r'\d', parts[2]) else 15
             fat = int(re.sub(r'\D', '', parts[3])) if re.search(r'\d', parts[3]) else 10
-            carb = int(re.sub(r'\D', '', parts[4])) if re.search(r'\d', parts[4]) else 30
+            carb = int(re.sub(r'\D', '', parts[4])) if re.search(r'\d', parts[4]) else 30 
 
             return jsonify({
                 "food": parts[0],
@@ -260,11 +260,11 @@ def analyze_photo():
                 "description": ""
             })
         else:
-            return jsonify({"food": "Не удалось", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ не разобрал."})
+            return jsonify({"food": "Не удалось", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ не разобрал."}) 
 
     except Exception as e:
         print(f"Ofox error: {e}")
-        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": f"Ошибка: {str(e)}"})
+        return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": f"Ошибка: {str(e)}"}) 
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
