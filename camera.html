@@ -50,7 +50,7 @@
 <div id="camera-container" style="display: none;">
 <button id="switch-camera-btn" onclick="switchCamera()">🔄</button>
 <button id="close-camera-btn" onclick="resetCameraScreen()">✖</button>
-<video id="camera-video" autoplay playsinline></video>
+<video id="camera-video" autoplay playsinline muted></video>
 <div id="camera-controls"><button id="capture-btn" onclick="takePhoto()"></button></div>
 </div>
 <img id="photo-preview" style="width: 100%; border-radius: 16px; margin-bottom: 20px; display: none;">
@@ -82,7 +82,7 @@
 <div id="barcode-camera-container" style="display: none;">
 <button id="barcode-switch-camera-btn" onclick="switchBarcodeCamera()">🔄</button>
 <button id="barcode-close-camera-btn" onclick="resetBarcodeScreen()">✖</button>
-<video id="barcode-camera-video" autoplay playsinline></video>
+<video id="barcode-camera-video" autoplay playsinline muted></video>
 <div id="barcode-camera-controls">
 <button id="barcode-capture-btn" onclick="takeBarcodePhoto()"></button>
 </div>
@@ -114,33 +114,27 @@ const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 let selectedFoodData = null; window.foodList = [];
 
-// --- СОХРАНЕНИЕ ЕДЫ В ОБЛАКО ---
+// --- НАДЕЖНОЕ СОХРАНЕНИЕ В ОБЛАКО ---
 async function saveFoodToCloud(foodArray) {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
     if (!tgId && !email) return;
 
-    let query = supabaseClient.from('user_links').select('*');
-    if (tgId && email) {
-        query = query.or(`telegram_id.eq.${tgId},email.eq.${email}`);
-    } else if (tgId) {
-        query = query.eq('telegram_id', tgId);
-    } else if (email) {
-        query = query.eq('email', email);
+    let idsToUpdate = new Set();
+    if (tgId) {
+        const { data } = await supabaseClient.from('user_links').select('id').eq('telegram_id', tgId);
+        if (data) data.forEach(r => idsToUpdate.add(r.id));
     }
-
-    const { data } = await query;
-    if (data && data.length > 0) {
-        const mainRecord = data[0];
-        await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', mainRecord.id);
-        
-        if (data.length > 1) {
-            const idsToDelete = data.slice(1).map(r => r.id);
-            await supabaseClient.from('user_links').delete().in('id', idsToDelete);
-        }
+    if (email) {
+        const { data } = await supabaseClient.from('user_links').select('id').eq('email', email);
+        if (data) data.forEach(r => idsToUpdate.add(r.id));
+    }
+    const idsArray = Array.from(idsToUpdate);
+    if (idsArray.length > 0) {
+        await supabaseClient.from('user_links').update({ food: foodArray }).in('id', idsArray);
     }
 }
-// -------------------------------
+// -------------------------------------
 
 function switchTab(tabName) {
 document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -193,8 +187,10 @@ async function startBarcodeCamera() {
 try {
 document.getElementById('barcode-buttons').style.display = 'none';
 document.getElementById('barcode-camera-container').style.display = 'flex';
-barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: barcodeFacingMode } });
-document.getElementById('barcode-camera-video').srcObject = barcodeStream;
+barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: barcodeFacingMode }, audio: false });
+const videoEl = document.getElementById('barcode-camera-video');
+videoEl.srcObject = barcodeStream;
+videoEl.play().catch(e => console.log("Play error:", e));
 } catch (err) { tg.showAlert("Ошибка камеры."); resetBarcodeScreen(); }
 }
 
@@ -266,13 +262,13 @@ document.getElementById('food-modal').classList.add('active');
 }
 function closeModal() { document.getElementById('food-modal').classList.remove('active'); }
 
-function confirmFoodSelection() {
+async function confirmFoodSelection() {
 if (!selectedFoodData) return;
 let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
 todayFood.push(selectedFoodData);
 localStorage.setItem('todayFood', JSON.stringify(todayFood));
 
-saveFoodToCloud(todayFood);
+try { await saveFoodToCloud(todayFood); } catch(e) { console.log(e); }
 
 document.getElementById('food-result').style.display = 'block';
 document.getElementById('food-name').innerText = selectedFoodData.product_name;
@@ -292,8 +288,10 @@ async function startCamera() {
 try {
 document.getElementById('photo-buttons').style.display = 'none';
 document.getElementById('camera-container').style.display = 'flex';
-videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
-document.getElementById('camera-video').srcObject = videoStream;
+videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: false });
+const videoEl = document.getElementById('camera-video');
+videoEl.srcObject = videoStream;
+videoEl.play().catch(e => console.log("Play error:", e));
 } catch (err) { tg.showAlert("Ошибка камеры."); resetCameraScreen(); }
 }
 
@@ -373,12 +371,12 @@ resetCameraScreen();
 }
 }
 
-function saveFoodAndGoBack() {
+async function saveFoodAndGoBack() {
 if (!selectedFoodData) return;
 let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
 todayFood.push(selectedFoodData);
 localStorage.setItem('todayFood', JSON.stringify(todayFood));
-saveFoodToCloud(todayFood);
+try { await saveFoodToCloud(todayFood); } catch(e) { console.log(e); }
 localStorage.setItem('pendingXP', '20');
 window.location.replace('index.html');
 }
