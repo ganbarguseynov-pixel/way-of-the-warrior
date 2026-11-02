@@ -215,12 +215,15 @@ def analyze_photo():
         image.save(img_byte_arr, format='JPEG', quality=75)
         compressed_image_data = img_byte_arr.getvalue()
 
-        prompt = """
-Ты — калькулятор калорий. Никаких вступлений, приветствий и лишних слов.
-Выведи СТРОГО в таком формате:
+        # ЖЕСТКИЙ ПРОМПТ
+        prompt = """Ты — калькулятор калорий. Никаких вступлений, приветствий и рассуждений. 
+Оцени продукт на фото. Если это напиток, оцени стандартную порцию (стакан 200-250 мл). 
+Если это еда, оцени стандартную порцию.
+Выведи СТРОГО ОДНУ строку в таком формате, без лишних слов:
 Название | Калории | Белки | Жиры | Углеводы
 
-Пример: Чизбургер | 285 | 18 | 19 | 12
+Пример: Черный чай с сахаром | 20 | 0 | 0 | 5
+Пример: Банан | 89 | 1.1 | 0.3 | 23
 """
 
         response = client.models.generate_content(
@@ -229,7 +232,19 @@ def analyze_photo():
         )
 
         clean_text = re.sub(r'[*#_]', '', response.text.strip())
-        parts = [p.strip() for p in clean_text.split('|')]
+        
+        # Ищем строку с разделителями |
+        lines = clean_text.split('\n')
+        target_line = ""
+        for line in lines:
+            if '|' in line:
+                target_line = line
+                break
+
+        if not target_line:
+            target_line = clean_text
+
+        parts = [p.strip() for p in target_line.split('|')]
 
         if len(parts) >= 5:
             cal = int(re.sub(r'\D', '', parts[1])) if re.search(r'\d', parts[1]) else 250
