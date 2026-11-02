@@ -13,7 +13,7 @@ from google.genai import types
 app = Flask(__name__)
 CORS(app)
 
-OFOX_API_KEY = "sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPmKOuTmo"
+OFOX_API_KEY = os.environ.get("OFOX_API_KEY", "sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPmKOuTmo")
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)")
 
@@ -118,7 +118,8 @@ def search_food():
                     nutrients = product.get('nutriments', {})
                     image_url = product.get('image_front_small_url') or product.get('image_url') or DEFAULT_IMG
                     results.append({"product_name": name, "image_url": image_url, "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1), "proteins_100g": round(nutrients.get('proteins_100g', 0), 1), "fat_100g": round(nutrients.get('fat_100g', 0), 1), "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1), "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан', "description": "Данные Open Food Facts"})
-        except Exception as e: print(f"OFF error: {e}")
+        except Exception as e:
+            print(f"OFF error: {e}")
 
     if len(results) == 0 and USDA_API_KEY:
         eng_query = translate_to_english(query)
@@ -130,7 +131,8 @@ def search_food():
                 for food in data['foods']:
                     nutrients = {n['nutrientName']: n['value'] for n in food.get('foodNutrients', [])}
                     results.append({"product_name": food.get('description', 'Без названия'), "image_url": DEFAULT_IMG, "calories_100g": round(nutrients.get('Energy', 0), 1), "proteins_100g": round(nutrients.get('Protein', 0), 1), "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1), "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1), "ingredients": "Данные USDA FoodData Central", "description": ""})
-        except Exception as e: print(f"USDA error: {e}")
+        except Exception as e:
+            print(f"USDA error: {e}")
 
     for p in results:
         if not p["image_url"]: p["image_url"] = DEFAULT_IMG
@@ -145,7 +147,7 @@ def search_by_barcode():
     barcode = request.args.get('code', '').strip()
     if not barcode:
         return jsonify({"products": []})
-        
+
     if barcode in BARCODE_CACHE:
         return jsonify({"products": BARCODE_CACHE[barcode]})
 
@@ -155,7 +157,6 @@ def search_by_barcode():
             nutrients = product.get('nutriments', {})
             image_url = product.get('image_front_small_url') or product.get('image_url') or DEFAULT_IMG
             result = {"product_name": product.get('product_name'), "image_url": image_url, "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1), "proteins_100g": round(nutrients.get('proteins_100g', 0), 1), "fat_100g": round(nutrients.get('fat_100g', 0), 1), "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1), "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан', "description": "Найдено по штрих-коду"}
-            
             BARCODE_CACHE[barcode] = [result]
             return jsonify({"products": [result]})
         return jsonify({"products": []})
@@ -168,31 +169,31 @@ def scan_barcode():
     if 'image' not in request.files:
         return jsonify({"error": "No image"}), 400
     file = request.files['image']
-    
+
     try:
         image_data = file.read()
         image = Image.open(io.BytesIO(image_data)).convert("RGB")
-        
+
         img_byte_arr = io.BytesIO()
         image.thumbnail((1000, 1000))
         image.save(img_byte_arr, format='JPEG', quality=85)
         compressed_image_data = img_byte_arr.getvalue()
 
         prompt = "Найди штрих-код. Напиши только цифры или 'НЕТ'."
-        
+
         response = client.models.generate_content(
             model='gemini-3.1-flash-lite',
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
         )
-        
+
         barcode_text = response.text.strip()
         barcode_digits = re.sub(r'\D', '', barcode_text)
-        
+
         if len(barcode_digits) >= 8:
             return jsonify({"barcode": barcode_digits})
         else:
             return jsonify({"error": "Barcode not found"}), 404
-            
+
     except Exception as e:
         print(f"Gemini Barcode error: {e}")
         return jsonify({"error": "Scan failed"}), 500
@@ -214,41 +215,39 @@ def analyze_photo():
         image.save(img_byte_arr, format='JPEG', quality=75)
         compressed_image_data = img_byte_arr.getvalue()
 
-        # МАКСИМАЛЬНО ЖЕСТКИЙ ПРОМПТ
         prompt = """
-        Ты — калькулятор калорий. Никаких вступлений, приветствий и лишних слов.
-        Выведи СТРОГО в таком формате:
-        Название | Калории | Белки | Жиры | Углеводы
-        
-        Пример: Чизбургер | 285 | 18 | 19 | 12
-        """
-        
+Ты — калькулятор калорий. Никаких вступлений, приветствий и лишних слов.
+Выведи СТРОГО в таком формате:
+Название | Калории | Белки | Жиры | Углеводы
+
+Пример: Чизбургер | 285 | 18 | 19 | 12
+"""
+
         response = client.models.generate_content(
             model='gemini-3.1-flash-lite',
             contents=[types.Part.from_bytes(data=compressed_image_data, mime_type='image/jpeg'), prompt]
         )
-        
-        # Очищаем от звездочек и прочего мусора
+
         clean_text = re.sub(r'[*#_]', '', response.text.strip())
         parts = [p.strip() for p in clean_text.split('|')]
-        
+
         if len(parts) >= 5:
             cal = int(re.sub(r'\D', '', parts[1])) if re.search(r'\d', parts[1]) else 250
             prot = int(re.sub(r'\D', '', parts[2])) if re.search(r'\d', parts[2]) else 15
             fat = int(re.sub(r'\D', '', parts[3])) if re.search(r'\d', parts[3]) else 10
             carb = int(re.sub(r'\D', '', parts[4])) if re.search(r'\d', parts[4]) else 30
-            
+
             return jsonify({
-                "food": parts[0], 
-                "calories": cal, 
-                "protein": prot, 
-                "fat": fat, 
-                "carbs": carb, 
-                "description": "" 
+                "food": parts[0],
+                "calories": cal,
+                "protein": prot,
+                "fat": fat,
+                "carbs": carb,
+                "description": ""
             })
         else:
             return jsonify({"food": "Не удалось", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": "ИИ не разобрал."})
-            
+
     except Exception as e:
         print(f"Ofox error: {e}")
         return jsonify({"food": "Ошибка ИИ", "calories": 0, "protein": 0, "fat": 0, "carbs": 0, "description": f"Ошибка: {str(e)}"})
