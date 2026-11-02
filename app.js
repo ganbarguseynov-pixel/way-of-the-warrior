@@ -35,7 +35,17 @@ async function loginWithTelegram() {
         localStorage.setItem('tgId', tgId);
         localStorage.setItem('userName', tgName);
 
-        const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId).maybeSingle();
+        // Ищем по telegram_id
+        let { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId).maybeSingle();
+        
+        // Если не нашли по telegram_id, ищем по email (если он есть в памяти)
+        if (!data) {
+            const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
+            if (email) {
+                const res = await supabaseClient.from('user_links').select('*').eq('email', email).maybeSingle();
+                data = res.data;
+            }
+        }
 
         if (data && data.profile) {
             localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
@@ -44,9 +54,6 @@ async function loginWithTelegram() {
             if (data.email) {
                 localStorage.setItem('linkedEmail', data.email);
                 localStorage.setItem('currentEmail', data.email);
-            } else {
-                localStorage.removeItem('linkedEmail');
-                localStorage.removeItem('currentEmail');
             }
             if (data.name) localStorage.setItem('userName', data.name);
             if (data.food) localStorage.setItem('todayFood', JSON.stringify(data.food));
@@ -87,7 +94,8 @@ async function handleEmailAuth() {
             const emailName = email.split('@')[0];
             localStorage.setItem('userName', emailName);
 
-            const { data: linkData } = await supabaseClient.from('user_links').select('*').eq('email', email).maybeSingle();
+            // Ищем по email
+            let { data: linkData } = await supabaseClient.from('user_links').select('*').eq('email', email).maybeSingle();
 
             if (linkData && linkData.profile) {
                 localStorage.setItem('cachedProfile', JSON.stringify(linkData.profile));
@@ -95,8 +103,6 @@ async function handleEmailAuth() {
                 localStorage.setItem('cachedBurned', linkData.burned || 0);
                 if (linkData.telegram_id) {
                     localStorage.setItem('tgId', linkData.telegram_id);
-                } else {
-                    localStorage.removeItem('tgId');
                 }
                 if (linkData.name) localStorage.setItem('userName', linkData.name);
                 if (linkData.food) localStorage.setItem('todayFood', JSON.stringify(linkData.food));
@@ -118,19 +124,27 @@ async function handleEmailAuth() {
     }
 }
 
-// --- СИНХРОНИЗАЦИЯ ЕДЫ ---
+// --- СИНХРОНИЗАЦИЯ ЕДЫ (ИЩЕМ И ПО EMAIL, И ПО TG) ---
 async function syncFoodFromCloud() {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
-    if (!tgId && !email) return;
+    
+    let foodData = null;
 
-    let query = supabaseClient.from('user_links').select('food');
-    if (email) query = query.eq('email', email);
-    else if (tgId) query = query.eq('telegram_id', tgId);
+    // Сначала пробуем найти по email
+    if (email) {
+        const { data } = await supabaseClient.from('user_links').select('food').eq('email', email).maybeSingle();
+        if (data && data.food) foodData = data.food;
+    }
+    
+    // Если по email ничего нет, пробуем по телеге
+    if (!foodData && tgId) {
+        const { data } = await supabaseClient.from('user_links').select('food').eq('telegram_id', tgId).maybeSingle();
+        if (data && data.food) foodData = data.food;
+    }
 
-    const { data } = await query.maybeSingle();
-    if (data && data.food) {
-        localStorage.setItem('todayFood', JSON.stringify(data.food));
+    if (foodData) {
+        localStorage.setItem('todayFood', JSON.stringify(foodData));
         updateDashboard();
     }
 }
@@ -140,13 +154,19 @@ async function saveFoodToCloud(foodArray) {
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
     if (!tgId && !email) return;
 
-    let query = supabaseClient.from('user_links').select('id');
-    if (email) query = query.eq('email', email);
-    else if (tgId) query = query.eq('telegram_id', tgId);
+    // Ищем строку, чтобы сохранить
+    let existingId = null;
+    if (email) {
+        const { data } = await supabaseClient.from('user_links').select('id').eq('email', email).maybeSingle();
+        if (data) existingId = data.id;
+    }
+    if (!existingId && tgId) {
+        const { data } = await supabaseClient.from('user_links').select('id').eq('telegram_id', tgId).maybeSingle();
+        if (data) existingId = data.id;
+    }
 
-    const { data } = await query.maybeSingle();
-    if (data) {
-        await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', data.id);
+    if (existingId) {
+        await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', existingId);
     }
 }
 // -------------------------
@@ -160,12 +180,12 @@ async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
         if (!currentTgId && !currentEmail) return;
 
         let existingId = null;
-        if (currentTgId) {
-            const { data } = await supabaseClient.from('user_links').select('id').eq('telegram_id', currentTgId).maybeSingle();
+        if (currentEmail) {
+            const { data } = await supabaseClient.from('user_links').select('id').eq('email', currentEmail).maybeSingle();
             if (data) existingId = data.id;
         }
-        if (!existingId && currentEmail) {
-            const { data } = await supabaseClient.from('user_links').select('id').eq('email', currentEmail).maybeSingle();
+        if (!existingId && currentTgId) {
+            const { data } = await supabaseClient.from('user_links').select('id').eq('telegram_id', currentTgId).maybeSingle();
             if (data) existingId = data.id;
         }
 
@@ -181,27 +201,6 @@ async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
         }
     } catch (e) {
         console.log("Ошибка сохранения:", e);
-    }
-}
-
-async function syncProgressFromCloud(email, tgId) {
-    try {
-        let query = supabaseClient.from('user_links').select('*');
-        if (email) query = query.eq('email', email);
-        if (tgId) query = query.eq('telegram_id', tgId);
-
-        const { data } = await query.maybeSingle();
-        if (data && data.profile) {
-            localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
-            localStorage.setItem('cachedXP', data.xp || 0);
-            localStorage.setItem('cachedBurned', data.burned || 0);
-            if (data.name) localStorage.setItem('userName', data.name);
-            if (data.telegram_id) localStorage.setItem('tgId', data.telegram_id);
-            if (data.food) localStorage.setItem('todayFood', JSON.stringify(data.food));
-            renderProfile(data.profile);
-        }
-    } catch (e) {
-        console.log("Ошибка загрузки:", e);
     }
 }
 
