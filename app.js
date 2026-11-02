@@ -267,6 +267,7 @@ async function saveOnboardingData() {
     tg.showAlert("Отлично! Данные сохранены.");
 }
 
+// ИСПРАВЛЕННАЯ СИНХРОНИЗАЦИЯ
 async function syncFoodFromCloud() {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
@@ -276,12 +277,33 @@ async function syncFoodFromCloud() {
     let localFood = [];
     try { localFood = JSON.parse(localStorage.getItem('todayFood') || '[]'); } catch(e) {} 
 
+    const now = new Date();
+    const today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+    const savedDate = localStorage.getItem('foodListDate');
+
     if (record) {
         const cloudFood = record.food || [];
-        if (cloudFood.length > 0) {
-            localStorage.setItem('todayFood', JSON.stringify(cloudFood));
-        } else if (localFood.length > 0) {
-            await supabaseClient.from('user_links').update({ food: localFood }).eq('id', record.id);
+        
+        if (!savedDate) {
+            // Если зашли впервые (или почистили кэш) - забираем данные из облака, ничего не стираем
+            if (cloudFood.length > 0) {
+                localStorage.setItem('todayFood', JSON.stringify(cloudFood));
+            } else if (localFood.length > 0) {
+                await supabaseClient.from('user_links').update({ food: localFood }).eq('id', record.id);
+            }
+            localStorage.setItem('foodListDate', today);
+        } else if (savedDate === today) {
+            // Если сегодняшняя дата, просто синхронизируем облако и телефон
+            if (cloudFood.length > 0) {
+                localStorage.setItem('todayFood', JSON.stringify(cloudFood));
+            } else if (localFood.length > 0) {
+                await supabaseClient.from('user_links').update({ food: localFood }).eq('id', record.id);
+            }
+        } else {
+            // Наступил новый день - очищаем всё, чтобы не тянуть вчерашнее
+            localStorage.setItem('todayFood', '[]');
+            localStorage.setItem('foodListDate', today);
+            await supabaseClient.from('user_links').update({ food: [] }).eq('id', record.id);
         }
         updateDashboard();
     }
@@ -342,13 +364,14 @@ function calculateNutrition(profile) {
     return { calories: Math.round(tdee), protein: Math.round((tdee * 0.30) / 4), fat: Math.round((tdee * 0.30) / 9), carbs: Math.round((tdee * 0.40) / 4) };
 } 
 
+// ИСПРАВЛЕННЫЙ СБРОС ДНЯ (больше не стирает облако)
 function checkDayReset() {
     const now = new Date();
     const today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
     if (localStorage.getItem('foodListDate') !== today) {
         localStorage.setItem('todayFood', '[]');
         localStorage.setItem('foodListDate', today);
-        saveFoodToCloud([]);
+        // saveFoodToCloud([]);  <-- УБРАНО, чтобы не затирать данные при загрузке
     }
 } 
 
@@ -526,7 +549,6 @@ async function linkEmailToTelegram() {
     const currentTgId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : localStorage.getItem('tgId');
     if (!currentTgId) { tg.showAlert("Ошибка: Telegram не найден."); return; }
 
-    // ПРОВЕРКА: Не привязана ли эта почта к другому ТГ?
     const { data: emailCheck } = await supabaseClient.from('user_links').select('telegram_id').eq('email', email).maybeSingle();
     if (emailCheck && emailCheck.telegram_id && emailCheck.telegram_id != currentTgId) {
         tg.showAlert("Эта почта уже привязана к другому аккаунту Telegram!");
@@ -559,7 +581,6 @@ async function linkTelegramToEmail() {
     
     if (!tgId || !email) { tg.showAlert("Ошибка: не найден Email или Telegram ID."); return; } 
 
-    // ПРОВЕРКА: Не привязан ли этот ТГ к другой почте?
     const { data: tgCheck } = await supabaseClient.from('user_links').select('email').eq('telegram_id', tgId).maybeSingle();
     if (tgCheck && tgCheck.email && tgCheck.email !== email) {
         tg.showAlert("Этот Telegram уже привязан к другой почте!");
