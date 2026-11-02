@@ -36,7 +36,6 @@ async function resolveUserRecord(tgId, email) {
 
     let records = Array.from(recordsMap.values());
 
-    // Проверяем перекрестные связи (если в записи есть второй ID)
     let linkedTgId = tgId;
     let linkedEmail = email;
     records.forEach(r => {
@@ -135,6 +134,7 @@ async function loginWithTelegram() {
         const data = await resolveUserRecord(tgId, null);
 
         if (data && data.profile) {
+            // Старый пользователь
             localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
             localStorage.setItem('cachedXP', data.xp || 0);
             localStorage.setItem('cachedBurned', data.burned || 0);
@@ -148,11 +148,13 @@ async function loginWithTelegram() {
             if (data.name) localStorage.setItem('userName', data.name);
             if (data.food) localStorage.setItem('todayFood', JSON.stringify(data.food));
         } else {
+            // НОВЫЙ ПОЛЬЗОВАТЕЛЬ
             const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
             localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
             localStorage.setItem('cachedXP', 0);
             localStorage.setItem('cachedBurned', 0);
             await saveProgressToCloud(tgId, null, tgName, defaultProfile, 0, 0);
+            openOnboardingModal(); // Показываем окно
         }
         renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
         await syncFoodFromCloud();
@@ -187,6 +189,7 @@ async function handleEmailAuth() {
             const linkData = await resolveUserRecord(null, email);
 
             if (linkData && linkData.profile) {
+                // Старый пользователь
                 localStorage.setItem('cachedProfile', JSON.stringify(linkData.profile));
                 localStorage.setItem('cachedXP', linkData.xp || 0);
                 localStorage.setItem('cachedBurned', linkData.burned || 0);
@@ -199,11 +202,13 @@ async function handleEmailAuth() {
                 if (linkData.name) localStorage.setItem('userName', linkData.name);
                 if (linkData.food) localStorage.setItem('todayFood', JSON.stringify(linkData.food));
             } else {
+                // НОВЫЙ ПОЛЬЗОВАТЕЛЬ
                 const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
                 localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
                 localStorage.setItem('cachedXP', 0);
                 localStorage.setItem('cachedBurned', 0);
                 await saveProgressToCloud(null, email, emailName, defaultProfile, 0, 0);
+                openOnboardingModal(); // Показываем окно
             }
             renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
             await syncFoodFromCloud();
@@ -216,7 +221,40 @@ async function handleEmailAuth() {
     }
 }
 
-// --- БЕЗОПАСНАЯ СИНХРОНИЗАЦИЯ ЕДЫ (НЕ ЗАТИРАЕТ ЛОКАЛЬНЫЕ ДАННЫЕ) ---
+// --- ОНБОРДИНГ (ЗАПОЛНЕНИЕ ПРОФИЛЯ ПРИ РЕГИСТРАЦИИ) ---
+function openOnboardingModal() {
+    setTimeout(() => {
+        document.getElementById('onboarding-modal').classList.add('active');
+    }, 500); // Небольшая задержка, чтобы экран успел прогрузиться
+}
+
+async function saveOnboardingData() {
+    const age = document.getElementById('onboarding-age').value;
+    const weight = document.getElementById('onboarding-weight').value;
+    const height = document.getElementById('onboarding-height').value;
+    const gender = document.getElementById('onboarding-gender').value;
+    const goal = document.getElementById('onboarding-goal').value;
+
+    if (!age || !weight || !height) { 
+        tg.showAlert("Пожалуйста, заполни возраст, вес и рост!"); 
+        return; 
+    }
+
+    const profile = { age, gender, weight, height, goal, custom_calories: '', custom_protein: '', custom_fat: '', custom_carbs: '' };
+    localStorage.setItem('cachedProfile', JSON.stringify(profile));
+
+    const tgId = localStorage.getItem('tgId');
+    const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
+    const name = localStorage.getItem('userName') || "Атлет";
+    
+    await saveProgressToCloud(tgId, email, name, profile, 0, 0);
+    
+    document.getElementById('onboarding-modal').classList.remove('active');
+    renderProfile(profile);
+    tg.showAlert("Профиль настроен! Теперь калории считаются верно.");
+}
+// -------------------------------------------------------
+
 async function syncFoodFromCloud() {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
@@ -229,10 +267,8 @@ async function syncFoodFromCloud() {
     if (record) {
         const cloudFood = record.food || [];
         if (cloudFood.length > 0) {
-            // Если в облаке есть еда - берем её
             localStorage.setItem('todayFood', JSON.stringify(cloudFood));
         } else if (localFood.length > 0) {
-            // Если в облаке пусто, но локально есть - сохраняем локальное в облако
             await supabaseClient.from('user_links').update({ food: localFood }).eq('id', record.id);
         }
         updateDashboard();
@@ -249,7 +285,6 @@ async function saveFoodToCloud(foodArray) {
         await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', record.id);
     }
 }
-// -------------------------
 
 async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
     try {
