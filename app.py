@@ -24,7 +24,8 @@ client = genai.Client(
 
 SEARCH_CACHE = {}
 BARCODE_CACHE = {}
-DEFAULT_IMG = "https://cdn-icons-png.flaticon.com/512/3081/3081986.png"
+# ИЗМЕНЕНО: Теперь вместо иконки корзины будет красивая картинка с едой
+DEFAULT_IMG = "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=200"
 
 LOCAL_DB = [
     {"name": "Курица", "cal": 165, "prot": 31, "fat": 3.6, "carb": 0, "img": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=200"},
@@ -215,7 +216,6 @@ def analyze_photo():
         image.save(img_byte_arr, format='JPEG', quality=75)
         compressed_image_data = img_byte_arr.getvalue()
 
-        # ЖЕСТКИЙ ПРОМПТ
         prompt = """Ты — калькулятор калорий. Никаких вступлений, приветствий и рассуждений. 
 Оцени продукт на фото. Если это напиток, оцени стандартную порцию (стакан 200-250 мл). 
 Если это еда, оцени стандартную порцию.
@@ -233,7 +233,6 @@ def analyze_photo():
 
         clean_text = re.sub(r'[*#_]', '', response.text.strip())
         
-        # Ищем строку с разделителями |
         lines = clean_text.split('\n')
         target_line = ""
         for line in lines:
