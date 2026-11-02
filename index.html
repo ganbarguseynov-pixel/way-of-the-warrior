@@ -22,7 +22,7 @@
 .custom-modal-close { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 18px; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 </style>
 </head>
-<body class="male-theme">
+<body class="male-theme"> 
 
 <div id="auth-screen" class="screen active auth-screen">
 <div class="auth-container">
@@ -36,7 +36,7 @@
 </div>
 </div>
 </div>
-</div>
+</div> 
 
 <div id="email-screen" class="screen">
 <div class="inner-screen">
@@ -46,7 +46,7 @@
 <div class="form-group"><label>Пароль</label><input type="password" id="auth-password" placeholder="Минимум 6 символов"></div>
 <button class="btn" onclick="handleEmailAuth()" id="email-submit-btn">Продолжить</button>
 </div>
-</div>
+</div> 
 
 <div id="dashboard-screen" class="screen">
 <video id="character-video" class="video-background" loop muted playsinline></video>
@@ -61,13 +61,13 @@
 <div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
 <p class="xp-text" id="xp-text" style="font-size: 11px;">0 / 100 XP</p>
 </div>
-<div class="bottom-panel">
+<div class="bottom-panel"> 
 
 <div class="compact-panel">
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
 <h4 style="margin: 0; color: #fff; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Съедено за сегодня</h4>
 <button onclick="openCustomNormModal()" style="background: rgba(52, 199, 89, 0.2); border: 1px solid #34c759; color: #34c759; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer;">✎ Ред.</button>
-</div>
+</div> 
 
 <div class="compact-grid">
 <div>
@@ -86,12 +86,12 @@
 <div class="compact-val"><span id="eaten-carb">0</span> <span style="font-size: 10px; color: #8e8e93;">/</span> <span id="norm-carb" style="color: #fff;">0</span></div>
 <div class="compact-label">Углев.</div>
 </div>
-</div>
+</div> 
 
-<div id="today-food-list" class="compact-food-list"></div>
+<div id="today-food-list" class="compact-food-list"></div> 
 
 <button class="btn" style="background-color: rgba(255,59,48,0.8); color: white; padding: 6px; font-size: 11px; margin-top: 8px; border-radius: 8px;" onclick="clearTodayFood()">Очистить</button>
-</div>
+</div> 
 
 <div class="action-grid">
 <button class="action-btn" onclick="window.location.href='camera.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 4px;">📸</h3><p style="font-size: 10px;">Еда</p></button>
@@ -101,13 +101,13 @@
 </div>
 </div>
 </div>
-</div>
+</div> 
 
 <div id="norm-modal" class="custom-modal">
 <div class="custom-modal-content">
 <button class="custom-modal-close" onclick="closeCustomNormModal()">✖</button>
 <h3 style="margin-top: 0; text-align: center; font-size: 16px;">Своя норма</h3>
-<p style="color: #8e8e93; font-size: 11px; text-align: center; margin-bottom: 15px;">Впиши свои цифры. Если оставить пустым, будет считаться по формуле.</p>
+<p style="color: #8e8e93; font-size: 11px; text-align: center; margin-bottom: 15px;">Впиши свои цифры. Если оставить пустым, будет считаться по формуле.</p> 
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
 <div class="form-group" style="margin: 0;"><label style="font-size: 11px;">Калории</label><input type="number" id="modal-calories" placeholder="2000" style="padding: 8px;"></div>
@@ -117,12 +117,12 @@
 </div>
 <button class="btn" style="padding: 10px; font-size: 14px; margin-top: 15px; background-color: var(--accent-color); color: #000;" onclick="saveCustomNormFromModal()">Сохранить</button>
 </div>
-</div>
+</div> 
 
 <div id="profile-settings-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
-<h1 style="text-align: center; margin-bottom: 20px;">Настройки профиля</h1>
+<h1 style="text-align: center; margin-bottom: 20px;">Настройки профиля</h1> 
 
 <div id="link-section" style="background: #1c1c1e; padding: 15px; border-radius: 16px; margin-bottom: 15px;">
 <h3 style="margin-top: 0; font-size: 16px;" id="link-title">Привязка аккаунта</h3>
@@ -136,7 +136,7 @@
 <p style="font-size: 13px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b id="current-tg-id">неизвестно</b></p>
 <button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkTelegramToEmail()">Подтвердить привязку</button>
 </div>
-</div>
+</div> 
 
 <div style="background: #1c1c1e; padding: 15px; border-radius: 16px; margin-bottom: 15px;">
 <h3 style="margin-top: 0; font-size: 16px;">Изменить данные</h3>
@@ -145,7 +145,7 @@
 <div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Рост (см)</label><input type="number" id="height" placeholder="175" style="padding: 10px;"></div>
 <div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Пол</label><select id="gender" style="padding: 10px;"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
 <div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Цель</label><select id="goal" style="padding: 10px;"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
-</div>
+</div> 
 
 <div style="background: #1c1c1e; padding: 15px; border-radius: 16px; margin-bottom: 15px;">
 <h3 style="margin-top: 0; font-size: 16px;">Своя норма (опционально)</h3>
@@ -156,21 +156,20 @@
 <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Жиры (г)</label><input type="number" id="custom-fat" placeholder="Напр. 70" style="padding: 10px;"></div>
 <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Углеводы (г)</label><input type="number" id="custom-carbs" placeholder="Напр. 200" style="padding: 10px;"></div>
 </div>
-</div>
+</div> 
 
-<button class="btn" style="padding: 15px; font-size: 16px; background-color: var(--accent-color); color: #000; margin-bottom: 15px;" onclick="saveProfile()">Сохранить все данные</button>
+<button class="btn" style="padding: 15px; font-size: 16px; background-color: var(--accent-color); color: #000; margin-bottom: 15px;" onclick="saveProfile()">Сохранить все данные</button> 
 
 <div style="background: #1c1c1e; padding: 15px; border-radius: 16px;">
 <h3 style="margin-top: 0; font-size: 16px;">Тест датчиков</h3>
 <p style="color: #8e8e93; font-size: 13px; margin-bottom: 10px;">Проверь, видит ли Telegram тряску телефона.</p>
 <button id="test-shake-btn" class="btn" style="background-color: #007aff; color: white; padding: 12px; font-size: 15px;" onclick="startShakeTest()">📳 Начать тест</button>
 <button id="stop-shake-btn" class="btn" style="background-color: #ff3b30; color: white; display: none; padding: 12px; font-size: 15px;" onclick="stopShakeTest()">🛑 СТОП</button>
-</div>
+</div> 
 
 </div>
 </div>
 
-<!-- НОВОЕ ОКНО ДЛЯ НОВЫХ ПОЛЬЗОВАТЕЛЕЙ -->
 <div id="onboarding-modal" class="custom-modal">
 <div class="custom-modal-content">
 <h3 style="margin-top: 0; text-align: center; font-size: 18px; color: var(--accent-color);">Добро пожаловать! 🏆</h3>
