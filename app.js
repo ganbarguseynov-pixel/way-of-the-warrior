@@ -19,41 +19,101 @@ function closeScreen(screenId) {
     }
 }
 
-// --- УМНАЯ ФУНКЦИЯ ПОИСКА И ОЧИСТКИ ДУБЛИКАТОВ ---
+// --- БЕЗОПАСНАЯ ФУНКЦИЯ СЛИЯНИЯ АККАУНТОВ ---
 async function resolveUserRecord(tgId, email) {
-    let query = supabaseClient.from('user_links').select('*');
-    if (tgId && email) {
-        query = query.or(`telegram_id.eq.${tgId},email.eq.${email}`);
-    } else if (tgId) {
-        query = query.eq('telegram_id', tgId);
-    } else if (email) {
-        query = query.eq('email', email);
-    } else {
-        return null;
+    if (!tgId && !email) return null;
+
+    let recordsMap = new Map();
+
+    if (tgId) {
+        const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId);
+        if (data) data.forEach(r => recordsMap.set(r.id, r));
     }
-    
-    const { data, error } = await query;
-    if (error) { console.log("Ошибка поиска:", error); return null; }
-    if (!data || data.length === 0) return null;
-    
-    let mainRecord = data[0]; // Берем первую запись как главную
-    const idsToDelete = data.slice(1).map(r => r.id); // Все остальные - на удаление
-    
-    const updateData = {};
-    if (tgId) updateData.telegram_id = tgId;
-    if (email) updateData.email = email;
-    
-    // Обновляем главную запись обоими ID
-    if (Object.keys(updateData).length > 0) {
-        await supabaseClient.from('user_links').update(updateData).eq('id', mainRecord.id);
+    if (email) {
+        const { data } = await supabaseClient.from('user_links').select('*').eq('email', email);
+        if (data) data.forEach(r => recordsMap.set(r.id, r));
     }
-    
-    // Удаляем дубликаты из базы
+
+    let records = Array.from(recordsMap.values());
+
+    // Проверяем перекрестные связи (если в записи есть второй ID)
+    let linkedTgId = tgId;
+    let linkedEmail = email;
+    records.forEach(r => {
+        if (r.telegram_id) linkedTgId = r.telegram_id;
+        if (r.email) linkedEmail = r.email;
+    });
+
+    if (linkedTgId && linkedTgId !== tgId) {
+        const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', linkedTgId);
+        if (data) data.forEach(r => recordsMap.set(r.id, r));
+    }
+    if (linkedEmail && linkedEmail !== email) {
+        const { data } = await supabaseClient.from('user_links').select('*').eq('email', linkedEmail);
+        if (data) data.forEach(r => recordsMap.set(r.id, r));
+    }
+
+    records = Array.from(recordsMap.values());
+    if (records.length === 0) return null;
+
+    if (records.length === 1) {
+        const r = records[0];
+        let needsUpdate = false;
+        let updateObj = {};
+        if (tgId && !r.telegram_id) { updateObj.telegram_id = tgId; needsUpdate = true; }
+        if (email && !r.email) { updateObj.email = email; needsUpdate = true; }
+        if (needsUpdate) {
+            await supabaseClient.from('user_links').update(updateObj).eq('id', r.id);
+            Object.assign(r, updateObj);
+        }
+        return r;
+    }
+
+    let mergedFood = [];
+    let maxXp = 0;
+    let maxBurned = 0;
+    let profile = null;
+    let name = null;
+
+    records.forEach(rec => {
+        if (rec.food && Array.isArray(rec.food)) {
+            mergedFood = mergedFood.concat(rec.food);
+        }
+        if (rec.xp && rec.xp > maxXp) maxXp = rec.xp;
+        if (rec.burned && rec.burned > maxBurned) maxBurned = rec.burned;
+        if (rec.profile && !profile) profile = rec.profile;
+        if (rec.name && !name) name = rec.name;
+    });
+
+    const uniqueFood = [];
+    const seen = new Set();
+    mergedFood.forEach(f => {
+        const key = JSON.stringify(f); 
+        if (!seen.has(key)) {
+            seen.add(key);
+            uniqueFood.push(f);
+        }
+    });
+
+    const mainRecord = records[0];
+    const idsToDelete = records.slice(1).map(r => r.id);
+
+    const updateData = {
+        telegram_id: linkedTgId || mainRecord.telegram_id || null,
+        email: linkedEmail || mainRecord.email || null,
+        food: uniqueFood,
+        xp: maxXp,
+        burned: maxBurned,
+        profile: profile || mainRecord.profile,
+        name: name || mainRecord.name || "Атлет"
+    };
+
+    await supabaseClient.from('user_links').update(updateData).eq('id', mainRecord.id);
     if (idsToDelete.length > 0) {
         await supabaseClient.from('user_links').delete().in('id', idsToDelete);
     }
-    
-    return mainRecord;
+
+    return { ...mainRecord, ...updateData };
 }
 
 window.addEventListener('load', async () => {
@@ -156,15 +216,25 @@ async function handleEmailAuth() {
     }
 }
 
-// --- СИНХРОНИЗАЦИЯ ЕДЫ ---
+// --- БЕЗОПАСНАЯ СИНХРОНИЗАЦИЯ ЕДЫ (НЕ ЗАТИРАЕТ ЛОКАЛЬНЫЕ ДАННЫЕ) ---
 async function syncFoodFromCloud() {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
     if (!tgId && !email) return;
 
     const record = await resolveUserRecord(tgId, email);
-    if (record && record.food) {
-        localStorage.setItem('todayFood', JSON.stringify(record.food));
+    let localFood = [];
+    try { localFood = JSON.parse(localStorage.getItem('todayFood') || '[]'); } catch(e) {}
+
+    if (record) {
+        const cloudFood = record.food || [];
+        if (cloudFood.length > 0) {
+            // Если в облаке есть еда - берем её
+            localStorage.setItem('todayFood', JSON.stringify(cloudFood));
+        } else if (localFood.length > 0) {
+            // Если в облаке пусто, но локально есть - сохраняем локальное в облако
+            await supabaseClient.from('user_links').update({ food: localFood }).eq('id', record.id);
+        }
         updateDashboard();
     }
 }
