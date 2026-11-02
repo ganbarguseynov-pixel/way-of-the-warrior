@@ -24,7 +24,6 @@ client = genai.Client(
 
 SEARCH_CACHE = {}
 BARCODE_CACHE = {}
-# ВОТ ЗДЕСЬ ИЗМЕНЕНИЕ: Вместо иконки корзины теперь красивая еда
 DEFAULT_IMG = "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=200" 
 
 LOCAL_DB = [
@@ -81,7 +80,11 @@ def translate_to_english(query):
         'масло': 'butter', 'сахар': 'sugar', 'мед': 'honey', 'орехи': 'nuts',
         'суши': 'sushi', 'роллы': 'rolls', 'чипсы': 'chips', 'сникерс': 'snickers',
         'марс': 'mars', 'йогурт': 'yogurt', 'теос': 'teos', 'зеро': 'zero',
-        'кола зеро': 'coca-cola zero', 'кефир': 'kefir'
+        'кола зеро': 'coca-cola zero', 'кефир': 'kefir',
+        'арахис': 'peanut', 'грецкие орехи': 'walnuts', 'грецкий орех': 'walnut',
+        'миндаль': 'almond', 'кешью': 'cashew', 'фундук': 'hazelnut', 'фисташки': 'pistachio',
+        'семечки': 'sunflower seeds', 'тыквенные семечки': 'pumpkin seeds',
+        'шашлык': 'kebab', 'шашлык из свинины': 'pork kebab', 'люля-кебаб': 'lula kebab'
     }
     words = query.lower().split()
     if query.lower() in dictionary:
@@ -100,14 +103,18 @@ def search_food():
         return jsonify({"products": SEARCH_CACHE[cache_key]}) 
 
     results = []
-    best_match = process.extractOne(query, LOCAL_NAMES, scorer=fuzz.WRatio, score_cutoff=60)
-    if best_match:
-        matched_name = best_match[0]
+    
+    # 1. Точное совпадение в нашей базе
+    best_match_strict = process.extractOne(query.lower(), [n.lower() for n in LOCAL_NAMES], scorer=fuzz.ratio, score_cutoff=80)
+    
+    if best_match_strict:
+        matched_name = best_match_strict[0]
         for p in LOCAL_DB:
-            if p["name"] == matched_name:
+            if p["name"].lower() == matched_name:
                 results.append({"product_name": p["name"], "image_url": p["img"], "calories_100g": p["cal"], "proteins_100g": p["prot"], "fat_100g": p["fat"], "carbs_100g": p["carb"], "ingredients": "Точные данные", "description": ""})
                 break 
 
+    # 2. Open Food Facts
     if len(results) == 0:
         eng_query = translate_to_english(query)
         try:
@@ -117,11 +124,18 @@ def search_food():
                     name = product.get('product_name')
                     if not name: continue
                     nutrients = product.get('nutriments', {})
+                    
+                    # ФИЛЬТР: Если калорий 0, пропускаем продукт (ищем нормальный)
+                    cal = round(nutrients.get('energy-kcal_100g', 0), 1)
+                    if cal == 0:
+                        continue
+
                     image_url = product.get('image_front_small_url') or product.get('image_url') or DEFAULT_IMG
-                    results.append({"product_name": name, "image_url": image_url, "calories_100g": round(nutrients.get('energy-kcal_100g', 0), 1), "proteins_100g": round(nutrients.get('proteins_100g', 0), 1), "fat_100g": round(nutrients.get('fat_100g', 0), 1), "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1), "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан', "description": "Данные Open Food Facts"})
+                    results.append({"product_name": name, "image_url": image_url, "calories_100g": cal, "proteins_100g": round(nutrients.get('proteins_100g', 0), 1), "fat_100g": round(nutrients.get('fat_100g', 0), 1), "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1), "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан', "description": "Данные Open Food Facts"})
         except Exception as e:
             print(f"OFF error: {e}") 
 
+    # 3. USDA
     if len(results) == 0 and USDA_API_KEY:
         eng_query = translate_to_english(query)
         try:
@@ -134,6 +148,25 @@ def search_food():
                     results.append({"product_name": food.get('description', 'Без названия'), "image_url": DEFAULT_IMG, "calories_100g": round(nutrients.get('Energy', 0), 1), "proteins_100g": round(nutrients.get('Protein', 0), 1), "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1), "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1), "ingredients": "Данные USDA FoodData Central", "description": ""})
         except Exception as e:
             print(f"USDA error: {e}") 
+
+    # 4. Умный запасной вариант (если опечатка)
+    if len(results) == 0:
+        best_match_fuzzy = process.extractOne(query.lower(), [n.lower() for n in LOCAL_NAMES], scorer=fuzz.WRatio, score_cutoff=65)
+        if best_match_fuzzy:
+            matched_name = best_match_fuzzy[0]
+            for p in LOCAL_DB:
+                if p["name"].lower() == matched_name:
+                    results.append({
+                        "product_name": p["name"] + " (Возможно, вы имели в виду?)", 
+                        "image_url": p["img"], 
+                        "calories_100g": p["cal"], 
+                        "proteins_100g": p["prot"], 
+                        "fat_100g": p["fat"], 
+                        "carbs_100g": p["carb"], 
+                        "ingredients": "Похожий продукт", 
+                        "description": ""
+                    })
+                    break
 
     for p in results:
         if not p["image_url"]: p["image_url"] = DEFAULT_IMG 
@@ -216,8 +249,8 @@ def analyze_photo():
         image.save(img_byte_arr, format='JPEG', quality=75)
         compressed_image_data = img_byte_arr.getvalue() 
 
-        prompt = """Ты — калькулятор калорий. Никаких вступлений, приветствий и рассуждений.
-Оцени продукт на фото. Если это напиток, оцени стандартную порцию (стакан 200-250 мл).
+        prompt = """Ты — калькулятор калорий. Никаких вступлений, приветствий и рассуждений. 
+Оцени продукт на фото. Если это напиток, оцени стандартную порцию (стакан 200-250 мл). 
 Если это еда, оцени стандартную порцию.
 Выведи СТРОГО ОДНУ строку в таком формате, без лишних слов:
 Название | Калории | Белки | Жиры | Углеводы 
