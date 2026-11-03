@@ -298,7 +298,7 @@ async function syncFoodFromCloud() {
                 await supabaseClient.from('user_links').update({ food: localFood }).eq('id', record.id);
             }
         } else {
-            archiveFoodToHistory(localFood, savedDate); // Отправляем вчерашнюю еду в историю
+            archiveFoodToHistory(localFood, savedDate);
             localStorage.setItem('todayFood', '[]');
             localStorage.setItem('foodListDate', today);
             await supabaseClient.from('user_links').update({ food: [] }).eq('id', record.id);
@@ -366,13 +366,11 @@ function checkDayReset() {
     const now = new Date();
     const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     
-    // Сброс еды
     if (localStorage.getItem('foodListDate') !== today) {
         localStorage.setItem('todayFood', '[]');
         localStorage.setItem('foodListDate', today);
     }
     
-    // Сброс воды
     if (localStorage.getItem('waterListDate') !== today) {
         localStorage.setItem('todayWater', '[]');
         localStorage.setItem('waterListDate', today);
@@ -380,6 +378,26 @@ function checkDayReset() {
 } 
 
 // --- ВОДА ---
+function updateCustomWaterBtn() {
+    const btn = document.getElementById('custom-water-quick-btn');
+    if (!btn) return;
+    const saved = localStorage.getItem('customWaterAmount');
+    if (saved && parseInt(saved) > 0) {
+        btn.innerText = `+${saved}`;
+    } else {
+        btn.innerText = "+Своя";
+    }
+}
+
+function quickAddCustomWater() {
+    const customAmount = localStorage.getItem('customWaterAmount');
+    if (customAmount && parseInt(customAmount) > 0) {
+        addWater(customAmount);
+    } else {
+        openCustomWaterModal();
+    }
+}
+
 function addWater(amount) {
     let waterArr = [];
     try { waterArr = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e) {}
@@ -387,7 +405,6 @@ function addWater(amount) {
     localStorage.setItem('todayWater', JSON.stringify(waterArr));
     updateDashboard();
     
-    // Архивируем в историю
     const today = localStorage.getItem('waterListDate');
     archiveWaterToHistory(waterArr, today);
 }
@@ -404,7 +421,8 @@ function deleteWaterItem(index) {
 }
 
 function openCustomWaterModal() {
-    document.getElementById('custom-water-input').value = '';
+    const saved = localStorage.getItem('customWaterAmount');
+    document.getElementById('custom-water-input').value = saved ? saved : '';
     document.getElementById('water-modal').classList.add('active');
 }
 function closeCustomWaterModal() {
@@ -413,6 +431,8 @@ function closeCustomWaterModal() {
 function addCustomWater() {
     const val = parseInt(document.getElementById('custom-water-input').value);
     if (val && val > 0) {
+        localStorage.setItem('customWaterAmount', val);
+        updateCustomWaterBtn();
         addWater(val);
         closeCustomWaterModal();
     } else {
@@ -493,10 +513,7 @@ function renderHistory() {
     try { foodHistory = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) {}
     try { waterHistory = JSON.parse(localStorage.getItem('waterHistory') || '{}'); } catch(e) {}
 
-    // Собираем все уникальные даты из обеих историй
     const allDates = new Set([...Object.keys(foodHistory), ...Object.keys(waterHistory)]);
-    
-    // Фильтруем по выбранному диапазону и сортируем
     const datesInRange = Array.from(allDates).filter(date => date >= startDate && date <= endDate).sort((a, b) => new Date(b) - new Date(a));
 
     if (datesInRange.length === 0) {
@@ -538,7 +555,6 @@ function renderHistory() {
         html += `<div class="history-card">`;
         html += `<div class="history-date">📅 ${dayDisplay}</div>`;
         
-        // Статистика дня
         html += `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; margin-bottom: 10px;">`;
         html += `<div><span style="color: var(--accent-color); font-weight: bold; font-size: 14px;">${Math.round(dayCal)}</span><br><span style="font-size: 10px; color: #8e8e93;">Ккал</span></div>`;
         html += `<div><span style="color: #fff; font-weight: bold; font-size: 14px;">${Math.round(dayProt)}</span><br><span style="font-size: 10px; color: #8e8e93;">Бел.</span></div>`;
@@ -546,19 +562,16 @@ function renderHistory() {
         html += `<div><span style="color: #fff; font-weight: bold; font-size: 14px;">${Math.round(dayCarb)}</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div>`;
         html += `</div>`;
         
-        // Вода за день
         if (dayWater > 0) {
             html += `<div style="text-align: center; margin-bottom: 10px; color: #5ac8fa; font-size: 13px; font-weight: bold;">💧 Выпито воды: ${dayWater} мл</div>`;
         }
 
-        // Списки
         html += `<div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">`;
         foods.forEach(f => {
             html += `<div class="history-food-item" style="display: flex; justify-content: space-between; margin-bottom: 5px;">`;
             html += `<span>${f.product_name}</span><span style="color: #8e8e93;">${Math.round(f.calories_100g || 0)} ккал</span></div>`;
         });
         
-        // Выводим детализацию воды
         waters.forEach(w => {
             html += `<div class="history-water-item" style="display: flex; justify-content: space-between; margin-bottom: 5px;">`;
             html += `<span>💧 Вода</span><span style="color: #8e8e93;">${w.amount} мл</span></div>`;
@@ -582,6 +595,9 @@ function updateDashboard() {
     if (!currentProfileData) return;
     checkDayReset();
     
+    // Обновляем кнопку быстрой воды
+    updateCustomWaterBtn();
+
     // --- ЕДА ---
     const norm = calculateNutrition(currentProfileData);
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
