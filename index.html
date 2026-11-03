@@ -14,6 +14,7 @@
 .history-date { color: var(--accent-color); font-weight: bold; font-size: 15px; margin-bottom: 5px; }
 .history-stats { color: #8e8e93; font-size: 12px; margin-bottom: 10px; }
 .history-food-item { font-size: 12px; color: #fff; margin-bottom: 3px; padding-left: 10px; border-left: 2px solid #34c759; }
+.history-water-item { font-size: 12px; color: #5ac8fa; margin-bottom: 3px; padding-left: 10px; border-left: 2px solid #5ac8fa; }
 .custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
 .custom-modal.active { display: flex; }
 .custom-modal-content { background: #1c1c1e; border-radius: 16px; padding: 20px; width: 100%; max-width: 320px; box-sizing: border-box; position: relative; }
@@ -23,6 +24,8 @@
 .compact-food-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; margin-bottom: 4px; font-size: 11px; }
 .quick-btn { background: #2c2c2e; color: white; border: 1px solid #3a3a3c; border-radius: 8px; padding: 6px 10px; font-size: 11px; cursor: pointer; }
 .quick-btn:active { background: #3a3a3c; }
+.water-btn { background: rgba(90, 200, 250, 0.2); border: 1px solid #5ac8fa; color: #5ac8fa; border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; font-weight: bold; }
+.water-btn:active { background: rgba(90, 200, 250, 0.4); }
 </style>
 </head>
 <body class="male-theme"> 
@@ -66,10 +69,30 @@
 </div>
 <div class="bottom-panel">
 <div class="stats-row">
-<div class="stat-box"><p>Норма</p><h3 id="calories-norm">0 ккал</h3></div>
+<div class="stat-box"><p>Норма еды</p><h3 id="calories-norm">0 ккал</h3></div>
 <div class="stat-box"><p>Сожжено</p><h3 id="burned-total">0 ккал</h3></div>
 </div>
 
+<!-- Блок воды -->
+<div class="compact-panel" style="border-color: rgba(90, 200, 250, 0.3);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h4 style="margin: 0; color: #5ac8fa; font-size: 11px; text-transform: uppercase;">💧 Водный баланс</h4>
+        <span style="font-size: 12px; color: #fff;"><span id="eaten-water">0</span> / <span id="norm-water">2000</span> мл</span>
+    </div>
+    
+    <div style="display: flex; gap: 5px; margin-bottom: 8px;">
+        <button class="water-btn" onclick="addWater(200)">+200</button>
+        <button class="water-btn" onclick="addWater(250)">+250</button>
+        <button class="water-btn" onclick="addWater(500)">+500</button>
+        <button class="water-btn" style="background: transparent; color: #8e8e93; border-color: #3a3a3c;" onclick="openCustomWaterModal()">+ Своя</button>
+    </div>
+    
+    <div id="today-water-list" class="compact-food-list" style="border-color: rgba(90, 200, 250, 0.2);">
+        <!-- Список выпитой воды -->
+    </div>
+</div>
+
+<!-- Блок еды -->
 <div class="compact-panel">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
         <h4 style="margin: 0; color: #fff; font-size: 10px; text-transform: uppercase;">Съедено сегодня</h4>
@@ -97,11 +120,11 @@
 </div>
 </div> 
 
-<!-- ЭКРАН ИСТОРИИ С ВЫБОРОМ ПЕРИОДА -->
+<!-- ЭКРАН ИСТОРИИ -->
 <div id="history-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('history-screen')">← Назад</button>
-<h1 style="text-align: center; margin-bottom: 15px;">📜 История питания</h1>
+<h1 style="text-align: center; margin-bottom: 15px;">📜 История</h1>
 
 <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
     <div style="display: flex; gap: 10px; margin-bottom: 10px;">
@@ -123,14 +146,17 @@
     </div>
 </div>
 
-<!-- Блок с итогами за выбранный период -->
+<!-- Итоги за период -->
 <div id="history-period-summary" class="history-card" style="background: rgba(52, 199, 89, 0.1); border-color: #34c759; display: none;">
     <div style="font-size: 14px; font-weight: bold; color: #34c759; margin-bottom: 8px;">Итого за период:</div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; margin-bottom: 10px;">
         <div><span id="hist-total-cal" style="color: var(--accent-color); font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Ккал</span></div>
         <div><span id="hist-total-prot" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Бел.</span></div>
         <div><span id="hist-total-fat" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Жир.</span></div>
         <div><span id="hist-total-carb" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div>
+    </div>
+    <div style="text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+        <span style="color: #5ac8fa; font-weight: bold; font-size: 16px;" id="hist-total-water">0</span> <span style="font-size: 12px; color: #8e8e93;">мл воды</span>
     </div>
 </div>
 
@@ -143,7 +169,7 @@
 <div id="profile-settings-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
-<h1 style="text-align: center; margin-bottom: 30px;">Настройки профиля</h1>
+<h1 style="text-align: center; margin-bottom: 30px;">Настройки</h1>
 <div id="link-section" style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-bottom: 20px;">
 <h3 style="margin-top: 0;" id="link-title">Привязка аккаунта</h3>
 <p style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;" id="link-desc">Привяжите второй способ входа.</p>
@@ -166,17 +192,20 @@
 <div class="form-group"><label>Рост (см)</label><input type="number" id="height" placeholder="175"></div>
 <div class="form-group"><label>Пол</label><select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
 <div class="form-group"><label>Цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
+<div class="form-group" style="margin-top: 15px; border-top: 1px solid #3a3a3c; padding-top: 15px;">
+    <label style="color: #5ac8fa;">Норма воды (мл)</label>
+    <input type="number" id="custom-water-goal" placeholder="Напр. 2000">
+</div>
 </div>
 
-<!-- ВОССТАНОВЛЕННЫЙ БЛОК СВОЕЙ НОРМЫ -->
 <div style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-bottom: 20px;">
-<h3 style="margin-top: 0;">Своя норма (опционально)</h3>
-<p style="color: #8e8e93; font-size: 12px; margin-bottom: 10px;">Если хотите задать норму вручную, впишите цифры ниже. Если оставить пустым — норма посчитается по формуле.</p>
+<h3 style="margin-top: 0;">Своя норма еды (опционально)</h3>
+<p style="color: #8e8e93; font-size: 12px; margin-bottom: 10px;">Если хотите задать норму вручную, впишите цифры ниже.</p>
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Калории</label><input type="number" id="custom-calories" placeholder="Напр. 2000"></div>
-    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Белки (г)</label><input type="number" id="custom-protein" placeholder="Напр. 150"></div>
-    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Жиры (г)</label><input type="number" id="custom-fat" placeholder="Напр. 70"></div>
-    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Углеводы (г)</label><input type="number" id="custom-carbs" placeholder="Напр. 200"></div>
+    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Калории</label><input type="number" id="custom-calories" placeholder="2000"></div>
+    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Белки (г)</label><input type="number" id="custom-protein" placeholder="150"></div>
+    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Жиры (г)</label><input type="number" id="custom-fat" placeholder="70"></div>
+    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Углеводы (г)</label><input type="number" id="custom-carbs" placeholder="200"></div>
 </div>
 </div>
 
@@ -195,7 +224,7 @@
 <div id="norm-modal" class="custom-modal">
 <div class="custom-modal-content">
 <button class="custom-modal-close" onclick="closeCustomNormModal()">✖</button>
-<h3 style="margin-top: 0; text-align: center; font-size: 16px;">Своя норма</h3>
+<h3 style="margin-top: 0; text-align: center; font-size: 16px;">Своя норма еды</h3>
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
 <div class="form-group" style="margin: 0;"><label>Ккал</label><input type="number" id="modal-calories" placeholder="2000"></div>
 <div class="form-group" style="margin: 0;"><label>Белки</label><input type="number" id="modal-protein" placeholder="150"></div>
@@ -203,6 +232,18 @@
 <div class="form-group" style="margin: 0;"><label>Углев.</label><input type="number" id="modal-carbs" placeholder="200"></div>
 </div>
 <button class="btn" style="margin-top: 15px;" onclick="saveCustomNormFromModal()">Сохранить</button>
+</div>
+</div>
+
+<div id="water-modal" class="custom-modal">
+<div class="custom-modal-content">
+<button class="custom-modal-close" onclick="closeCustomWaterModal()">✖</button>
+<h3 style="margin-top: 0; text-align: center; font-size: 16px; color: #5ac8fa;">Свой объем воды</h3>
+<div class="form-group">
+    <label>Объем (мл)</label>
+    <input type="number" id="custom-water-input" placeholder="Напр. 300" style="font-size: 20px; text-align: center;">
+</div>
+<button class="btn" style="margin-top: 15px; background-color: #5ac8fa; color: #fff;" onclick="addCustomWater()">Добавить</button>
 </div>
 </div>
 
@@ -217,6 +258,7 @@
 <div class="form-group" style="margin: 0;"><label>Пол</label><select id="onboarding-gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
 </div>
 <div class="form-group" style="margin-top: 10px;"><label>Цель</label><select id="onboarding-goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
+<div class="form-group" style="margin-top: 10px;"><label>Норма воды (мл)</label><input type="number" id="onboarding-water" placeholder="Напр. 2000"></div>
 <button class="btn" style="margin-top: 15px;" onclick="saveOnboardingData()">Сохранить и начать</button>
 </div>
 </div>
