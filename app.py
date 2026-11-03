@@ -35,6 +35,11 @@ LOCAL_DB = [
     {"name": "Адреналин", "cal": 45, "prot": 0, "fat": 0, "carb": 11, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
     {"name": "Йогурт", "cal": 60, "prot": 5, "fat": 3, "carb": 4, "img": "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=200"},
     {"name": "Кола", "cal": 42, "prot": 0, "fat": 0, "carb": 10.6, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
+    {"name": "Coca-Cola", "cal": 42, "prot": 0, "fat": 0, "carb": 10.6, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
+    {"name": "Пепси", "cal": 43, "prot": 0, "fat": 0, "carb": 11, "img": "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=200"},
+    {"name": "Спрайт", "cal": 40, "prot": 0, "fat": 0, "carb": 10, "img": "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=200"},
+    {"name": "Фанта", "cal": 45, "prot": 0, "fat": 0, "carb": 11.5, "img": "https://images.unsplash.com/photo-1624517452488-04869289c4ca?w=200"},
+    {"name": "Вода", "cal": 0, "prot": 0, "fat": 0, "carb": 0, "img": "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=200"},
     {"name": "Кола Зеро", "cal": 0, "prot": 0, "fat": 0, "carb": 0, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
     {"name": "Салат", "cal": 15, "prot": 1.4, "fat": 0.2, "carb": 2.9, "img": "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?w=200"},
     {"name": "Банан", "cal": 89, "prot": 1.1, "fat": 0.3, "carb": 23, "img": "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=200"},
@@ -125,7 +130,6 @@ def search_food():
                     if not name: continue
                     nutrients = product.get('nutriments', {})
                     
-                    # ФИЛЬТР: Если калорий 0, пропускаем продукт (ищем нормальный)
                     cal = round(nutrients.get('energy-kcal_100g', 0), 1)
                     if cal == 0:
                         continue
@@ -145,11 +149,35 @@ def search_food():
             if 'foods' in data:
                 for food in data['foods']:
                     nutrients = {n['nutrientName']: n['value'] for n in food.get('foodNutrients', [])}
-                    results.append({"product_name": food.get('description', 'Без названия'), "image_url": DEFAULT_IMG, "calories_100g": round(nutrients.get('Energy', 0), 1), "proteins_100g": round(nutrients.get('Protein', 0), 1), "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1), "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1), "ingredients": "Данные USDA FoodData Central", "description": ""})
+                    
+                    raw_name = food.get('description', 'Без названия')
+                    
+                    # --- ОЧИСТКА НАЗВАНИЙ ОТ USDA ---
+                    clean_name = raw_name
+                    if clean_name.startswith("Beverages, "):
+                        clean_name = clean_name.replace("Beverages, ", "")
+                    if clean_name.startswith("The COCA-COLA company, "):
+                        clean_name = clean_name.replace("The COCA-COLA company, ", "")
+                    
+                    clean_name = clean_name.replace("ready-to-drink", "готовый к употреблению")
+                    clean_name = clean_name.replace("non-carbonated", "без газа")
+                    clean_name = clean_name.replace("bottled", "бутилированная")
+                    clean_name = clean_name.replace("lemon-lime flavored", "со вкусом лимона и лайма")
+                    clean_name = clean_name.replace("Lemonade", "Лимонад")
+                    clean_name = clean_name.replace("water", "Вода")
+                    clean_name = clean_name.replace("POWERADE", "Пауэрейд")
+                    clean_name = clean_name.replace("DASANI", "Дасани")
+                    
+                    # Если стало слишком коротко или пусто - берем оригинал
+                    if len(clean_name) < 3: 
+                        clean_name = raw_name
+                    # ---------------------------------
+
+                    results.append({"product_name": clean_name, "image_url": DEFAULT_IMG, "calories_100g": round(nutrients.get('Energy', 0), 1), "proteins_100g": round(nutrients.get('Protein', 0), 1), "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1), "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1), "ingredients": "Данные USDA FoodData Central", "description": ""})
         except Exception as e:
             print(f"USDA error: {e}") 
 
-    # 4. Умный запасной вариант (если опечатка)
+    # 4. Умный запасной вариант
     if len(results) == 0:
         best_match_fuzzy = process.extractOne(query.lower(), [n.lower() for n in LOCAL_NAMES], scorer=fuzz.WRatio, score_cutoff=65)
         if best_match_fuzzy:
