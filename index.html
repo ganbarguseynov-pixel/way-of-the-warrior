@@ -9,7 +9,6 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="style.css">
 <style>
-/* Стили для истории */
 .history-card { background: #1c1c1e; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #2c2c2e; }
 .history-date { color: var(--accent-color); font-weight: bold; font-size: 15px; margin-bottom: 5px; }
 .history-stats { color: #8e8e93; font-size: 12px; margin-bottom: 10px; }
@@ -68,7 +67,7 @@
 <div class="stat-box"><p>Сожжено</p><h3 id="burned-total">0 ккал</h3></div>
 </div>
 
-<!-- ВОССТАНОВЛЕННЫЙ БЛОК ЕДЫ И КНОПКА ИСТОРИИ -->
+<!-- Блок еды -->
 <div class="compact-panel">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
         <h4 style="margin: 0; color: #fff; font-size: 10px; text-transform: uppercase;">Съедено сегодня</h4>
@@ -96,7 +95,7 @@
 </div>
 </div> 
 
-<!-- НОВЫЙ ЭКРАН ИСТОРИИ -->
+<!-- Экран истории -->
 <div id="history-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('history-screen')">← Назад</button>
@@ -143,7 +142,7 @@
 </div>
 </div>
 
-<!-- МОДАЛЬНЫЕ ОКНА (восстановлены) -->
+<!-- Модальные окна (ВОССТАНОВЛЕНЫ) -->
 <div id="norm-modal" class="custom-modal">
 <div class="custom-modal-content">
 <button class="custom-modal-close" onclick="closeCustomNormModal()">✖</button>
