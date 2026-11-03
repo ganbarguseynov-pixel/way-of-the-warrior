@@ -370,7 +370,7 @@ function checkDayReset() {
     }
 } 
 
-// --- ИСТОРИЯ ПИТАНИЯ И КАЛЕНДАРЬ ---
+// --- ИСТОРИЯ ПИТАНИЯ С ВЫБОРОМ ПЕРИОДА ---
 function archiveFoodToHistory(foodArray, dateString) {
     if (!foodArray || foodArray.length === 0 || !dateString) return;
     
@@ -380,7 +380,7 @@ function archiveFoodToHistory(foodArray, dateString) {
     history[dateString] = foodArray;
     
     const dates = Object.keys(history).sort();
-    if (dates.length > 60) {
+    if (dates.length > 90) {
         delete history[dates[0]];
     }
     
@@ -388,41 +388,72 @@ function archiveFoodToHistory(foodArray, dateString) {
 }
 
 function openHistoryScreen() {
-    const monthPicker = document.getElementById('history-month-picker');
-    if (monthPicker && !monthPicker.value) {
+    const startInput = document.getElementById('history-start-date');
+    const endInput = document.getElementById('history-end-date');
+    
+    if (startInput && !startInput.value) {
         const now = new Date();
-        monthPicker.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        startInput.value = firstDay.toISOString().split('T')[0];
+        endInput.value = now.toISOString().split('T')[0];
     }
     openScreen('history-screen');
     renderHistory();
 }
 
+function setHistoryPeriod(type) {
+    const startInput = document.getElementById('history-start-date');
+    const endInput = document.getElementById('history-end-date');
+    const now = new Date();
+    
+    endInput.value = now.toISOString().split('T')[0];
+
+    if (type === '7days') {
+        const past = new Date(now);
+        past.setDate(now.getDate() - 7);
+        startInput.value = past.toISOString().split('T')[0];
+    } else if (type === '30days') {
+        const past = new Date(now);
+        past.setDate(now.getDate() - 30);
+        startInput.value = past.toISOString().split('T')[0];
+    } else if (type === 'month') {
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        startInput.value = firstDay.toISOString().split('T')[0];
+    } else if (type === 'all') {
+        startInput.value = '2020-01-01'; // Условная ранняя дата
+    }
+    renderHistory();
+}
+
 function renderHistory() {
     const listDiv = document.getElementById('history-list');
-    const summaryDiv = document.getElementById('history-month-summary');
-    const monthPicker = document.getElementById('history-month-picker');
+    const summaryDiv = document.getElementById('history-period-summary');
+    const startInput = document.getElementById('history-start-date');
+    const endInput = document.getElementById('history-end-date');
     
-    if (!listDiv || !summaryDiv || !monthPicker) return;
+    if (!listDiv || !summaryDiv || !startInput || !endInput) return;
 
-    const selectedMonth = monthPicker.value; // Формат: "2026-11"
-    if (!selectedMonth) return;
+    const startDate = startInput.value;
+    const endDate = endInput.value;
+
+    if (!startDate || !endDate) return;
 
     let history = {};
     try { history = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) { history = {}; }
 
-    // Берем только дни из выбранного месяца
-    const datesInMonth = Object.keys(history).filter(date => date.startsWith(selectedMonth)).sort((a, b) => new Date(b) - new Date(a));
+    // Берем только дни в выбранном диапазоне
+    const datesInRange = Object.keys(history).filter(date => date >= startDate && date <= endDate).sort((a, b) => new Date(b) - new Date(a));
 
-    if (datesInMonth.length === 0) {
+    if (datesInRange.length === 0) {
         summaryDiv.style.display = 'none';
-        listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; margin-top: 20px;">За этот месяц записей нет.</p>';
+        listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; margin-top: 20px;">За выбранный период записей нет.</p>';
         return;
     }
 
-    let monthCal = 0, monthProt = 0, monthFat = 0, monthCarb = 0;
+    let periodCal = 0, periodProt = 0, periodFat = 0, periodCarb = 0;
     let html = '';
 
-    datesInMonth.forEach(date => {
+    datesInRange.forEach(date => {
         const foods = history[date];
         if (!foods || foods.length === 0) return;
 
@@ -434,10 +465,10 @@ function renderHistory() {
             dayCarb += parseFloat(f.carbs_100g || 0);
         });
 
-        monthCal += dayCal;
-        monthProt += dayProt;
-        monthFat += dayFat;
-        monthCarb += dayCarb;
+        periodCal += dayCal;
+        periodProt += dayProt;
+        periodFat += dayFat;
+        periodCarb += dayCarb;
 
         const dayDisplay = date.split('-').reverse().join('.'); // Превращаем 2026-11-03 в 03.11.2026
 
@@ -460,12 +491,12 @@ function renderHistory() {
         html += `</div></div>`;
     });
 
-    // Показываем итоги за месяц
+    // Показываем итоги за выбранный период
     summaryDiv.style.display = 'block';
-    document.getElementById('hist-total-cal').innerText = Math.round(monthCal);
-    document.getElementById('hist-total-prot').innerText = Math.round(monthProt);
-    document.getElementById('hist-total-fat').innerText = Math.round(monthFat);
-    document.getElementById('hist-total-carb').innerText = Math.round(monthCarb);
+    document.getElementById('hist-total-cal').innerText = Math.round(periodCal);
+    document.getElementById('hist-total-prot').innerText = Math.round(periodProt);
+    document.getElementById('hist-total-fat').innerText = Math.round(periodFat);
+    document.getElementById('hist-total-carb').innerText = Math.round(periodCarb);
 
     listDiv.innerHTML = html;
 }
@@ -604,7 +635,6 @@ function updateCharacterUI() {
     if (document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = percent + "%";
 } 
 
-// --- ИСПРАВЛЕННАЯ ФУНКЦИЯ НАСТРОЕК (без зависаний) ---
 function openProfileSettings() {
     try {
         const loginType = localStorage.getItem('loginType') || 'telegram';
@@ -649,15 +679,15 @@ function openProfileSettings() {
         const cachedProfile = localStorage.getItem('cachedProfile');
         if (cachedProfile) {
             const p = JSON.parse(cachedProfile);
-            document.getElementById('age').value = p.age || '';
-            document.getElementById('weight').value = p.weight || '';
-            document.getElementById('height').value = p.height || '';
-            document.getElementById('gender').value = p.gender || 'male';
-            document.getElementById('goal').value = p.goal || 'lose';
-            document.getElementById('custom-calories').value = p.custom_calories || '';
-            document.getElementById('custom-protein').value = p.custom_protein || '';
-            document.getElementById('custom-fat').value = p.custom_fat || '';
-            document.getElementById('custom-carbs').value = p.custom_carbs || '';
+            if(document.getElementById('age')) document.getElementById('age').value = p.age || '';
+            if(document.getElementById('weight')) document.getElementById('weight').value = p.weight || '';
+            if(document.getElementById('height')) document.getElementById('height').value = p.height || '';
+            if(document.getElementById('gender')) document.getElementById('gender').value = p.gender || 'male';
+            if(document.getElementById('goal')) document.getElementById('goal').value = p.goal || 'lose';
+            if(document.getElementById('custom-calories')) document.getElementById('custom-calories').value = p.custom_calories || '';
+            if(document.getElementById('custom-protein')) document.getElementById('custom-protein').value = p.custom_protein || '';
+            if(document.getElementById('custom-fat')) document.getElementById('custom-fat').value = p.custom_fat || '';
+            if(document.getElementById('custom-carbs')) document.getElementById('custom-carbs').value = p.custom_carbs || '';
         }
         openScreen('profile-settings-screen');
     } catch (e) {
@@ -665,7 +695,6 @@ function openProfileSettings() {
         tg.showAlert("Не удалось открыть настройки.");
     }
 } 
-// ------------------------------------------------------
 
 async function linkEmailToTelegram() {
     const email = document.getElementById('link-email').value;
