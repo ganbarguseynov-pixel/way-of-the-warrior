@@ -67,7 +67,6 @@
 <div class="stat-box"><p>Сожжено</p><h3 id="burned-total">0 ккал</h3></div>
 </div>
 
-<!-- Блок еды -->
 <div class="compact-panel">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
         <h4 style="margin: 0; color: #fff; font-size: 10px; text-transform: uppercase;">Съедено сегодня</h4>
@@ -95,11 +94,28 @@
 </div>
 </div> 
 
-<!-- Экран истории -->
+<!-- ЭКРАН ИСТОРИИ С КАЛЕНДАРЕМ -->
 <div id="history-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('history-screen')">← Назад</button>
-<h1 style="text-align: center; margin-bottom: 20px;">📜 История питания</h1>
+<h1 style="text-align: center; margin-bottom: 15px;">📜 История питания</h1>
+
+<div class="form-group" style="margin-bottom: 15px;">
+    <label style="color: #8e8e93; font-size: 12px; margin-bottom: 5px;">Выберите месяц</label>
+    <input type="month" id="history-month-picker" style="padding: 10px; width: 100%; border-radius: 12px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 16px; outline: none;" onchange="renderHistory()">
+</div>
+
+<!-- Блок с итогами за месяц -->
+<div id="history-month-summary" class="history-card" style="background: rgba(52, 199, 89, 0.1); border-color: #34c759; display: none;">
+    <div style="font-size: 14px; font-weight: bold; color: #34c759; margin-bottom: 8px;">Итого за месяц:</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center;">
+        <div><span id="hist-total-cal" style="color: var(--accent-color); font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Ккал</span></div>
+        <div><span id="hist-total-prot" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Бел.</span></div>
+        <div><span id="hist-total-fat" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Жир.</span></div>
+        <div><span id="hist-total-carb" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div>
+    </div>
+</div>
+
 <div id="history-list">
     <p style="text-align: center; color: #8e8e93;">Загрузка...</p>
 </div>
@@ -142,7 +158,7 @@
 </div>
 </div>
 
-<!-- Модальные окна (ВОССТАНОВЛЕНЫ) -->
+<!-- Модальные окна -->
 <div id="norm-modal" class="custom-modal">
 <div class="custom-modal-content">
 <button class="custom-modal-close" onclick="closeCustomNormModal()">✖</button>
