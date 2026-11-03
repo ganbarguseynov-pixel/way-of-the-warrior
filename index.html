@@ -64,7 +64,6 @@
 <button class="btn" style="background-color: rgba(255,59,48,0.2); color: #ff3b30; width: auto; padding: 6px 12px; font-size: 12px; margin: 0; border: 1px solid #ff3b30;" onclick="logout()">Выйти</button>
 </div>
 
-<!-- Блок с уровнем (сдвинут немного выше) -->
 <div class="top-info" style="margin-top: 0; margin-bottom: auto;">
 <div class="character-level" id="char-level" style="font-size: 14px;">Уровень 1</div>
 <div class="character-title" id="char-title" style="font-size: 28px;">Странник</div>
@@ -74,7 +73,6 @@
 
 <div class="bottom-panel" style="gap: 8px;">
     
-    <!-- Верхняя строка со статистикой (Норма/Сожжено) -->
     <div class="stats-row" style="margin-bottom: 0;">
         <div class="stat-box" style="padding: 8px;"><p style="font-size: 10px;">Норма</p><h3 id="calories-norm" style="font-size: 16px;">0 ккал</h3></div>
         <div class="stat-box" style="padding: 8px;"><p style="font-size: 10px;">Сожжено</p><h3 id="burned-total" style="font-size: 16px;">0 ккал</h3></div>
@@ -89,11 +87,15 @@
                 <h4 style="margin: 0; color: #5ac8fa; font-size: 10px; text-transform: uppercase;">💧 Вода</h4>
                 <span style="font-size: 10px; color: #fff;"><span id="eaten-water">0</span>/<span id="norm-water">2000</span></span>
             </div>
-            <div style="display: flex; gap: 3px;">
+            
+            <!-- Кнопки воды -->
+            <div style="display: flex; gap: 3px; align-items: stretch;">
                 <button class="water-btn" style="flex: 1;" onclick="addWater(200)">+200</button>
                 <button class="water-btn" style="flex: 1;" onclick="addWater(500)">+500</button>
-                <button class="water-btn" style="flex: 1; background: transparent; color: #8e8e93; border-color: #3a3a3c;" onclick="openCustomWaterModal()">+...</button>
+                <button id="custom-water-quick-btn" class="water-btn" style="flex: 1.5; background: rgba(90, 200, 250, 0.1);" onclick="quickAddCustomWater()">+Своя</button>
+                <button class="water-btn" style="width: 26px; padding: 0; background: transparent; color: #8e8e93; border-color: #3a3a3c;" onclick="openCustomWaterModal()">✎</button>
             </div>
+            
             <div id="today-water-list" class="compact-food-list" style="border-color: rgba(90, 200, 250, 0.2);"></div>
         </div>
 
@@ -107,7 +109,6 @@
                 </div>
             </div>
             
-            <!-- Компактные макросы в сетке 2х2 -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; font-size: 10px; text-align: center;">
                 <div style="color: var(--accent-color); background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;"><span id="eaten-cal">0</span> Ккал</div>
                 <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;"><span id="eaten-prot">0</span> Бел.</div>
@@ -117,7 +118,6 @@
             
             <div id="today-food-list" class="compact-food-list"></div>
             
-            <!-- Скрытые нормы, чтобы скрипт не падал с ошибкой (т.к. он ищет эти ID) -->
             <div style="display: none;">
                 <span id="norm-cal"></span><span id="norm-prot"></span><span id="norm-fat"></span><span id="norm-carb"></span>
             </div>
@@ -135,7 +135,7 @@
 </div>
 </div> 
 
-<!-- ЭКРАН ИСТОРИИ (Без изменений) -->
+<!-- ЭКРАН ИСТОРИИ -->
 <div id="history-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('history-screen')">← Назад</button>
@@ -253,11 +253,12 @@
 <div class="custom-modal-content">
 <button class="custom-modal-close" onclick="closeCustomWaterModal()">✖</button>
 <h3 style="margin-top: 0; text-align: center; font-size: 16px; color: #5ac8fa;">Свой объем воды</h3>
+<p style="color: #8e8e93; font-size: 12px; text-align: center; margin-bottom: 10px;">Этот объем сохранится на кнопке быстрого добавления.</p>
 <div class="form-group">
     <label>Объем (мл)</label>
     <input type="number" id="custom-water-input" placeholder="Напр. 300" style="font-size: 20px; text-align: center;">
 </div>
-<button class="btn" style="margin-top: 15px; background-color: #5ac8fa; color: #fff;" onclick="addCustomWater()">Добавить</button>
+<button class="btn" style="margin-top: 15px; background-color: #5ac8fa; color: #fff;" onclick="addCustomWater()">Сохранить</button>
 </div>
 </div>
 
