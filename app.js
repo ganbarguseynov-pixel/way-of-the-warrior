@@ -370,7 +370,7 @@ function checkDayReset() {
     }
 } 
 
-// --- ИСТОРИЯ ПИТАНИЯ ---
+// --- ИСТОРИЯ ПИТАНИЯ И КАЛЕНДАРЬ ---
 function archiveFoodToHistory(foodArray, dateString) {
     if (!foodArray || foodArray.length === 0 || !dateString) return;
     
@@ -380,7 +380,7 @@ function archiveFoodToHistory(foodArray, dateString) {
     history[dateString] = foodArray;
     
     const dates = Object.keys(history).sort();
-    if (dates.length > 30) {
+    if (dates.length > 60) {
         delete history[dates[0]];
     }
     
@@ -388,40 +388,85 @@ function archiveFoodToHistory(foodArray, dateString) {
 }
 
 function openHistoryScreen() {
+    const monthPicker = document.getElementById('history-month-picker');
+    if (monthPicker && !monthPicker.value) {
+        const now = new Date();
+        monthPicker.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    }
     openScreen('history-screen');
     renderHistory();
 }
 
 function renderHistory() {
     const listDiv = document.getElementById('history-list');
-    if (!listDiv) return;
+    const summaryDiv = document.getElementById('history-month-summary');
+    const monthPicker = document.getElementById('history-month-picker');
+    
+    if (!listDiv || !summaryDiv || !monthPicker) return;
+
+    const selectedMonth = monthPicker.value; // Формат: "2026-11"
+    if (!selectedMonth) return;
 
     let history = {};
     try { history = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) { history = {}; }
 
-    const dates = Object.keys(history).sort((a, b) => new Date(b) - new Date(a));
+    // Берем только дни из выбранного месяца
+    const datesInMonth = Object.keys(history).filter(date => date.startsWith(selectedMonth)).sort((a, b) => new Date(b) - new Date(a));
 
-    if (dates.length === 0) {
-        listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93;">История пока пуста. Добавляй еду, и она будет сохраняться здесь.</p>';
+    if (datesInMonth.length === 0) {
+        summaryDiv.style.display = 'none';
+        listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; margin-top: 20px;">За этот месяц записей нет.</p>';
         return;
     }
 
+    let monthCal = 0, monthProt = 0, monthFat = 0, monthCarb = 0;
     let html = '';
-    dates.forEach(date => {
+
+    datesInMonth.forEach(date => {
         const foods = history[date];
         if (!foods || foods.length === 0) return;
-        
-        let cal = 0;
-        foods.forEach(f => cal += parseFloat(f.calories_100g || 0));
+
+        let dayCal = 0, dayProt = 0, dayFat = 0, dayCarb = 0;
+        foods.forEach(f => {
+            dayCal += parseFloat(f.calories_100g || 0);
+            dayProt += parseFloat(f.proteins_100g || 0);
+            dayFat += parseFloat(f.fat_100g || 0);
+            dayCarb += parseFloat(f.carbs_100g || 0);
+        });
+
+        monthCal += dayCal;
+        monthProt += dayProt;
+        monthFat += dayFat;
+        monthCarb += dayCarb;
+
+        const dayDisplay = date.split('-').reverse().join('.'); // Превращаем 2026-11-03 в 03.11.2026
 
         html += `<div class="history-card">`;
-        html += `<div class="history-date">📅 ${date}</div>`;
-        html += `<div class="history-stats">Съедено: ${Math.round(cal)} ккал</div>`;
-        foods.forEach(f => {
-            html += `<div class="history-food-item">${f.product_name} (${Math.round(f.calories_100g || 0)} ккал)</div>`;
-        });
+        html += `<div class="history-date">📅 ${dayDisplay}</div>`;
+        html += `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; margin-bottom: 10px;">`;
+        html += `<div><span style="color: var(--accent-color); font-weight: bold; font-size: 14px;">${Math.round(dayCal)}</span><br><span style="font-size: 10px; color: #8e8e93;">Ккал</span></div>`;
+        html += `<div><span style="color: #fff; font-weight: bold; font-size: 14px;">${Math.round(dayProt)}</span><br><span style="font-size: 10px; color: #8e8e93;">Бел.</span></div>`;
+        html += `<div><span style="color: #fff; font-weight: bold; font-size: 14px;">${Math.round(dayFat)}</span><br><span style="font-size: 10px; color: #8e8e93;">Жир.</span></div>`;
+        html += `<div><span style="color: #fff; font-weight: bold; font-size: 14px;">${Math.round(dayCarb)}</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div>`;
         html += `</div>`;
+        
+        html += `<div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">`;
+        foods.forEach(f => {
+            html += `<div class="history-food-item" style="display: flex; justify-content: space-between; margin-bottom: 5px;">`;
+            html += `<span>${f.product_name}</span>`;
+            html += `<span style="color: #8e8e93;">${Math.round(f.calories_100g || 0)} ккал</span>`;
+            html += `</div>`;
+        });
+        html += `</div></div>`;
     });
+
+    // Показываем итоги за месяц
+    summaryDiv.style.display = 'block';
+    document.getElementById('hist-total-cal').innerText = Math.round(monthCal);
+    document.getElementById('hist-total-prot').innerText = Math.round(monthProt);
+    document.getElementById('hist-total-fat').innerText = Math.round(monthFat);
+    document.getElementById('hist-total-carb').innerText = Math.round(monthCarb);
+
     listDiv.innerHTML = html;
 }
 // --------------------------
@@ -432,7 +477,6 @@ function updateDashboard() {
     const norm = calculateNutrition(currentProfileData);
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
     
-    // Автоматически сохраняем в историю при каждом обновлении
     const savedDate = localStorage.getItem('foodListDate');
     if (savedDate && todayFood.length > 0) {
         archiveFoodToHistory(todayFood, savedDate);
@@ -560,61 +604,68 @@ function updateCharacterUI() {
     if (document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = percent + "%";
 } 
 
+// --- ИСПРАВЛЕННАЯ ФУНКЦИЯ НАСТРОЕК (без зависаний) ---
 function openProfileSettings() {
-    const loginType = localStorage.getItem('loginType') || 'telegram';
-    if (loginType === 'telegram') {
-        document.getElementById('link-title').innerText = "Привязка Email";
-        document.getElementById('link-desc').innerText = "Привяжите Email, чтобы заходить с любого устройства.";
-        const linked = localStorage.getItem('linkedEmail');
-        if (linked) {
-            document.getElementById('link-email-form').innerHTML = `
-                <p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ${linked}</p>
-                <button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkEmail()">Отвязать Email</button>
-            `;
-        } else {
-            document.getElementById('link-email-form').innerHTML = `
-                <div class="form-group" style="margin-bottom: 10px;"><input type="email" id="link-email" placeholder="your@email.com" style="padding: 10px;"></div>
-                <div class="form-group" style="margin-bottom: 10px;"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)" style="padding: 10px;"></div>
-                <button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkEmailToTelegram()">Привязать Email</button>
-            `;
-        }
-        document.getElementById('link-email-form').style.display = 'block';
-        document.getElementById('link-tg-form').style.display = 'none';
-    } else {
-        document.getElementById('link-title').innerText = "Привязка Telegram";
-        document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона.";
-        const tgId = localStorage.getItem('tgId');
-        if (tgId) {
-            document.getElementById('link-tg-form').innerHTML = `
-                <p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ${tgId}</p>
-                <button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkTelegram()">Отвязать Telegram</button>
-            `;
-        } else {
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                document.getElementById('link-tg-form').innerHTML = `
-                    <p style="font-size: 14px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b>${tg.initDataUnsafe.user.id}</b></p>
-                    <button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkTelegramToEmail()">Привязать Telegram</button>
+    try {
+        const loginType = localStorage.getItem('loginType') || 'telegram';
+        if (loginType === 'telegram') {
+            document.getElementById('link-title').innerText = "Привязка Email";
+            document.getElementById('link-desc').innerText = "Привяжите Email, чтобы заходить с любого устройства.";
+            const linked = localStorage.getItem('linkedEmail');
+            if (linked) {
+                document.getElementById('link-email-form').innerHTML = `
+                    <p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ${linked}</p>
+                    <button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkEmail()">Отвязать Email</button>
+                `;
+            } else {
+                document.getElementById('link-email-form').innerHTML = `
+                    <div class="form-group" style="margin-bottom: 10px;"><input type="email" id="link-email" placeholder="your@email.com" style="padding: 10px;"></div>
+                    <div class="form-group" style="margin-bottom: 10px;"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)" style="padding: 10px;"></div>
+                    <button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkEmailToTelegram()">Привязать Email</button>
                 `;
             }
+            document.getElementById('link-email-form').style.display = 'block';
+            document.getElementById('link-tg-form').style.display = 'none';
+        } else {
+            document.getElementById('link-title').innerText = "Привязка Telegram";
+            document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона.";
+            const tgId = localStorage.getItem('tgId');
+            if (tgId) {
+                document.getElementById('link-tg-form').innerHTML = `
+                    <p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ${tgId}</p>
+                    <button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkTelegram()">Отвязать Telegram</button>
+                `;
+            } else {
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                    document.getElementById('link-tg-form').innerHTML = `
+                        <p style="font-size: 14px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b>${tg.initDataUnsafe.user.id}</b></p>
+                        <button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkTelegramToEmail()">Привязать Telegram</button>
+                    `;
+                }
+            }
+            document.getElementById('link-email-form').style.display = 'none';
+            document.getElementById('link-tg-form').style.display = 'block';
         }
-        document.getElementById('link-email-form').style.display = 'none';
-        document.getElementById('link-tg-form').style.display = 'block';
+        const cachedProfile = localStorage.getItem('cachedProfile');
+        if (cachedProfile) {
+            const p = JSON.parse(cachedProfile);
+            document.getElementById('age').value = p.age || '';
+            document.getElementById('weight').value = p.weight || '';
+            document.getElementById('height').value = p.height || '';
+            document.getElementById('gender').value = p.gender || 'male';
+            document.getElementById('goal').value = p.goal || 'lose';
+            document.getElementById('custom-calories').value = p.custom_calories || '';
+            document.getElementById('custom-protein').value = p.custom_protein || '';
+            document.getElementById('custom-fat').value = p.custom_fat || '';
+            document.getElementById('custom-carbs').value = p.custom_carbs || '';
+        }
+        openScreen('profile-settings-screen');
+    } catch (e) {
+        console.error("Ошибка в настройках:", e);
+        tg.showAlert("Не удалось открыть настройки.");
     }
-    const cachedProfile = localStorage.getItem('cachedProfile');
-    if (cachedProfile) {
-        const p = JSON.parse(cachedProfile);
-        document.getElementById('age').value = p.age || '';
-        document.getElementById('weight').value = p.weight || '';
-        document.getElementById('height').value = p.height || '';
-        document.getElementById('gender').value = p.gender || 'male';
-        document.getElementById('goal').value = p.goal || 'lose';
-        document.getElementById('custom-calories').value = p.custom_calories || '';
-        document.getElementById('custom-protein').value = p.custom_protein || '';
-        document.getElementById('custom-fat').value = p.custom_fat || '';
-        document.getElementById('custom-carbs').value = p.custom_carbs || '';
-    }
-    openScreen('profile-settings-screen');
 } 
+// ------------------------------------------------------
 
 async function linkEmailToTelegram() {
     const email = document.getElementById('link-email').value;
