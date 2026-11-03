@@ -146,7 +146,7 @@ async function loginWithTelegram() {
             if (data.name) localStorage.setItem('userName', data.name);
             if (data.food) localStorage.setItem('todayFood', JSON.stringify(data.food));
         } else {
-            const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
+            const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose', custom_water_goal: 2000 };
             localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
             localStorage.setItem('cachedXP', 0);
             localStorage.setItem('cachedBurned', 0);
@@ -217,7 +217,7 @@ async function handleEmailAuth() {
             if (linkData.name) localStorage.setItem('userName', linkData.name);
             if (linkData.food) localStorage.setItem('todayFood', JSON.stringify(linkData.food));
         } else {
-            const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose' };
+            const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose', custom_water_goal: 2000 };
             localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
             localStorage.setItem('cachedXP', 0);
             localStorage.setItem('cachedBurned', 0);
@@ -246,14 +246,15 @@ async function saveOnboardingData() {
     const weight = document.getElementById('onboarding-weight').value;
     const height = document.getElementById('onboarding-height').value;
     const gender = document.getElementById('onboarding-gender').value;
-    const goal = document.getElementById('onboarding-goal').value; 
+    const goal = document.getElementById('onboarding-goal').value;
+    const water = document.getElementById('onboarding-water').value || 2000; 
 
     if (!age || !weight || !height) {
         tg.showAlert("Пожалуйста, заполни возраст, вес и рост!");
         return;
     } 
 
-    const profile = { age, gender, weight, height, goal, custom_calories: '', custom_protein: '', custom_fat: '', custom_carbs: '' };
+    const profile = { age, gender, weight, height, goal, custom_calories: '', custom_protein: '', custom_fat: '', custom_carbs: '', custom_water_goal: parseInt(water) };
     localStorage.setItem('cachedProfile', JSON.stringify(profile)); 
 
     const tgId = localStorage.getItem('tgId');
@@ -364,27 +365,77 @@ function calculateNutrition(profile) {
 function checkDayReset() {
     const now = new Date();
     const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    
+    // Сброс еды
     if (localStorage.getItem('foodListDate') !== today) {
         localStorage.setItem('todayFood', '[]');
         localStorage.setItem('foodListDate', today);
     }
+    
+    // Сброс воды
+    if (localStorage.getItem('waterListDate') !== today) {
+        localStorage.setItem('todayWater', '[]');
+        localStorage.setItem('waterListDate', today);
+    }
 } 
 
-// --- ИСТОРИЯ ПИТАНИЯ С ВЫБОРОМ ПЕРИОДА ---
+// --- ВОДА ---
+function addWater(amount) {
+    let waterArr = [];
+    try { waterArr = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e) {}
+    waterArr.push({ amount: parseInt(amount), time: new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'}) });
+    localStorage.setItem('todayWater', JSON.stringify(waterArr));
+    updateDashboard();
+    
+    // Архивируем в историю
+    const today = localStorage.getItem('waterListDate');
+    archiveWaterToHistory(waterArr, today);
+}
+
+function deleteWaterItem(index) {
+    let waterArr = [];
+    try { waterArr = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e) {}
+    waterArr.splice(index, 1);
+    localStorage.setItem('todayWater', JSON.stringify(waterArr));
+    updateDashboard();
+    
+    const today = localStorage.getItem('waterListDate');
+    archiveWaterToHistory(waterArr, today);
+}
+
+function openCustomWaterModal() {
+    document.getElementById('custom-water-input').value = '';
+    document.getElementById('water-modal').classList.add('active');
+}
+function closeCustomWaterModal() {
+    document.getElementById('water-modal').classList.remove('active');
+}
+function addCustomWater() {
+    const val = parseInt(document.getElementById('custom-water-input').value);
+    if (val && val > 0) {
+        addWater(val);
+        closeCustomWaterModal();
+    } else {
+        tg.showAlert("Введите корректный объем!");
+    }
+}
+// --------------------------
+
+// --- ИСТОРИЯ ---
 function archiveFoodToHistory(foodArray, dateString) {
     if (!foodArray || foodArray.length === 0 || !dateString) return;
-    
     let history = {};
-    try { history = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) { history = {}; }
-    
+    try { history = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) {}
     history[dateString] = foodArray;
-    
-    const dates = Object.keys(history).sort();
-    if (dates.length > 90) {
-        delete history[dates[0]];
-    }
-    
     localStorage.setItem('foodHistory', JSON.stringify(history));
+}
+
+function archiveWaterToHistory(waterArray, dateString) {
+    if (!waterArray || waterArray.length === 0 || !dateString) return;
+    let history = {};
+    try { history = JSON.parse(localStorage.getItem('waterHistory') || '{}'); } catch(e) {}
+    history[dateString] = waterArray;
+    localStorage.setItem('waterHistory', JSON.stringify(history));
 }
 
 function openHistoryScreen() {
@@ -420,7 +471,7 @@ function setHistoryPeriod(type) {
         const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
         startInput.value = firstDay.toISOString().split('T')[0];
     } else if (type === 'all') {
-        startInput.value = '2020-01-01'; // Условная ранняя дата
+        startInput.value = '2020-01-01';
     }
     renderHistory();
 }
@@ -435,14 +486,18 @@ function renderHistory() {
 
     const startDate = startInput.value;
     const endDate = endInput.value;
-
     if (!startDate || !endDate) return;
 
-    let history = {};
-    try { history = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) { history = {}; }
+    let foodHistory = {};
+    let waterHistory = {};
+    try { foodHistory = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) {}
+    try { waterHistory = JSON.parse(localStorage.getItem('waterHistory') || '{}'); } catch(e) {}
 
-    // Берем только дни в выбранном диапазоне
-    const datesInRange = Object.keys(history).filter(date => date >= startDate && date <= endDate).sort((a, b) => new Date(b) - new Date(a));
+    // Собираем все уникальные даты из обеих историй
+    const allDates = new Set([...Object.keys(foodHistory), ...Object.keys(waterHistory)]);
+    
+    // Фильтруем по выбранному диапазону и сортируем
+    const datesInRange = Array.from(allDates).filter(date => date >= startDate && date <= endDate).sort((a, b) => new Date(b) - new Date(a));
 
     if (datesInRange.length === 0) {
         summaryDiv.style.display = 'none';
@@ -450,30 +505,40 @@ function renderHistory() {
         return;
     }
 
-    let periodCal = 0, periodProt = 0, periodFat = 0, periodCarb = 0;
+    let periodCal = 0, periodProt = 0, periodFat = 0, periodCarb = 0, periodWater = 0;
     let html = '';
 
     datesInRange.forEach(date => {
-        const foods = history[date];
-        if (!foods || foods.length === 0) return;
+        const foods = foodHistory[date] || [];
+        const waters = waterHistory[date] || [];
+        
+        if (foods.length === 0 && waters.length === 0) return;
 
-        let dayCal = 0, dayProt = 0, dayFat = 0, dayCarb = 0;
+        let dayCal = 0, dayProt = 0, dayFat = 0, dayCarb = 0, dayWater = 0;
+        
         foods.forEach(f => {
             dayCal += parseFloat(f.calories_100g || 0);
             dayProt += parseFloat(f.proteins_100g || 0);
             dayFat += parseFloat(f.fat_100g || 0);
             dayCarb += parseFloat(f.carbs_100g || 0);
         });
+        
+        waters.forEach(w => {
+            dayWater += parseInt(w.amount || 0);
+        });
 
         periodCal += dayCal;
         periodProt += dayProt;
         periodFat += dayFat;
         periodCarb += dayCarb;
+        periodWater += dayWater;
 
-        const dayDisplay = date.split('-').reverse().join('.'); // Превращаем 2026-11-03 в 03.11.2026
+        const dayDisplay = date.split('-').reverse().join('.');
 
         html += `<div class="history-card">`;
         html += `<div class="history-date">📅 ${dayDisplay}</div>`;
+        
+        // Статистика дня
         html += `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; margin-bottom: 10px;">`;
         html += `<div><span style="color: var(--accent-color); font-weight: bold; font-size: 14px;">${Math.round(dayCal)}</span><br><span style="font-size: 10px; color: #8e8e93;">Ккал</span></div>`;
         html += `<div><span style="color: #fff; font-weight: bold; font-size: 14px;">${Math.round(dayProt)}</span><br><span style="font-size: 10px; color: #8e8e93;">Бел.</span></div>`;
@@ -481,22 +546,33 @@ function renderHistory() {
         html += `<div><span style="color: #fff; font-weight: bold; font-size: 14px;">${Math.round(dayCarb)}</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div>`;
         html += `</div>`;
         
+        // Вода за день
+        if (dayWater > 0) {
+            html += `<div style="text-align: center; margin-bottom: 10px; color: #5ac8fa; font-size: 13px; font-weight: bold;">💧 Выпито воды: ${dayWater} мл</div>`;
+        }
+
+        // Списки
         html += `<div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">`;
         foods.forEach(f => {
             html += `<div class="history-food-item" style="display: flex; justify-content: space-between; margin-bottom: 5px;">`;
-            html += `<span>${f.product_name}</span>`;
-            html += `<span style="color: #8e8e93;">${Math.round(f.calories_100g || 0)} ккал</span>`;
-            html += `</div>`;
+            html += `<span>${f.product_name}</span><span style="color: #8e8e93;">${Math.round(f.calories_100g || 0)} ккал</span></div>`;
         });
+        
+        // Выводим детализацию воды
+        waters.forEach(w => {
+            html += `<div class="history-water-item" style="display: flex; justify-content: space-between; margin-bottom: 5px;">`;
+            html += `<span>💧 Вода</span><span style="color: #8e8e93;">${w.amount} мл</span></div>`;
+        });
+        
         html += `</div></div>`;
     });
 
-    // Показываем итоги за выбранный период
     summaryDiv.style.display = 'block';
     document.getElementById('hist-total-cal').innerText = Math.round(periodCal);
     document.getElementById('hist-total-prot').innerText = Math.round(periodProt);
     document.getElementById('hist-total-fat').innerText = Math.round(periodFat);
     document.getElementById('hist-total-carb').innerText = Math.round(periodCarb);
+    document.getElementById('hist-total-water').innerText = periodWater;
 
     listDiv.innerHTML = html;
 }
@@ -505,6 +581,8 @@ function renderHistory() {
 function updateDashboard() {
     if (!currentProfileData) return;
     checkDayReset();
+    
+    // --- ЕДА ---
     const norm = calculateNutrition(currentProfileData);
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
     
@@ -542,6 +620,25 @@ function updateDashboard() {
     }
 
     renderTodayFoodList(todayFood);
+
+    // --- ВОДА ---
+    let todayWater = [];
+    try { todayWater = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e) {}
+    
+    const waterDate = localStorage.getItem('waterListDate');
+    if (waterDate && todayWater.length > 0) {
+        archiveWaterToHistory(todayWater, waterDate);
+    }
+
+    let eatenWater = 0;
+    todayWater.forEach(w => eatenWater += parseInt(w.amount || 0));
+    
+    const waterGoal = currentProfileData.custom_water_goal || 2000;
+
+    if (document.getElementById('eaten-water')) document.getElementById('eaten-water').innerText = eatenWater;
+    if (document.getElementById('norm-water')) document.getElementById('norm-water').innerText = waterGoal;
+    
+    renderTodayWaterList(todayWater);
 } 
 
 function renderTodayFoodList(todayFood) {
@@ -554,6 +651,17 @@ function renderTodayFoodList(todayFood) {
     });
     listDiv.innerHTML = html;
 } 
+
+function renderTodayWaterList(todayWater) {
+    const listDiv = document.getElementById('today-water-list');
+    if (!listDiv) return;
+    if (todayWater.length === 0) { listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; font-size: 10px;">Пока ничего не выпито</p>'; return; }
+    let html = '';
+    todayWater.forEach((w, index) => {
+        html += `<div class="compact-food-item" style="border-left: 2px solid #5ac8fa;"><div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;">💧 ${w.amount} мл (${w.time})</div><button onclick="deleteWaterItem(${index})" style="background: none; border: none; color: #ff3b30; font-size: 14px; cursor: pointer; padding: 0;">✖</button></div>`;
+    });
+    listDiv.innerHTML = html;
+}
 
 function deleteFoodItem(index) {
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
@@ -688,6 +796,7 @@ function openProfileSettings() {
             if(document.getElementById('custom-protein')) document.getElementById('custom-protein').value = p.custom_protein || '';
             if(document.getElementById('custom-fat')) document.getElementById('custom-fat').value = p.custom_fat || '';
             if(document.getElementById('custom-carbs')) document.getElementById('custom-carbs').value = p.custom_carbs || '';
+            if(document.getElementById('custom-water-goal')) document.getElementById('custom-water-goal').value = p.custom_water_goal || '';
         }
         openScreen('profile-settings-screen');
     } catch (e) {
@@ -788,8 +897,10 @@ async function saveProfile() {
     const custom_protein = document.getElementById('custom-protein').value;
     const custom_fat = document.getElementById('custom-fat').value;
     const custom_carbs = document.getElementById('custom-carbs').value;
+    const custom_water_goal = document.getElementById('custom-water-goal').value;
+    
     if (!age || !weight || !height) { tg.showAlert("Заполни все поля!"); return; }
-    const profile = { age, gender, weight, height, goal, custom_calories, custom_protein, custom_fat, custom_carbs };
+    const profile = { age, gender, weight, height, goal, custom_calories, custom_protein, custom_fat, custom_carbs, custom_water_goal: parseInt(custom_water_goal) || 2000 };
     localStorage.setItem('cachedProfile', JSON.stringify(profile));
     await saveProgressToCloud(localStorage.getItem('tgId'), localStorage.getItem('currentEmail'), localStorage.getItem('userName'), profile, currentXP, totalBurnedCalories);
     renderProfile(profile);
