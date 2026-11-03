@@ -225,8 +225,8 @@ async function handleEmailAuth() {
             openOnboardingModal();
         }
         renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
-        await syncFoodFromCloud();
-        
+        await syncFoodFromCloud(); 
+
     } catch (e) {
         tg.showAlert("Ошибка сети.");
     } finally {
@@ -239,35 +239,34 @@ function openOnboardingModal() {
     setTimeout(() => {
         document.getElementById('onboarding-modal').classList.add('active');
     }, 500);
-}
+} 
 
 async function saveOnboardingData() {
     const age = document.getElementById('onboarding-age').value;
     const weight = document.getElementById('onboarding-weight').value;
     const height = document.getElementById('onboarding-height').value;
     const gender = document.getElementById('onboarding-gender').value;
-    const goal = document.getElementById('onboarding-goal').value;
+    const goal = document.getElementById('onboarding-goal').value; 
 
-    if (!age || !weight || !height) { 
-        tg.showAlert("Пожалуйста, заполни возраст, вес и рост!"); 
-        return; 
-    }
+    if (!age || !weight || !height) {
+        tg.showAlert("Пожалуйста, заполни возраст, вес и рост!");
+        return;
+    } 
 
     const profile = { age, gender, weight, height, goal, custom_calories: '', custom_protein: '', custom_fat: '', custom_carbs: '' };
-    localStorage.setItem('cachedProfile', JSON.stringify(profile));
+    localStorage.setItem('cachedProfile', JSON.stringify(profile)); 
 
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
-    const name = localStorage.getItem('userName') || "Атлет";
-    
-    await saveProgressToCloud(tgId, email, name, profile, 0, 0);
-    
+    const name = localStorage.getItem('userName') || "Атлет"; 
+
+    await saveProgressToCloud(tgId, email, name, profile, 0, 0); 
+
     document.getElementById('onboarding-modal').classList.remove('active');
     renderProfile(profile);
     tg.showAlert("Отлично! Данные сохранены.");
-}
+} 
 
-// ИСПРАВЛЕННАЯ СИНХРОНИЗАЦИЯ
 async function syncFoodFromCloud() {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
@@ -278,14 +277,13 @@ async function syncFoodFromCloud() {
     try { localFood = JSON.parse(localStorage.getItem('todayFood') || '[]'); } catch(e) {} 
 
     const now = new Date();
-    const today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
-    const savedDate = localStorage.getItem('foodListDate');
+    const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    const savedDate = localStorage.getItem('foodListDate'); 
 
     if (record) {
-        const cloudFood = record.food || [];
-        
+        const cloudFood = record.food || []; 
+
         if (!savedDate) {
-            // Если зашли впервые (или почистили кэш) - забираем данные из облака, ничего не стираем
             if (cloudFood.length > 0) {
                 localStorage.setItem('todayFood', JSON.stringify(cloudFood));
             } else if (localFood.length > 0) {
@@ -293,14 +291,13 @@ async function syncFoodFromCloud() {
             }
             localStorage.setItem('foodListDate', today);
         } else if (savedDate === today) {
-            // Если сегодняшняя дата, просто синхронизируем облако и телефон
             if (cloudFood.length > 0) {
                 localStorage.setItem('todayFood', JSON.stringify(cloudFood));
             } else if (localFood.length > 0) {
                 await supabaseClient.from('user_links').update({ food: localFood }).eq('id', record.id);
             }
         } else {
-            // Наступил новый день - очищаем всё, чтобы не тянуть вчерашнее
+            archiveFoodToHistory(localFood, savedDate); // Отправляем вчерашнюю еду в историю
             localStorage.setItem('todayFood', '[]');
             localStorage.setItem('foodListDate', today);
             await supabaseClient.from('user_links').update({ food: [] }).eq('id', record.id);
@@ -318,8 +315,8 @@ async function saveFoodToCloud(foodArray) {
     if (record) {
         await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', record.id);
     }
-}
- 
+} 
+
 async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
     try {
         let currentTgId = tgId || localStorage.getItem('tgId');
@@ -364,22 +361,85 @@ function calculateNutrition(profile) {
     return { calories: Math.round(tdee), protein: Math.round((tdee * 0.30) / 4), fat: Math.round((tdee * 0.30) / 9), carbs: Math.round((tdee * 0.40) / 4) };
 } 
 
-// ИСПРАВЛЕННЫЙ СБРОС ДНЯ (больше не стирает облако)
 function checkDayReset() {
     const now = new Date();
-    const today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+    const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     if (localStorage.getItem('foodListDate') !== today) {
         localStorage.setItem('todayFood', '[]');
         localStorage.setItem('foodListDate', today);
-        // saveFoodToCloud([]);  <-- УБРАНО, чтобы не затирать данные при загрузке
     }
 } 
+
+// --- ИСТОРИЯ ПИТАНИЯ ---
+function archiveFoodToHistory(foodArray, dateString) {
+    if (!foodArray || foodArray.length === 0 || !dateString) return;
+    
+    let history = {};
+    try { history = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) { history = {}; }
+    
+    // Сохраняем еду за этот день
+    history[dateString] = foodArray;
+    
+    // Оставляем только последние 30 дней, чтобы не забивать память
+    const dates = Object.keys(history).sort();
+    if (dates.length > 30) {
+        delete history[dates[0]];
+    }
+    
+    localStorage.setItem('foodHistory', JSON.stringify(history));
+}
+
+function openHistoryScreen() {
+    openScreen('history-screen');
+    renderHistory();
+}
+
+function renderHistory() {
+    const listDiv = document.getElementById('history-list');
+    if (!listDiv) return;
+
+    let history = {};
+    try { history = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) { history = {}; }
+
+    const dates = Object.keys(history).sort((a, b) => new Date(b) - new Date(a)); // Сначала новые
+
+    if (dates.length === 0) {
+        listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93;">История пока пуста. Добавляй еду, и она будет сохраняться здесь.</p>';
+        return;
+    }
+
+    let html = '';
+    dates.forEach(date => {
+        const foods = history[date];
+        if (!foods || foods.length === 0) return;
+        
+        let cal = 0;
+        foods.forEach(f => cal += parseFloat(f.calories_100g || 0));
+
+        html += `<div class="history-card">`;
+        html += `<div class="history-date">📅 ${date}</div>`;
+        html += `<div class="history-stats">Съедено: ${Math.round(cal)} ккал</div>`;
+        foods.forEach(f => {
+            html += `<div class="history-food-item">${f.product_name} (${Math.round(f.calories_100g || 0)} ккал)</div>`;
+        });
+        html += `</div>`;
+    });
+    listDiv.innerHTML = html;
+}
+// --------------------------
 
 function updateDashboard() {
     if (!currentProfileData) return;
     checkDayReset();
     const norm = calculateNutrition(currentProfileData);
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
+    
+    // Автоматически сохраняем в историю при каждом обновлении
+    const savedDate = localStorage.getItem('foodListDate');
+    if (savedDate && todayFood.length > 0) {
+        archiveFoodToHistory(todayFood, savedDate);
+    }
+
     let eatenCal = 0, eatenProt = 0, eatenFat = 0, eatenCarb = 0;
     todayFood.forEach(food => {
         eatenCal += parseFloat(food.calories_100g || 0);
@@ -387,12 +447,14 @@ function updateDashboard() {
         eatenFat += parseFloat(food.fat_100g || 0);
         eatenCarb += parseFloat(food.carbs_100g || 0);
     });
+    
     if (document.getElementById('norm-cal')) {
         document.getElementById('norm-cal').innerText = norm.calories;
         document.getElementById('norm-prot').innerText = norm.protein;
         document.getElementById('norm-fat').innerText = norm.fat;
         document.getElementById('norm-carb').innerText = norm.carbs;
     }
+    
     const setValue = (id, eaten, normVal) => {
         const el = document.getElementById(id);
         if (el) { el.innerText = Math.round(eaten); el.style.color = (eaten > normVal) ? '#ff3b30' : '#fff'; }
@@ -401,6 +463,12 @@ function updateDashboard() {
     setValue('eaten-prot', eatenProt, norm.protein);
     setValue('eaten-fat', eatenFat, norm.fat);
     setValue('eaten-carb', eatenCarb, norm.carbs);
+    
+    // Синхронизируем ккал в старом блоке (calories-norm), если он есть
+    if (document.getElementById('calories-norm')) {
+        document.getElementById('calories-norm').innerText = norm.calories + " ккал";
+    }
+
     renderTodayFoodList(todayFood);
 } 
 
@@ -502,20 +570,21 @@ function openProfileSettings() {
         document.getElementById('link-desc').innerText = "Привяжите Email, чтобы заходить с любого устройства.";
         const linked = localStorage.getItem('linkedEmail');
         if (linked) {
-            document.getElementById('link-email-form').innerHTML = `<p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ${linked}</p><button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkEmail()">Отвязать Email</button>`;
-        } else {
+            document.getElementById('link-email-form').innerHTML = `<p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ${linked}</p><button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkEmail()">Отвязать Email</button>`; 
+        } else { 
             document.getElementById('link-email-form').innerHTML = `
                 <div class="form-group" style="margin-bottom: 10px;"><input type="email" id="link-email" placeholder="your@email.com" style="padding: 10px;"></div>
                 <div class="form-group" style="margin-bottom: 10px;"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)" style="padding: 10px;"></div>
-                <button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkEmailToTelegram()">Привязать Email</button>`;
-        }
-        document.getElementById('link-email-form').style.display = 'block';
-        document.getElementById('link-tg-form').style.display = 'none';
-    } else {
-        document.getElementById('link-title').innerText = "Привязка Telegram";
-        document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона.";
-        const tgId = localStorage.getItem('tgId');
-        if (tgId) {
+                <button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkEmailToTelegram()">Привязать Email</button>
+            `; 
+        } 
+        document.getElementById('link-email-form').style.display = 'block'; 
+        document.getElementById('link-tg-form').style.display = 'none'; 
+    } else { 
+        document.getElementById('link-title').innerText = "Привязка Telegram"; 
+        document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона."; 
+        const tgId = localStorage.getItem('tgId'); 
+        if (tgId) { 
             document.getElementById('link-tg-form').innerHTML = `<p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ${tgId}</p><button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkTelegram()">Отвязать Telegram</button>`;
         } else {
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
@@ -547,13 +616,13 @@ async function linkEmailToTelegram() {
     if (!email || !password) { tg.showAlert("Заполните Email и пароль!"); return; } 
 
     const currentTgId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : localStorage.getItem('tgId');
-    if (!currentTgId) { tg.showAlert("Ошибка: Telegram не найден."); return; }
+    if (!currentTgId) { tg.showAlert("Ошибка: Telegram не найден."); return; } 
 
     const { data: emailCheck } = await supabaseClient.from('user_links').select('telegram_id').eq('email', email).maybeSingle();
     if (emailCheck && emailCheck.telegram_id && emailCheck.telegram_id != currentTgId) {
         tg.showAlert("Эта почта уже привязана к другому аккаунту Telegram!");
         return;
-    }
+    } 
 
     try {
         const { error } = await supabaseClient.auth.signUp({ email, password });
@@ -563,8 +632,8 @@ async function linkEmailToTelegram() {
             const profile = JSON.parse(localStorage.getItem('cachedProfile'));
             const xp = parseInt(localStorage.getItem('cachedXP') || 0);
             const burned = parseInt(localStorage.getItem('cachedBurned') || 0);
-            const name = localStorage.getItem('userName') || "Атлет";
-            
+            const name = localStorage.getItem('userName') || "Атлет"; 
+
             await saveProgressToCloud(currentTgId, email, name, profile, xp, burned);
             localStorage.setItem('linkedEmail', email);
             localStorage.setItem('currentEmail', email);
@@ -577,19 +646,19 @@ async function linkEmailToTelegram() {
 async function linkTelegramToEmail() {
     const tgId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : null;
     const tgName = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.first_name : "Атлет";
-    const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
-    
+    const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail'); 
+
     if (!tgId || !email) { tg.showAlert("Ошибка: не найден Email или Telegram ID."); return; } 
 
     const { data: tgCheck } = await supabaseClient.from('user_links').select('email').eq('telegram_id', tgId).maybeSingle();
     if (tgCheck && tgCheck.email && tgCheck.email !== email) {
         tg.showAlert("Этот Telegram уже привязан к другой почте!");
         return;
-    }
+    } 
 
     const profile = JSON.parse(localStorage.getItem('cachedProfile'));
     const xp = parseInt(localStorage.getItem('cachedXP') || 0);
-    const burned = parseInt(localStorage.getItem('cachedBurned') || 0);
+    const burned = parseInt(localStorage.getItem('cachedBurned') || 0); 
 
     await saveProgressToCloud(tgId, email, tgName, profile, xp, burned);
     localStorage.setItem('tgId', tgId);
@@ -665,9 +734,9 @@ async function startShakeTest() {
     });
     tg.showAlert("Тряси телефон!");
 }
-function stopShakeTest() { 
-    isShakeTesting = false; 
-    document.getElementById('test-shake-btn').style.display = 'block'; 
-    document.getElementById('stop-shake-btn').style.display = 'none'; 
-    tg.showAlert("Максимум: " + maxShakeValue); 
+function stopShakeTest() {
+    isShakeTesting = false;
+    document.getElementById('test-shake-btn').style.display = 'block';
+    document.getElementById('stop-shake-btn').style.display = 'none';
+    tg.showAlert("Максимум: " + maxShakeValue);
 }
