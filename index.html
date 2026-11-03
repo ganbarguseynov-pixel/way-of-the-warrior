@@ -9,6 +9,7 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="style.css">
 <style>
+/* Стили для истории */
 .history-card { background: #1c1c1e; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #2c2c2e; }
 .history-date { color: var(--accent-color); font-weight: bold; font-size: 15px; margin-bottom: 5px; }
 .history-stats { color: #8e8e93; font-size: 12px; margin-bottom: 10px; }
@@ -20,6 +21,8 @@
 .compact-panel { background: rgba(28, 28, 30, 0.85); border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1); }
 .compact-food-list { max-height: 80px; overflow-y: auto; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; }
 .compact-food-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; margin-bottom: 4px; font-size: 11px; }
+.quick-btn { background: #2c2c2e; color: white; border: 1px solid #3a3a3c; border-radius: 8px; padding: 6px 10px; font-size: 11px; cursor: pointer; }
+.quick-btn:active { background: #3a3a3c; }
 </style>
 </head>
 <body class="male-theme"> 
@@ -94,20 +97,35 @@
 </div>
 </div> 
 
-<!-- ЭКРАН ИСТОРИИ С КАЛЕНДАРЕМ -->
+<!-- ЭКРАН ИСТОРИИ С ВЫБОРОМ ПЕРИОДА -->
 <div id="history-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('history-screen')">← Назад</button>
 <h1 style="text-align: center; margin-bottom: 15px;">📜 История питания</h1>
 
-<div class="form-group" style="margin-bottom: 15px;">
-    <label style="color: #8e8e93; font-size: 12px; margin-bottom: 5px;">Выберите месяц</label>
-    <input type="month" id="history-month-picker" style="padding: 10px; width: 100%; border-radius: 12px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 16px; outline: none;" onchange="renderHistory()">
+<div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <div style="flex: 1;">
+            <label style="font-size: 11px; color: #8e8e93; margin-bottom: 4px; display: block;">С даты</label>
+            <input type="date" id="history-start-date" style="width: 100%; padding: 8px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 14px; outline: none; box-sizing: border-box;" onchange="renderHistory()">
+        </div>
+        <div style="flex: 1;">
+            <label style="font-size: 11px; color: #8e8e93; margin-bottom: 4px; display: block;">По дату</label>
+            <input type="date" id="history-end-date" style="width: 100%; padding: 8px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 14px; outline: none; box-sizing: border-box;" onchange="renderHistory()">
+        </div>
+    </div>
+    
+    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+        <button class="quick-btn" onclick="setHistoryPeriod('7days')">7 дней</button>
+        <button class="quick-btn" onclick="setHistoryPeriod('30days')">30 дней</button>
+        <button class="quick-btn" onclick="setHistoryPeriod('month')">Этот месяц</button>
+        <button class="quick-btn" onclick="setHistoryPeriod('all')">Все время</button>
+    </div>
 </div>
 
-<!-- Блок с итогами за месяц -->
-<div id="history-month-summary" class="history-card" style="background: rgba(52, 199, 89, 0.1); border-color: #34c759; display: none;">
-    <div style="font-size: 14px; font-weight: bold; color: #34c759; margin-bottom: 8px;">Итого за месяц:</div>
+<!-- Блок с итогами за выбранный период -->
+<div id="history-period-summary" class="history-card" style="background: rgba(52, 199, 89, 0.1); border-color: #34c759; display: none;">
+    <div style="font-size: 14px; font-weight: bold; color: #34c759; margin-bottom: 8px;">Итого за период:</div>
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center;">
         <div><span id="hist-total-cal" style="color: var(--accent-color); font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Ккал</span></div>
         <div><span id="hist-total-prot" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Бел.</span></div>
@@ -140,15 +158,30 @@
 <button class="btn" onclick="linkTelegramToEmail()">Подтвердить привязку</button>
 </div>
 </div>
-<div style="background: #1c1c1e; padding: 20px; border-radius: 16px;">
+
+<div style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-bottom: 20px;">
 <h3 style="margin-top: 0;">Изменить данные</h3>
 <div class="form-group"><label>Возраст</label><input type="number" id="age" placeholder="25"></div>
 <div class="form-group"><label>Вес (кг)</label><input type="number" id="weight" placeholder="70"></div>
 <div class="form-group"><label>Рост (см)</label><input type="number" id="height" placeholder="175"></div>
 <div class="form-group"><label>Пол</label><select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
 <div class="form-group"><label>Цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
-<button class="btn" onclick="saveProfile()">Сохранить</button>
 </div>
+
+<!-- ВОССТАНОВЛЕННЫЙ БЛОК СВОЕЙ НОРМЫ -->
+<div style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-bottom: 20px;">
+<h3 style="margin-top: 0;">Своя норма (опционально)</h3>
+<p style="color: #8e8e93; font-size: 12px; margin-bottom: 10px;">Если хотите задать норму вручную, впишите цифры ниже. Если оставить пустым — норма посчитается по формуле.</p>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Калории</label><input type="number" id="custom-calories" placeholder="Напр. 2000"></div>
+    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Белки (г)</label><input type="number" id="custom-protein" placeholder="Напр. 150"></div>
+    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Жиры (г)</label><input type="number" id="custom-fat" placeholder="Напр. 70"></div>
+    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Углеводы (г)</label><input type="number" id="custom-carbs" placeholder="Напр. 200"></div>
+</div>
+</div>
+
+<button class="btn" onclick="saveProfile()">Сохранить все данные</button>
+
 <div style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-top: 20px;">
 <h3 style="margin-top: 0;">Тест датчиков</h3>
 <p style="color: #8e8e93; font-size: 14px;">Проверь, видит ли Telegram тряску телефона.</p>
