@@ -377,10 +377,8 @@ function archiveFoodToHistory(foodArray, dateString) {
     let history = {};
     try { history = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) { history = {}; }
     
-    // Сохраняем еду за этот день
     history[dateString] = foodArray;
     
-    // Оставляем только последние 30 дней, чтобы не забивать память
     const dates = Object.keys(history).sort();
     if (dates.length > 30) {
         delete history[dates[0]];
@@ -401,7 +399,7 @@ function renderHistory() {
     let history = {};
     try { history = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) { history = {}; }
 
-    const dates = Object.keys(history).sort((a, b) => new Date(b) - new Date(a)); // Сначала новые
+    const dates = Object.keys(history).sort((a, b) => new Date(b) - new Date(a));
 
     if (dates.length === 0) {
         listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93;">История пока пуста. Добавляй еду, и она будет сохраняться здесь.</p>';
@@ -464,7 +462,6 @@ function updateDashboard() {
     setValue('eaten-fat', eatenFat, norm.fat);
     setValue('eaten-carb', eatenCarb, norm.carbs);
     
-    // Синхронизируем ккал в старом блоке (calories-norm), если он есть
     if (document.getElementById('calories-norm')) {
         document.getElementById('calories-norm').innerText = norm.calories + " ккал";
     }
@@ -570,25 +567,34 @@ function openProfileSettings() {
         document.getElementById('link-desc').innerText = "Привяжите Email, чтобы заходить с любого устройства.";
         const linked = localStorage.getItem('linkedEmail');
         if (linked) {
-            document.getElementById('link-email-form').innerHTML = `<p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ${linked}</p><button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkEmail()">Отвязать Email</button>`; 
-        } else { 
+            document.getElementById('link-email-form').innerHTML = `
+                <p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ${linked}</p>
+                <button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkEmail()">Отвязать Email</button>
+            `;
+        } else {
             document.getElementById('link-email-form').innerHTML = `
                 <div class="form-group" style="margin-bottom: 10px;"><input type="email" id="link-email" placeholder="your@email.com" style="padding: 10px;"></div>
                 <div class="form-group" style="margin-bottom: 10px;"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)" style="padding: 10px;"></div>
                 <button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkEmailToTelegram()">Привязать Email</button>
-            `; 
-        } 
-        document.getElementById('link-email-form').style.display = 'block'; 
-        document.getElementById('link-tg-form').style.display = 'none'; 
-    } else { 
-        document.getElementById('link-title').innerText = "Привязка Telegram"; 
-        document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона."; 
-        const tgId = localStorage.getItem('tgId'); 
-        if (tgId) { 
-            document.getElementById('link-tg-form').innerHTML = `<p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ${tgId}</p><button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkTelegram()">Отвязать Telegram</button>`;
+            `;
+        }
+        document.getElementById('link-email-form').style.display = 'block';
+        document.getElementById('link-tg-form').style.display = 'none';
+    } else {
+        document.getElementById('link-title').innerText = "Привязка Telegram";
+        document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона.";
+        const tgId = localStorage.getItem('tgId');
+        if (tgId) {
+            document.getElementById('link-tg-form').innerHTML = `
+                <p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ${tgId}</p>
+                <button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkTelegram()">Отвязать Telegram</button>
+            `;
         } else {
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                document.getElementById('link-tg-form').innerHTML = `<p style="font-size: 14px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b>${tg.initDataUnsafe.user.id}</b></p><button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkTelegramToEmail()">Привязать Telegram</button>`;
+                document.getElementById('link-tg-form').innerHTML = `
+                    <p style="font-size: 14px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b>${tg.initDataUnsafe.user.id}</b></p>
+                    <button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkTelegramToEmail()">Привязать Telegram</button>
+                `;
             }
         }
         document.getElementById('link-email-form').style.display = 'none';
