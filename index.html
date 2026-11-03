@@ -9,17 +9,18 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="style.css">
 <style>
-.compact-panel { background: rgba(28, 28, 30, 0.85); border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); position: relative; }
-.compact-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; }
-.compact-val { font-size: 13px; font-weight: bold; white-space: nowrap; }
-.compact-val span { font-size: 10px; color: #8e8e93; font-weight: normal; }
-.compact-label { font-size: 9px; color: #8e8e93; text-transform: uppercase; margin-top: 2px; }
-.compact-food-list { max-height: 80px; overflow-y: auto; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; }
-.compact-food-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; margin-bottom: 4px; font-size: 11px; }
+/* Стили для истории */
+.history-card { background: #1c1c1e; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #2c2c2e; }
+.history-date { color: var(--accent-color); font-weight: bold; font-size: 15px; margin-bottom: 5px; }
+.history-stats { color: #8e8e93; font-size: 12px; margin-bottom: 10px; }
+.history-food-item { font-size: 12px; color: #fff; margin-bottom: 3px; padding-left: 10px; border-left: 2px solid #34c759; }
 .custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
 .custom-modal.active { display: flex; }
 .custom-modal-content { background: #1c1c1e; border-radius: 16px; padding: 20px; width: 100%; max-width: 320px; box-sizing: border-box; position: relative; }
 .custom-modal-close { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 18px; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.compact-panel { background: rgba(28, 28, 30, 0.85); border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1); }
+.compact-food-list { max-height: 80px; overflow-y: auto; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; }
+.compact-food-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; margin-bottom: 4px; font-size: 11px; }
 </style>
 </head>
 <body class="male-theme"> 
@@ -49,141 +50,126 @@
 </div> 
 
 <div id="dashboard-screen" class="screen">
-<video id="character-video" class="video-background" loop muted playsinline></video>
+<video id="character-video" class="video-background" autoplay loop muted playsinline></video>
 <div class="overlay">
-<div style="display: flex; justify-content: space-between; position: absolute; top: 0px; left: 0px; right: 0px; z-index: 30; padding: 10px 15px;">
-<button class="btn" style="background-color: rgba(44,44,46,0.7); color: white; width: auto; padding: 6px 12px; font-size: 12px; margin: 0;" onclick="openProfileSettings()">⚙️ Настройки</button>
-<button class="btn" style="background-color: rgba(255,59,48,0.2); color: #ff3b30; width: auto; padding: 6px 12px; font-size: 12px; margin: 0; border: 1px solid #ff3b30;" onclick="logout()">Выйти</button>
+<div style="display: flex; justify-content: space-between; position: absolute; top: 0px; left: 0px; right: 0px; z-index: 30; padding: 5px 10px;">
+<button class="btn" style="background-color: rgba(44,44,46,0.7); color: white; width: auto; padding: 8px 15px; font-size: 13px; margin: 0;" onclick="openProfileSettings()">⚙️ Настройки</button>
+<button class="btn" style="background-color: rgba(255,59,48,0.2); color: #ff3b30; width: auto; padding: 8px 15px; font-size: 13px; margin: 0; border: 1px solid #ff3b30;" onclick="logout()">Выйти</button>
 </div>
-<div class="top-info" style="margin-top: 40px;">
-<div class="character-level" id="char-level" style="font-size: 12px;">Уровень 1</div>
-<div class="character-title" id="char-title" style="font-size: 26px;">Странник</div>
+<div class="top-info">
+<div class="character-level" id="char-level">Уровень 1</div>
+<div class="character-title" id="char-title">Странник</div>
 <div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
-<p class="xp-text" id="xp-text" style="font-size: 11px;">0 / 100 XP</p>
+<p class="xp-text" id="xp-text">0 / 100 XP</p>
 </div>
-<div class="bottom-panel"> 
+<div class="bottom-panel">
+<div class="stats-row">
+<div class="stat-box"><p>Норма</p><h3 id="calories-norm">0 ккал</h3></div>
+<div class="stat-box"><p>Сожжено</p><h3 id="burned-total">0 ккал</h3></div>
+</div>
 
+<!-- ВОССТАНОВЛЕННЫЙ БЛОК ЕДЫ И КНОПКА ИСТОРИИ -->
 <div class="compact-panel">
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-<h4 style="margin: 0; color: #fff; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Съедено за сегодня</h4>
-<button onclick="openCustomNormModal()" style="background: rgba(52, 199, 89, 0.2); border: 1px solid #34c759; color: #34c759; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer;">✎ Ред.</button>
-</div> 
-
-<div class="compact-grid">
-<div>
-<div class="compact-val" style="color: var(--accent-color);"><span id="eaten-cal">0</span> <span style="font-size: 10px; color: #8e8e93;">/</span> <span id="norm-cal" style="color: #fff;">0</span></div>
-<div class="compact-label">Ккал</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h4 style="margin: 0; color: #fff; font-size: 10px; text-transform: uppercase;">Съедено сегодня</h4>
+        <div style="display: flex; gap: 5px;">
+            <button onclick="openHistoryScreen()" style="background: rgba(52, 199, 89, 0.2); border: 1px solid #34c759; color: #34c759; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer;">📜 История</button>
+            <button onclick="openCustomNormModal()" style="background: rgba(52, 199, 89, 0.2); border: 1px solid #34c759; color: #34c759; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer;">✎ Ред.</button>
+        </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 11px; text-align: center; margin-bottom: 5px;">
+        <div style="flex: 1; color: var(--accent-color);"><span id="eaten-cal">0</span><br><span style="color: #8e8e93;">Ккал</span></div>
+        <div style="flex: 1;"><span id="eaten-prot">0</span><br><span style="color: #8e8e93;">Белки</span></div>
+        <div style="flex: 1;"><span id="eaten-fat">0</span><br><span style="color: #8e8e93;">Жиры</span></div>
+        <div style="flex: 1;"><span id="eaten-carb">0</span><br><span style="color: #8e8e93;">Углев.</span></div>
+    </div>
+    <div id="today-food-list" class="compact-food-list"></div>
 </div>
-<div>
-<div class="compact-val"><span id="eaten-prot">0</span> <span style="font-size: 10px; color: #8e8e93;">/</span> <span id="norm-prot" style="color: #fff;">0</span></div>
-<div class="compact-label">Белки</div>
-</div>
-<div>
-<div class="compact-val"><span id="eaten-fat">0</span> <span style="font-size: 10px; color: #8e8e93;">/</span> <span id="norm-fat" style="color: #fff;">0</span></div>
-<div class="compact-label">Жиры</div>
-</div>
-<div>
-<div class="compact-val"><span id="eaten-carb">0</span> <span style="font-size: 10px; color: #8e8e93;">/</span> <span id="norm-carb" style="color: #fff;">0</span></div>
-<div class="compact-label">Углев.</div>
-</div>
-</div> 
-
-<div id="today-food-list" class="compact-food-list"></div> 
-
-<button class="btn" style="background-color: rgba(255,59,48,0.8); color: white; padding: 6px; font-size: 11px; margin-top: 8px; border-radius: 8px;" onclick="clearTodayFood()">Очистить</button>
-</div> 
 
 <div class="action-grid">
-<button class="action-btn" onclick="window.location.href='camera.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 4px;">📸</h3><p style="font-size: 10px;">Еда</p></button>
-<button class="action-btn" onclick="window.location.href='workout.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 4px;">💪</h3><p style="font-size: 10px;">Треня</p></button>
-<button class="action-btn" onclick="window.location.href='timer.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 4px;">⏱</h3><p style="font-size: 10px;">Таймер</p></button>
-<button class="action-btn" onclick="window.location.href='leaderboard.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 4px;">🏆</h3><p style="font-size: 10px;">Рейтинг</p></button>
+<button class="action-btn" onclick="window.location.href='camera.html'"><h3>📸</h3><p>Еда</p></button>
+<button class="action-btn" onclick="window.location.href='workout.html'"><h3>💪</h3><p>Треня</p></button>
+<button class="action-btn" onclick="window.location.href='timer.html'"><h3>⏱</h3><p>Таймер</p></button>
+<button class="action-btn" onclick="window.location.href='leaderboard.html'"><h3>🏆</h3><p>Рейтинг</p></button>
 </div>
 </div>
 </div>
 </div> 
 
-<div id="norm-modal" class="custom-modal">
-<div class="custom-modal-content">
-<button class="custom-modal-close" onclick="closeCustomNormModal()">✖</button>
-<h3 style="margin-top: 0; text-align: center; font-size: 16px;">Своя норма</h3>
-<p style="color: #8e8e93; font-size: 11px; text-align: center; margin-bottom: 15px;">Впиши свои цифры. Если оставить пустым, будет считаться по формуле.</p> 
-
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-<div class="form-group" style="margin: 0;"><label style="font-size: 11px;">Калории</label><input type="number" id="modal-calories" placeholder="2000" style="padding: 8px;"></div>
-<div class="form-group" style="margin: 0;"><label style="font-size: 11px;">Белки (г)</label><input type="number" id="modal-protein" placeholder="150" style="padding: 8px;"></div>
-<div class="form-group" style="margin: 0;"><label style="font-size: 11px;">Жиры (г)</label><input type="number" id="modal-fat" placeholder="70" style="padding: 8px;"></div>
-<div class="form-group" style="margin: 0;"><label style="font-size: 11px;">Углеводы (г)</label><input type="number" id="modal-carbs" placeholder="200" style="padding: 8px;"></div>
+<!-- НОВЫЙ ЭКРАН ИСТОРИИ -->
+<div id="history-screen" class="screen">
+<div class="inner-screen">
+<button class="back-btn" onclick="closeScreen('history-screen')">← Назад</button>
+<h1 style="text-align: center; margin-bottom: 20px;">📜 История питания</h1>
+<div id="history-list">
+    <p style="text-align: center; color: #8e8e93;">Загрузка...</p>
 </div>
-<button class="btn" style="padding: 10px; font-size: 14px; margin-top: 15px; background-color: var(--accent-color); color: #000;" onclick="saveCustomNormFromModal()">Сохранить</button>
 </div>
-</div> 
+</div>
 
 <div id="profile-settings-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
-<h1 style="text-align: center; margin-bottom: 20px;">Настройки профиля</h1> 
-
-<div id="link-section" style="background: #1c1c1e; padding: 15px; border-radius: 16px; margin-bottom: 15px;">
-<h3 style="margin-top: 0; font-size: 16px;" id="link-title">Привязка аккаунта</h3>
-<p style="color: #8e8e93; font-size: 13px; margin-bottom: 10px;" id="link-desc">Привяжите второй способ входа.</p>
+<h1 style="text-align: center; margin-bottom: 30px;">Настройки профиля</h1>
+<div id="link-section" style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-bottom: 20px;">
+<h3 style="margin-top: 0;" id="link-title">Привязка аккаунта</h3>
+<p style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;" id="link-desc">Привяжите второй способ входа.</p>
 <div id="link-email-form">
-<div class="form-group" style="margin-bottom: 10px;"><input type="email" id="link-email" placeholder="your@email.com" style="padding: 10px;"></div>
-<div class="form-group" style="margin-bottom: 10px;"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)" style="padding: 10px;"></div>
-<button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkEmailToTelegram()">Привязать Email</button>
+<div class="form-group"><input type="email" id="link-email" placeholder="your@email.com"></div>
+<div class="form-group"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)"></div>
+<button class="btn" onclick="linkEmailToTelegram()">Привязать Email</button>
 </div>
 <div id="link-tg-form" style="display: none;">
-<p style="font-size: 13px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b id="current-tg-id">неизвестно</b></p>
-<button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkTelegramToEmail()">Подтвердить привязку</button>
+<p style="font-size: 14px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b id="current-tg-id">неизвестно</b></p>
+<p style="font-size: 12px; color: #8e8e93; margin-bottom: 15px;">Скопируйте этот ID и используйте его для входа.</p>
+<button class="btn" onclick="linkTelegramToEmail()">Подтвердить привязку</button>
 </div>
-</div> 
+</div>
+<div style="background: #1c1c1e; padding: 20px; border-radius: 16px;">
+<h3 style="margin-top: 0;">Изменить данные</h3>
+<div class="form-group"><label>Возраст</label><input type="number" id="age" placeholder="25"></div>
+<div class="form-group"><label>Вес (кг)</label><input type="number" id="weight" placeholder="70"></div>
+<div class="form-group"><label>Рост (см)</label><input type="number" id="height" placeholder="175"></div>
+<div class="form-group"><label>Пол</label><select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
+<div class="form-group"><label>Цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
+<button class="btn" onclick="saveProfile()">Сохранить</button>
+</div>
+<div style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-top: 20px;">
+<h3 style="margin-top: 0;">Тест датчиков</h3>
+<p style="color: #8e8e93; font-size: 14px;">Проверь, видит ли Telegram тряску телефона.</p>
+<button id="test-shake-btn" class="btn" style="background-color: #007aff; color: white;" onclick="startShakeTest()">📳 Начать тест</button>
+<button id="stop-shake-btn" class="btn" style="background-color: #ff3b30; color: white; display: none;" onclick="stopShakeTest()">🛑 СТОП</button>
+</div>
+</div>
+</div>
 
-<div style="background: #1c1c1e; padding: 15px; border-radius: 16px; margin-bottom: 15px;">
-<h3 style="margin-top: 0; font-size: 16px;">Изменить данные</h3>
-<div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Возраст</label><input type="number" id="age" placeholder="25" style="padding: 10px;"></div>
-<div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Вес (кг)</label><input type="number" id="weight" placeholder="70" style="padding: 10px;"></div>
-<div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Рост (см)</label><input type="number" id="height" placeholder="175" style="padding: 10px;"></div>
-<div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Пол</label><select id="gender" style="padding: 10px;"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
-<div class="form-group" style="margin-bottom: 10px;"><label style="font-size: 12px;">Цель</label><select id="goal" style="padding: 10px;"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
-</div> 
-
-<div style="background: #1c1c1e; padding: 15px; border-radius: 16px; margin-bottom: 15px;">
-<h3 style="margin-top: 0; font-size: 16px;">Своя норма (опционально)</h3>
-<p style="color: #8e8e93; font-size: 12px; margin-bottom: 10px;">Если хотите задать норму вручную, впишите цифры ниже. Если оставить пустым — норма посчитается по формуле.</p>
+<!-- МОДАЛЬНЫЕ ОКНА (восстановлены) -->
+<div id="norm-modal" class="custom-modal">
+<div class="custom-modal-content">
+<button class="custom-modal-close" onclick="closeCustomNormModal()">✖</button>
+<h3 style="margin-top: 0; text-align: center; font-size: 16px;">Своя норма</h3>
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-<div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Калории</label><input type="number" id="custom-calories" placeholder="Напр. 2000" style="padding: 10px;"></div>
-<div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Белки (г)</label><input type="number" id="custom-protein" placeholder="Напр. 150" style="padding: 10px;"></div>
-<div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Жиры (г)</label><input type="number" id="custom-fat" placeholder="Напр. 70" style="padding: 10px;"></div>
-<div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Углеводы (г)</label><input type="number" id="custom-carbs" placeholder="Напр. 200" style="padding: 10px;"></div>
+<div class="form-group" style="margin: 0;"><label>Ккал</label><input type="number" id="modal-calories" placeholder="2000"></div>
+<div class="form-group" style="margin: 0;"><label>Белки</label><input type="number" id="modal-protein" placeholder="150"></div>
+<div class="form-group" style="margin: 0;"><label>Жиры</label><input type="number" id="modal-fat" placeholder="70"></div>
+<div class="form-group" style="margin: 0;"><label>Углев.</label><input type="number" id="modal-carbs" placeholder="200"></div>
 </div>
-</div> 
-
-<button class="btn" style="padding: 15px; font-size: 16px; background-color: var(--accent-color); color: #000; margin-bottom: 15px;" onclick="saveProfile()">Сохранить все данные</button> 
-
-<div style="background: #1c1c1e; padding: 15px; border-radius: 16px;">
-<h3 style="margin-top: 0; font-size: 16px;">Тест датчиков</h3>
-<p style="color: #8e8e93; font-size: 13px; margin-bottom: 10px;">Проверь, видит ли Telegram тряску телефона.</p>
-<button id="test-shake-btn" class="btn" style="background-color: #007aff; color: white; padding: 12px; font-size: 15px;" onclick="startShakeTest()">📳 Начать тест</button>
-<button id="stop-shake-btn" class="btn" style="background-color: #ff3b30; color: white; display: none; padding: 12px; font-size: 15px;" onclick="stopShakeTest()">🛑 СТОП</button>
-</div> 
-
+<button class="btn" style="margin-top: 15px;" onclick="saveCustomNormFromModal()">Сохранить</button>
 </div>
 </div>
 
 <div id="onboarding-modal" class="custom-modal">
 <div class="custom-modal-content">
 <h3 style="margin-top: 0; text-align: center; font-size: 18px; color: var(--accent-color);">Добро пожаловать! 🏆</h3>
-<p style="color: #8e8e93; font-size: 13px; text-align: center; margin-bottom: 15px;">Пожалуйста, заполни свои данные, чтобы приложение могло правильно рассчитать твою норму калорий и БЖУ.</p>
-
+<p style="color: #8e8e93; font-size: 13px; text-align: center; margin-bottom: 15px;">Заполни свои данные для расчета нормы.</p>
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-<div class="form-group" style="margin: 0;"><label style="font-size: 11px;">Возраст</label><input type="number" id="onboarding-age" placeholder="25" style="padding: 8px;"></div>
-<div class="form-group" style="margin: 0;"><label style="font-size: 11px;">Вес (кг)</label><input type="number" id="onboarding-weight" placeholder="70" style="padding: 8px;"></div>
-<div class="form-group" style="margin: 0;"><label style="font-size: 11px;">Рост (см)</label><input type="number" id="onboarding-height" placeholder="175" style="padding: 8px;"></div>
-<div class="form-group" style="margin: 0;"><label style="font-size: 11px;">Пол</label><select id="onboarding-gender" style="padding: 8px;"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
+<div class="form-group" style="margin: 0;"><label>Возраст</label><input type="number" id="onboarding-age" placeholder="25"></div>
+<div class="form-group" style="margin: 0;"><label>Вес (кг)</label><input type="number" id="onboarding-weight" placeholder="70"></div>
+<div class="form-group" style="margin: 0;"><label>Рост (см)</label><input type="number" id="onboarding-height" placeholder="175"></div>
+<div class="form-group" style="margin: 0;"><label>Пол</label><select id="onboarding-gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
 </div>
-<div class="form-group" style="margin-top: 10px;"><label style="font-size: 11px;">Цель</label><select id="onboarding-goal" style="padding: 8px;"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
-
-<button class="btn" style="padding: 12px; font-size: 15px; margin-top: 15px; background-color: #34c759; color: white;" onclick="saveOnboardingData()">Сохранить и начать</button>
+<div class="form-group" style="margin-top: 10px;"><label>Цель</label><select id="onboarding-goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
+<button class="btn" style="margin-top: 15px;" onclick="saveOnboardingData()">Сохранить и начать</button>
 </div>
 </div>
 
