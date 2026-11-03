@@ -35,6 +35,7 @@ LOCAL_DB = [
     {"name": "Адреналин", "cal": 45, "prot": 0, "fat": 0, "carb": 11, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
     {"name": "Йогурт", "cal": 60, "prot": 5, "fat": 3, "carb": 4, "img": "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=200"},
     {"name": "Кола", "cal": 42, "prot": 0, "fat": 0, "carb": 10.6, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
+    {"name": "Cola", "cal": 42, "prot": 0, "fat": 0, "carb": 10.6, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
     {"name": "Coca-Cola", "cal": 42, "prot": 0, "fat": 0, "carb": 10.6, "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"},
     {"name": "Пепси", "cal": 43, "prot": 0, "fat": 0, "carb": 11, "img": "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=200"},
     {"name": "Спрайт", "cal": 40, "prot": 0, "fat": 0, "carb": 10, "img": "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=200"},
@@ -125,17 +126,38 @@ def search_food():
         try:
             api_results = api.product.text_search(eng_query, page_size=10)
             if api_results and 'products' in api_results:
+                seen_names = set() # Защита от дубликатов
+                
                 for product in api_results['products']:
                     name = product.get('product_name')
                     if not name: continue
-                    nutrients = product.get('nutriments', {})
                     
+                    clean_name_check = name.lower().strip()
+                    if clean_name_check in seen_names: continue
+                    seen_names.add(clean_name_check)
+
+                    nutrients = product.get('nutriments', {})
                     cal = round(nutrients.get('energy-kcal_100g', 0), 1)
                     if cal == 0:
                         continue
 
-                    image_url = product.get('image_front_small_url') or product.get('image_url') or DEFAULT_IMG
+                    image_url = product.get('image_front_small_url') or product.get('image_url')
+                    
+                    # Умная подстановка картинок, если их нет
+                    if not image_url:
+                        if "cola" in clean_name_check:
+                            image_url = "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200"
+                        elif "pepsi" in clean_name_check:
+                            image_url = "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=200"
+                        elif "water" in clean_name_check:
+                            image_url = "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=200"
+                        else:
+                            image_url = DEFAULT_IMG
+
                     results.append({"product_name": name, "image_url": image_url, "calories_100g": cal, "proteins_100g": round(nutrients.get('proteins_100g', 0), 1), "fat_100g": round(nutrients.get('fat_100g', 0), 1), "carbs_100g": round(nutrients.get('carbohydrates_100g', 0), 1), "ingredients": product.get('ingredients_text_ru') or product.get('ingredients_text') or 'Состав не указан', "description": "Данные Open Food Facts"})
+                    
+                    if len(results) >= 5: # Больше 5 не надо
+                        break
         except Exception as e:
             print(f"OFF error: {e}") 
 
@@ -147,12 +169,14 @@ def search_food():
             response = requests.get(url, timeout=10)
             data = response.json()
             if 'foods' in data:
+                seen_names = set()
                 for food in data['foods']:
                     nutrients = {n['nutrientName']: n['value'] for n in food.get('foodNutrients', [])}
-                    
                     raw_name = food.get('description', 'Без названия')
                     
-                    # --- ОЧИСТКА НАЗВАНИЙ ОТ USDA ---
+                    if raw_name.lower() in seen_names: continue
+                    seen_names.add(raw_name.lower())
+
                     clean_name = raw_name
                     if clean_name.startswith("Beverages, "):
                         clean_name = clean_name.replace("Beverages, ", "")
@@ -168,10 +192,7 @@ def search_food():
                     clean_name = clean_name.replace("POWERADE", "Пауэрейд")
                     clean_name = clean_name.replace("DASANI", "Дасани")
                     
-                    # Если стало слишком коротко или пусто - берем оригинал
-                    if len(clean_name) < 3: 
-                        clean_name = raw_name
-                    # ---------------------------------
+                    if len(clean_name) < 3: clean_name = raw_name
 
                     results.append({"product_name": clean_name, "image_url": DEFAULT_IMG, "calories_100g": round(nutrients.get('Energy', 0), 1), "proteins_100g": round(nutrients.get('Protein', 0), 1), "fat_100g": round(nutrients.get('Total lipid (fat)', 0), 1), "carbs_100g": round(nutrients.get('Carbohydrate, by difference', 0), 1), "ingredients": "Данные USDA FoodData Central", "description": ""})
         except Exception as e:
