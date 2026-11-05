@@ -1,10 +1,11 @@
+const OFOX_API_KEY = 'sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPmKOuTmo';
+
 const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
 const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
-// Переменные для графиков
 let chartWaterDiary = null;
 let chartFoodCalDiary = null;
 let chartFoodMacroDiary = null;
@@ -160,9 +161,7 @@ async function saveOnboardingData() {
     document.getElementById('onboarding-modal').classList.remove('active');
     renderProfile(profile);
     tg.showAlert("Отлично! Твоя норма воды рассчитана автоматически.");
-}
-
-async function syncFoodFromCloud() {
+}async function syncFoodFromCloud() {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
     if (!tgId && !email) return;
@@ -250,7 +249,6 @@ function checkDayReset() {
     if (localStorage.getItem('waterListDate') !== today) { localStorage.setItem('todayWater', '[]'); localStorage.setItem('waterListDate', today); }
 }
 
-// --- ВЕС ---
 function saveWeightToHistory(weight) {
     let history = []; try { history = JSON.parse(localStorage.getItem('weightHistory') || '[]'); } catch(e) { history = []; }
     const now = new Date(); const dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
@@ -318,7 +316,6 @@ function renderWeightDiary() {
     listDiv.innerHTML = listHtml || '<p style="text-align: center; color: #8e8e93;">Нет записей за этот период.</p>';
 }
 
-// --- ВОДА ---
 function updateCustomWaterBtn() {
     const btn = document.getElementById('custom-water-quick-btn'); if (!btn) return;
     const saved = localStorage.getItem('customWaterAmount');
@@ -394,7 +391,6 @@ function renderWaterDiary() {
     listDiv.innerHTML = listHtml || '<p style="text-align: center; color: #8e8e93;">Нет записей за этот период.</p>';
 }
 
-// --- ЕДА ---
 function openFoodDiary() {
     setPeriod('food', '7days');
     openScreen('food-diary-screen');
@@ -463,7 +459,6 @@ function renderFoodDiary() {
     listDiv.innerHTML = listHtml || '<p style="text-align: center; color: #8e8e93;">Нет записей за этот период.</p>';
 }
 
-// --- ГЛОБАЛЬНЫЙ АНАЛИЗ ---
 function openGlobalStatsModal() {
     const now = new Date(); const past = new Date(); past.setDate(now.getDate() - 7);
     document.getElementById('global-start-date').value = past.toISOString().split('T')[0];
@@ -506,7 +501,6 @@ function renderAllCharts() {
     chartGlobalWater = new Chart(document.getElementById('g-water-chart').getContext('2d'), { type:'line', data:{labels,datasets:[{label:'Вода',data:hData,borderColor:'#5ac8fa',borderWidth:2,pointRadius:2,fill:false,tension:0.3}]}, options:{...baseOpts, plugins:{...baseOpts.plugins, title:{display:true,text:'Вода (мл)',color:'#fff'}}, scales:{...baseOpts.scales, y:{...baseOpts.scales.y, beginAtZero:true}}} });
 }
 
-// --- УТИЛИТЫ ---
 function setPeriod(type, period) {
     const startInput = document.getElementById(type + '-start-date'); const endInput = document.getElementById(type + '-end-date');
     const now = new Date(); endInput.value = now.toISOString().split('T')[0];
@@ -626,9 +620,7 @@ function updateCharacterUI() {
     let nextLevelXp = 100; if (newLevelIndex + 1 < levels.length) nextLevelXp = levels[newLevelIndex + 1].xp;
     let percent = (currentXP / nextLevelXp) * 100; if (percent > 100) percent = 100;
     if (document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = percent + "%";
-}
-
-function openProfileSettings() {
+}function openProfileSettings() {
     try {
         const loginType = localStorage.getItem('loginType') || 'telegram';
         if (loginType === 'telegram') {
@@ -747,7 +739,7 @@ function stopShakeTest() {
 }
 
 // --- СЕНСЕЙ (ИИ) ---
-const PROXY_API_KEY = 'sk-HQWY8HQ6KEHVAt6mnKNpTa6XgMys9wDv';
+const OFOX_API_KEY = 'sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPmKOuTmo';
 let senseiChatHistory = [];
 try {
     const savedHistory = localStorage.getItem('senseiChatHistory');
@@ -859,37 +851,37 @@ ${context}
 ПРАВИЛА:
 1. Пиши кратко, прямо, как военачальник. Без воды.
 2. Если он косячит, укажи.
-3. Если спрашивает план, предложи РАЗНООБРАЗНОЕ питание. Не предлагай курицу и гречку каждый раз. Используй рыбу, индейку, тофу, яйца, сложные углеводы (рис, киноа, овсянка). Учитывай его предпочтения.
-4. Учитывай время суток (если вечер, не советуй тяжелый завтрак).`;
+3. Если спрашивает план, предложи РАЗНООБРАЗНОЕ питание. Не предлагай курицу и гречку каждый раз.
+4. Учитывай время суток.`;
 
-        const messages = [
-            { role: 'system', content: systemPrompt },
-            ...senseiChatHistory.slice(-10)
-        ];
+        const contents = senseiChatHistory.slice(-10).map(msg => ({
+            role: msg.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: msg.content }]
+        }));
 
-        const response = await fetch('https://api.proxyapi.ru/openai/v1/chat/completions', {
+        if (contents.length === 0) {
+            contents.push({ role: 'user', parts: [{ text: systemPrompt }] });
+        }
+
+        const response = await fetch('https://api.ofox.ai/gemini/v1beta/models/google/gemini-2.5-flash-lite:generateContent', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${PROXY_API_KEY}`
+                'x-goog-api-key': OFOX_API_KEY
             },
-            body: JSON.stringify({
-                model: 'deepseek/deepseek-v4-flash',
-                messages: messages,
-                temperature: 0.7 // Чуть выше температура для креативности в планах питания
-            })
+            body: JSON.stringify({ contents: contents })
         });
 
         const data = await response.json();
         const loadEl = document.getElementById('sensei-loading');
         if (loadEl) loadEl.remove();
 
-        if (data.choices && data.choices.length > 0) {
-            addSenseiMessage('assistant', data.choices[0].message.content);
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
+            addSenseiMessage('assistant', data.candidates[0].content.parts[0].text);
         } else {
-            let errorMsg = "Ошибка API.";
+            let errorMsg = "Неизвестная ошибка.";
             if (data.error && data.error.message) errorMsg = data.error.message;
-            addSenseiMessage('assistant', `Прости, воин. Мое соединение с духами прервалось. Причина: ${errorMsg}`);
+            addSenseiMessage('assistant', `Прости, воин. Ошибка API: ${errorMsg}`);
         }
     } catch (e) {
         const loadEl = document.getElementById('sensei-loading');
@@ -898,7 +890,6 @@ ${context}
     }
 }
 
-// Всплывающее окно (Динамический запрос к ИИ)
 async function showSenseiAdvice(customText = null) {
     const textEl = document.getElementById('sensei-advice-text');
     const modal = document.getElementById('sensei-advice-modal');
@@ -907,56 +898,46 @@ async function showSenseiAdvice(customText = null) {
     let advice = customText;
     
     if (!advice) {
-        // Показываем загрузку, пока ИИ думает
-        textEl.innerText = "Сенсей анализирует твой день и составляет уникальный план...";
+        textEl.innerText = "Сенсей анализирует твой день...";
         modal.setAttribute('data-advice-text', 'Загрузка плана...');
         modal.classList.add('active');
 
         try {
             const context = getSenseiContext();
-            const systemPrompt = `Ты — Сенсей. Составь УНИКАЛЬНЫЙ план на остаток дня для ученика.
+            const systemPrompt = `Ты — Сенсей. Составь УНИКАЛЬНЫЙ план на остаток дня.
 ДАННЫЕ УЧЕНИКА:
 ${context}
 
-ТВОЯ ЗАДАЧА:
-1. Оцени, сколько калорий и БЖУ осталось съесть до нормы.
-2. Предложи КОНКРЕТНЫЙ прием пищи (продукты и граммы). ОБЯЗАТЕЛЬНО учитывай предпочтения в еде. НЕ ПРЕДЛАГАЙ курицу и гречку, придумай что-то другое (рыба, индейка, овощи, творог и т.д.).
-3. Предложи тренировку (если цель похудеть — кардио/круговая, если набрать — силовая).
-4. Если ученик уже перебрал калорий, скажи об этом и предложи сжечь их.
-Выдай ответ строго по шаблону:
-🛑 ОШИБКИ: (если есть)
-🍗 ПИТАНИЕ: (что съесть)
-💪 ТРЕНИРОВКА: (что делать)`;
+Выдай ответ по шаблону:
+🛑 ОШИБКИ: 
+🍗 ПИТАНИЕ: 
+💪 ТРЕНИРОВКА: `;
 
-            const response = await fetch('https://api.proxyapi.ru/openai/v1/chat/completions', {
+            const contents = [{ role: 'user', parts: [{ text: systemPrompt }] }];
+
+            const response = await fetch('https://api.ofox.ai/gemini/v1beta/models/google/gemini-2.5-flash-lite:generateContent', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${PROXY_API_KEY}`
+                    'x-goog-api-key': OFOX_API_KEY
                 },
-                body: JSON.stringify({
-                    model: 'deepseek/deepseek-v4-flash',
-                    messages: [{ role: 'system', content: systemPrompt }],
-                    temperature: 0.8 // Максимальная вариативность
-                })
+                body: JSON.stringify({ contents: contents })
             });
 
             const data = await response.json();
-            if (data.choices && data.choices.length > 0) {
-                advice = data.choices[0].message.content;
+            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
+                advice = data.candidates[0].content.parts[0].text;
             } else {
-                throw new Error("API Error");
+                throw new Error(data.error?.message || "Ошибка API");
             }
         } catch (e) {
             console.error(e);
-            // Если API упал, даем резервный план (чтобы окно не было пустым)
-            advice = `🛑 ОШИБКИ:\nСвязь с духами потеряна (нет баланса API).\n\n🍗 ПИТАНИЕ:\nСъешь порцию рыбы (200г) и овощной салат.\n\n💪 ТРЕНИРОВКА:\n30 минут быстрой ходьбы.`;
+            advice = `🛑 ОШИБКИ:\nСвязь с духами потеряна. Причина: ${e.message}\n\n🍗 ПИТАНИЕ:\nСъешь порцию рыбы (200г) и овощной салат.\n\n💪 ТРЕНИРОВКА:\n30 минут быстрой ходьбы.`;
         }
     }
 
     modal.setAttribute('data-advice-text', advice);
     textEl.innerText = advice;
-    // Окно уже открыто (active), просто обновился текст
 }
 
 function closeSenseiAdvice() {
