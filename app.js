@@ -233,7 +233,10 @@ function calculateNutrition(profile) {
     if (profile.custom_calories && profile.custom_calories > 0) {
         return { calories: parseInt(profile.custom_calories), protein: parseInt(profile.custom_protein) || 0, fat: parseInt(profile.custom_fat) || 0, carbs: parseInt(profile.custom_carbs) || 0 };
     }
-    let bmr = profile.gender === 'male' ? (10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) : (10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161);
+    let w = parseFloat(profile.weight) || 70;
+    let h = parseFloat(profile.height) || 175;
+    let a = parseInt(profile.age) || 25;
+    let bmr = profile.gender === 'male' ? (10 * w + 6.25 * h - 5 * a + 5) : (10 * w + 6.25 * h - 5 * a - 161);
     let tdee = bmr * 1.375;
     if (profile.goal === 'lose') tdee -= 500;
     if (profile.goal === 'gain') tdee += 500;
@@ -746,15 +749,25 @@ let senseiChatHistory = [];
 
 function getSenseiContext() {
     let p = currentProfileData || { weight: 70, height: 175, goal: 'lose', age: 25, gender: 'male' };
-    let goalText = p.goal === 'lose' ? 'похудеть' : 'набрать массу';
+    let norm = calculateNutrition(p);
+    let goalText = p.goal === 'lose' ? 'Похудеть' : 'Набрать массу';
+    let waterGoal = p.custom_water_goal || 2000;
     
     let todayWater = []; try { todayWater = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e){}
     let eatenWater = 0; todayWater.forEach(w => eatenWater += parseInt(w.amount || 0));
     
     let todayFood = []; try { todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]'); } catch(e){}
-    let eatenCal = 0; todayFood.forEach(f => eatenCal += parseFloat(f.calories_100g || 0));
+    let eatenCal = 0, eatenProt = 0, eatenFat = 0, eatenCarb = 0;
+    todayFood.forEach(f => {
+        eatenCal += parseFloat(f.calories_100g || 0);
+        eatenProt += parseFloat(f.proteins_100g || 0);
+        eatenFat += parseFloat(f.fat_100g || 0);
+        eatenCarb += parseFloat(f.carbs_100g || 0);
+    });
     
-    return `Ученик: Пол ${p.gender === 'male' ? 'Мужской' : 'Женский'}, Возраст ${p.age}, Вес ${p.weight}кг, Рост ${p.height}см. Цель: ${goalText}. Сегодня он выпил ${eatenWater} мл воды и съел ${eatenCal} ккал.`;
+    return `Ученик: Пол: ${p.gender === 'male' ? 'Мужской' : 'Женский'}, Возраст: ${p.age}, Вес: ${p.weight}кг, Рост: ${p.height}см. Цель: ${goalText}.
+Норма на день: ${norm.calories} ккал, Белки: ${norm.protein}г, Жиры: ${norm.fat}г, Углеводы: ${norm.carbs}г. Вода: ${waterGoal} мл.
+Уже съедено за сегодня: ${Math.round(eatenCal)} ккал, Белки: ${Math.round(eatenProt)}г, Жиры: ${Math.round(eatenFat)}г, Углеводы: ${Math.round(eatenCarb)}г. Вода: ${eatenWater} мл.`;
 }
 
 function openSenseiChat() {
@@ -796,8 +809,16 @@ async function sendSenseiMessage() {
 
     try {
         const context = getSenseiContext();
-        const systemPrompt = `Ты — Сенсей, суровый и мудрый наставник из игры Shadow Fight 2. Ты тренируешь своего ученика. Твоя задача — давать четкие, конкретные советы по тренировкам и питанию, исходя из его данных. Отвечай кратко (до 4 предложений), мотивируй, обращайся 'воин' или 'ученик'. Не давай общих фраз, говори по делу.
-        ВОТ ДАННЫЕ УЧЕНИКА: ${context}`;
+        const systemPrompt = `Ты — Сенсей, суровый и мудрый наставник из игры Shadow Fight 2. Ты тренируешь воина и следишь за его питанием.
+Твоя задача: адаптировать план под его текущий прогресс, строго указывать на ошибки (недобор/перебор калорий, мало воды), и давать четкие инструкции по питанию и тренировкам.
+ДАННЫЕ УЧЕНИКА:
+${context}
+
+ПРАВИЛА ОТВЕТА:
+1. Пиши кратко, как военачальник.
+2. Если он косячит (мало воды, перебор еды), укажи на это.
+3. Если он спрашивает план или что делать, составь ему КОНКРЕТНЫЙ план питания (продукты и граммы) и тренировок (упражнения, подходы).
+4. Не пиши длинные философские речи. Только факты и действия.`;
 
         const messages = [
             { role: 'system', content: systemPrompt },
@@ -846,44 +867,49 @@ function showSenseiAdvice(customText = null) {
     let advice = customText;
     
     if (!advice) {
-        let p = currentProfileData || { weight: 70, height: 175, goal: 'lose' };
+        let p = currentProfileData || { weight: 70, height: 175, goal: 'lose', age: 25, gender: 'male' };
+        let norm = calculateNutrition(p);
         let goalText = p.goal === 'lose' ? 'похудения' : 'набора массы';
+        let waterGoal = p.custom_water_goal || 2000;
         
         let todayWater = []; try { todayWater = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e){}
         let eatenWater = 0; todayWater.forEach(w => eatenWater += parseInt(w.amount || 0));
         
         let todayFood = []; try { todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]'); } catch(e){}
-        let eatenCal = 0; todayFood.forEach(f => eatenCal += parseFloat(f.calories_100g || 0));
+        let eatenCal = 0, eatenProt = 0, eatenFat = 0, eatenCarb = 0;
+        todayFood.forEach(f => {
+            eatenCal += parseFloat(f.calories_100g || 0);
+            eatenProt += parseFloat(f.proteins_100g || 0);
+            eatenFat += parseFloat(f.fat_100g || 0);
+            eatenCarb += parseFloat(f.carbs_100g || 0);
+        });
+
+        let leftCal = norm.calories - eatenCal;
+        let leftProt = norm.protein - eatenProt;
+        let leftFat = norm.fat - eatenFat;
+        let leftCarb = norm.carbs - eatenCarb;
+
+        let issues = [];
+        if (eatenWater < waterGoal / 2) issues.push(`Выпито мало воды (${eatenWater}/${waterGoal} мл). Пей больше!`);
+        if (leftCal < 0) issues.push(`Перебор калорий на ${Math.abs(Math.round(leftCal))} ккал. Нужно кардио.`);
+        if (p.goal === 'lose' && leftCal > 1000) issues.push(`Ты почти не ел. Это замедлит метаболизм.`);
         
-        const norm = calculateNutrition(p);
-        
-        // Локальный "мозг" тренера, если API молчит
-        if (eatenWater === 0) {
-            advice = `Воин, твой организм обезвожен. Чтобы достичь цели (${goalText}), выпей 250 мл воды прямо сейчас. Вода разгоняет метаболизм.`;
-        } else if (eatenWater < 1000) {
-            advice = `Ты выпил только ${eatenWater} мл воды. Для твоего веса (${p.weight} кг) этого мало. Выпей еще стакан.`;
-        } else if (todayFood.length === 0) {
-            advice = `Ты еще не записал ни одного приема пищи. Без дисциплины в еде не будет результата. Запиши свой завтрак в дневник.`;
-        } else if (eatenCal > norm.calories + 200) {
-            advice = `Ты съел ${Math.round(eatenCal)} ккал, а твоя норма ${norm.calories} ккал. Это перебор. Иди на улицу и пройди быстрым шагом 20 минут, чтобы сжечь лишнее.`;
-        } else if (p.goal === 'lose' && eatenCal < norm.calories - 500) {
-            advice = `Ты съел слишком мало (${Math.round(eatenCal)} ккал). Ты хочешь похудеть, но голодовка сожжет мышцы, а не жир. Съешь порцию белка (яйца или курицу).`;
+        let dietPlan = "";
+        if (leftCal > 0) {
+            dietPlan = `Осталось съесть: ${Math.round(leftCal)} ккал, Белки: ${Math.round(leftProt)}г, Жиры: ${Math.round(leftFat)}г, Углеводы: ${Math.round(leftCarb)}г. Съешь, например, куриную грудку (200г) и гречку (100г).`;
         } else {
-            const generalTasks = [
-                `Твоя цель — ${goalText}. Сделай 3 подхода по 15 приседаний прямо сейчас. Это разбудит твое тело.`,
-                `Проверь свой дневник веса. Взвесься и запиши результат, чтобы видеть прогресс.`,
-                `Сегодня отличный день, чтобы сделать растяжку на 5 минут. Гибкость — сила воина.`,
-                `Выпей порцию протеина или съешь творог перед сном, чтобы мышцы восстанавливались.`,
-                `Твоя норма — ${norm.calories} ккал. Спланируй свой следующий прием пищи, чтобы не превысить ее.`
-            ];
-            advice = generalTasks[Math.floor(Math.random() * generalTasks.length)];
+            dietPlan = `Норма закрыта. Больше не ешь сегодня. Пей только воду.`;
         }
+
+        let workoutPlan = p.goal === 'lose' 
+            ? `Жиросжигание: 3 круга по (20 приседаний, 15 отжиманий, 30 сек планки).` 
+            : `Силовая: 4 подхода по 10 подтягиваний/тяги, и 3 подхода по 15 приседаний с весом.`;
+
+        advice = `Твой план на сегодня, воин:\n\n🛑 ОШИБКИ:\n${issues.length > 0 ? issues.join(' ') : 'Пока все по плану.'}\n\n🍗 ПИТАНИЕ:\n${dietPlan}\n\n💪 ТРЕНИРОВКА:\n${workoutPlan}`;
     }
 
-    // Сохраняем текст в скрытое поле, чтобы передать в чат
     modal.setAttribute('data-advice-text', advice);
-    
-    textEl.innerText = `"${advice}"`;
+    textEl.innerText = advice;
     modal.classList.add('active');
 }
 
