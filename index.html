@@ -20,17 +20,8 @@
 .custom-modal-content { background: #1c1c1e; border-radius: 16px; padding: 20px; width: 100%; max-width: 320px; box-sizing: border-box; position: relative; }
 .custom-modal-close { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 18px; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-/* Уменьшенные и ИСПРАВЛЕННЫЕ стили для главного экрана */
-.compact-panel { 
-    background: rgba(28, 28, 30, 0.85); 
-    border-radius: 10px; 
-    padding: 8px; 
-    border: 1px solid rgba(255,255,255,0.1); 
-    display: flex; 
-    flex-direction: column; 
-    min-width: 0; 
-    box-sizing: border-box; 
-}
+/* Уменьшенные стили для главного экрана */
+.compact-panel { background: rgba(28, 28, 30, 0.85); border-radius: 10px; padding: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; min-width: 0; box-sizing: border-box; }
 .compact-food-list { max-height: 50px; overflow-y: auto; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px; }
 .compact-food-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px; margin-bottom: 2px; font-size: 10px; }
 .quick-btn { background: #2c2c2e; color: white; border: 1px solid #3a3a3c; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; }
@@ -78,6 +69,13 @@
 <div class="character-title" id="char-title" style="font-size: 28px;">Странник</div>
 <div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
 <p class="xp-text" id="xp-text" style="font-size: 11px;">0 / 100 XP</p>
+
+<!-- БЛОК ДЛЯ ЦИТАТЫ -->
+<div id="daily-quote-container" style="margin: 25px auto 0; max-width: 90%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); padding: 12px 15px; border-radius: 12px; border-left: 3px solid var(--accent-color); text-align: left; display: none;">
+    <p id="daily-quote-text" style="margin: 0; font-size: 14px; font-style: italic; color: #eee; line-height: 1.4;"></p>
+    <p id="daily-quote-author" style="margin: 8px 0 0 0; font-size: 12px; font-weight: bold; color: var(--accent-color); text-align: right;"></p>
+</div>
+
 </div>
 
 <div class="bottom-panel" style="gap: 8px;">
@@ -271,7 +269,6 @@
 </div>
 </div>
 
-<!-- ОКНО РЕГИСТРАЦИИ (БЕЗ ВОДЫ) -->
 <div id="onboarding-modal" class="custom-modal">
 <div class="custom-modal-content">
 <h3 style="margin-top: 0; text-align: center; font-size: 18px; color: var(--accent-color);">Добро пожаловать! 🏆</h3>
