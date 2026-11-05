@@ -10,41 +10,39 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="style.css">
 <style>
-/* Стили для истории */
+/* Все стили остаются прежними */
 .history-card { background: #1c1c1e; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #2c2c2e; }
 .history-date { color: var(--accent-color); font-weight: bold; font-size: 15px; margin-bottom: 5px; }
 .history-food-item { font-size: 12px; color: #fff; margin-bottom: 5px; padding-left: 10px; border-left: 2px solid #34c759; display: flex; justify-content: space-between; }
 .history-water-item { font-size: 12px; color: #fff; margin-bottom: 5px; padding-left: 10px; border-left: 2px solid #5ac8fa; display: flex; justify-content: space-between; }
 .history-weight-item { font-size: 14px; color: #fff; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; }
-
 .custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
 .custom-modal.active { display: flex; }
 .custom-modal-content { background: #1c1c1e; border-radius: 16px; padding: 20px; width: 100%; max-width: 400px; box-sizing: border-box; position: relative; max-height: 90vh; overflow-y: auto;}
 .custom-modal-close { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 18px; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;}
-
-/* Карточки на главном экране */
 .compact-panel { background: rgba(28, 28, 30, 0.85); border-radius: 10px; padding: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; min-width: 0; box-sizing: border-box; cursor: pointer; transition: 0.2s;}
 .compact-panel:active { background: rgba(50, 50, 55, 0.9); }
 .compact-food-list { max-height: 50px; overflow-y: auto; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px; }
 .compact-food-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px; margin-bottom: 2px; font-size: 10px; }
-
-/* Кнопки */
 .quick-btn { background: #2c2c2e; color: white; border: 1px solid #3a3a3c; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; }
 .water-btn { background: rgba(90, 200, 250, 0.2); border: 1px solid #5ac8fa; color: #5ac8fa; border-radius: 4px; padding: 2px 4px; font-size: 10px; cursor: pointer; font-weight: bold; text-align: center; }
 .weight-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; margin-right: 5px; }
 .analysis-btn { background: rgba(255, 204, 0, 0.2); border: 1px solid var(--accent-color); color: var(--accent-color); padding: 6px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; }
-
-/* Стили для маленьких кнопок дневника */
 .diary-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 6px; padding: 2px 6px; font-size: 12px; cursor: pointer; }
-.diary-btn:active { background: rgba(255,255,255,0.3); }
-
-/* Стили для графиков */
 .chart-container { background: #2c2c2e; border-radius: 12px; padding: 10px; margin-top: 15px; position: relative; height: 200px; width: 100%; box-sizing: border-box;}
-
-/* Блоки итогов */
 .summary-box { background: rgba(52, 199, 89, 0.1); border: 1px solid #34c759; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
 .summary-title { font-size: 14px; font-weight: bold; color: #34c759; margin-bottom: 8px; }
 .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; }
+.sensei-btn { background: linear-gradient(90deg, #ffcc00, #ff9500); color: #000; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; margin-top: 10px; box-shadow: 0 4px 10px rgba(255, 204, 0, 0.3); display: inline-flex; align-items: center; gap: 8px; }
+.sensei-btn:active { transform: scale(0.95); }
+.sensei-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color); }
+.sensei-chat-box { height: 50vh; overflow-y: auto; background: #2c2c2e; border-radius: 12px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px;}
+.chat-msg { max-width: 85%; padding: 10px 15px; border-radius: 16px; font-size: 14px; line-height: 1.4; }
+.chat-msg.sensei { background: #3a3a3c; color: #fff; align-self: flex-start; border-bottom-left-radius: 4px; }
+.chat-msg.user { background: var(--accent-color); color: #000; align-self: flex-end; border-bottom-right-radius: 4px; }
+.sensei-input-row { display: flex; gap: 8px; }
+.sensei-input-row input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #3a3a3c; background: #1c1c1e; color: white; outline: none; }
+.sensei-input-row button { background: var(--accent-color); color: #000; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 </style>
 </head>
 <body class="male-theme"> 
@@ -87,12 +85,17 @@
 <div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
 <p class="xp-text" id="xp-text" style="font-size: 11px;">0 / 100 XP</p>
 
-<div style="text-align: center;">
-    <button class="weight-btn" onclick="openWeightDiary()">
-        ⚖️ <span id="current-weight-display">0</span> кг
-    </button>
-    <button class="analysis-btn" onclick="openGlobalStatsModal()">
-        📈 Анализ
+<div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+    <div>
+        <button class="weight-btn" onclick="openWeightDiary()">
+            ⚖️ <span id="current-weight-display">0</span> кг
+        </button>
+        <button class="analysis-btn" onclick="openGlobalStatsModal()">
+            📈 Анализ
+        </button>
+    </div>
+    <button class="sensei-btn" onclick="openSensei()">
+        🥋 Сенсей
     </button>
 </div>
 </div>
@@ -103,10 +106,7 @@
         <div class="stat-box" style="padding: 8px;"><p style="font-size: 10px;">Сожжено</p><h3 id="burned-total" style="font-size: 16px;">0 ккал</h3></div>
     </div>
 
-    <!-- Панели Воды и Еды (Симметричный дизайн) -->
     <div style="display: flex; gap: 8px; margin-bottom: 4px; width: 100%; box-sizing: border-box;">
-        
-        <!-- Вода -->
         <div class="compact-panel" style="flex: 1; border-color: rgba(90, 200, 250, 0.3);" onclick="openWaterDiary()">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                 <div style="display: flex; flex-direction: column;">
@@ -123,7 +123,6 @@
             <div id="today-water-list" class="compact-food-list" style="border-color: rgba(90, 200, 250, 0.2);"></div>
         </div>
 
-        <!-- Еда -->
         <div class="compact-panel" style="flex: 1;" onclick="openFoodDiary()">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                 <div style="display: flex; flex-direction: column;">
@@ -153,17 +152,32 @@
 </div>
 </div> 
 
-<!-- ================= ДНЕВНИК ВОДЫ ================= -->
+<div id="sensei-modal" class="custom-modal">
+<div class="custom-modal-content">
+<button class="custom-modal-close" onclick="closeSensei()">✖</button>
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+    <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=200" class="sensei-avatar" alt="Sensei">
+    <div>
+        <h3 style="margin: 0; color: var(--accent-color);">Сенсей</h3>
+        <p style="margin: 0; font-size: 12px; color: #8e8e93;">Твой личный наставник</p>
+    </div>
+</div>
+<div id="sensei-chat-box" class="sensei-chat-box"></div>
+<div class="sensei-input-row">
+    <input type="text" id="sensei-input" placeholder="Задай вопрос..." onkeypress="if(event.key === 'Enter') sendSenseiMsg()">
+    <button onclick="sendSenseiMsg()">➤</button>
+</div>
+</div>
+</div>
+
 <div id="water-diary-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('water-diary-screen')">← Назад</button>
 <h1 style="text-align: center; margin-bottom: 15px;">📜 Дневник воды</h1>
-
 <div style="display: flex; gap: 8px; margin-bottom: 15px;">
     <input type="number" id="custom-water-input" placeholder="Мл" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #3a3a3c; background: #2c2c2e; color: white; font-size: 16px; text-align: center;">
     <button class="btn" style="width: auto; margin: 0; padding: 10px 15px; background-color: #5ac8fa; color: #fff; font-size: 14px;" onclick="addWaterFromDiary()">Добавить</button>
 </div>
-
 <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
     <div style="display: flex; gap: 10px; margin-bottom: 10px;">
         <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">От</label><input type="date" id="water-start-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderWaterDiary()"></div>
@@ -175,25 +189,19 @@
         <button class="quick-btn" onclick="setPeriod('water', 'month')">Этот месяц</button>
     </div>
 </div>
-
 <div id="water-summary" class="summary-box" style="border-color: #5ac8fa; background: rgba(90, 200, 250, 0.1); display: none;">
     <div class="summary-title" style="color: #5ac8fa;">Итого выпито:</div>
-    <div style="text-align: center; font-size: 20px; font-weight: bold; color: #fff;">
-        <span id="water-total-ml">0</span> мл
-    </div>
+    <div style="text-align: center; font-size: 20px; font-weight: bold; color: #fff;"><span id="water-total-ml">0</span> мл</div>
 </div>
-
 <div class="chart-container"><canvas id="water-diary-chart"></canvas></div>
 <div id="water-diary-list" style="margin-top: 15px;"></div>
 </div>
 </div>
 
-<!-- ================= ДНЕВНИК ЕДЫ ================= -->
 <div id="food-diary-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('food-diary-screen')">← Назад</button>
 <h1 style="text-align: center; margin-bottom: 15px;">📜 Дневник еды</h1>
-
 <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
     <div style="display: flex; gap: 10px; margin-bottom: 10px;">
         <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">От</label><input type="date" id="food-start-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderFoodDiary()"></div>
@@ -205,7 +213,6 @@
         <button class="quick-btn" onclick="setPeriod('food', 'month')">Этот месяц</button>
     </div>
 </div>
-
 <div id="food-summary" class="summary-box" style="display: none;">
     <div class="summary-title">Итого за период:</div>
     <div class="summary-grid">
@@ -215,24 +222,20 @@
         <div><span id="food-total-carb" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div>
     </div>
 </div>
-
 <div class="chart-container" style="height: 180px;"><canvas id="food-diary-cal-chart"></canvas></div>
 <div class="chart-container" style="height: 180px; margin-top: 10px;"><canvas id="food-diary-macro-chart"></canvas></div>
 <div id="food-diary-list" style="margin-top: 15px;"></div>
 </div>
 </div>
 
-<!-- ================= ДНЕВНИК ВЕСА ================= -->
 <div id="weight-diary-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('weight-diary-screen')">← Назад</button>
 <h1 style="text-align: center; margin-bottom: 15px;">📜 Дневник веса</h1>
-
 <div style="display: flex; gap: 8px; margin-bottom: 15px;">
     <input type="number" id="modal-weight-input" step="0.1" style="flex: 1; padding: 10px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 16px; text-align: center; outline: none;">
     <button class="btn" style="width: auto; margin: 0; padding: 10px 15px; background-color: #34c759; color: white; font-size: 14px;" onclick="saveWeightFromDiary()">Записать</button>
 </div>
-
 <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
     <div style="display: flex; gap: 10px; margin-bottom: 10px;">
         <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">От</label><input type="date" id="weight-start-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderWeightDiary()"></div>
@@ -244,18 +247,15 @@
         <button class="quick-btn" onclick="setPeriod('weight', 'month')">Этот месяц</button>
     </div>
 </div>
-
 <div id="weight-summary" class="summary-box" style="border-color: #ffcc00; background: rgba(255, 204, 0, 0.1); display: none;">
     <div class="summary-title" style="color: #ffcc00;">Разница за период:</div>
     <div id="weight-diff" style="text-align: center; font-size: 20px; font-weight: bold; color: #fff;"></div>
 </div>
-
 <div class="chart-container"><canvas id="weight-diary-chart"></canvas></div>
 <div id="weight-diary-list" style="margin-top: 15px;"></div>
 </div>
 </div>
 
-<!-- ================= ОБЩИЙ АНАЛИЗ ================= -->
 <div id="global-stats-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('global-stats-screen')">← Назад</button>
@@ -273,7 +273,6 @@
 </div>
 </div>
 
-<!-- Настройки профиля -->
 <div id="profile-settings-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
@@ -321,7 +320,6 @@
 </div>
 </div>
 
-<!-- Модальные окна -->
 <div id="norm-modal" class="custom-modal">
 <div class="custom-modal-content">
 <button class="custom-modal-close" onclick="closeCustomNormModal()">✖</button>
