@@ -2,13 +2,9 @@ const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
 const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
-tg.ready(); tg.expand(); 
+tg.ready(); tg.expand();
 
-// ================= НАСТРОЙКИ СЕНСЕЯ =================
-const PROXYAPI_KEY = 'sk-HQWY8HQ6KEHVAt6mnKNpTa6XgMys9wDv'; // Твой ключ
-const SENSEI_MODEL = 'deepseek/deepseek-v4-flash'; // Дешевая и умная модель
-// ====================================================
-
+// Переменные для графиков
 let chartWaterDiary = null;
 let chartFoodCalDiary = null;
 let chartFoodMacroDiary = null;
@@ -19,7 +15,7 @@ function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
     const el = document.getElementById(screenId);
     if (el) el.classList.add('active');
-} 
+}
 
 function closeScreen(screenId) {
     document.getElementById(screenId).classList.remove('active');
@@ -28,57 +24,57 @@ function closeScreen(screenId) {
     } else {
         document.getElementById('auth-screen').classList.add('active');
     }
-} 
+}
 
 async function resolveUserRecord(tgId, email) {
-    if (!tgId && !email) return null; 
-    let recordsMap = new Map(); 
+    if (!tgId && !email) return null;
+    let recordsMap = new Map();
     if (tgId) { const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId); if (data) data.forEach(r => recordsMap.set(r.id, r)); }
-    if (email) { const { data } = await supabaseClient.from('user_links').select('*').eq('email', email); if (data) data.forEach(r => recordsMap.set(r.id, r)); } 
-    let records = Array.from(recordsMap.values()); 
+    if (email) { const { data } = await supabaseClient.from('user_links').select('*').eq('email', email); if (data) data.forEach(r => recordsMap.set(r.id, r)); }
+    let records = Array.from(recordsMap.values());
     let linkedTgId = tgId, linkedEmail = email;
-    records.forEach(r => { if (r.telegram_id) linkedTgId = r.telegram_id; if (r.email) linkedEmail = r.email; }); 
+    records.forEach(r => { if (r.telegram_id) linkedTgId = r.telegram_id; if (r.email) linkedEmail = r.email; });
     if (linkedTgId && linkedTgId !== tgId) { const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', linkedTgId); if (data) data.forEach(r => recordsMap.set(r.id, r)); }
-    if (linkedEmail && linkedEmail !== email) { const { data } = await supabaseClient.from('user_links').select('*').eq('email', linkedEmail); if (data) data.forEach(r => recordsMap.set(r.id, r)); } 
+    if (linkedEmail && linkedEmail !== email) { const { data } = await supabaseClient.from('user_links').select('*').eq('email', linkedEmail); if (data) data.forEach(r => recordsMap.set(r.id, r)); }
     records = Array.from(recordsMap.values());
-    if (records.length === 0) return null; 
+    if (records.length === 0) return null;
     if (records.length === 1) {
         const r = records[0]; let needsUpdate = false; let updateObj = {};
         if (tgId && !r.telegram_id) { updateObj.telegram_id = tgId; needsUpdate = true; }
         if (email && !r.email) { updateObj.email = email; needsUpdate = true; }
         if (needsUpdate) { await supabaseClient.from('user_links').update(updateObj).eq('id', r.id); Object.assign(r, updateObj); }
         return r;
-    } 
-    let mergedFood = [], maxXp = 0, maxBurned = 0, profile = null, name = null; 
+    }
+    let mergedFood = [], maxXp = 0, maxBurned = 0, profile = null, name = null;
     records.forEach(rec => {
         if (rec.food && Array.isArray(rec.food)) mergedFood = mergedFood.concat(rec.food);
         if (rec.xp && rec.xp > maxXp) maxXp = rec.xp;
         if (rec.burned && rec.burned > maxBurned) maxBurned = rec.burned;
         if (rec.profile && !profile) profile = rec.profile;
         if (rec.name && !name) name = rec.name;
-    }); 
+    });
     const uniqueFood = [], seen = new Set();
-    mergedFood.forEach(f => { const key = JSON.stringify(f); if (!seen.has(key)) { seen.add(key); uniqueFood.push(f); } }); 
-    const mainRecord = records[0]; const idsToDelete = records.slice(1).map(r => r.id); 
-    const updateData = { telegram_id: linkedTgId || mainRecord.telegram_id || null, email: linkedEmail || mainRecord.email || null, food: uniqueFood, xp: maxXp, burned: maxBurned, profile: profile || mainRecord.profile, name: name || mainRecord.name || "Атлет" }; 
+    mergedFood.forEach(f => { const key = JSON.stringify(f); if (!seen.has(key)) { seen.add(key); uniqueFood.push(f); } });
+    const mainRecord = records[0]; const idsToDelete = records.slice(1).map(r => r.id);
+    const updateData = { telegram_id: linkedTgId || mainRecord.telegram_id || null, email: linkedEmail || mainRecord.email || null, food: uniqueFood, xp: maxXp, burned: maxBurned, profile: profile || mainRecord.profile, name: name || mainRecord.name || "Атлет" };
     await supabaseClient.from('user_links').update(updateData).eq('id', mainRecord.id);
     if (idsToDelete.length > 0) await supabaseClient.from('user_links').delete().in('id', idsToDelete);
     return { ...mainRecord, ...updateData };
-} 
+}
 
 window.addEventListener('load', async () => {
     const cachedProfile = localStorage.getItem('cachedProfile');
     if (cachedProfile) renderProfile(JSON.parse(cachedProfile));
     await syncFoodFromCloud();
-}); 
+});
 
 async function loginWithTelegram() {
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         localStorage.setItem('loginType', 'telegram');
         const tgId = tg.initDataUnsafe.user.id;
         const tgName = tg.initDataUnsafe.user.first_name || "Атлет";
-        localStorage.setItem('tgId', tgId); localStorage.setItem('userName', tgName); 
-        const data = await resolveUserRecord(tgId, null); 
+        localStorage.setItem('tgId', tgId); localStorage.setItem('userName', tgName);
+        const data = await resolveUserRecord(tgId, null);
         if (data && data.profile) {
             localStorage.setItem('cachedProfile', JSON.stringify(data.profile));
             localStorage.setItem('cachedXP', data.xp || 0); localStorage.setItem('cachedBurned', data.burned || 0);
@@ -99,18 +95,18 @@ async function loginWithTelegram() {
         renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
         await syncFoodFromCloud();
     } else { tg.showAlert("Откройте через Telegram!"); }
-} 
+}
 
-function showEmailForm() { openScreen('email-screen'); } 
+function showEmailForm() { openScreen('email-screen'); }
 
 async function handleEmailAuth() {
     const email = document.getElementById('auth-email').value;
     const password = document.getElementById('auth-password').value;
-    const btn = document.getElementById('email-submit-btn'); 
+    const btn = document.getElementById('email-submit-btn');
     if (!email || !password) { tg.showAlert("Заполните все поля!"); return; }
-    btn.innerText = "Загрузка..."; btn.disabled = true; 
+    btn.innerText = "Загрузка..."; btn.disabled = true;
     try {
-        let { error } = await supabaseClient.auth.signInWithPassword({ email, password }); 
+        let { error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) {
             if (error.message.includes("Invalid login credentials")) {
                 const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
@@ -119,10 +115,10 @@ async function handleEmailAuth() {
                 if (!signUpData.session) await supabaseClient.auth.signInWithPassword({ email, password });
                 tg.showAlert("Аккаунт успешно создан!");
             } else { tg.showAlert("Ошибка входа: " + error.message); btn.innerText = "Продолжить"; btn.disabled = false; return; }
-        } else { tg.showAlert("Успешный вход!"); } 
+        } else { tg.showAlert("Успешный вход!"); }
         localStorage.setItem('loginType', 'email'); localStorage.setItem('currentEmail', email);
-        const emailName = email.split('@')[0]; localStorage.setItem('userName', emailName); 
-        const linkData = await resolveUserRecord(null, email); 
+        const emailName = email.split('@')[0]; localStorage.setItem('userName', emailName);
+        const linkData = await resolveUserRecord(null, email);
         if (linkData && linkData.profile) {
             localStorage.setItem('cachedProfile', JSON.stringify(linkData.profile));
             localStorage.setItem('cachedXP', linkData.xp || 0); localStorage.setItem('cachedBurned', linkData.burned || 0);
@@ -141,11 +137,11 @@ async function handleEmailAuth() {
             openOnboardingModal();
         }
         renderProfile(JSON.parse(localStorage.getItem('cachedProfile')));
-        await syncFoodFromCloud(); 
+        await syncFoodFromCloud();
     } catch (e) { tg.showAlert("Ошибка сети."); } finally { btn.innerText = "Продолжить"; btn.disabled = false; }
-} 
+}
 
-function openOnboardingModal() { setTimeout(() => { document.getElementById('onboarding-modal').classList.add('active'); }, 500); } 
+function openOnboardingModal() { setTimeout(() => { document.getElementById('onboarding-modal').classList.add('active'); }, 500); }
 
 async function saveOnboardingData() {
     const age = document.getElementById('onboarding-age').value;
@@ -153,28 +149,28 @@ async function saveOnboardingData() {
     const height = document.getElementById('onboarding-height').value;
     const gender = document.getElementById('onboarding-gender').value;
     const goal = document.getElementById('onboarding-goal').value;
-    if (!age || !weight || !height) { tg.showAlert("Пожалуйста, заполни возраст, вес и рост!"); return; } 
+    if (!age || !weight || !height) { tg.showAlert("Пожалуйста, заполни возраст, вес и рост!"); return; }
     const calculatedWater = weight ? Math.round(parseFloat(weight) * 30) : 2000;
     const profile = { age, gender, weight, height, goal, custom_calories: '', custom_protein: '', custom_fat: '', custom_carbs: '', custom_water_goal: calculatedWater };
-    localStorage.setItem('cachedProfile', JSON.stringify(profile)); 
+    localStorage.setItem('cachedProfile', JSON.stringify(profile));
     const tgId = localStorage.getItem('tgId'); const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
-    const name = localStorage.getItem('userName') || "Атлет"; 
-    await saveProgressToCloud(tgId, email, name, profile, 0, 0); 
+    const name = localStorage.getItem('userName') || "Атлет";
+    await saveProgressToCloud(tgId, email, name, profile, 0, 0);
     document.getElementById('onboarding-modal').classList.remove('active');
     renderProfile(profile);
     tg.showAlert("Отлично! Твоя норма воды рассчитана автоматически.");
-} 
+}
 
 async function syncFoodFromCloud() {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
-    if (!tgId && !email) return; 
+    if (!tgId && !email) return;
     const record = await resolveUserRecord(tgId, email);
-    let localFood = []; try { localFood = JSON.parse(localStorage.getItem('todayFood') || '[]'); } catch(e) {} 
+    let localFood = []; try { localFood = JSON.parse(localStorage.getItem('todayFood') || '[]'); } catch(e) {}
     const now = new Date(); const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-    const savedDate = localStorage.getItem('foodListDate'); 
+    const savedDate = localStorage.getItem('foodListDate');
     if (record) {
-        const cloudFood = record.food || []; 
+        const cloudFood = record.food || [];
         if (!savedDate) {
             if (cloudFood.length > 0) localStorage.setItem('todayFood', JSON.stringify(cloudFood));
             else if (localFood.length > 0) await supabaseClient.from('user_links').update({ food: localFood }).eq('id', record.id);
@@ -188,31 +184,31 @@ async function syncFoodFromCloud() {
         }
         updateDashboard();
     }
-} 
+}
 
 async function saveFoodToCloud(foodArray) {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
-    if (!tgId && !email) return; 
+    if (!tgId && !email) return;
     const record = await resolveUserRecord(tgId, email);
     if (record) await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', record.id);
-} 
+}
 
 async function syncWaterToProfile() {
     let todayWater = []; try { todayWater = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e) {}
     const today = localStorage.getItem('waterListDate'); let prof = JSON.parse(localStorage.getItem('cachedProfile') || '{}');
     prof.water = todayWater; prof.waterDate = today; localStorage.setItem('cachedProfile', JSON.stringify(prof));
     const tgId = localStorage.getItem('tgId'); const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
-    const name = localStorage.getItem('userName') || "Атлет"; 
+    const name = localStorage.getItem('userName') || "Атлет";
     await saveProgressToCloud(tgId, email, name, prof, currentXP, totalBurnedCalories);
 }
 
 async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
     try {
         let currentTgId = tgId || localStorage.getItem('tgId'); let currentEmail = email || localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
-        let currentName = name || localStorage.getItem('userName') || "Атлет"; 
-        if (!currentTgId && !currentEmail) return; 
-        const existing = await resolveUserRecord(currentTgId, currentEmail); 
+        let currentName = name || localStorage.getItem('userName') || "Атлет";
+        if (!currentTgId && !currentEmail) return;
+        const existing = await resolveUserRecord(currentTgId, currentEmail);
         if (existing) {
             await supabaseClient.from('user_links').update({
                 profile: profile, xp: xp, burned: burned, name: currentName, telegram_id: currentTgId || null, email: currentEmail || null
@@ -223,14 +219,15 @@ async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
             }]);
         }
     } catch (e) { console.log("Ошибка сохранения:", e); }
-} 
+}
 
 const levelsData = {
     male: [{ xp: 0, title: "Странник", video: "VID_20261028_173134_198.mp4" }, { xp: 100, title: "Берсерк", video: "VID_20261028_173215_440.mp4" }],
     female: [{ xp: 0, title: "Новичок", video: "VID_20261028_175618_746.mp4" }, { xp: 100, title: "Фурия", video: "VID_20261028_175631_701.mp4" }]
-}; 
+};
 
-let currentXP = 0, totalBurnedCalories = 0, userGender = 'male'; let currentProfileData = null; 
+let currentXP = 0, totalBurnedCalories = 0, userGender = 'male'; let currentProfileData = null;
+let currentLevelIndex = -1; // Для отслеживания повышения уровня
 
 function calculateNutrition(profile) {
     if (profile.custom_calories && profile.custom_calories > 0) {
@@ -241,28 +238,30 @@ function calculateNutrition(profile) {
     if (profile.goal === 'lose') tdee -= 500;
     if (profile.goal === 'gain') tdee += 500;
     return { calories: Math.round(tdee), protein: Math.round((tdee * 0.30) / 4), fat: Math.round((tdee * 0.30) / 9), carbs: Math.round((tdee * 0.40) / 4) };
-} 
+}
 
 function checkDayReset() {
     const now = new Date(); const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     if (localStorage.getItem('foodListDate') !== today) { localStorage.setItem('todayFood', '[]'); localStorage.setItem('foodListDate', today); }
     if (localStorage.getItem('waterListDate') !== today) { localStorage.setItem('todayWater', '[]'); localStorage.setItem('waterListDate', today); }
-} 
+}
 
 // --- ВЕС ---
 function saveWeightToHistory(weight) {
     let history = []; try { history = JSON.parse(localStorage.getItem('weightHistory') || '[]'); } catch(e) { history = []; }
     const now = new Date(); const dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-    if (history.length > 0 && history[0].dateRaw === dateStr) { history[0].weight = parseFloat(weight); } 
+    if (history.length > 0 && history[0].dateRaw === dateStr) { history[0].weight = parseFloat(weight); }
     else { history.unshift({ dateRaw: dateStr, dateDisplay: now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' }), weight: parseFloat(weight) }); }
     if (history.length > 50) history.pop();
     localStorage.setItem('weightHistory', JSON.stringify(history));
 }
+
 function openWeightDiary() {
     if (currentProfileData && document.getElementById('modal-weight-input')) document.getElementById('modal-weight-input').value = currentProfileData.weight || '';
     setPeriod('weight', '7days');
     openScreen('weight-diary-screen');
 }
+
 async function saveWeightFromDiary() {
     const newWeight = parseFloat(document.getElementById('modal-weight-input').value);
     if (!newWeight || newWeight <= 0) { tg.showAlert("Введите корректный вес!"); return; }
@@ -273,11 +272,14 @@ async function saveWeightFromDiary() {
         updateDashboard(); renderWeightDiary(); tg.showAlert("Вес обновлен!");
     }
 }
+
 function renderWeightDiary() {
     const start = document.getElementById('weight-start-date').value;
     const end = document.getElementById('weight-end-date').value;
     if (!start || !end) return;
+
     let history = []; try { history = JSON.parse(localStorage.getItem('weightHistory') || '[]'); } catch(e) { history = []; }
+
     const labels = []; const data = [];
     for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
@@ -285,12 +287,14 @@ function renderWeightDiary() {
         const rec = history.find(h => h.dateRaw === dateStr || (h.date && h.date.split('.').reverse().join('-') === dateStr));
         if (rec) data.push(rec.weight); else { const last = data.filter(v=>v!==null).pop(); data.push(last || null); }
     }
+
     if (chartWeightDiary) chartWeightDiary.destroy();
     chartWeightDiary = new Chart(document.getElementById('weight-diary-chart').getContext('2d'), {
         type: 'line',
         data: { labels: labels, datasets: [{ label: 'Вес', data: data, borderColor: '#ffcc00', backgroundColor: '#ffcc0033', borderWidth: 2, pointBackgroundColor: '#fff', pointBorderColor: '#ffcc00', pointRadius: 3, fill: true, tension: 0.3 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } } } }
     });
+
     const validData = data.filter(v => v !== null);
     const diffDiv = document.getElementById('weight-diff');
     const summaryDiv = document.getElementById('weight-summary');
@@ -305,10 +309,7 @@ function renderWeightDiary() {
     const listDiv = document.getElementById('weight-diary-list');
     let listHtml = '';
     history.filter(h => h.dateRaw >= start && h.dateRaw <= end).forEach(h => {
-        listHtml += `<div class="history-weight-item">
-            <span style="color: var(--accent-color);">${h.dateDisplay || h.date}</span>
-            <span>${h.weight} кг</span>
-        </div>`;
+        listHtml += `<div class="history-weight-item"> <span style="color: var(--accent-color);">${h.dateDisplay || h.date}</span> <span>${h.weight} кг</span> </div>`;
     });
     listDiv.innerHTML = listHtml || '<p style="text-align: center; color: #8e8e93;">Нет записей за этот период.</p>';
 }
@@ -344,7 +345,7 @@ function openWaterDiary() {
 }
 function addWaterFromDiary() {
     const val = parseInt(document.getElementById('custom-water-input').value);
-    if (val && val > 0) { localStorage.setItem('customWaterAmount', val); updateCustomWaterBtn(); addWater(val); document.getElementById('custom-water-input').value = ''; } 
+    if (val && val > 0) { localStorage.setItem('customWaterAmount', val); updateCustomWaterBtn(); addWater(val); document.getElementById('custom-water-input').value = ''; }
     else tg.showAlert("Введите корректный объем!");
 }
 
@@ -352,22 +353,28 @@ function renderWaterDiary() {
     const start = document.getElementById('water-start-date').value;
     const end = document.getElementById('water-end-date').value;
     if (!start || !end) return;
+
     let hist = {}; try { hist = JSON.parse(localStorage.getItem('waterHistory') || '{}'); } catch(e) {}
     const labels = []; const data = []; let total = 0;
+
     for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
         labels.push(dateStr.split('-').slice(1).reverse().join('.'));
         let sum = 0; (hist[dateStr] || []).forEach(w => sum += parseInt(w.amount || 0));
-        data.push(sum); total += sum;
+        data.push(sum);
+        total += sum;
     }
+
     if (chartWaterDiary) chartWaterDiary.destroy();
     chartWaterDiary = new Chart(document.getElementById('water-diary-chart').getContext('2d'), {
         type: 'line',
         data: { labels: labels, datasets: [{ label: 'Вода', data: data, borderColor: '#5ac8fa', backgroundColor: '#5ac8fa33', borderWidth: 2, pointBackgroundColor: '#fff', pointBorderColor: '#5ac8fa', pointRadius: 3, fill: true, tension: 0.3 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true } } }
     });
+
     document.getElementById('water-summary').style.display = 'block';
     document.getElementById('water-total-ml').innerText = total;
+
     const listDiv = document.getElementById('water-diary-list');
     let listHtml = '';
     const dates = Object.keys(hist).filter(date => date >= start && date <= end).sort((a, b) => new Date(b) - new Date(a));
@@ -375,7 +382,8 @@ function renderWaterDiary() {
         const waters = hist[date] || [];
         if (waters.length === 0) return;
         let dayTotal = 0; waters.forEach(w => dayTotal += parseInt(w.amount));
-        listHtml += `<div class="history-card"><div class="history-date">📅 ${date.split('-').reverse().join('.')} <span style="float:right; font-size: 12px; color:#5ac8fa;">${dayTotal} мл</span></div>`;
+
+        listHtml += `<div class="history-card"><div class="history-date">📅${date.split('-').reverse().join('.')} <span style="float:right; font-size: 12px; color:#5ac8fa;">${dayTotal} мл</span></div>`;
         waters.forEach(w => { listHtml += `<div class="history-water-item"><span>💧 Вода</span><span style="color:#8e8e93;">${w.amount} мл (${w.time || ''})</span></div>`; });
         listHtml += `</div>`;
     });
@@ -387,13 +395,16 @@ function openFoodDiary() {
     setPeriod('food', '7days');
     openScreen('food-diary-screen');
 }
+
 function renderFoodDiary() {
     const start = document.getElementById('food-start-date').value;
     const end = document.getElementById('food-end-date').value;
     if (!start || !end) return;
+
     let hist = {}; try { hist = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) {}
     const labels = []; const calData = []; const protData = []; const fatData = []; const carbData = [];
     let totalCal = 0, totalProt = 0, totalFat = 0, totalCarb = 0;
+
     for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
         labels.push(dateStr.split('-').slice(1).reverse().join('.'));
@@ -403,12 +414,14 @@ function renderFoodDiary() {
         calData.push(Math.round(c)); protData.push(Math.round(p)); fatData.push(Math.round(f)); carbData.push(Math.round(cb));
         totalCal += c; totalProt += p; totalFat += f; totalCarb += cb;
     }
+
     if (chartFoodCalDiary) chartFoodCalDiary.destroy();
     chartFoodCalDiary = new Chart(document.getElementById('food-diary-cal-chart').getContext('2d'), {
         type: 'line',
         data: { labels: labels, datasets: [{ label: 'Калории', data: calData, borderColor: '#ff3b30', backgroundColor: '#ff3b3033', borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Калории', color: '#fff' } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true } } }
     });
+
     if (chartFoodMacroDiary) chartFoodMacroDiary.destroy();
     chartFoodMacroDiary = new Chart(document.getElementById('food-diary-macro-chart').getContext('2d'), {
         type: 'line',
@@ -419,11 +432,13 @@ function renderFoodDiary() {
         ] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } }, title: { display: true, text: 'БЖУ', color: '#fff' } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true } } }
     });
+
     document.getElementById('food-summary').style.display = 'block';
     document.getElementById('food-total-cal').innerText = Math.round(totalCal);
     document.getElementById('food-total-prot').innerText = Math.round(totalProt);
     document.getElementById('food-total-fat').innerText = Math.round(totalFat);
     document.getElementById('food-total-carb').innerText = Math.round(totalCarb);
+
     const listDiv = document.getElementById('food-diary-list');
     let listHtml = '';
     const dates = Object.keys(hist).filter(date => date >= start && date <= end).sort((a, b) => new Date(b) - new Date(a));
@@ -432,16 +447,14 @@ function renderFoodDiary() {
         if (foods.length === 0) return;
         let dayCal = 0, dayProt = 0, dayFat = 0, dayCarb = 0;
         foods.forEach(f => { dayCal+=parseFloat(f.calories_100g||0); dayProt+=parseFloat(f.proteins_100g||0); dayFat+=parseFloat(f.fat_100g||0); dayCarb+=parseFloat(f.carbs_100g||0); });
-        listHtml += `<div class="history-card"><div class="history-date">📅 ${date.split('-').reverse().join('.')}</div>`;
-        listHtml += `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; margin-bottom: 10px;">`;
+        listHtml += `<div class="history-card"><div class="history-date">📅${date.split('-').reverse().join('.')}</div>`;
         listHtml += `<div><span style="color: var(--accent-color); font-weight: bold;">${Math.round(dayCal)}</span><br><span style="font-size: 10px; color: #8e8e93;">Ккал</span></div>`;
         listHtml += `<div><span style="color: #fff; font-weight: bold;">${Math.round(dayProt)}</span><br><span style="font-size: 10px; color: #8e8e93;">Бел.</span></div>`;
         listHtml += `<div><span style="color: #fff; font-weight: bold;">${Math.round(dayFat)}</span><br><span style="font-size: 10px; color: #8e8e93;">Жир.</span></div>`;
         listHtml += `<div><span style="color: #fff; font-weight: bold;">${Math.round(dayCarb)}</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div>`;
         listHtml += `</div>`;
-        listHtml += `<div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">`;
         foods.forEach(f => { listHtml += `<div class="history-food-item"><span>${f.product_name}</span><span style="color: #8e8e93;">${Math.round(f.calories_100g || 0)} ккал</span></div>`; });
-        listHtml += `</div></div>`;
+        listHtml += `</div>`;
     });
     listDiv.innerHTML = listHtml || '<p style="text-align: center; color: #8e8e93;">Нет записей за этот период.</p>';
 }
@@ -489,12 +502,14 @@ function renderAllCharts() {
     chartGlobalWater = new Chart(document.getElementById('g-water-chart').getContext('2d'), { type:'line', data:{labels,datasets:[{label:'Вода',data:hData,borderColor:'#5ac8fa',borderWidth:2,pointRadius:2,fill:false,tension:0.3}]}, options:{...baseOpts, plugins:{...baseOpts.plugins, title:{display:true,text:'Вода (мл)',color:'#fff'}}, scales:{...baseOpts.scales, y:{...baseOpts.scales.y, beginAtZero:true}}} });
 }
 
+// --- УТИЛИТЫ ---
 function setPeriod(type, period) {
     const startInput = document.getElementById(type + '-start-date'); const endInput = document.getElementById(type + '-end-date');
     const now = new Date(); endInput.value = now.toISOString().split('T')[0];
-    if (period === '7days') { const past = new Date(now); past.setDate(now.getDate() - 7); startInput.value = past.toISOString().split('T')[0]; } 
-    else if (period === '30days') { const past = new Date(now); past.setDate(now.getDate() - 30); startInput.value = past.toISOString().split('T')[0]; } 
+    if (period === '7days') { const past = new Date(now); past.setDate(now.getDate() - 7); startInput.value = past.toISOString().split('T')[0]; }
+    else if (period === '30days') { const past = new Date(now); past.setDate(now.getDate() - 30); startInput.value = past.toISOString().split('T')[0]; }
     else if (period === 'month') { const firstDay = new Date(now.getFullYear(), now.getMonth(), 1); startInput.value = firstDay.toISOString().split('T')[0]; }
+
     if (type === 'water') renderWaterDiary();
     if (type === 'food') renderFoodDiary();
     if (type === 'weight') renderWeightDiary();
@@ -534,14 +549,14 @@ function updateDashboard() {
     if (document.getElementById('eaten-water')) document.getElementById('eaten-water').innerText = eatenWater;
     if (document.getElementById('norm-water')) document.getElementById('norm-water').innerText = waterGoal;
     renderTodayWaterList(todayWater);
-} 
+}
 
 function renderTodayFoodList(todayFood) {
     const listDiv = document.getElementById('today-food-list'); if (!listDiv) return;
     if (todayFood.length === 0) { listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; font-size: 10px;">Пока ничего не съедено</p>'; return; }
     let html = ''; todayFood.forEach((food, index) => { html += `<div class="compact-food-item"><div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%;">${food.product_name}</div><button onclick="event.stopPropagation(); deleteFoodItem(${index})" style="background: none; border: none; color: #ff3b30; font-size: 14px; cursor: pointer; padding: 0;">✖</button></div>`; });
     listDiv.innerHTML = html;
-} 
+}
 function renderTodayWaterList(todayWater) {
     const listDiv = document.getElementById('today-water-list'); if (!listDiv) return;
     if (todayWater.length === 0) { listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; font-size: 10px;">Пока ничего не выпито</p>'; return; }
@@ -551,14 +566,14 @@ function renderTodayWaterList(todayWater) {
 function deleteFoodItem(index) {
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]'); todayFood.splice(index, 1);
     localStorage.setItem('todayFood', JSON.stringify(todayFood)); saveFoodToCloud(todayFood); updateDashboard();
-} 
+}
 function openCustomNormModal() {
     if (!currentProfileData) return;
     document.getElementById('modal-calories').value = currentProfileData.custom_calories || ''; document.getElementById('modal-protein').value = currentProfileData.custom_protein || '';
     document.getElementById('modal-fat').value = currentProfileData.custom_fat || ''; document.getElementById('modal-carbs').value = currentProfileData.custom_carbs || '';
     document.getElementById('norm-modal').classList.add('active');
-} 
-function closeCustomNormModal() { document.getElementById('norm-modal').classList.remove('active'); } 
+}
+function closeCustomNormModal() { document.getElementById('norm-modal').classList.remove('active'); }
 function saveCustomNormFromModal() {
     if (!currentProfileData) return;
     currentProfileData.custom_calories = document.getElementById('modal-calories').value; currentProfileData.custom_protein = document.getElementById('modal-protein').value;
@@ -566,7 +581,7 @@ function saveCustomNormFromModal() {
     localStorage.setItem('cachedProfile', JSON.stringify(currentProfileData));
     saveProgressToCloud(localStorage.getItem('tgId'), localStorage.getItem('currentEmail'), localStorage.getItem('userName'), currentProfileData, currentXP, totalBurnedCalories);
     updateDashboard(); closeCustomNormModal();
-} 
+}
 
 function renderProfile(profile) {
     currentProfileData = profile; userGender = profile.gender || 'male';
@@ -583,19 +598,38 @@ function renderProfile(profile) {
             if (videoElement.src.indexOf(currentLevel.video) === -1) { videoElement.src = currentLevel.video; videoElement.load(); videoElement.play().catch(e => console.log("Autoplay blocked")); }
         }
     }, 1000);
-} 
+    
+    // Показ совета Сенсея при входе (раз в 3 часа)
+    setTimeout(() => {
+        const lastAdviceTime = localStorage.getItem('lastSenseiAdviceTime');
+        const now = Date.now();
+        if (!lastAdviceTime || (now - parseInt(lastAdviceTime)) > 3 * 60 * 60 * 1000) {
+            showSenseiAdvice();
+            localStorage.setItem('lastSenseiAdviceTime', now);
+        }
+    }, 2000);
+}
 
 function updateCharacterUI() {
     const levels = levelsData[userGender]; let newLevelIndex = 0;
     for (let i = 0; i < levels.length; i++) { if (currentXP >= levels[i].xp) newLevelIndex = i; }
     const currentLevel = levels[newLevelIndex];
+
+    // Проверка на новый уровень (достижение)
+    if (currentLevelIndex !== -1 && newLevelIndex > currentLevelIndex) {
+        setTimeout(() => {
+            showSenseiAdvice("Поздравляю с новым уровнем, воин! Ты становишься сильнее. Продолжай в том же духе.");
+        }, 1000);
+    }
+    currentLevelIndex = newLevelIndex;
+
     if (document.getElementById('char-level')) document.getElementById('char-level').innerText = "Уровень " + (newLevelIndex + 1);
     if (document.getElementById('char-title')) document.getElementById('char-title').innerText = currentLevel.title;
     if (document.getElementById('xp-text')) document.getElementById('xp-text').innerText = currentXP + " XP";
     let nextLevelXp = 100; if (newLevelIndex + 1 < levels.length) nextLevelXp = levels[newLevelIndex + 1].xp;
     let percent = (currentXP / nextLevelXp) * 100; if (percent > 100) percent = 100;
     if (document.getElementById('xp-bar')) document.getElementById('xp-bar').style.width = percent + "%";
-} 
+}
 
 function openProfileSettings() {
     try {
@@ -611,7 +645,8 @@ function openProfileSettings() {
             }
             document.getElementById('link-email-form').style.display = 'block'; document.getElementById('link-tg-form').style.display = 'none';
         } else {
-            document.getElementById('link-title').innerText = "Привязка Telegram"; document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона.";
+            document.getElementById('link-title').innerText = "Привязка Telegram";
+            document.getElementById('link-desc').innerText = "Ваш Telegram ID для входа с телефона.";
             const tgId = localStorage.getItem('tgId');
             if (tgId) {
                 document.getElementById('link-tg-form').innerHTML = `<p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ${tgId}</p><button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkTelegram()">Отвязать Telegram</button>`;
@@ -631,50 +666,50 @@ function openProfileSettings() {
         }
         openScreen('profile-settings-screen');
     } catch (e) { tg.showAlert("Не удалось открыть настройки."); }
-} 
+}
 
 async function linkEmailToTelegram() {
     const email = document.getElementById('link-email').value; const password = document.getElementById('link-password').value;
-    if (!email || !password) { tg.showAlert("Заполните Email и пароль!"); return; } 
+    if (!email || !password) { tg.showAlert("Заполните Email и пароль!"); return; }
     const currentTgId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : localStorage.getItem('tgId');
-    if (!currentTgId) { tg.showAlert("Ошибка: Telegram не найден."); return; } 
+    if (!currentTgId) { tg.showAlert("Ошибка: Telegram не найден."); return; }
     const { data: emailCheck } = await supabaseClient.from('user_links').select('telegram_id').eq('email', email).maybeSingle();
-    if (emailCheck && emailCheck.telegram_id && emailCheck.telegram_id != currentTgId) { tg.showAlert("Эта почта уже привязана к другому аккаунту Telegram!"); return; } 
+    if (emailCheck && emailCheck.telegram_id && emailCheck.telegram_id != currentTgId) { tg.showAlert("Эта почта уже привязана к другому аккаунту Telegram!"); return; }
     try {
         const { error } = await supabaseClient.auth.signUp({ email, password });
-        if (error && error.message !== "User already registered") { tg.showAlert("Ошибка: " + error.message); } 
+        if (error && error.message !== "User already registered") { tg.showAlert("Ошибка: " + error.message); }
         else {
             const profile = JSON.parse(localStorage.getItem('cachedProfile')); const xp = parseInt(localStorage.getItem('cachedXP') || 0);
-            const burned = parseInt(localStorage.getItem('cachedBurned') || 0); const name = localStorage.getItem('userName') || "Атлет"; 
+            const burned = parseInt(localStorage.getItem('cachedBurned') || 0); const name = localStorage.getItem('userName') || "Атлет";
             await saveProgressToCloud(currentTgId, email, name, profile, xp, burned);
             localStorage.setItem('linkedEmail', email); localStorage.setItem('currentEmail', email);
             tg.showAlert("Email успешно привязан!"); openProfileSettings();
         }
     } catch (e) { tg.showAlert("Ошибка сети."); }
-} 
+}
 async function linkTelegramToEmail() {
     const tgId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : null;
     const tgName = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.first_name : "Атлет";
-    const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail'); 
-    if (!tgId || !email) { tg.showAlert("Ошибка: не найден Email или Telegram ID."); return; } 
+    const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
+    if (!tgId || !email) { tg.showAlert("Ошибка: не найден Email или Telegram ID."); return; }
     const { data: tgCheck } = await supabaseClient.from('user_links').select('email').eq('telegram_id', tgId).maybeSingle();
-    if (tgCheck && tgCheck.email && tgCheck.email !== email) { tg.showAlert("Этот Telegram уже привязан к другой почте!"); return; } 
+    if (tgCheck && tgCheck.email && tgCheck.email !== email) { tg.showAlert("Этот Telegram уже привязан к другой почте!"); return; }
     const profile = JSON.parse(localStorage.getItem('cachedProfile')); const xp = parseInt(localStorage.getItem('cachedXP') || 0);
-    const burned = parseInt(localStorage.getItem('cachedBurned') || 0); 
+    const burned = parseInt(localStorage.getItem('cachedBurned') || 0);
     await saveProgressToCloud(tgId, email, tgName, profile, xp, burned);
     localStorage.setItem('tgId', tgId); localStorage.setItem('userName', tgName);
     tg.showAlert("Telegram успешно привязан!"); openProfileSettings();
-} 
+}
 async function unlinkEmail() {
     if (!confirm("Отвязать Email? Прогресс останется в Telegram.")) return;
     const tgId = localStorage.getItem('tgId'); if (tgId) { const record = await resolveUserRecord(tgId, null); if (record) await supabaseClient.from('user_links').update({ email: null }).eq('id', record.id); }
     localStorage.removeItem('linkedEmail'); localStorage.removeItem('currentEmail'); tg.showAlert("Email отвязан."); openProfileSettings();
-} 
+}
 async function unlinkTelegram() {
     if (!confirm("Отвязать Telegram? Прогресс останется в Email.")) return;
     const email = localStorage.getItem('currentEmail'); if (email) { const record = await resolveUserRecord(null, email); if (record) await supabaseClient.from('user_links').update({ telegram_id: null }).eq('id', record.id); }
     localStorage.removeItem('tgId'); tg.showAlert("Telegram отвязан."); openProfileSettings();
-} 
+}
 async function saveProfile() {
     const age = document.getElementById('age').value; const gender = document.getElementById('gender').value;
     const weight = document.getElementById('weight').value; const height = document.getElementById('height').value; const goal = document.getElementById('goal').value;
@@ -688,11 +723,11 @@ async function saveProfile() {
     localStorage.setItem('cachedProfile', JSON.stringify(profile));
     await saveProgressToCloud(localStorage.getItem('tgId'), localStorage.getItem('currentEmail'), localStorage.getItem('userName'), profile, currentXP, totalBurnedCalories);
     renderProfile(profile); tg.showAlert("Данные сохранены!");
-} 
+}
 
 async function logout() {
     if (confirm("Выйти из аккаунта? Прогресс сохранен.")) { localStorage.clear(); await supabaseClient.auth.signOut(); location.reload(); }
-} 
+}
 let isShakeTesting = false; let maxShakeValue = 0;
 async function startShakeTest() {
     if (isShakeTesting) return;
@@ -712,92 +747,112 @@ function stopShakeTest() {
     tg.showAlert("Максимум: " + maxShakeValue);
 }
 
-// ================= ЛОГИКА СЕНСЕЯ =================
+// --- СЕНСЕЙ (ИИ) ---
+const PROXY_API_KEY = 'sk-HQWY8HQ6KEHVAt6mnKNpTa6XgMys9wDv';
+const SENSEI_SYSTEM_PROMPT = "Ты — Сенсей, мудрый наставник из игры Shadow Fight 2. Ты помогаешь воину-ученику с тренировками, питанием и мотивацией. Отвечай кратко, мудро, с уважением, обращайся 'воин' или 'ученик'. Не используй сложные термины. Давай практические советы.";
+
 let senseiChatHistory = [];
 
-function openSensei() {
-    document.getElementById('sensei-modal').classList.add('active');
+function openSenseiChat() {
+    document.getElementById('sensei-chat-modal').classList.add('active');
     if (senseiChatHistory.length === 0) {
-        addSenseiMessage("sensei", `Привет, воин! Я твой Сенсей. Вижу, ты ведешь дневник. Чем могу помочь? Спрашивай про тренировки, питание или мотивацию.`);
+        addSenseiMessage('assistant', 'Приветствую, воин! Я твой Сенсей. Вижу, ты ведешь дневник. Чем могу помочь? Спрашивай про тренировки, питание или мотивацию.');
     }
 }
 
-function closeSensei() {
-    document.getElementById('sensei-modal').classList.remove('active');
+function closeSenseiChat() {
+    document.getElementById('sensei-chat-modal').classList.remove('active');
 }
 
 function addSenseiMessage(role, text) {
     const chatBox = document.getElementById('sensei-chat-box');
+    if (!chatBox) return;
     const msgDiv = document.createElement('div');
-    msgDiv.className = `chat-msg ${role}`;
+    msgDiv.className = role === 'user' ? 'sensei-msg user-msg' : 'sensei-msg bot-msg';
     msgDiv.innerText = text;
     chatBox.appendChild(msgDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
-    senseiChatHistory.push({ role: role === 'sensei' ? 'model' : 'user', parts: [{ text: text }] });
+    senseiChatHistory.push({ role: role, content: text });
 }
 
-async function sendSenseiMsg() {
+async function sendSenseiMessage() {
     const input = document.getElementById('sensei-input');
     const text = input.value.trim();
     if (!text) return;
-
-    addSenseiMessage('user', text);
     input.value = '';
-
+    addSenseiMessage('user', text);
+    
+    // Показываем, что Сенсей печатает
     const chatBox = document.getElementById('sensei-chat-box');
     const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'chat-msg sensei';
-    loadingDiv.innerText = 'Думает...';
+    loadingDiv.className = 'sensei-msg bot-msg';
+    loadingDiv.innerText = '...';
+    loadingDiv.id = 'sensei-loading';
     chatBox.appendChild(loadingDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 
     try {
-        const now = new Date();
-        const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-        let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
-        let todayWater = JSON.parse(localStorage.getItem('todayWater') || '[]');
-        
-        let eatenCal = 0;
-        todayFood.forEach(f => eatenCal += parseFloat(f.calories_100g || 0));
-        let eatenWater = 0;
-        todayWater.forEach(w => eatenWater += parseInt(w.amount || 0));
-        const norm = calculateNutrition(currentProfileData);
-        const waterGoal = currentProfileData.custom_water_goal || 2000;
-
-        const systemPrompt = `Ты — Сенсей, мудрый и строгий наставник в фитнес-приложении. Ты общаешься с пользователем по имени ${localStorage.getItem('userName') || 'Атлет'}. 
-        Его цель: ${currentProfileData.goal === 'lose' ? 'похудеть' : 'набрать массу'}. 
-        Норма калорий: ${norm.calories} ккал, белки: ${norm.protein}г, жиры: ${norm.fat}г, углеводы: ${norm.carbs}г.
-        Сегодня он съел: ${Math.round(eatenCal)} ккал. Выпил воды: ${eatenWater} мл из ${waterGoal} мл.
-        Твоя задача: давать короткие, мотивирующие советы. Если он съел много калорий — скажи об этом. Если выпил мало воды — напомни. Отвечай в стиле самурая/мастера боевых искусств. Не пиши длинные тексты, только суть.`;
+        const messages = [
+            { role: 'system', content: SENSEI_SYSTEM_PROMPT },
+            ...senseiChatHistory.slice(-10) // последние 10 сообщений для контекста
+        ];
 
         const response = await fetch('https://api.proxyapi.ru/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${PROXYAPI_KEY}`
+                'Authorization': `Bearer ${PROXY_API_KEY}`
             },
             body: JSON.stringify({
-                model: SENSEI_MODEL,
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    ...senseiChatHistory.slice(-10)
-                ]
+                model: 'deepseek/deepseek-chat', // Стандартная модель DeepSeek на ProxyAPI
+                messages: messages,
+                temperature: 0.7
             })
         });
 
         const data = await response.json();
-        chatBox.removeChild(loadingDiv);
+        
+        // Удаляем загрузку
+        const loadEl = document.getElementById('sensei-loading');
+        if (loadEl) loadEl.remove();
 
         if (data.choices && data.choices.length > 0) {
-            addSenseiMessage('sensei', data.choices[0].message.content);
+            const reply = data.choices[0].message.content;
+            addSenseiMessage('assistant', reply);
         } else {
-            addSenseiMessage('sensei', 'Прости, воин. Я задумался. Попробуй еще раз.');
+            console.error('API Error:', data);
+            addSenseiMessage('assistant', 'Прости, воин. Я задумался. Попробуй еще раз.');
         }
-
     } catch (e) {
-        chatBox.removeChild(loadingDiv);
-        addSenseiMessage('sensei', 'Ошибка связи с моим разумом. Проверь интернет.');
-        console.error(e);
+        console.error('Sensei API error:', e);
+        const loadEl = document.getElementById('sensei-loading');
+        if (loadEl) loadEl.remove();
+        addSenseiMessage('assistant', 'Прости, воин. Я задумался. Попробуй еще раз.');
     }
 }
-// ====================================================
+
+// Всплывающее окно с советом
+const senseiFallbackQuotes = [
+    "Путь в тысячу ли начинается с первого шага. Главное — не останавливайся.",
+    "Твое тело — это храм. Не оскверняй его вредной едой.",
+    "Вода — это жизнь. Пей больше, воин.",
+    "Дисциплина — это мост между целями и их достижением.",
+    "Не сравнивай себя с другими. Сравнивай себя с собой вчерашним.",
+    "Истинная сила не в мышцах, а в воле.",
+    "Отдых — это часть тренировки. Не забывай восстанавливаться."
+];
+
+function showSenseiAdvice(customText = null) {
+    const textEl = document.getElementById('sensei-advice-text');
+    const modal = document.getElementById('sensei-advice-modal');
+    if (!textEl || !modal) return;
+    
+    const advice = customText || senseiFallbackQuotes[Math.floor(Math.random() * senseiFallbackQuotes.length)];
+    textEl.innerText = `"${advice}"`;
+    modal.classList.add('active');
+}
+
+function closeSenseiAdvice() {
+    const modal = document.getElementById('sensei-advice-modal');
+    if (modal) modal.classList.remove('active');
+}
