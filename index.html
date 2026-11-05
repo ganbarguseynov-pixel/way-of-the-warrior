@@ -20,8 +20,17 @@
 .custom-modal-content { background: #1c1c1e; border-radius: 16px; padding: 20px; width: 100%; max-width: 320px; box-sizing: border-box; position: relative; }
 .custom-modal-close { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 18px; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-/* Уменьшенные стили для главного экрана */
-.compact-panel { background: rgba(28, 28, 30, 0.85); border-radius: 10px; padding: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
+/* Уменьшенные и ИСПРАВЛЕННЫЕ стили для главного экрана */
+.compact-panel { 
+    background: rgba(28, 28, 30, 0.85); 
+    border-radius: 10px; 
+    padding: 8px; 
+    border: 1px solid rgba(255,255,255,0.1); 
+    display: flex; 
+    flex-direction: column; 
+    min-width: 0; /* Важно: не дает блоку растягиваться шире экрана */
+    box-sizing: border-box; 
+}
 .compact-food-list { max-height: 50px; overflow-y: auto; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px; }
 .compact-food-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px; margin-bottom: 2px; font-size: 10px; }
 .quick-btn { background: #2c2c2e; color: white; border: 1px solid #3a3a3c; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; }
@@ -79,7 +88,7 @@
     </div>
 
     <!-- ВОДА И ЕДА РЯДОМ -->
-    <div style="display: flex; gap: 8px; margin-bottom: 4px;">
+    <div style="display: flex; gap: 8px; margin-bottom: 4px; width: 100%; box-sizing: border-box;">
         
         <!-- Левая часть: Вода -->
         <div class="compact-panel" style="flex: 1; border-color: rgba(90, 200, 250, 0.3);">
