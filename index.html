@@ -63,12 +63,12 @@
 .sensei-input-area input { flex: 1; padding: 12px; border-radius: 20px; border: none; background: #1c1c1e; color: #fff; font-size: 15px; outline: none; }
 .sensei-send-btn { background: var(--accent-color); color: #000; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
-/* Стили для всплывающего окна Сенсея */
+/* Стили для всплывающего окна Сенсея (Shadow Fight) */
 #sensei-advice-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
 #sensei-advice-modal.active { display: flex; }
 .sensei-advice-content { background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://images.unsplash.com/photo-1599839619722-39751411ea63?w=500&auto=format&fit=crop') center/cover; border-radius: 20px; width: 100%; max-width: 350px; padding: 30px 20px; text-align: center; border: 2px solid var(--accent-color); position: relative; }
 .sensei-advice-title { color: var(--accent-color); font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; margin-top: 0; margin-bottom: 15px; }
-.sensei-advice-avatar { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent-color); margin: 0 auto 15px auto; display: block; background: #000; }
+.sensei-advice-avatar { width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--accent-color); margin: 0 auto 15px auto; display: block; background: #000; object-fit: cover; }
 .sensei-advice-text { font-size: 16px; font-style: italic; color: #fff; line-height: 1.5; margin-bottom: 25px; min-height: 70px; }
 </style>
 </head>
@@ -102,9 +102,8 @@
 <video id="character-video" class="video-background" autoplay loop muted playsinline></video>
 <div class="overlay" style="justify-content: flex-end; padding-bottom: 10px;">
 <div style="display: flex; justify-content: space-between; position: absolute; top: 0px; left: 0px; right: 0px; z-index: 30; padding: 5px 10px; gap: 5px;">
-<button class="btn" style="background-color: rgba(44,44,46,0.7); color: white; width: auto; padding: 6px 8px; font-size: 12px; margin: 0; flex: 1;" onclick="openProfileSettings()">⚙️ Настр.</button>
-<button class="btn" style="background-color: rgba(255,204,0,0.2); color: var(--accent-color); width: auto; padding: 6px 8px; font-size: 12px; margin: 0; flex: 1; border: 1px solid var(--accent-color);" onclick="openSenseiChat()">🥋 Сенсей</button>
-<button class="btn" style="background-color: rgba(255,59,48,0.2); color: #ff3b30; width: auto; padding: 6px 8px; font-size: 12px; margin: 0; flex: 1; border: 1px solid #ff3b30;" onclick="logout()">Выйти</button>
+<button class="btn" style="background-color: rgba(44,44,46,0.7); color: white; width: auto; padding: 6px 12px; font-size: 12px; margin: 0; flex: 1;" onclick="openProfileSettings()">⚙️ Настр.</button>
+<button class="btn" style="background-color: rgba(255,59,48,0.2); color: #ff3b30; width: auto; padding: 6px 12px; font-size: 12px; margin: 0; flex: 1; border: 1px solid #ff3b30;" onclick="logout()">Выйти</button>
 </div>
 
 <div class="top-info" style="margin-top: 0; margin-bottom: auto;">
@@ -119,6 +118,9 @@
 </button>
 <button class="analysis-btn" onclick="openGlobalStatsModal()">
 📈 Анализ
+</button>
+<button class="analysis-btn" onclick="openSenseiChat()" style="border-color: #fff; color: #fff; background: rgba(255,255,255,0.1);">
+🥋 Сенсей
 </button>
 </div>
 </div>
@@ -398,13 +400,16 @@
 </div>
 </div>
 
-<!-- Модалка Совета Сенсея -->
+<!-- Модалка Совета Сенсея (Всплывающее окно) -->
 <div id="sensei-advice-modal">
 <div class="sensei-advice-content">
 <h3 class="sensei-advice-title">🥋 Сэнсэй</h3>
 <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Master&backgroundColor=000000" class="sensei-advice-avatar">
-<p id="sensei-advice-text" class="sensei-advice-text">"Загрузка мудрости..."</p>
-<button class="btn" onclick="closeSenseiAdvice()" style="background-color: var(--accent-color); color: #000; font-weight: bold; border-radius: 8px;">ДАЛЕЕ</button>
+<p id="sensei-advice-text" class="sensei-advice-text">"Загрузка задания..."</p>
+<div style="display: flex; gap: 10px; margin-top: 20px;">
+    <button class="btn" onclick="openChatFromAdvice()" style="background-color: transparent; border: 2px solid var(--accent-color); color: var(--accent-color); margin: 0; flex: 1;">Ответить</button>
+    <button class="btn" onclick="closeSenseiAdvice()" style="background-color: var(--accent-color); color: #000; font-weight: bold; margin: 0; flex: 1;">Далее</button>
+</div>
 </div>
 </div>
 
