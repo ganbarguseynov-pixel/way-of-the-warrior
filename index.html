@@ -7,6 +7,8 @@
 <title>Sport App</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<!-- Подключаем библиотеку для графиков -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="style.css">
 <style>
 /* Стили для истории */
@@ -28,6 +30,9 @@
 .water-btn:active { background: rgba(90, 200, 250, 0.4); }
 .weight-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; }
 .weight-btn:active { background: rgba(255,255,255,0.2); }
+.stats-btn { background: rgba(255, 204, 0, 0.2); border: 1px solid var(--accent-color); color: var(--accent-color); padding: 4px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin-left: 5px; margin-top: 10px; }
+/* Контейнеры для графиков */
+.chart-container { background: #1c1c1e; border-radius: 12px; padding: 10px; margin-bottom: 15px; border: 1px solid #2c2c2e; position: relative; height: 200px; width: 100%; }
 </style>
 </head>
 <body class="male-theme"> 
@@ -70,9 +75,12 @@
 <div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
 <p class="xp-text" id="xp-text" style="font-size: 11px;">0 / 100 XP</p>
 
-<div style="text-align: center;">
+<div style="text-align: center; display: flex; justify-content: center;">
     <button class="weight-btn" onclick="openWeightHistory()">
         ⚖️ <span id="current-weight-display">0</span> кг
+    </button>
+    <button class="stats-btn" onclick="openStatsScreen()">
+        📊 Графики
     </button>
 </div>
 
@@ -128,10 +136,40 @@
 </div>
 </div> 
 
+<!-- НОВЫЙ ЭКРАН СТАТИСТИКИ (ГРАФИКИ) -->
+<div id="stats-screen" class="screen">
+<div class="inner-screen">
+<button class="back-btn" onclick="closeScreen('stats-screen')">← Назад</button>
+<h1 style="text-align: center; margin-bottom: 15px;">📊 Графики прогресса</h1>
+
+<div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+    <div style="display: flex; gap: 10px;">
+        <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93; margin-bottom: 4px; display: block;">С даты</label><input type="date" id="stats-start-date" style="width: 100%; padding: 8px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 14px; outline: none; box-sizing: border-box;" onchange="renderAllCharts()"></div>
+        <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93; margin-bottom: 4px; display: block;">По дату</label><input type="date" id="stats-end-date" style="width: 100%; padding: 8px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 14px; outline: none; box-sizing: border-box;" onchange="renderAllCharts()"></div>
+    </div>
+</div>
+
+<!-- Графики -->
+<div class="chart-container">
+    <canvas id="weightChart"></canvas>
+</div>
+<div class="chart-container">
+    <canvas id="caloriesChart"></canvas>
+</div>
+<div class="chart-container">
+    <canvas id="macrosChart"></canvas>
+</div>
+<div class="chart-container">
+    <canvas id="waterChart"></canvas>
+</div>
+
+</div>
+</div>
+
 <div id="history-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('history-screen')">← Назад</button>
-<h1 style="text-align: center; margin-bottom: 15px;">📜 История</h1>
+<h1 style="text-align: center; margin-bottom: 15px;">📜 Дневник</h1>
 <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
     <div style="display: flex; gap: 10px; margin-bottom: 10px;">
         <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93; margin-bottom: 4px; display: block;">С даты</label><input type="date" id="history-start-date" style="width: 100%; padding: 8px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 14px; outline: none; box-sizing: border-box;" onchange="renderHistory()"></div>
@@ -233,18 +271,14 @@
 </div>
 </div>
 
-<!-- ОБНОВЛЕННОЕ МОДАЛЬНОЕ ОКНО ВЕСА -->
 <div id="weight-modal" class="custom-modal">
 <div class="custom-modal-content">
 <button class="custom-modal-close" onclick="closeWeightHistory()">✖</button>
 <h3 style="margin-top: 0; text-align: center; font-size: 16px; color: var(--accent-color);">⚖️ Дневник веса</h3>
-
-<!-- Блок для быстрого изменения веса -->
 <div style="display: flex; gap: 8px; margin-bottom: 15px;">
     <input type="number" id="modal-weight-input" step="0.1" style="flex: 1; padding: 10px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 16px; text-align: center; outline: none;">
     <button class="btn" style="width: auto; margin: 0; padding: 10px 15px; background-color: #34c759; color: white; font-size: 14px;" onclick="saveWeightFromModal()">Сохранить</button>
 </div>
-
 <div id="weight-diff" style="text-align: center; font-size: 14px; margin-bottom: 15px; color: #8e8e93;"></div>
 <div id="weight-list" style="max-height: 30vh; overflow-y: auto;"></div>
 </div>
