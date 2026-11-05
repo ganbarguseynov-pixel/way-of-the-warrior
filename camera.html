@@ -21,12 +21,10 @@
 #barcode-switch-camera-btn { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 5; display: flex; align-items: center; justify-content: center; }
 .result-card { background: #1c1c1e; padding: 25px 20px; border-radius: 16px; margin-top: 20px; text-align: center; }
 .result-title { margin-top: 0; color: var(--accent-color); font-size: 24px; word-break: break-word; line-height: 1.2; }
-.result-desc { color: #8e8e93; font-size: 15px; margin-bottom: 20px; line-height: 1.4; padding: 0 10px; }
 .macro-box { background: #2c2c2e; padding: 15px; border-radius: 12px; display: inline-block; width: 100%; max-width: 300px; margin: 0 auto; }
 .macro-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 16px; padding: 0 10px; }
-.macro-row:last-child { margin-bottom: 0; }
-/* Стиль для поля ввода грамм */
 .grams-input { width: 100px; padding: 8px; border-radius: 8px; background: #1c1c1e; color: white; border: 1px solid #3a3a3c; text-align: center; font-size: 20px; font-weight: bold; outline: none; }
+.edit-input { width: 100%; padding: 6px; border-radius: 6px; background: #1c1c1e; color: var(--accent-color); border: 1px solid #3a3a3c; text-align: center; font-size: 14px; font-weight: bold; outline: none; }
 </style>
 </head>
 <body>
@@ -61,17 +59,16 @@
 <div id="food-result" style="display: none;" class="result-card">
 <h2 id="food-name" class="result-title">Название</h2>
 <div class="macro-box">
-<div class="macro-row"><span>Калории:</span> <b id="food-calories">0 ккал</b></div>
-<div class="macro-row"><span>Белки:</span> <b id="food-protein">0 г</b></div>
-<div class="macro-row"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
-<div class="macro-row"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
-
-<!-- ПОЛЕ ВВОДА ГРАММ ДЛЯ ФОТО -->
-<div style="margin-top: 15px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-    <label style="color: #8e8e93; font-size: 13px; margin-bottom: 5px; display: block;">Сколько грамм вы съели?</label>
-    <input type="number" id="photo-grams" class="grams-input" value="100" oninput="recalcPhotoResult()">
-</div>
-
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+        <div><label style="font-size: 11px; color: #8e8e93; display: block; margin-bottom: 2px;">Ккал</label><input type="number" id="photo-edit-cal" class="edit-input" oninput="manualEditPhoto('cal')"></div>
+        <div><label style="font-size: 11px; color: #8e8e93; display: block; margin-bottom: 2px;">Белки</label><input type="number" id="photo-edit-prot" class="edit-input" oninput="manualEditPhoto('prot')"></div>
+        <div><label style="font-size: 11px; color: #8e8e93; display: block; margin-bottom: 2px;">Жиры</label><input type="number" id="photo-edit-fat" class="edit-input" oninput="manualEditPhoto('fat')"></div>
+        <div><label style="font-size: 11px; color: #8e8e93; display: block; margin-bottom: 2px;">Углев.</label><input type="number" id="photo-edit-carb" class="edit-input" oninput="manualEditPhoto('carb')"></div>
+    </div>
+    <div style="text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+        <label style="color: #8e8e93; font-size: 13px; margin-bottom: 5px; display: block;">Сколько грамм вы съели?</label>
+        <input type="number" id="photo-grams" class="grams-input" value="100" oninput="recalcPhotoResult()">
+    </div>
 </div>
 <button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="saveFoodAndGoBack()">Добавить (+20 XP)</button>
 <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 10px;" onclick="resetCameraScreen()">Отмена</button>
@@ -84,17 +81,13 @@
 <input type="file" id="barcode-gallery-input" accept="image/*" style="display: none;" onchange="handleBarcodeImage(event)">
 <button class="btn" style="background-color: #2c2c2e; color: white; margin-bottom: 10px;" onclick="document.getElementById('barcode-gallery-input').click()">🖼️ Выбрать из галереи</button>
 </div>
-<div class="form-group" style="margin-top: 20px;">
-<input type="number" id="barcode-input" placeholder="Или введите штрих-код вручную">
-</div>
+<div class="form-group" style="margin-top: 20px;"><input type="number" id="barcode-input" placeholder="Или введите штрих-код вручную"></div>
 <button class="btn" onclick="searchByBarcode()">🔎 Найти по штрих-коду</button>
 <div id="barcode-camera-container" style="display: none;">
 <button id="barcode-switch-camera-btn" onclick="switchBarcodeCamera()">🔄</button>
 <button id="barcode-close-camera-btn" onclick="resetBarcodeScreen()">✖</button>
 <video id="barcode-camera-video" autoplay playsinline muted></video>
-<div id="barcode-camera-controls">
-<button id="barcode-capture-btn" onclick="takeBarcodePhoto()"></button>
-</div>
+<div id="barcode-camera-controls"><button id="barcode-capture-btn" onclick="takeBarcodePhoto()"></button></div>
 </div>
 <div id="barcode-result" style="margin-top: 20px; text-align: center; font-size: 18px; font-weight: bold;"></div>
 </div>
@@ -105,18 +98,17 @@
 <img id="modal-image" src="" style="width: 100%; height: 200px; object-fit: contain; background: #2c2c2e; border-radius: 12px; margin-bottom: 15px; display: none;">
 <h2 id="modal-name" style="color: var(--accent-color); margin-top: 0; text-align: center;">Название</h2>
 <div style="background: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-<h4 style="margin-top: 0;">На 100 грамм:</h4>
-<div class="nutrition-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Калории:</span> <b id="modal-calories">0 ккал</b></div>
-<div class="nutrition-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Белки:</span> <b id="modal-protein">0 г</b></div>
-<div class="nutrition-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Жиры:</span> <b id="modal-fat">0 г</b></div>
-<div class="nutrition-row" style="display: flex; justify-content: space-between;"><span>Углеводы:</span> <b id="modal-carbs">0 г</b></div>
-
-<!-- ПОЛЕ ВВОДА ГРАММ ДЛЯ ПОИСКА/ШТРИХКОДА -->
-<div style="margin-top: 15px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-    <label style="color: #8e8e93; font-size: 13px; margin-bottom: 5px; display: block;">Сколько грамм вы съели?</label>
-    <input type="number" id="modal-grams" class="grams-input" value="100" oninput="recalcModal()">
-</div>
-
+<h4 style="margin-top: 0; text-align: center;">На 100 грамм:</h4>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+        <div><label style="font-size: 11px; color: #8e8e93; display: block; margin-bottom: 2px;">Ккал</label><input type="number" id="modal-edit-cal" class="edit-input" oninput="manualEditModal('cal')"></div>
+        <div><label style="font-size: 11px; color: #8e8e93; display: block; margin-bottom: 2px;">Белки</label><input type="number" id="modal-edit-prot" class="edit-input" oninput="manualEditModal('prot')"></div>
+        <div><label style="font-size: 11px; color: #8e8e93; display: block; margin-bottom: 2px;">Жиры</label><input type="number" id="modal-edit-fat" class="edit-input" oninput="manualEditModal('fat')"></div>
+        <div><label style="font-size: 11px; color: #8e8e93; display: block; margin-bottom: 2px;">Углев.</label><input type="number" id="modal-edit-carb" class="edit-input" oninput="manualEditModal('carb')"></div>
+    </div>
+    <div style="text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+        <label style="color: #8e8e93; font-size: 13px; margin-bottom: 5px; display: block;">Сколько грамм вы съели?</label>
+        <input type="number" id="modal-grams" class="grams-input" value="100" oninput="recalcModal()">
+    </div>
 </div>
 <button class="btn" style="background-color: #34c759; color: white;" onclick="confirmFoodSelection()">✅ Выбрать это</button>
 </div>
@@ -132,96 +124,37 @@ let selectedFoodData = null; window.foodList = [];
 
 async function resolveUserRecord(tgId, email) {
     if (!tgId && !email) return null; 
-
     let recordsMap = new Map(); 
-
-    if (tgId) {
-        const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId);
-        if (data) data.forEach(r => recordsMap.set(r.id, r));
-    }
-    if (email) {
-        const { data } = await supabaseClient.from('user_links').select('*').eq('email', email);
-        if (data) data.forEach(r => recordsMap.set(r.id, r));
-    } 
-
+    if (tgId) { const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', tgId); if (data) data.forEach(r => recordsMap.set(r.id, r)); }
+    if (email) { const { data } = await supabaseClient.from('user_links').select('*').eq('email', email); if (data) data.forEach(r => recordsMap.set(r.id, r)); } 
     let records = Array.from(recordsMap.values()); 
-
-    let linkedTgId = tgId;
-    let linkedEmail = email;
-    records.forEach(r => {
-        if (r.telegram_id) linkedTgId = r.telegram_id;
-        if (r.email) linkedEmail = r.email;
-    }); 
-
-    if (linkedTgId && linkedTgId !== tgId) {
-        const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', linkedTgId);
-        if (data) data.forEach(r => recordsMap.set(r.id, r));
-    }
-    if (linkedEmail && linkedEmail !== email) {
-        const { data } = await supabaseClient.from('user_links').select('*').eq('email', linkedEmail);
-        if (data) data.forEach(r => recordsMap.set(r.id, r));
-    } 
-
+    let linkedTgId = tgId, linkedEmail = email;
+    records.forEach(r => { if (r.telegram_id) linkedTgId = r.telegram_id; if (r.email) linkedEmail = r.email; }); 
+    if (linkedTgId && linkedTgId !== tgId) { const { data } = await supabaseClient.from('user_links').select('*').eq('telegram_id', linkedTgId); if (data) data.forEach(r => recordsMap.set(r.id, r)); }
+    if (linkedEmail && linkedEmail !== email) { const { data } = await supabaseClient.from('user_links').select('*').eq('email', linkedEmail); if (data) data.forEach(r => recordsMap.set(r.id, r)); } 
     records = Array.from(recordsMap.values());
     if (records.length === 0) return null; 
-
     if (records.length === 1) {
-        const r = records[0];
-        let needsUpdate = false;
-        let updateObj = {};
+        const r = records[0]; let needsUpdate = false; let updateObj = {};
         if (tgId && !r.telegram_id) { updateObj.telegram_id = tgId; needsUpdate = true; }
         if (email && !r.email) { updateObj.email = email; needsUpdate = true; }
-        if (needsUpdate) {
-            await supabaseClient.from('user_links').update(updateObj).eq('id', r.id);
-            Object.assign(r, updateObj);
-        }
+        if (needsUpdate) { await supabaseClient.from('user_links').update(updateObj).eq('id', r.id); Object.assign(r, updateObj); }
         return r;
     } 
-
-    let mergedFood = [];
-    let maxXp = 0;
-    let maxBurned = 0;
-    let profile = null;
-    let name = null; 
-
+    let mergedFood = [], maxXp = 0, maxBurned = 0, profile = null, name = null; 
     records.forEach(rec => {
-        if (rec.food && Array.isArray(rec.food)) {
-            mergedFood = mergedFood.concat(rec.food);
-        }
+        if (rec.food && Array.isArray(rec.food)) mergedFood = mergedFood.concat(rec.food);
         if (rec.xp && rec.xp > maxXp) maxXp = rec.xp;
         if (rec.burned && rec.burned > maxBurned) maxBurned = rec.burned;
         if (rec.profile && !profile) profile = rec.profile;
         if (rec.name && !name) name = rec.name;
     }); 
-
-    const uniqueFood = [];
-    const seen = new Set();
-    mergedFood.forEach(f => {
-        const key = JSON.stringify(f);
-        if (!seen.has(key)) {
-            seen.add(key);
-            uniqueFood.push(f);
-        }
-    }); 
-
-    const mainRecord = records[0];
-    const idsToDelete = records.slice(1).map(r => r.id); 
-
-    const updateData = {
-        telegram_id: linkedTgId || mainRecord.telegram_id || null,
-        email: linkedEmail || mainRecord.email || null,
-        food: uniqueFood,
-        xp: maxXp,
-        burned: maxBurned,
-        profile: profile || mainRecord.profile,
-        name: name || mainRecord.name || "Атлет"
-    }; 
-
+    const uniqueFood = []; const seen = new Set();
+    mergedFood.forEach(f => { const key = JSON.stringify(f); if (!seen.has(key)) { seen.add(key); uniqueFood.push(f); } }); 
+    const mainRecord = records[0]; const idsToDelete = records.slice(1).map(r => r.id); 
+    const updateData = { telegram_id: linkedTgId || mainRecord.telegram_id || null, email: linkedEmail || mainRecord.email || null, food: uniqueFood, xp: maxXp, burned: maxBurned, profile: profile || mainRecord.profile, name: name || mainRecord.name || "Атлет" }; 
     await supabaseClient.from('user_links').update(updateData).eq('id', mainRecord.id);
-    if (idsToDelete.length > 0) {
-        await supabaseClient.from('user_links').delete().in('id', idsToDelete);
-    } 
-
+    if (idsToDelete.length > 0) await supabaseClient.from('user_links').delete().in('id', idsToDelete);
     return { ...mainRecord, ...updateData };
 }
 
@@ -229,301 +162,272 @@ async function saveFoodToCloud(foodArray) {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
     if (!tgId && !email) return;
-
     const record = await resolveUserRecord(tgId, email);
-    if (record) {
-        await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', record.id);
-    }
+    if (record) await supabaseClient.from('user_links').update({ food: foodArray }).eq('id', record.id);
 }
 
 function switchTab(tabName) {
-document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-document.getElementById('tab-' + tabName).classList.add('active');
-event.target.classList.add('active');
-stopCamera(); stopBarcodeCamera();
-if (tabName === 'photo') resetCameraScreen();
-if (tabName === 'barcode') resetBarcodeScreen();
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tabName).classList.add('active');
+    event.target.classList.add('active');
+    stopCamera(); stopBarcodeCamera();
+    if (tabName === 'photo') resetCameraScreen();
+    if (tabName === 'barcode') resetBarcodeScreen();
 }
 
 async function searchFood() {
-const query = document.getElementById('food-search-input').value;
-if (!query) return;
-const resultDiv = document.getElementById('search-result');
-resultDiv.innerHTML = '<p style="text-align:center;">Поиск...</p>';
-try {
-const response = await fetch(`${AI_SERVER_URL}/search?q=${encodeURIComponent(query)}`);
-const data = await response.json();
-if (data.products && data.products.length > 0) {
-window.foodList = data.products;
-let html = '';
-data.products.forEach((p, index) => {
-let imgHtml = p.image_url ? `<img src="${p.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 15px;">`:`<div style="width: 50px; height: 50px; background: #2c2c2e; border-radius: 8px; margin-right: 15px;"></div>`; html +=`<div class="leaderboard-item" style="cursor: pointer; margin-bottom: 10px;" onclick="openFoodModal(${index})">${imgHtml}<div class="user-info"><p style="margin:0; font-weight:bold; font-size:15px;">${p.product_name}</p><p style="margin:0; font-size:12px; color:#8e8e93;">${p.calories_100g || 0} ккал на 100г</p></div></div>`;
-});
-resultDiv.innerHTML = html;
-} else {
-resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ничего не найдено.</p>';
-}
-} catch (e) { resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ошибка связи</p>'; }
+    const query = document.getElementById('food-search-input').value;
+    if (!query) return;
+    const resultDiv = document.getElementById('search-result');
+    resultDiv.innerHTML = '<p style="text-align:center;">Поиск...</p>';
+    try {
+        const response = await fetch(`${AI_SERVER_URL}/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        if (data.products && data.products.length > 0) {
+            window.foodList = data.products; let html = '';
+            data.products.forEach((p, index) => {
+                let imgHtml = p.image_url ? `<img src="${p.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 15px;">`:`<div style="width: 50px; height: 50px; background: #2c2c2e; border-radius: 8px; margin-right: 15px;"></div>`; html +=`<div class="leaderboard-item" style="cursor: pointer; margin-bottom: 10px;" onclick="openFoodModal(${index})">${imgHtml}<div class="user-info"><p style="margin:0; font-weight:bold; font-size:15px;">${p.product_name}</p><p style="margin:0; font-size:12px; color:#8e8e93;">${p.calories_100g || 0} ккал на 100г</p></div></div>`;
+            });
+            resultDiv.innerHTML = html;
+        } else { resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ничего не найдено.</p>'; }
+    } catch (e) { resultDiv.innerHTML = '<p style="text-align:center; color: #ff3b30;">Ошибка связи</p>'; }
 }
 
 async function searchByBarcode() {
-const code = document.getElementById('barcode-input').value.trim();
-if (!code) { tg.showAlert("Введите штрих-код!"); return; }
-const resultDiv = document.getElementById('barcode-result');
-resultDiv.innerText = "Поиск...";
-try {
-const response = await fetch(`${AI_SERVER_URL}/barcode?code=${code}`);
-const data = await response.json();
-if (data.products && data.products.length > 0) {
-window.foodList = data.products; openFoodModal(0); resultDiv.innerText = "";
-} else { resultDiv.innerText = "Продукт не найден."; }
-} catch (e) { resultDiv.innerText = "Ошибка сервера."; }
+    const code = document.getElementById('barcode-input').value.trim();
+    if (!code) { tg.showAlert("Введите штрих-код!"); return; }
+    const resultDiv = document.getElementById('barcode-result'); resultDiv.innerText = "Поиск...";
+    try {
+        const response = await fetch(`${AI_SERVER_URL}/barcode?code=${code}`);
+        const data = await response.json();
+        if (data.products && data.products.length > 0) { window.foodList = data.products; openFoodModal(0); resultDiv.innerText = ""; } 
+        else { resultDiv.innerText = "Продукт не найден."; }
+    } catch (e) { resultDiv.innerText = "Ошибка сервера."; }
 }
 
 let barcodeStream = null; let barcodeFacingMode = "environment";
 
 async function startBarcodeCamera() {
-try {
-document.getElementById('barcode-buttons').style.display = 'none';
-document.getElementById('barcode-camera-container').style.display = 'flex';
-barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: barcodeFacingMode }, audio: false });
-const videoEl = document.getElementById('barcode-camera-video');
-videoEl.srcObject = barcodeStream;
-videoEl.play().catch(e => console.log("Play error:", e));
-} catch (err) { tg.showAlert("Ошибка камеры."); resetBarcodeScreen(); }
+    try {
+        document.getElementById('barcode-buttons').style.display = 'none';
+        document.getElementById('barcode-camera-container').style.display = 'flex';
+        barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: barcodeFacingMode }, audio: false });
+        const videoEl = document.getElementById('barcode-camera-video');
+        videoEl.srcObject = barcodeStream; videoEl.play().catch(e => console.log("Play error:", e));
+    } catch (err) { tg.showAlert("Ошибка камеры."); resetBarcodeScreen(); }
 }
 
 async function switchBarcodeCamera() {
-barcodeFacingMode = barcodeFacingMode === "environment" ? "user" : "environment";
-stopBarcodeCamera(); await startBarcodeCamera();
+    barcodeFacingMode = barcodeFacingMode === "environment" ? "user" : "environment";
+    stopBarcodeCamera(); await startBarcodeCamera();
 }
 
 function takeBarcodePhoto() {
-if (!barcodeStream) return;
-const video = document.getElementById('barcode-camera-video');
-const canvas = document.createElement('canvas');
-canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-canvas.getContext('2d').drawImage(video, 0, 0);
-stopBarcodeCamera();
-canvas.toBlob(async function(blob) {
-const file = new File([blob], "barcode.jpg", { type: "image/jpeg" });
-await sendBarcodeToServer(file);
-}, 'image/jpeg', 0.8);
+    if (!barcodeStream) return;
+    const video = document.getElementById('barcode-camera-video');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0); stopBarcodeCamera();
+    canvas.toBlob(async function(blob) {
+        const file = new File([blob], "barcode.jpg", { type: "image/jpeg" }); await sendBarcodeToServer(file);
+    }, 'image/jpeg', 0.8);
 }
 
 function stopBarcodeCamera() {
-if (barcodeStream) { barcodeStream.getTracks().forEach(track => track.stop()); barcodeStream = null; }
-document.getElementById('barcode-camera-container').style.display = 'none';
+    if (barcodeStream) { barcodeStream.getTracks().forEach(track => track.stop()); barcodeStream = null; }
+    document.getElementById('barcode-camera-container').style.display = 'none';
 }
 
 function resetBarcodeScreen() {
-stopBarcodeCamera();
-document.getElementById('barcode-buttons').style.display = 'block';
-document.getElementById('barcode-result').innerText = "";
+    stopBarcodeCamera();
+    document.getElementById('barcode-buttons').style.display = 'block';
+    document.getElementById('barcode-result').innerText = "";
 }
 
 async function sendBarcodeToServer(file) {
-const resultDiv = document.getElementById('barcode-result');
-resultDiv.innerText = "Распознавание...";
-const formData = new FormData();
-formData.append('image', file);
-try {
-const response = await fetch(`${AI_SERVER_URL}/scan_barcode`, { method: 'POST', body: formData }); const data = await response.json(); if (data.barcode) { resultDiv.innerText = `Найден: ${data.barcode}. Загрузка...`; const productResponse = await fetch(`${AI_SERVER_URL}/barcode?code=${data.barcode}`);
-const productData = await productResponse.json();
-if (productData.products && productData.products.length > 0) {
-window.foodList = productData.products;
-openFoodModal(0);
-resultDiv.innerText = "";
-} else { resultDiv.innerText = "Продукт не найден в базе."; }
-} else { resultDiv.innerText = "Штрих-код не распознан."; }
-} catch (e) { resultDiv.innerText = "Ошибка сервера."; }
-resetBarcodeScreen();
+    const resultDiv = document.getElementById('barcode-result');
+    resultDiv.innerText = "Распознавание...";
+    const formData = new FormData(); formData.append('image', file);
+    try {
+        const response = await fetch(`${AI_SERVER_URL}/scan_barcode`, { method: 'POST', body: formData });
+        const data = await response.json();
+        if (data.barcode) {
+            resultDiv.innerText = `Найден: ${data.barcode}. Загрузка...`;
+            const productResponse = await fetch(`${AI_SERVER_URL}/barcode?code=${data.barcode}`);
+            const productData = await productResponse.json();
+            if (productData.products && productData.products.length > 0) { window.foodList = productData.products; openFoodModal(0); resultDiv.innerText = ""; } 
+            else { resultDiv.innerText = "Продукт не найден в базе."; }
+        } else { resultDiv.innerText = "Штрих-код не распознан."; }
+    } catch (e) { resultDiv.innerText = "Ошибка сервера."; }
+    resetBarcodeScreen();
 }
 
 async function handleBarcodeImage(event) {
-const file = event.target.files[0];
-if (!file) return;
-await sendBarcodeToServer(file);
-event.target.value = "";
+    const file = event.target.files[0];
+    if (!file) return;
+    await sendBarcodeToServer(file); event.target.value = "";
 }
 
 function openFoodModal(index) {
-const food = window.foodList[index];
-selectedFoodData = food;
-document.getElementById('modal-name').innerText = food.product_name;
-const imgElement = document.getElementById('modal-image');
-if (food.image_url) { imgElement.src = food.image_url; imgElement.style.display = 'block'; } else { imgElement.style.display = 'none'; }
-
-// СБРОС ГРАММОВ НА 100 ПРИ ОТКРЫТИИ
-document.getElementById('modal-grams').value = 100;
-recalcModal();
-
-document.getElementById('food-modal').classList.add('active');
+    const food = window.foodList[index];
+    selectedFoodData = { ...food };
+    document.getElementById('modal-name').innerText = food.product_name;
+    const imgElement = document.getElementById('modal-image');
+    if (food.image_url) { imgElement.src = food.image_url; imgElement.style.display = 'block'; } else { imgElement.style.display = 'none'; }
+    document.getElementById('modal-grams').value = 100; recalcModal();
+    document.getElementById('food-modal').classList.add('active');
 }
 function closeModal() { document.getElementById('food-modal').classList.remove('active'); }
 
-// ПЕРЕСЧЕТ В МОДАЛЬНОМ ОКНЕ
 function recalcModal() {
     if (!selectedFoodData) return;
     const grams = Math.abs(parseFloat(document.getElementById('modal-grams').value)) || 100;
     const ratio = grams / 100;
-    
-    document.getElementById('modal-calories').innerText = Math.round((selectedFoodData.calories_100g || 0) * ratio) + " ккал";
-    document.getElementById('modal-protein').innerText = Math.round((selectedFoodData.proteins_100g || 0) * ratio) + " г";
-    document.getElementById('modal-fat').innerText = Math.round((selectedFoodData.fat_100g || 0) * ratio) + " г";
-    document.getElementById('modal-carbs').innerText = Math.round((selectedFoodData.carbs_100g || 0) * ratio) + " г";
+    document.getElementById('modal-edit-cal').value = Math.round((selectedFoodData.calories_100g || 0) * ratio);
+    document.getElementById('modal-edit-prot').value = Math.round((selectedFoodData.proteins_100g || 0) * ratio);
+    document.getElementById('modal-edit-fat').value = Math.round((selectedFoodData.fat_100g || 0) * ratio);
+    document.getElementById('modal-edit-carb').value = Math.round((selectedFoodData.carbs_100g || 0) * ratio);
+}
+
+function manualEditModal(type) {
+    const grams = Math.abs(parseFloat(document.getElementById('modal-grams').value)) || 100;
+    const ratio = grams / 100;
+    let val = parseFloat(document.getElementById(type === 'cal' ? 'modal-edit-cal' : type === 'prot' ? 'modal-edit-prot' : type === 'fat' ? 'modal-edit-fat' : 'modal-edit-carb').value) || 0;
+    if (type === 'cal') selectedFoodData.calories_100g = val / ratio;
+    if (type === 'prot') selectedFoodData.proteins_100g = val / ratio;
+    if (type === 'fat') selectedFoodData.fat_100g = val / ratio;
+    if (type === 'carb') selectedFoodData.carbs_100g = val / ratio;
 }
 
 async function confirmFoodSelection() {
-if (!selectedFoodData) return;
-
-// СЧИТЫВАЕМ ГРАММЫ И СЧИТАЕМ КОЭФФИЦИЕНТ
-const grams = Math.abs(parseFloat(document.getElementById('modal-grams').value)) || 100;
-const ratio = grams / 100;
-
-// СОЗДАЕМ НОВЫЙ ОБЪЕКТ С ПЕРЕСЧИТАННЫМИ ЗНАЧЕНИЯМИ
-let scaledFood = {
-    product_name: `${selectedFoodData.product_name} (${grams}г)`,
-    calories_100g: (parseFloat(selectedFoodData.calories_100g) || 0) * ratio,
-    proteins_100g: (parseFloat(selectedFoodData.proteins_100g) || 0) * ratio,
-    fat_100g: (parseFloat(selectedFoodData.fat_100g) || 0) * ratio,
-    carbs_100g: (parseFloat(selectedFoodData.carbs_100g) || 0) * ratio
-};
-
-let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
-todayFood.push(scaledFood);
-localStorage.setItem('todayFood', JSON.stringify(todayFood));
-
-try { await saveFoodToCloud(todayFood); } catch(e) { console.log(e); }
-
-closeModal();
-document.getElementById('search-result').innerHTML = '';
-tg.showAlert(`Добавлено: ${scaledFood.product_name}`);
+    if (!selectedFoodData) return;
+    const grams = Math.abs(parseFloat(document.getElementById('modal-grams').value)) || 100;
+    let scaledFood = {
+        product_name: `${selectedFoodData.product_name} (${grams}г)`,
+        calories_100g: parseFloat(document.getElementById('modal-edit-cal').value) || 0,
+        proteins_100g: parseFloat(document.getElementById('modal-edit-prot').value) || 0,
+        fat_100g: parseFloat(document.getElementById('modal-edit-fat').value) || 0,
+        carbs_100g: parseFloat(document.getElementById('modal-edit-carb').value) || 0
+    };
+    let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
+    todayFood.push(scaledFood); localStorage.setItem('todayFood', JSON.stringify(todayFood));
+    try { await saveFoodToCloud(todayFood); } catch(e) { console.log(e); }
+    closeModal(); document.getElementById('search-result').innerHTML = '';
+    tg.showAlert(`Добавлено: ${scaledFood.product_name}`);
 }
 
 let videoStream = null; let currentFacingMode = "environment";
 
 async function startCamera() {
-try {
-document.getElementById('photo-buttons').style.display = 'none';
-document.getElementById('camera-container').style.display = 'flex';
-videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: false });
-const videoEl = document.getElementById('camera-video');
-videoEl.srcObject = videoStream;
-videoEl.play().catch(e => console.log("Play error:", e));
-} catch (err) { tg.showAlert("Ошибка камеры."); resetCameraScreen(); }
+    try {
+        document.getElementById('photo-buttons').style.display = 'none';
+        document.getElementById('camera-container').style.display = 'flex';
+        videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: false });
+        const videoEl = document.getElementById('camera-video');
+        videoEl.srcObject = videoStream; videoEl.play().catch(e => console.log("Play error:", e));
+    } catch (err) { tg.showAlert("Ошибка камеры."); resetCameraScreen(); }
 }
 
 async function switchCamera() {
-currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
-stopCamera(); await startCamera();
+    currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+    stopCamera(); await startCamera();
 }
 
 function takePhoto() {
-if (!videoStream) return;
-const video = document.getElementById('camera-video');
-const canvas = document.createElement('canvas');
-canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-canvas.getContext('2d').drawImage(video, 0, 0);
-stopCamera();
-canvas.toBlob(async function(blob) {
-const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-document.getElementById('photo-preview').src = URL.createObjectURL(blob);
-document.getElementById('photo-preview').style.display = 'block';
-document.getElementById('remove-photo-btn').style.display = 'block';
-await sendPhotoToServer(file);
-}, 'image/jpeg', 0.8);
+    if (!videoStream) return;
+    const video = document.getElementById('camera-video');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0); stopCamera();
+    canvas.toBlob(async function(blob) {
+        const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+        document.getElementById('photo-preview').src = URL.createObjectURL(blob);
+        document.getElementById('photo-preview').style.display = 'block';
+        document.getElementById('remove-photo-btn').style.display = 'block';
+        await sendPhotoToServer(file);
+    }, 'image/jpeg', 0.8);
 }
 
 function stopCamera() {
-if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); videoStream = null; }
-document.getElementById('camera-container').style.display = 'none';
+    if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); videoStream = null; }
+    document.getElementById('camera-container').style.display = 'none';
 }
 
 function resetCameraScreen() {
-stopCamera();
-document.getElementById('photo-preview').style.display = 'none';
-document.getElementById('food-result').style.display = 'none';
-document.getElementById('photo-buttons').style.display = 'block';
-document.getElementById('remove-photo-btn').style.display = 'none';
-document.getElementById('loading-spinner').style.display = 'none';
-document.getElementById('gallery-input').value = "";
-document.getElementById('search-result').innerHTML = '';
-closeModal();
+    stopCamera(); document.getElementById('photo-preview').style.display = 'none';
+    document.getElementById('food-result').style.display = 'none';
+    document.getElementById('photo-buttons').style.display = 'block';
+    document.getElementById('remove-photo-btn').style.display = 'none';
+    document.getElementById('loading-spinner').style.display = 'none';
+    document.getElementById('gallery-input').value = "";
+    document.getElementById('search-result').innerHTML = ''; closeModal();
 }
 
 async function handleImage(event) {
-const file = event.target.files[0];
-if (!file) return;
-document.getElementById('photo-buttons').style.display = 'none';
-document.getElementById('photo-preview').src = URL.createObjectURL(file);
-document.getElementById('photo-preview').style.display = 'block';
-document.getElementById('remove-photo-btn').style.display = 'block';
-await sendPhotoToServer(file);
+    const file = event.target.files[0];
+    if (!file) return;
+    document.getElementById('photo-buttons').style.display = 'none';
+    document.getElementById('photo-preview').src = URL.createObjectURL(file);
+    document.getElementById('photo-preview').style.display = 'block';
+    document.getElementById('remove-photo-btn').style.display = 'block';
+    await sendPhotoToServer(file);
 }
 
 async function sendPhotoToServer(file) {
-document.getElementById('loading-spinner').style.display = 'block';
-document.getElementById('food-result').style.display = 'none';
-const formData = new FormData();
-formData.append('image', file);
-try {
-const response = await fetch(`${AI_SERVER_URL}/analyze`, { method: 'POST', body: formData });
-const data = await response.json();
-document.getElementById('loading-spinner').style.display = 'none';
-if (data.food !== "Не удалось распознать" && data.food !== "Ошибка ИИ") {
-selectedFoodData = { product_name: data.food, calories_100g: data.calories, proteins_100g: data.protein, fat_100g: data.fat, carbs_100g: data.carbs };
-document.getElementById('food-result').style.display = 'block';
-document.getElementById('food-name').innerText = data.food;
-
-// СБРОС ГРАММОВ НА 100
-document.getElementById('photo-grams').value = 100;
-recalcPhotoResult();
-
-} else {
-tg.showAlert(data.description || "ИИ не смог распознать еду.");
-resetCameraScreen();
-}
-} catch (error) {
-document.getElementById('loading-spinner').style.display = 'none';
-tg.showAlert("Сервер не отвечает.");
-resetCameraScreen();
-}
+    document.getElementById('loading-spinner').style.display = 'block';
+    document.getElementById('food-result').style.display = 'none';
+    const formData = new FormData(); formData.append('image', file);
+    try {
+        const response = await fetch(`${AI_SERVER_URL}/analyze`, { method: 'POST', body: formData });
+        const data = await response.json();
+        document.getElementById('loading-spinner').style.display = 'none';
+        if (data.food !== "Не удалось распознать" && data.food !== "Ошибка ИИ") {
+            selectedFoodData = { product_name: data.food, calories_100g: data.calories, proteins_100g: data.protein, fat_100g: data.fat, carbs_100g: data.carbs };
+            document.getElementById('food-result').style.display = 'block';
+            document.getElementById('food-name').innerText = data.food;
+            document.getElementById('photo-grams').value = 100; recalcPhotoResult();
+        } else { tg.showAlert(data.description || "ИИ не смог распознать еду."); resetCameraScreen(); }
+    } catch (error) {
+        document.getElementById('loading-spinner').style.display = 'none';
+        tg.showAlert("Сервер не отвечает."); resetCameraScreen();
+    }
 }
 
-// ПЕРЕСЧЕТ ДЛЯ ФОТО
 function recalcPhotoResult() {
     if (!selectedFoodData) return;
     const grams = Math.abs(parseFloat(document.getElementById('photo-grams').value)) || 100;
     const ratio = grams / 100;
-    
-    document.getElementById('food-calories').innerText = Math.round((selectedFoodData.calories_100g || 0) * ratio) + " ккал";
-    document.getElementById('food-protein').innerText = Math.round((selectedFoodData.proteins_100g || 0) * ratio) + " г";
-    document.getElementById('food-fat').innerText = Math.round((selectedFoodData.fat_100g || 0) * ratio) + " г";
-    document.getElementById('food-carbs').innerText = Math.round((selectedFoodData.carbs_100g || 0) * ratio) + " г";
+    document.getElementById('photo-edit-cal').value = Math.round((selectedFoodData.calories_100g || 0) * ratio);
+    document.getElementById('photo-edit-prot').value = Math.round((selectedFoodData.proteins_100g || 0) * ratio);
+    document.getElementById('photo-edit-fat').value = Math.round((selectedFoodData.fat_100g || 0) * ratio);
+    document.getElementById('photo-edit-carb').value = Math.round((selectedFoodData.carbs_100g || 0) * ratio);
+}
+
+function manualEditPhoto(type) {
+    const grams = Math.abs(parseFloat(document.getElementById('photo-grams').value)) || 100;
+    const ratio = grams / 100;
+    let val = parseFloat(document.getElementById(type === 'cal' ? 'photo-edit-cal' : type === 'prot' ? 'photo-edit-prot' : type === 'fat' ? 'photo-edit-fat' : 'photo-edit-carb').value) || 0;
+    if (type === 'cal') selectedFoodData.calories_100g = val / ratio;
+    if (type === 'prot') selectedFoodData.proteins_100g = val / ratio;
+    if (type === 'fat') selectedFoodData.fat_100g = val / ratio;
+    if (type === 'carb') selectedFoodData.carbs_100g = val / ratio;
 }
 
 async function saveFoodAndGoBack() {
-if (!selectedFoodData) return;
-
-const grams = Math.abs(parseFloat(document.getElementById('photo-grams').value)) || 100;
-const ratio = grams / 100;
-
-let scaledFood = {
-    product_name: `${selectedFoodData.product_name} (${grams}г)`,
-    calories_100g: (parseFloat(selectedFoodData.calories_100g) || 0) * ratio,
-    proteins_100g: (parseFloat(selectedFoodData.proteins_100g) || 0) * ratio,
-    fat_100g: (parseFloat(selectedFoodData.fat_100g) || 0) * ratio,
-    carbs_100g: (parseFloat(selectedFoodData.carbs_100g) || 0) * ratio
-};
-
-let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
-todayFood.push(scaledFood);
-localStorage.setItem('todayFood', JSON.stringify(todayFood));
-try { await saveFoodToCloud(todayFood); } catch(e) { console.log(e); }
-localStorage.setItem('pendingXP', '20');
-window.location.replace('index.html');
+    if (!selectedFoodData) return;
+    const grams = Math.abs(parseFloat(document.getElementById('photo-grams').value)) || 100;
+    let scaledFood = {
+        product_name: `${selectedFoodData.product_name} (${grams}г)`,
+        calories_100g: parseFloat(document.getElementById('photo-edit-cal').value) || 0,
+        proteins_100g: parseFloat(document.getElementById('photo-edit-prot').value) || 0,
+        fat_100g: parseFloat(document.getElementById('photo-edit-fat').value) || 0,
+        carbs_100g: parseFloat(document.getElementById('photo-edit-carb').value) || 0
+    };
+    let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
+    todayFood.push(scaledFood); localStorage.setItem('todayFood', JSON.stringify(todayFood));
+    try { await saveFoodToCloud(todayFood); } catch(e) { console.log(e); }
+    localStorage.setItem('pendingXP', '20'); window.location.replace('index.html');
 }
 </script>
 </body>
