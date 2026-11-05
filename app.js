@@ -227,7 +227,7 @@ const levelsData = {
 };
 
 let currentXP = 0, totalBurnedCalories = 0, userGender = 'male'; let currentProfileData = null;
-let currentLevelIndex = -1; // Для отслеживания повышения уровня
+let currentLevelIndex = -1;
 
 function calculateNutrition(profile) {
     if (profile.custom_calories && profile.custom_calories > 0) {
@@ -599,7 +599,7 @@ function renderProfile(profile) {
         }
     }, 1000);
     
-    // Показ совета Сенсея при входе (раз в 3 часа)
+    // Показ совета Сенсея при входе
     setTimeout(() => {
         const lastAdviceTime = localStorage.getItem('lastSenseiAdviceTime');
         const now = Date.now();
@@ -615,7 +615,6 @@ function updateCharacterUI() {
     for (let i = 0; i < levels.length; i++) { if (currentXP >= levels[i].xp) newLevelIndex = i; }
     const currentLevel = levels[newLevelIndex];
 
-    // Проверка на новый уровень (достижение)
     if (currentLevelIndex !== -1 && newLevelIndex > currentLevelIndex) {
         setTimeout(() => {
             showSenseiAdvice("Поздравляю с новым уровнем, воин! Ты становишься сильнее. Продолжай в том же духе.");
@@ -749,7 +748,7 @@ function stopShakeTest() {
 
 // --- СЕНСЕЙ (ИИ) ---
 const PROXY_API_KEY = 'sk-HQWY8HQ6KEHVAt6mnKNpTa6XgMys9wDv';
-const SENSEI_SYSTEM_PROMPT = "Ты — Сенсей, мудрый наставник из игры Shadow Fight 2. Ты помогаешь воину-ученику с тренировками, питанием и мотивацией. Отвечай кратко, мудро, с уважением, обращайся 'воин' или 'ученик'. Не используй сложные термины. Давай практические советы.";
+const SENSEI_SYSTEM_PROMPT = "Ты — Сенсей, мудрый наставник из игры Shadow Fight 2. Ты помогаешь воину-ученику с тренировками, питанием и мотивацией. Отвечай кратко, мудро, с уважением, обращайся 'воин' или 'ученик'. Не используй сложные термины. Давай практические советы. Если ученик спрашивает про похудение, дай ему четкий план на день.";
 
 let senseiChatHistory = [];
 
@@ -782,7 +781,6 @@ async function sendSenseiMessage() {
     input.value = '';
     addSenseiMessage('user', text);
     
-    // Показываем, что Сенсей печатает
     const chatBox = document.getElementById('sensei-chat-box');
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'sensei-msg bot-msg';
@@ -794,7 +792,7 @@ async function sendSenseiMessage() {
     try {
         const messages = [
             { role: 'system', content: SENSEI_SYSTEM_PROMPT },
-            ...senseiChatHistory.slice(-10) // последние 10 сообщений для контекста
+            ...senseiChatHistory.slice(-10)
         ];
 
         const response = await fetch('https://api.proxyapi.ru/openai/v1/chat/completions', {
@@ -804,50 +802,66 @@ async function sendSenseiMessage() {
                 'Authorization': `Bearer ${PROXY_API_KEY}`
             },
             body: JSON.stringify({
-                model: 'deepseek/deepseek-chat', // Стандартная модель DeepSeek на ProxyAPI
+                model: 'deepseek-chat',
                 messages: messages,
                 temperature: 0.7
             })
         });
 
         const data = await response.json();
-        
-        // Удаляем загрузку
         const loadEl = document.getElementById('sensei-loading');
         if (loadEl) loadEl.remove();
 
         if (data.choices && data.choices.length > 0) {
-            const reply = data.choices[0].message.content;
-            addSenseiMessage('assistant', reply);
+            addSenseiMessage('assistant', data.choices[0].message.content);
         } else {
             console.error('API Error:', data);
-            addSenseiMessage('assistant', 'Прости, воин. Я задумался. Попробуй еще раз.');
+            addSenseiMessage('assistant', 'Прости, воин. Мое соединение с духами прервалось (проверь баланс API). Попробуй позже.');
         }
     } catch (e) {
         console.error('Sensei API error:', e);
         const loadEl = document.getElementById('sensei-loading');
         if (loadEl) loadEl.remove();
-        addSenseiMessage('assistant', 'Прости, воин. Я задумался. Попробуй еще раз.');
+        addSenseiMessage('assistant', 'Прости, воин. Мое соединение с духами прервалось. Попробуй позже.');
     }
 }
 
-// Всплывающее окно с советом
-const senseiFallbackQuotes = [
-    "Путь в тысячу ли начинается с первого шага. Главное — не останавливайся.",
-    "Твое тело — это храм. Не оскверняй его вредной едой.",
-    "Вода — это жизнь. Пей больше, воин.",
-    "Дисциплина — это мост между целями и их достижением.",
-    "Не сравнивай себя с другими. Сравнивай себя с собой вчерашним.",
-    "Истинная сила не в мышцах, а в воле.",
-    "Отдых — это часть тренировки. Не забывай восстанавливаться."
-];
-
+// Всплывающее окно с конкретным заданием
 function showSenseiAdvice(customText = null) {
     const textEl = document.getElementById('sensei-advice-text');
     const modal = document.getElementById('sensei-advice-modal');
     if (!textEl || !modal) return;
     
-    const advice = customText || senseiFallbackQuotes[Math.floor(Math.random() * senseiFallbackQuotes.length)];
+    let advice = customText;
+    
+    // Если текст не передан, генерируем задание на основе данных воина
+    if (!advice) {
+        let todayWater = JSON.parse(localStorage.getItem('todayWater') || '[]');
+        let eatenWater = 0; todayWater.forEach(w => eatenWater += parseInt(w.amount || 0));
+        
+        let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
+        let eatenCal = 0; todayFood.forEach(f => eatenCal += parseFloat(f.calories_100g || 0));
+        
+        const tasks = [];
+        if (eatenWater < 500) tasks.push("Воин, ты выпил мало воды. Выпей стакан воды прямо сейчас.");
+        if (todayFood.length === 0) tasks.push("Ты еще ничего не записал в дневник еды. Запиши свой завтрак.");
+        if (eatenCal > 2500) tasks.push("Ты превысил норму калорий. Сделай 20 приседаний, чтобы разогнать кровь.");
+        
+        if (tasks.length > 0) {
+            advice = tasks[Math.floor(Math.random() * tasks.length)];
+        } else {
+            // Если всё в порядке, даем задание на тренировку
+            const generalTasks = [
+                "Сделай 15 отжиманий прямо сейчас. Это укрепит твой дух.",
+                "Выпей 200 мл воды. Вода — источник силы.",
+                "Запиши свой текущий вес в дневник, чтобы видеть прогресс.",
+                "Сделай растяжку на 5 минут. Тело должно быть гибким.",
+                "Съешь порцию белка (яйца, курица) для роста мышц."
+            ];
+            advice = generalTasks[Math.floor(Math.random() * generalTasks.length)];
+        }
+    }
+
     textEl.innerText = `"${advice}"`;
     modal.classList.add('active');
 }
@@ -855,4 +869,9 @@ function showSenseiAdvice(customText = null) {
 function closeSenseiAdvice() {
     const modal = document.getElementById('sensei-advice-modal');
     if (modal) modal.classList.remove('active');
+}
+
+function openChatFromAdvice() {
+    closeSenseiAdvice();
+    openSenseiChat();
 }
