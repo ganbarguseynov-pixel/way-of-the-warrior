@@ -9,6 +9,7 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="style.css">
 <style>
+/* Стили для истории */
 .history-card { background: #1c1c1e; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #2c2c2e; }
 .history-date { color: var(--accent-color); font-weight: bold; font-size: 15px; margin-bottom: 5px; }
 .history-stats { color: #8e8e93; font-size: 12px; margin-bottom: 10px; }
@@ -232,12 +233,20 @@
 </div>
 </div>
 
+<!-- ОБНОВЛЕННОЕ МОДАЛЬНОЕ ОКНО ВЕСА -->
 <div id="weight-modal" class="custom-modal">
 <div class="custom-modal-content">
 <button class="custom-modal-close" onclick="closeWeightHistory()">✖</button>
 <h3 style="margin-top: 0; text-align: center; font-size: 16px; color: var(--accent-color);">⚖️ Дневник веса</h3>
+
+<!-- Блок для быстрого изменения веса -->
+<div style="display: flex; gap: 8px; margin-bottom: 15px;">
+    <input type="number" id="modal-weight-input" step="0.1" style="flex: 1; padding: 10px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 16px; text-align: center; outline: none;">
+    <button class="btn" style="width: auto; margin: 0; padding: 10px 15px; background-color: #34c759; color: white; font-size: 14px;" onclick="saveWeightFromModal()">Сохранить</button>
+</div>
+
 <div id="weight-diff" style="text-align: center; font-size: 14px; margin-bottom: 15px; color: #8e8e93;"></div>
-<div id="weight-list" style="max-height: 40vh; overflow-y: auto;"></div>
+<div id="weight-list" style="max-height: 30vh; overflow-y: auto;"></div>
 </div>
 </div>
 
