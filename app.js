@@ -273,7 +273,6 @@ async function saveOnboardingData() {
         return;
     } 
 
-    // АВТОМАТИЧЕСКИЙ РАСЧЕТ НОРМЫ ВОДЫ (30 мл на 1 кг веса)
     const calculatedWater = weight ? Math.round(parseFloat(weight) * 30) : 2000;
 
     const profile = { age, gender, weight, height, goal, custom_calories: '', custom_protein: '', custom_fat: '', custom_carbs: '', custom_water_goal: calculatedWater };
@@ -417,7 +416,22 @@ function checkDayReset() {
     }
 } 
 
-// --- ВОДА ---
+function updateDailyQuote() {
+    const container = document.getElementById('daily-quote-container');
+    const textEl = document.getElementById('daily-quote-text');
+    const authorEl = document.getElementById('daily-quote-author');
+    
+    if (!container || !textEl || !authorEl) return;
+    
+    // Проверяем, что файл quotes.js загрузился
+    if (typeof allQuotes !== 'undefined' && allQuotes.length > 0) {
+        const randomQuote = allQuotes[Math.floor(Math.random() * allQuotes.length)];
+        textEl.innerText = `«${randomQuote.text}»`;
+        authorEl.innerText = `— ${randomQuote.author}`;
+        container.style.display = 'block';
+    }
+}
+
 function updateCustomWaterBtn() {
     const btn = document.getElementById('custom-water-quick-btn');
     if (!btn) return;
@@ -484,7 +498,6 @@ function addCustomWater() {
     }
 }
 
-// --- ИСТОРИЯ ---
 function archiveFoodToHistory(foodArray, dateString) {
     if (!foodArray || foodArray.length === 0 || !dateString) return;
     let history = {};
@@ -766,6 +779,10 @@ function renderProfile(profile) {
     if (document.getElementById('burned-total')) document.getElementById('burned-total').innerText = totalBurnedCalories + " ккал";
     updateDashboard();
     updateCharacterUI();
+    
+    // ОБНОВЛЯЕМ ЦИТАТУ ПРИ КАЖДОМ ВХОДЕ
+    updateDailyQuote();
+
     openScreen('dashboard-screen');
     setTimeout(() => {
         const videoElement = document.getElementById('character-video');
