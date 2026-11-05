@@ -25,6 +25,8 @@
 .macro-box { background: #2c2c2e; padding: 15px; border-radius: 12px; display: inline-block; width: 100%; max-width: 300px; margin: 0 auto; }
 .macro-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 16px; padding: 0 10px; }
 .macro-row:last-child { margin-bottom: 0; }
+/* Стиль для поля ввода грамм */
+.grams-input { width: 100px; padding: 8px; border-radius: 8px; background: #1c1c1e; color: white; border: 1px solid #3a3a3c; text-align: center; font-size: 20px; font-weight: bold; outline: none; }
 </style>
 </head>
 <body>
@@ -63,6 +65,13 @@
 <div class="macro-row"><span>Белки:</span> <b id="food-protein">0 г</b></div>
 <div class="macro-row"><span>Жиры:</span> <b id="food-fat">0 г</b></div>
 <div class="macro-row"><span>Углеводы:</span> <b id="food-carbs">0 г</b></div>
+
+<!-- ПОЛЕ ВВОДА ГРАММ ДЛЯ ФОТО -->
+<div style="margin-top: 15px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+    <label style="color: #8e8e93; font-size: 13px; margin-bottom: 5px; display: block;">Сколько грамм вы съели?</label>
+    <input type="number" id="photo-grams" class="grams-input" value="100" oninput="recalcPhotoResult()">
+</div>
+
 </div>
 <button class="btn" style="background-color: #34c759; color: white; margin-top: 20px;" onclick="saveFoodAndGoBack()">Добавить (+20 XP)</button>
 <button class="btn" style="background-color: transparent; color: #ff3b30; margin-top: 10px;" onclick="resetCameraScreen()">Отмена</button>
@@ -101,6 +110,13 @@
 <div class="nutrition-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Белки:</span> <b id="modal-protein">0 г</b></div>
 <div class="nutrition-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>Жиры:</span> <b id="modal-fat">0 г</b></div>
 <div class="nutrition-row" style="display: flex; justify-content: space-between;"><span>Углеводы:</span> <b id="modal-carbs">0 г</b></div>
+
+<!-- ПОЛЕ ВВОДА ГРАММ ДЛЯ ПОИСКА/ШТРИХКОДА -->
+<div style="margin-top: 15px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+    <label style="color: #8e8e93; font-size: 13px; margin-bottom: 5px; display: block;">Сколько грамм вы съели?</label>
+    <input type="number" id="modal-grams" class="grams-input" value="100" oninput="recalcModal()">
+</div>
+
 </div>
 <button class="btn" style="background-color: #34c759; color: white;" onclick="confirmFoodSelection()">✅ Выбрать это</button>
 </div>
@@ -114,7 +130,6 @@ const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 let selectedFoodData = null; window.foodList = [];
 
-// Внедряем точную копию resolveUserRecord из app.js
 async function resolveUserRecord(tgId, email) {
     if (!tgId && !email) return null; 
 
@@ -210,7 +225,6 @@ async function resolveUserRecord(tgId, email) {
     return { ...mainRecord, ...updateData };
 }
 
-// Используем resolveUserRecord для сохранения еды
 async function saveFoodToCloud(foodArray) {
     const tgId = localStorage.getItem('tgId');
     const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
@@ -338,34 +352,54 @@ function openFoodModal(index) {
 const food = window.foodList[index];
 selectedFoodData = food;
 document.getElementById('modal-name').innerText = food.product_name;
-document.getElementById('modal-calories').innerText = (food.calories_100g || 0) + " ккал";
-document.getElementById('modal-protein').innerText = (food.proteins_100g || 0) + " г";
-document.getElementById('modal-fat').innerText = (food.fat_100g || 0) + " г";
-document.getElementById('modal-carbs').innerText = (food.carbs_100g || 0) + " г";
 const imgElement = document.getElementById('modal-image');
 if (food.image_url) { imgElement.src = food.image_url; imgElement.style.display = 'block'; } else { imgElement.style.display = 'none'; }
+
+// СБРОС ГРАММОВ НА 100 ПРИ ОТКРЫТИИ
+document.getElementById('modal-grams').value = 100;
+recalcModal();
+
 document.getElementById('food-modal').classList.add('active');
 }
 function closeModal() { document.getElementById('food-modal').classList.remove('active'); }
 
+// ПЕРЕСЧЕТ В МОДАЛЬНОМ ОКНЕ
+function recalcModal() {
+    if (!selectedFoodData) return;
+    const grams = Math.abs(parseFloat(document.getElementById('modal-grams').value)) || 100;
+    const ratio = grams / 100;
+    
+    document.getElementById('modal-calories').innerText = Math.round((selectedFoodData.calories_100g || 0) * ratio) + " ккал";
+    document.getElementById('modal-protein').innerText = Math.round((selectedFoodData.proteins_100g || 0) * ratio) + " г";
+    document.getElementById('modal-fat').innerText = Math.round((selectedFoodData.fat_100g || 0) * ratio) + " г";
+    document.getElementById('modal-carbs').innerText = Math.round((selectedFoodData.carbs_100g || 0) * ratio) + " г";
+}
+
 async function confirmFoodSelection() {
 if (!selectedFoodData) return;
+
+// СЧИТЫВАЕМ ГРАММЫ И СЧИТАЕМ КОЭФФИЦИЕНТ
+const grams = Math.abs(parseFloat(document.getElementById('modal-grams').value)) || 100;
+const ratio = grams / 100;
+
+// СОЗДАЕМ НОВЫЙ ОБЪЕКТ С ПЕРЕСЧИТАННЫМИ ЗНАЧЕНИЯМИ
+let scaledFood = {
+    product_name: `${selectedFoodData.product_name} (${grams}г)`,
+    calories_100g: (parseFloat(selectedFoodData.calories_100g) || 0) * ratio,
+    proteins_100g: (parseFloat(selectedFoodData.proteins_100g) || 0) * ratio,
+    fat_100g: (parseFloat(selectedFoodData.fat_100g) || 0) * ratio,
+    carbs_100g: (parseFloat(selectedFoodData.carbs_100g) || 0) * ratio
+};
+
 let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
-todayFood.push(selectedFoodData);
+todayFood.push(scaledFood);
 localStorage.setItem('todayFood', JSON.stringify(todayFood));
 
 try { await saveFoodToCloud(todayFood); } catch(e) { console.log(e); }
 
-document.getElementById('food-result').style.display = 'block';
-document.getElementById('food-name').innerText = selectedFoodData.product_name;
-document.getElementById('food-calories').innerText = (selectedFoodData.calories_100g || 0) + " ккал/100г";
-document.getElementById('food-protein').innerText = (selectedFoodData.proteins_100g || 0) + " г";
-document.getElementById('food-fat').innerText = (selectedFoodData.fat_100g || 0) + " г";
-document.getElementById('food-carbs').innerText = (selectedFoodData.carbs_100g || 0) + " г";
-
 closeModal();
 document.getElementById('search-result').innerHTML = '';
-tg.showAlert("Добавлено в дневник питания!");
+tg.showAlert(`Добавлено: ${scaledFood.product_name}`);
 }
 
 let videoStream = null; let currentFacingMode = "environment";
@@ -442,10 +476,11 @@ if (data.food !== "Не удалось распознать" && data.food !== "�
 selectedFoodData = { product_name: data.food, calories_100g: data.calories, proteins_100g: data.protein, fat_100g: data.fat, carbs_100g: data.carbs };
 document.getElementById('food-result').style.display = 'block';
 document.getElementById('food-name').innerText = data.food;
-document.getElementById('food-calories').innerText = data.calories + " ккал";
-document.getElementById('food-protein').innerText = data.protein + " г";
-document.getElementById('food-fat').innerText = data.fat + " г";
-document.getElementById('food-carbs').innerText = data.carbs + " г";
+
+// СБРОС ГРАММОВ НА 100
+document.getElementById('photo-grams').value = 100;
+recalcPhotoResult();
+
 } else {
 tg.showAlert(data.description || "ИИ не смог распознать еду.");
 resetCameraScreen();
@@ -457,10 +492,34 @@ resetCameraScreen();
 }
 }
 
+// ПЕРЕСЧЕТ ДЛЯ ФОТО
+function recalcPhotoResult() {
+    if (!selectedFoodData) return;
+    const grams = Math.abs(parseFloat(document.getElementById('photo-grams').value)) || 100;
+    const ratio = grams / 100;
+    
+    document.getElementById('food-calories').innerText = Math.round((selectedFoodData.calories_100g || 0) * ratio) + " ккал";
+    document.getElementById('food-protein').innerText = Math.round((selectedFoodData.proteins_100g || 0) * ratio) + " г";
+    document.getElementById('food-fat').innerText = Math.round((selectedFoodData.fat_100g || 0) * ratio) + " г";
+    document.getElementById('food-carbs').innerText = Math.round((selectedFoodData.carbs_100g || 0) * ratio) + " г";
+}
+
 async function saveFoodAndGoBack() {
 if (!selectedFoodData) return;
+
+const grams = Math.abs(parseFloat(document.getElementById('photo-grams').value)) || 100;
+const ratio = grams / 100;
+
+let scaledFood = {
+    product_name: `${selectedFoodData.product_name} (${grams}г)`,
+    calories_100g: (parseFloat(selectedFoodData.calories_100g) || 0) * ratio,
+    proteins_100g: (parseFloat(selectedFoodData.proteins_100g) || 0) * ratio,
+    fat_100g: (parseFloat(selectedFoodData.fat_100g) || 0) * ratio,
+    carbs_100g: (parseFloat(selectedFoodData.carbs_100g) || 0) * ratio
+};
+
 let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
-todayFood.push(selectedFoodData);
+todayFood.push(scaledFood);
 localStorage.setItem('todayFood', JSON.stringify(todayFood));
 try { await saveFoodToCloud(todayFood); } catch(e) { console.log(e); }
 localStorage.setItem('pendingXP', '20');
