@@ -86,7 +86,7 @@ async function loginWithTelegram() {
             if (data.name) localStorage.setItem('userName', data.name);
             if (data.food) localStorage.setItem('todayFood', JSON.stringify(data.food));
         } else {
-            const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose', custom_water_goal: 2000 };
+            const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose', custom_water_goal: 2000, food_preference: '' };
             localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
             localStorage.setItem('cachedXP', 0); localStorage.setItem('cachedBurned', 0);
             await saveProgressToCloud(tgId, null, tgName, defaultProfile, 0, 0);
@@ -130,7 +130,7 @@ async function handleEmailAuth() {
             if (linkData.name) localStorage.setItem('userName', linkData.name);
             if (linkData.food) localStorage.setItem('todayFood', JSON.stringify(linkData.food));
         } else {
-            const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose', custom_water_goal: 2000 };
+            const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose', custom_water_goal: 2000, food_preference: '' };
             localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
             localStorage.setItem('cachedXP', 0); localStorage.setItem('cachedBurned', 0);
             await saveProgressToCloud(null, email, emailName, defaultProfile, 0, 0);
@@ -149,9 +149,10 @@ async function saveOnboardingData() {
     const height = document.getElementById('onboarding-height').value;
     const gender = document.getElementById('onboarding-gender').value;
     const goal = document.getElementById('onboarding-goal').value;
+    const food_preference = document.getElementById('onboarding-food-preference').value;
     if (!age || !weight || !height) { tg.showAlert("Пожалуйста, заполни возраст, вес и рост!"); return; }
     const calculatedWater = weight ? Math.round(parseFloat(weight) * 30) : 2000;
-    const profile = { age, gender, weight, height, goal, custom_calories: '', custom_protein: '', custom_fat: '', custom_carbs: '', custom_water_goal: calculatedWater };
+    const profile = { age, gender, weight, height, goal, custom_calories: '', custom_protein: '', custom_fat: '', custom_carbs: '', custom_water_goal: calculatedWater, food_preference };
     localStorage.setItem('cachedProfile', JSON.stringify(profile));
     const tgId = localStorage.getItem('tgId'); const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
     const name = localStorage.getItem('userName') || "Атлет";
@@ -659,6 +660,7 @@ function openProfileSettings() {
             if(document.getElementById('goal')) document.getElementById('goal').value = p.goal || 'lose'; if(document.getElementById('custom-calories')) document.getElementById('custom-calories').value = p.custom_calories || '';
             if(document.getElementById('custom-protein')) document.getElementById('custom-protein').value = p.custom_protein || ''; if(document.getElementById('custom-fat')) document.getElementById('custom-fat').value = p.custom_fat || '';
             if(document.getElementById('custom-carbs')) document.getElementById('custom-carbs').value = p.custom_carbs || ''; if(document.getElementById('custom-water-goal')) document.getElementById('custom-water-goal').value = p.custom_water_goal || '';
+            if(document.getElementById('food-preference')) document.getElementById('food-preference').value = p.food_preference || '';
         }
         openScreen('profile-settings-screen');
     } catch (e) { tg.showAlert("Не удалось открыть настройки."); }
@@ -712,10 +714,11 @@ async function saveProfile() {
     const custom_calories = document.getElementById('custom-calories').value; const custom_protein = document.getElementById('custom-protein').value;
     const custom_fat = document.getElementById('custom-fat').value; const custom_carbs = document.getElementById('custom-carbs').value;
     const custom_water_goal = document.getElementById('custom-water-goal').value;
+    const food_preference = document.getElementById('food-preference').value;
     if (!age || !weight || !height) { tg.showAlert("Заполни все поля!"); return; }
     const oldWeight = currentProfileData ? parseFloat(currentProfileData.weight) : null; const newWeight = parseFloat(weight);
     if (oldWeight && oldWeight !== newWeight) saveWeightToHistory(newWeight);
-    const profile = { age, gender, weight, height, goal, custom_calories, custom_protein, custom_fat, custom_carbs, custom_water_goal: parseInt(custom_water_goal) || 2000 };
+    const profile = { age, gender, weight, height, goal, custom_calories, custom_protein, custom_fat, custom_carbs, custom_water_goal: parseInt(custom_water_goal) || 2000, food_preference };
     localStorage.setItem('cachedProfile', JSON.stringify(profile));
     await saveProgressToCloud(localStorage.getItem('tgId'), localStorage.getItem('currentEmail'), localStorage.getItem('userName'), profile, currentXP, totalBurnedCalories);
     renderProfile(profile); tg.showAlert("Данные сохранены!");
@@ -756,10 +759,11 @@ try {
 }
 
 function getSenseiContext() {
-    let p = currentProfileData || { weight: 70, height: 175, goal: 'lose', age: 25, gender: 'male' };
+    let p = currentProfileData || { weight: 70, height: 175, goal: 'lose', age: 25, gender: 'male', food_preference: '' };
     let norm = calculateNutrition(p);
     let goalText = p.goal === 'lose' ? 'Похудеть' : 'Набрать массу';
     let waterGoal = p.custom_water_goal || 2000;
+    let prefText = p.food_preference ? p.food_preference : 'Нет особых предпочтений';
     
     let todayWater = []; try { todayWater = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e){}
     let eatenWater = 0; todayWater.forEach(w => eatenWater += parseInt(w.amount || 0));
@@ -772,8 +776,14 @@ function getSenseiContext() {
         eatenFat += parseFloat(f.fat_100g || 0);
         eatenCarb += parseFloat(f.carbs_100g || 0);
     });
+
+    const now = new Date();
+    const hour = now.getHours();
+    let timeOfDay = hour < 12 ? "Утро (завтрак)" : hour < 18 ? "День (обед)" : "Вечер (ужин)";
     
     return `Ученик: Пол: ${p.gender === 'male' ? 'Мужской' : 'Женский'}, Возраст: ${p.age}, Вес: ${p.weight}кг, Рост: ${p.height}см. Цель: ${goalText}.
+Время суток: ${timeOfDay}.
+Предпочтения в еде: ${prefText}.
 Норма на день: ${norm.calories} ккал, Белки: ${norm.protein}г, Жиры: ${norm.fat}г, Углеводы: ${norm.carbs}г. Вода: ${waterGoal} мл.
 Уже съедено за сегодня: ${Math.round(eatenCal)} ккал, Белки: ${Math.round(eatenProt)}г, Жиры: ${Math.round(eatenFat)}г, Углеводы: ${Math.round(eatenCarb)}г. Вода: ${eatenWater} мл.`;
 }
@@ -781,12 +791,11 @@ function getSenseiContext() {
 function openSenseiChat() {
     document.getElementById('sensei-chat-modal').classList.add('active');
     const chatBox = document.getElementById('sensei-chat-box');
-    chatBox.innerHTML = ''; // Очищаем текущий вид
+    chatBox.innerHTML = ''; 
     
     if (senseiChatHistory.length === 0) {
         addSenseiMessage('assistant', 'Приветствую, воин! Я твой Сенсей. Вижу, ты ведешь дневник. Чем могу помочь? Спрашивай про тренировки, питание или мотивацию.');
     } else {
-        // Отрисовываем сохраненную историю
         senseiChatHistory.forEach(msg => {
             const msgDiv = document.createElement('div');
             msgDiv.className = msg.role === 'user' ? 'sensei-msg user-msg' : 'sensei-msg bot-msg';
@@ -805,7 +814,6 @@ function addSenseiMessage(role, text) {
     const chatBox = document.getElementById('sensei-chat-box');
     if (!chatBox) return;
 
-    // Проверка на дубликат (чтобы не было спама одинаковыми сообщениями)
     if (senseiChatHistory.length > 0) {
         const lastMsg = senseiChatHistory[senseiChatHistory.length - 1];
         if (lastMsg.role === role && lastMsg.content === text) {
@@ -820,13 +828,10 @@ function addSenseiMessage(role, text) {
     chatBox.scrollTop = chatBox.scrollHeight;
     
     senseiChatHistory.push({ role: role, content: text });
-    
-    // Ограничиваем память (храним последние 100 сообщений, чтобы не забить телефон)
     if (senseiChatHistory.length > 100) {
         senseiChatHistory = senseiChatHistory.slice(senseiChatHistory.length - 100);
     }
     
-    // СОХРАНЯЕМ В ПАМЯТЬ
     localStorage.setItem('senseiChatHistory', JSON.stringify(senseiChatHistory));
 }
 
@@ -847,18 +852,16 @@ async function sendSenseiMessage() {
 
     try {
         const context = getSenseiContext();
-        const systemPrompt = `Ты — Сенсей, суровый и мудрый наставник из игры Shadow Fight 2. Ты тренируешь воина и следишь за его питанием.
-Твоя задача: адаптировать план под его текущий прогресс, строго указывать на ошибки (недобор/перебор калорий, мало воды), и давать четкие инструкции по питанию и тренировкам.
+        const systemPrompt = `Ты — Сенсей, суровый и мудрый наставник. Ты тренируешь воина.
 ДАННЫЕ УЧЕНИКА:
 ${context}
 
-ПРАВИЛА ОТВЕТА:
-1. Пиши кратко, как военачальник.
-2. Если он косячит (мало воды, перебор еды), укажи на это.
-3. Если он спрашивает план или что делать, составь ему КОНКРЕТНЫЙ план питания (продукты и граммы) и тренировок (упражнения, подходы).
-4. Не пиши длинные философские речи. Только факты и действия.`;
+ПРАВИЛА:
+1. Пиши кратко, прямо, как военачальник. Без воды.
+2. Если он косячит, укажи.
+3. Если спрашивает план, предложи РАЗНООБРАЗНОЕ питание. Не предлагай курицу и гречку каждый раз. Используй рыбу, индейку, тофу, яйца, сложные углеводы (рис, киноа, овсянка). Учитывай его предпочтения.
+4. Учитывай время суток (если вечер, не советуй тяжелый завтрак).`;
 
-        // Берем последние 10 сообщений для контекста
         const messages = [
             { role: 'system', content: systemPrompt },
             ...senseiChatHistory.slice(-10)
@@ -873,7 +876,7 @@ ${context}
             body: JSON.stringify({
                 model: 'deepseek/deepseek-v4-flash',
                 messages: messages,
-                temperature: 0.6
+                temperature: 0.7 // Чуть выше температура для креативности в планах питания
             })
         });
 
@@ -884,21 +887,19 @@ ${context}
         if (data.choices && data.choices.length > 0) {
             addSenseiMessage('assistant', data.choices[0].message.content);
         } else {
-            console.error('API Error:', data);
-            let errorMsg = "Неизвестная ошибка.";
+            let errorMsg = "Ошибка API.";
             if (data.error && data.error.message) errorMsg = data.error.message;
             addSenseiMessage('assistant', `Прости, воин. Мое соединение с духами прервалось. Причина: ${errorMsg}`);
         }
     } catch (e) {
-        console.error('Sensei API error:', e);
         const loadEl = document.getElementById('sensei-loading');
         if (loadEl) loadEl.remove();
         addSenseiMessage('assistant', 'Прости, воин. Ошибка сети. Попробуй позже.');
     }
 }
 
-// Всплывающее окно с конкретным заданием (Логика Тренера)
-function showSenseiAdvice(customText = null) {
+// Всплывающее окно (Динамический запрос к ИИ)
+async function showSenseiAdvice(customText = null) {
     const textEl = document.getElementById('sensei-advice-text');
     const modal = document.getElementById('sensei-advice-modal');
     if (!textEl || !modal) return;
@@ -906,50 +907,56 @@ function showSenseiAdvice(customText = null) {
     let advice = customText;
     
     if (!advice) {
-        let p = currentProfileData || { weight: 70, height: 175, goal: 'lose', age: 25, gender: 'male' };
-        let norm = calculateNutrition(p);
-        let goalText = p.goal === 'lose' ? 'похудения' : 'набора массы';
-        let waterGoal = p.custom_water_goal || 2000;
-        
-        let todayWater = []; try { todayWater = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e){}
-        let eatenWater = 0; todayWater.forEach(w => eatenWater += parseInt(w.amount || 0));
-        
-        let todayFood = []; try { todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]'); } catch(e){}
-        let eatenCal = 0, eatenProt = 0, eatenFat = 0, eatenCarb = 0;
-        todayFood.forEach(f => {
-            eatenCal += parseFloat(f.calories_100g || 0);
-            eatenProt += parseFloat(f.proteins_100g || 0);
-            eatenFat += parseFloat(f.fat_100g || 0);
-            eatenCarb += parseFloat(f.carbs_100g || 0);
-        });
+        // Показываем загрузку, пока ИИ думает
+        textEl.innerText = "Сенсей анализирует твой день и составляет уникальный план...";
+        modal.setAttribute('data-advice-text', 'Загрузка плана...');
+        modal.classList.add('active');
 
-        let leftCal = norm.calories - eatenCal;
-        let leftProt = norm.protein - eatenProt;
-        let leftFat = norm.fat - eatenFat;
-        let leftCarb = norm.carbs - eatenCarb;
+        try {
+            const context = getSenseiContext();
+            const systemPrompt = `Ты — Сенсей. Составь УНИКАЛЬНЫЙ план на остаток дня для ученика.
+ДАННЫЕ УЧЕНИКА:
+${context}
 
-        let issues = [];
-        if (eatenWater < waterGoal / 2) issues.push(`Выпито мало воды (${eatenWater}/${waterGoal} мл). Пей больше!`);
-        if (leftCal < 0) issues.push(`Перебор калорий на ${Math.abs(Math.round(leftCal))} ккал. Нужно кардио.`);
-        if (p.goal === 'lose' && leftCal > 1000) issues.push(`Ты почти не ел. Это замедлит метаболизм.`);
-        
-        let dietPlan = "";
-        if (leftCal > 0) {
-            dietPlan = `Осталось съесть: ${Math.round(leftCal)} ккал, Белки: ${Math.round(leftProt)}г, Жиры: ${Math.round(leftFat)}г, Углеводы: ${Math.round(leftCarb)}г. Съешь, например, куриную грудку (200г) и гречку (100г).`;
-        } else {
-            dietPlan = `Норма закрыта. Больше не ешь сегодня. Пей только воду.`;
+ТВОЯ ЗАДАЧА:
+1. Оцени, сколько калорий и БЖУ осталось съесть до нормы.
+2. Предложи КОНКРЕТНЫЙ прием пищи (продукты и граммы). ОБЯЗАТЕЛЬНО учитывай предпочтения в еде. НЕ ПРЕДЛАГАЙ курицу и гречку, придумай что-то другое (рыба, индейка, овощи, творог и т.д.).
+3. Предложи тренировку (если цель похудеть — кардио/круговая, если набрать — силовая).
+4. Если ученик уже перебрал калорий, скажи об этом и предложи сжечь их.
+Выдай ответ строго по шаблону:
+🛑 ОШИБКИ: (если есть)
+🍗 ПИТАНИЕ: (что съесть)
+💪 ТРЕНИРОВКА: (что делать)`;
+
+            const response = await fetch('https://api.proxyapi.ru/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${PROXY_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: 'deepseek/deepseek-v4-flash',
+                    messages: [{ role: 'system', content: systemPrompt }],
+                    temperature: 0.8 // Максимальная вариативность
+                })
+            });
+
+            const data = await response.json();
+            if (data.choices && data.choices.length > 0) {
+                advice = data.choices[0].message.content;
+            } else {
+                throw new Error("API Error");
+            }
+        } catch (e) {
+            console.error(e);
+            // Если API упал, даем резервный план (чтобы окно не было пустым)
+            advice = `🛑 ОШИБКИ:\nСвязь с духами потеряна (нет баланса API).\n\n🍗 ПИТАНИЕ:\nСъешь порцию рыбы (200г) и овощной салат.\n\n💪 ТРЕНИРОВКА:\n30 минут быстрой ходьбы.`;
         }
-
-        let workoutPlan = p.goal === 'lose' 
-            ? `Жиросжигание: 3 круга по (20 приседаний, 15 отжиманий, 30 сек планки).` 
-            : `Силовая: 4 подхода по 10 подтягиваний/тяги, и 3 подхода по 15 приседаний с весом.`;
-
-        advice = `Твой план на сегодня, воин:\n\n🛑 ОШИБКИ:\n${issues.length > 0 ? issues.join(' ') : 'Пока все по плану.'}\n\n🍗 ПИТАНИЕ:\n${dietPlan}\n\n💪 ТРЕНИРОВКА:\n${workoutPlan}`;
     }
 
     modal.setAttribute('data-advice-text', advice);
     textEl.innerText = advice;
-    modal.classList.add('active');
+    // Окно уже открыто (active), просто обновился текст
 }
 
 function closeSenseiAdvice() {
@@ -964,10 +971,8 @@ function openChatFromAdvice() {
     closeSenseiAdvice();
     openSenseiChat();
     
-    if (adviceText) {
-        // Добавляем совет в чат от лица Сенсея
+    if (adviceText && adviceText !== 'Загрузка плана...') {
         addSenseiMessage('assistant', adviceText);
-        // Фокусируемся на вводе, чтобы ученик мог сразу ответить
         setTimeout(() => {
             document.getElementById('sensei-input').focus();
         }, 300);
