@@ -5,7 +5,10 @@ const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand(); 
 
 // Переменные для графиков
-let chartWater = null, chartFoodCal = null, chartFoodMacro = null, chartWeight = null;
+let chartWaterDiary = null;
+let chartFoodCalDiary = null;
+let chartFoodMacroDiary = null;
+let chartWeightDiary = null;
 let chartGlobalWeight = null, chartGlobalCal = null, chartGlobalMacro = null, chartGlobalWater = null;
 
 function openScreen(screenId) {
@@ -251,53 +254,31 @@ function saveWeightToHistory(weight) {
     if (history.length > 50) history.pop();
     localStorage.setItem('weightHistory', JSON.stringify(history));
 }
-function openWeightModal() { 
+
+function openWeightDiary() {
     if (currentProfileData && document.getElementById('modal-weight-input')) document.getElementById('modal-weight-input').value = currentProfileData.weight || '';
-    const now = new Date(); const past = new Date(); past.setDate(now.getDate() - 7);
-    document.getElementById('weight-start-date').value = past.toISOString().split('T')[0];
-    document.getElementById('weight-end-date').value = now.toISOString().split('T')[0];
-    renderWeightHistory(); 
-    document.getElementById('weight-modal').classList.add('active'); 
-    setTimeout(() => { renderWeightChart(); }, 100);
+    setPeriod('weight', '7days');
+    openScreen('weight-diary-screen');
 }
-function closeWeightModal() { 
-    document.getElementById('weight-modal').classList.remove('active'); 
-    if (chartWeight) { chartWeight.destroy(); chartWeight = null; }
-}
-async function saveWeightFromModal() {
+
+async function saveWeightFromDiary() {
     const newWeight = parseFloat(document.getElementById('modal-weight-input').value);
     if (!newWeight || newWeight <= 0) { tg.showAlert("Введите корректный вес!"); return; }
     if (currentProfileData) {
         currentProfileData.weight = newWeight; localStorage.setItem('cachedProfile', JSON.stringify(currentProfileData));
         saveWeightToHistory(newWeight);
         await saveProgressToCloud(localStorage.getItem('tgId'), localStorage.getItem('currentEmail'), localStorage.getItem('userName'), currentProfileData, currentXP, totalBurnedCalories);
-        updateDashboard(); renderWeightHistory(); renderWeightChart(); tg.showAlert("Вес обновлен!");
+        updateDashboard(); renderWeightDiary(); tg.showAlert("Вес обновлен!");
     }
 }
-function renderWeightHistory() {
-    const listDiv = document.getElementById('weight-list'); const diffDiv = document.getElementById('weight-diff');
-    let history = []; try { history = JSON.parse(localStorage.getItem('weightHistory') || '[]'); } catch(e) { history = []; }
-    if (history.length === 0) { listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93;">Нет записей.</p>'; diffDiv.innerText = ""; return; }
-    const currentW = history[0].weight; const oldestW = history[history.length - 1].weight; const diff = (currentW - oldestW).toFixed(1);
-    if (diff > 0) diffDiv.innerHTML = `Набрано: <span style="color: #ff3b30; font-weight: bold;">+${diff} кг</span>`;
-    else if (diff < 0) diffDiv.innerHTML = `Сброшено: <span style="color: #34c759; font-weight: bold;">${diff} кг</span>`;
-    else diffDiv.innerHTML = "Вес не изменился";
-    let html = '';
-    history.forEach((h, index) => {
-        const isLast = index === 0;
-        html += `<div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); ${isLast ? 'font-weight: bold;' : ''}">
-            <span style="color: ${isLast ? 'var(--accent-color)' : '#fff'};">${h.dateDisplay || h.date}</span>
-            <span>${h.weight} кг</span>
-        </div>`;
-    });
-    listDiv.innerHTML = html;
-}
-function renderWeightChart() {
-    if (typeof Chart === 'undefined') return;
+
+function renderWeightDiary() {
     const start = document.getElementById('weight-start-date').value;
     const end = document.getElementById('weight-end-date').value;
     if (!start || !end) return;
+
     let history = []; try { history = JSON.parse(localStorage.getItem('weightHistory') || '[]'); } catch(e) { history = []; }
+    
     const labels = []; const data = [];
     for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
@@ -305,12 +286,34 @@ function renderWeightChart() {
         const rec = history.find(h => h.dateRaw === dateStr || (h.date && h.date.split('.').reverse().join('-') === dateStr));
         if (rec) data.push(rec.weight); else { const last = data.filter(v=>v!==null).pop(); data.push(last || null); }
     }
-    if (chartWeight) chartWeight.destroy();
-    chartWeight = new Chart(document.getElementById('weight-chart-canvas').getContext('2d'), {
+
+    if (chartWeightDiary) chartWeightDiary.destroy();
+    chartWeightDiary = new Chart(document.getElementById('weight-diary-chart').getContext('2d'), {
         type: 'line',
         data: { labels: labels, datasets: [{ label: 'Вес', data: data, borderColor: '#ffcc00', backgroundColor: '#ffcc0033', borderWidth: 2, pointBackgroundColor: '#fff', pointBorderColor: '#ffcc00', pointRadius: 3, fill: true, tension: 0.3 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } } } }
     });
+
+    const validData = data.filter(v => v !== null);
+    const diffDiv = document.getElementById('weight-diff');
+    const summaryDiv = document.getElementById('weight-summary');
+    if (validData.length > 1) {
+        summaryDiv.style.display = 'block';
+        const diff = (validData[validData.length - 1] - validData[0]).toFixed(1);
+        if (diff > 0) diffDiv.innerHTML = `Набрано: <span style="color: #ff3b30;">+${diff} кг</span>`;
+        else if (diff < 0) diffDiv.innerHTML = `Сброшено: <span style="color: #34c759;">${diff} кг</span>`;
+        else diffDiv.innerHTML = "Вес не изменился";
+    } else { summaryDiv.style.display = 'none'; }
+
+    const listDiv = document.getElementById('weight-diary-list');
+    let listHtml = '';
+    history.filter(h => h.dateRaw >= start && h.dateRaw <= end).forEach(h => {
+        listHtml += `<div class="history-weight-item">
+            <span style="color: var(--accent-color);">${h.dateDisplay || h.date}</span>
+            <span>${h.weight} кг</span>
+        </div>`;
+    });
+    listDiv.innerHTML = listHtml || '<p style="text-align: center; color: #8e8e93;">Нет записей за этот период.</p>';
 }
 
 // --- ВОДА ---
@@ -321,7 +324,7 @@ function updateCustomWaterBtn() {
 }
 function quickAddCustomWater() {
     const customAmount = localStorage.getItem('customWaterAmount');
-    if (customAmount && parseInt(customAmount) > 0) addWater(customAmount); else openWaterModal();
+    if (customAmount && parseInt(customAmount) > 0) addWater(customAmount); else openWaterDiary();
 }
 function addWater(amount) {
     let waterArr = []; try { waterArr = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e) {}
@@ -337,71 +340,75 @@ function deleteWaterItem(index) {
     const today = localStorage.getItem('waterListDate'); archiveWaterToHistory(waterArr, today);
     renderTodayWaterList(waterArr);
 }
-function openWaterModal() {
-    const now = new Date(); const past = new Date(); past.setDate(now.getDate() - 7);
-    document.getElementById('water-start-date').value = past.toISOString().split('T')[0];
-    document.getElementById('water-end-date').value = now.toISOString().split('T')[0];
+function openWaterDiary() {
+    setPeriod('water', '7days');
     renderTodayWaterList(JSON.parse(localStorage.getItem('todayWater') || '[]'));
-    document.getElementById('water-modal').classList.add('active');
-    setTimeout(() => { renderWaterChart(); }, 100);
+    openScreen('water-diary-screen');
 }
-function closeWaterModal() { 
-    document.getElementById('water-modal').classList.remove('active'); 
-    if (chartWater) { chartWater.destroy(); chartWater = null; }
-}
-function addWaterFromModal() {
+function addWaterFromDiary() {
     const val = parseInt(document.getElementById('custom-water-input').value);
     if (val && val > 0) { localStorage.setItem('customWaterAmount', val); updateCustomWaterBtn(); addWater(val); document.getElementById('custom-water-input').value = ''; } 
     else tg.showAlert("Введите корректный объем!");
 }
-function renderWaterChart() {
-    if (typeof Chart === 'undefined') return;
+
+function renderWaterDiary() {
     const start = document.getElementById('water-start-date').value;
     const end = document.getElementById('water-end-date').value;
     if (!start || !end) return;
+
     let hist = {}; try { hist = JSON.parse(localStorage.getItem('waterHistory') || '{}'); } catch(e) {}
-    const labels = []; const data = [];
+    const labels = []; const data = []; let total = 0;
+    
     for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
         labels.push(dateStr.split('-').slice(1).reverse().join('.'));
         let sum = 0; (hist[dateStr] || []).forEach(w => sum += parseInt(w.amount || 0));
         data.push(sum);
+        total += sum;
     }
-    if (chartWater) chartWater.destroy();
-    chartWater = new Chart(document.getElementById('water-chart-canvas').getContext('2d'), {
+
+    if (chartWaterDiary) chartWaterDiary.destroy();
+    chartWaterDiary = new Chart(document.getElementById('water-diary-chart').getContext('2d'), {
         type: 'line',
         data: { labels: labels, datasets: [{ label: 'Вода', data: data, borderColor: '#5ac8fa', backgroundColor: '#5ac8fa33', borderWidth: 2, pointBackgroundColor: '#fff', pointBorderColor: '#5ac8fa', pointRadius: 3, fill: true, tension: 0.3 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true } } }
     });
-}
-function renderTodayWaterList(todayWater) {
-    const listDiv = document.getElementById('today-water-list'); if (!listDiv) return;
-    if (todayWater.length === 0) { listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; font-size: 10px;">Пока ничего не выпито</p>'; return; }
-    let html = ''; todayWater.forEach((w, index) => { html += `<div class="compact-food-item" style="border-left: 2px solid #5ac8fa;"><div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;">💧 ${w.amount} мл (${w.time})</div><button onclick="event.stopPropagation(); deleteWaterItem(${index})" style="background: none; border: none; color: #ff3b30; font-size: 14px; cursor: pointer; padding: 0;">✖</button></div>`; });
-    listDiv.innerHTML = html;
+
+    document.getElementById('water-summary').style.display = 'block';
+    document.getElementById('water-total-ml').innerText = total;
+
+    const listDiv = document.getElementById('water-diary-list');
+    let listHtml = '';
+    const dates = Object.keys(hist).filter(date => date >= start && date <= end).sort((a, b) => new Date(b) - new Date(a));
+    dates.forEach(date => {
+        const waters = hist[date] || [];
+        if (waters.length === 0) return;
+        let dayTotal = 0; waters.forEach(w => dayTotal += parseInt(w.amount));
+        
+        listHtml += `<div class="history-card"><div class="history-date">📅 ${date.split('-').reverse().join('.')} <span style="float:right; font-size: 12px; color:#5ac8fa;">${dayTotal} мл</span></div>`;
+        waters.forEach(w => {
+            listHtml += `<div class="history-water-item"><span>💧 Вода</span><span style="color:#8e8e93;">${w.amount} мл (${w.time || ''})</span></div>`;
+        });
+        listHtml += `</div>`;
+    });
+    listDiv.innerHTML = listHtml || '<p style="text-align: center; color: #8e8e93;">Нет записей за этот период.</p>';
 }
 
-// --- ЕДА И БЖУ ---
-function openFoodStatsModal() {
-    const now = new Date(); const past = new Date(); past.setDate(now.getDate() - 7);
-    document.getElementById('food-start-date').value = past.toISOString().split('T')[0];
-    document.getElementById('food-end-date').value = now.toISOString().split('T')[0];
-    document.getElementById('food-stats-modal').classList.add('active');
-    setTimeout(() => { renderFoodCharts(); }, 100);
+// --- ЕДА ---
+function openFoodDiary() {
+    setPeriod('food', '7days');
+    openScreen('food-diary-screen');
 }
-function closeFoodStatsModal() { 
-    document.getElementById('food-stats-modal').classList.remove('active'); 
-    if (chartFoodCal) { chartFoodCal.destroy(); chartFoodCal = null; }
-    if (chartFoodMacro) { chartFoodMacro.destroy(); chartFoodMacro = null; }
-}
-function renderFoodCharts() {
-    if (typeof Chart === 'undefined') return;
+
+function renderFoodDiary() {
     const start = document.getElementById('food-start-date').value;
     const end = document.getElementById('food-end-date').value;
     if (!start || !end) return;
 
     let hist = {}; try { hist = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) {}
     const labels = []; const calData = []; const protData = []; const fatData = []; const carbData = [];
+    let totalCal = 0, totalProt = 0, totalFat = 0, totalCarb = 0;
+
     for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
         labels.push(dateStr.split('-').slice(1).reverse().join('.'));
@@ -409,25 +416,53 @@ function renderFoodCharts() {
         let c = 0, p = 0, f = 0, cb = 0;
         foods.forEach(food => { c+=parseFloat(food.calories_100g||0); p+=parseFloat(food.proteins_100g||0); f+=parseFloat(food.fat_100g||0); cb+=parseFloat(food.carbs_100g||0); });
         calData.push(Math.round(c)); protData.push(Math.round(p)); fatData.push(Math.round(f)); carbData.push(Math.round(cb));
+        totalCal += c; totalProt += p; totalFat += f; totalCarb += cb;
     }
 
-    if (chartFoodCal) chartFoodCal.destroy();
-    chartFoodCal = new Chart(document.getElementById('food-cal-chart-canvas').getContext('2d'), {
+    if (chartFoodCalDiary) chartFoodCalDiary.destroy();
+    chartFoodCalDiary = new Chart(document.getElementById('food-diary-cal-chart').getContext('2d'), {
         type: 'line',
         data: { labels: labels, datasets: [{ label: 'Калории', data: calData, borderColor: '#ff3b30', backgroundColor: '#ff3b3033', borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Калории (ккал)', color: '#fff' } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Калории', color: '#fff' } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true } } }
     });
 
-    if (chartFoodMacro) chartFoodMacro.destroy();
-    chartFoodMacro = new Chart(document.getElementById('food-macro-chart-canvas').getContext('2d'), {
+    if (chartFoodMacroDiary) chartFoodMacroDiary.destroy();
+    chartFoodMacroDiary = new Chart(document.getElementById('food-diary-macro-chart').getContext('2d'), {
         type: 'line',
         data: { labels: labels, datasets: [
             { label: 'Белки', data: protData, borderColor: '#34c759', borderWidth: 2, pointRadius: 2, fill: false, tension: 0.3 },
             { label: 'Жиры', data: fatData, borderColor: '#ff9500', borderWidth: 2, pointRadius: 2, fill: false, tension: 0.3 },
             { label: 'Углеводы', data: carbData, borderColor: '#af52de', borderWidth: 2, pointRadius: 2, fill: false, tension: 0.3 }
         ] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } }, title: { display: true, text: 'БЖУ (граммы)', color: '#fff' } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } }, title: { display: true, text: 'БЖУ', color: '#fff' } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true } } }
     });
+
+    document.getElementById('food-summary').style.display = 'block';
+    document.getElementById('food-total-cal').innerText = Math.round(totalCal);
+    document.getElementById('food-total-prot').innerText = Math.round(totalProt);
+    document.getElementById('food-total-fat').innerText = Math.round(totalFat);
+    document.getElementById('food-total-carb').innerText = Math.round(totalCarb);
+
+    const listDiv = document.getElementById('food-diary-list');
+    let listHtml = '';
+    const dates = Object.keys(hist).filter(date => date >= start && date <= end).sort((a, b) => new Date(b) - new Date(a));
+    dates.forEach(date => {
+        const foods = hist[date] || [];
+        if (foods.length === 0) return;
+        let dayCal = 0, dayProt = 0, dayFat = 0, dayCarb = 0;
+        foods.forEach(f => { dayCal+=parseFloat(f.calories_100g||0); dayProt+=parseFloat(f.proteins_100g||0); dayFat+=parseFloat(f.fat_100g||0); dayCarb+=parseFloat(f.carbs_100g||0); });
+        listHtml += `<div class="history-card"><div class="history-date">📅 ${date.split('-').reverse().join('.')}</div>`;
+        listHtml += `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; margin-bottom: 10px;">`;
+        listHtml += `<div><span style="color: var(--accent-color); font-weight: bold;">${Math.round(dayCal)}</span><br><span style="font-size: 10px; color: #8e8e93;">Ккал</span></div>`;
+        listHtml += `<div><span style="color: #fff; font-weight: bold;">${Math.round(dayProt)}</span><br><span style="font-size: 10px; color: #8e8e93;">Бел.</span></div>`;
+        listHtml += `<div><span style="color: #fff; font-weight: bold;">${Math.round(dayFat)}</span><br><span style="font-size: 10px; color: #8e8e93;">Жир.</span></div>`;
+        listHtml += `<div><span style="color: #fff; font-weight: bold;">${Math.round(dayCarb)}</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div>`;
+        listHtml += `</div>`;
+        listHtml += `<div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">`;
+        foods.forEach(f => { listHtml += `<div class="history-food-item"><span>${f.product_name}</span><span style="color: #8e8e93;">${Math.round(f.calories_100g || 0)} ккал</span></div>`; });
+        listHtml += `</div></div>`;
+    });
+    listDiv.innerHTML = listHtml || '<p style="text-align: center; color: #8e8e93;">Нет записей за этот период.</p>';
 }
 
 // --- ГЛОБАЛЬНЫЙ АНАЛИЗ ---
@@ -473,7 +508,19 @@ function renderAllCharts() {
     chartGlobalWater = new Chart(document.getElementById('g-water-chart').getContext('2d'), { type:'line', data:{labels,datasets:[{label:'Вода',data:hData,borderColor:'#5ac8fa',borderWidth:2,pointRadius:2,fill:false,tension:0.3}]}, options:{...baseOpts, plugins:{...baseOpts.plugins, title:{display:true,text:'Вода (мл)',color:'#fff'}}, scales:{...baseOpts.scales, y:{...baseOpts.scales.y, beginAtZero:true}}} });
 }
 
-// --- ИСТОРИЯ ТЕКСТОМ (ТОЛЬКО ЕДА) ---
+// --- УТИЛИТЫ ---
+function setPeriod(type, period) {
+    const startInput = document.getElementById(type + '-start-date'); const endInput = document.getElementById(type + '-end-date');
+    const now = new Date(); endInput.value = now.toISOString().split('T')[0];
+    if (period === '7days') { const past = new Date(now); past.setDate(now.getDate() - 7); startInput.value = past.toISOString().split('T')[0]; } 
+    else if (period === '30days') { const past = new Date(now); past.setDate(now.getDate() - 30); startInput.value = past.toISOString().split('T')[0]; } 
+    else if (period === 'month') { const firstDay = new Date(now.getFullYear(), now.getMonth(), 1); startInput.value = firstDay.toISOString().split('T')[0]; }
+    
+    if (type === 'water') renderWaterDiary();
+    if (type === 'food') renderFoodDiary();
+    if (type === 'weight') renderWeightDiary();
+}
+
 function archiveFoodToHistory(foodArray, dateString) {
     if (!foodArray || foodArray.length === 0 || !dateString) return;
     let history = {}; try { history = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) {}
@@ -483,58 +530,6 @@ function archiveWaterToHistory(waterArray, dateString) {
     if (!waterArray || waterArray.length === 0 || !dateString) return;
     let history = {}; try { history = JSON.parse(localStorage.getItem('waterHistory') || '{}'); } catch(e) {}
     history[dateString] = waterArray; localStorage.setItem('waterHistory', JSON.stringify(history));
-}
-function openHistoryScreen() {
-    const startInput = document.getElementById('history-start-date'); const endInput = document.getElementById('history-end-date');
-    if (startInput && !startInput.value) {
-        const now = new Date(); const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-        startInput.value = firstDay.toISOString().split('T')[0]; endInput.value = now.toISOString().split('T')[0];
-    }
-    openScreen('history-screen'); renderHistory();
-}
-function setHistoryPeriod(type) {
-    const startInput = document.getElementById('history-start-date'); const endInput = document.getElementById('history-end-date');
-    const now = new Date(); endInput.value = now.toISOString().split('T')[0];
-    if (type === '7days') { const past = new Date(now); past.setDate(now.getDate() - 7); startInput.value = past.toISOString().split('T')[0]; } 
-    else if (type === '30days') { const past = new Date(now); past.setDate(now.getDate() - 30); startInput.value = past.toISOString().split('T')[0]; } 
-    else if (type === 'month') { const firstDay = new Date(now.getFullYear(), now.getMonth(), 1); startInput.value = firstDay.toISOString().split('T')[0]; } 
-    else if (type === 'all') startInput.value = '2020-01-01';
-    renderHistory();
-}
-function renderHistory() {
-    const listDiv = document.getElementById('history-list'); const summaryDiv = document.getElementById('history-period-summary');
-    const startInput = document.getElementById('history-start-date'); const endInput = document.getElementById('history-end-date');
-    if (!listDiv || !summaryDiv || !startInput || !endInput) return;
-    const startDate = startInput.value, endDate = endInput.value; if (!startDate || !endDate) return;
-    let foodHistory = {};
-    try { foodHistory = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) {}
-    const allDates = Object.keys(foodHistory); // Только еда
-    const datesInRange = Array.from(allDates).filter(date => date >= startDate && date <= endDate).sort((a, b) => new Date(b) - new Date(a));
-    if (datesInRange.length === 0) { summaryDiv.style.display = 'none'; listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; margin-top: 20px;">За выбранный период записей нет.</p>'; return; }
-    let periodCal = 0, periodProt = 0, periodFat = 0, periodCarb = 0, html = '';
-    datesInRange.forEach(date => {
-        const foods = foodHistory[date] || []; if (foods.length === 0) return;
-        let dayCal = 0, dayProt = 0, dayFat = 0, dayCarb = 0;
-        foods.forEach(f => { dayCal += parseFloat(f.calories_100g || 0); dayProt += parseFloat(f.proteins_100g || 0); dayFat += parseFloat(f.fat_100g || 0); dayCarb += parseFloat(f.carbs_100g || 0); });
-        periodCal += dayCal; periodProt += dayProt; periodFat += dayFat; periodCarb += dayCarb;
-        const dayDisplay = date.split('-').reverse().join('.');
-        html += `<div class="history-card"><div class="history-date">📅 ${dayDisplay}</div>`;
-        html += `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; margin-bottom: 10px;">`;
-        html += `<div><span style="color: var(--accent-color); font-weight: bold; font-size: 14px;">${Math.round(dayCal)}</span><br><span style="font-size: 10px; color: #8e8e93;">Ккал</span></div>`;
-        html += `<div><span style="color: #fff; font-weight: bold; font-size: 14px;">${Math.round(dayProt)}</span><br><span style="font-size: 10px; color: #8e8e93;">Бел.</span></div>`;
-        html += `<div><span style="color: #fff; font-weight: bold; font-size: 14px;">${Math.round(dayFat)}</span><br><span style="font-size: 10px; color: #8e8e93;">Жир.</span></div>`;
-        html += `<div><span style="color: #fff; font-weight: bold; font-size: 14px;">${Math.round(dayCarb)}</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div>`;
-        html += `</div>`;
-        html += `<div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">`;
-        foods.forEach(f => { html += `<div class="history-food-item" style="display: flex; justify-content: space-between; margin-bottom: 5px;"><span>${f.product_name}</span><span style="color: #8e8e93;">${Math.round(f.calories_100g || 0)} ккал</span></div>`; });
-        html += `</div></div>`;
-    });
-    summaryDiv.style.display = 'block';
-    document.getElementById('hist-total-cal').innerText = Math.round(periodCal);
-    document.getElementById('hist-total-prot').innerText = Math.round(periodProt);
-    document.getElementById('hist-total-fat').innerText = Math.round(periodFat);
-    document.getElementById('hist-total-carb').innerText = Math.round(periodCarb);
-    listDiv.innerHTML = html;
 }
 
 function updateDashboard() {
@@ -568,6 +563,12 @@ function renderTodayFoodList(todayFood) {
     let html = ''; todayFood.forEach((food, index) => { html += `<div class="compact-food-item"><div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%;">${food.product_name}</div><button onclick="event.stopPropagation(); deleteFoodItem(${index})" style="background: none; border: none; color: #ff3b30; font-size: 14px; cursor: pointer; padding: 0;">✖</button></div>`; });
     listDiv.innerHTML = html;
 } 
+function renderTodayWaterList(todayWater) {
+    const listDiv = document.getElementById('today-water-list'); if (!listDiv) return;
+    if (todayWater.length === 0) { listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; font-size: 10px;">Пока ничего не выпито</p>'; return; }
+    let html = ''; todayWater.forEach((w, index) => { html += `<div class="compact-food-item" style="border-left: 2px solid #5ac8fa;"><div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;">💧 ${w.amount} мл (${w.time})</div><button onclick="event.stopPropagation(); deleteWaterItem(${index})" style="background: none; border: none; color: #ff3b30; font-size: 14px; cursor: pointer; padding: 0;">✖</button></div>`; });
+    listDiv.innerHTML = html;
+}
 function deleteFoodItem(index) {
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]'); todayFood.splice(index, 1);
     localStorage.setItem('todayFood', JSON.stringify(todayFood)); saveFoodToCloud(todayFood); updateDashboard();
