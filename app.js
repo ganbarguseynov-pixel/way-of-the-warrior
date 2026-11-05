@@ -746,6 +746,14 @@ function stopShakeTest() {
 // --- СЕНСЕЙ (ИИ) ---
 const PROXY_API_KEY = 'sk-HQWY8HQ6KEHVAt6mnKNpTa6XgMys9wDv';
 let senseiChatHistory = [];
+try {
+    const savedHistory = localStorage.getItem('senseiChatHistory');
+    if (savedHistory) {
+        senseiChatHistory = JSON.parse(savedHistory);
+    }
+} catch(e) {
+    console.error("Ошибка чтения истории чата", e);
+}
 
 function getSenseiContext() {
     let p = currentProfileData || { weight: 70, height: 175, goal: 'lose', age: 25, gender: 'male' };
@@ -772,8 +780,20 @@ function getSenseiContext() {
 
 function openSenseiChat() {
     document.getElementById('sensei-chat-modal').classList.add('active');
+    const chatBox = document.getElementById('sensei-chat-box');
+    chatBox.innerHTML = ''; // Очищаем текущий вид
+    
     if (senseiChatHistory.length === 0) {
         addSenseiMessage('assistant', 'Приветствую, воин! Я твой Сенсей. Вижу, ты ведешь дневник. Чем могу помочь? Спрашивай про тренировки, питание или мотивацию.');
+    } else {
+        // Отрисовываем сохраненную историю
+        senseiChatHistory.forEach(msg => {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = msg.role === 'user' ? 'sensei-msg user-msg' : 'sensei-msg bot-msg';
+            msgDiv.innerText = msg.content;
+            chatBox.appendChild(msgDiv);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
 }
 
@@ -784,12 +804,30 @@ function closeSenseiChat() {
 function addSenseiMessage(role, text) {
     const chatBox = document.getElementById('sensei-chat-box');
     if (!chatBox) return;
+
+    // Проверка на дубликат (чтобы не было спама одинаковыми сообщениями)
+    if (senseiChatHistory.length > 0) {
+        const lastMsg = senseiChatHistory[senseiChatHistory.length - 1];
+        if (lastMsg.role === role && lastMsg.content === text) {
+            return; 
+        }
+    }
+
     const msgDiv = document.createElement('div');
     msgDiv.className = role === 'user' ? 'sensei-msg user-msg' : 'sensei-msg bot-msg';
     msgDiv.innerText = text;
     chatBox.appendChild(msgDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
+    
     senseiChatHistory.push({ role: role, content: text });
+    
+    // Ограничиваем память (храним последние 100 сообщений, чтобы не забить телефон)
+    if (senseiChatHistory.length > 100) {
+        senseiChatHistory = senseiChatHistory.slice(senseiChatHistory.length - 100);
+    }
+    
+    // СОХРАНЯЕМ В ПАМЯТЬ
+    localStorage.setItem('senseiChatHistory', JSON.stringify(senseiChatHistory));
 }
 
 async function sendSenseiMessage() {
@@ -820,9 +858,10 @@ ${context}
 3. Если он спрашивает план или что делать, составь ему КОНКРЕТНЫЙ план питания (продукты и граммы) и тренировок (упражнения, подходы).
 4. Не пиши длинные философские речи. Только факты и действия.`;
 
+        // Берем последние 10 сообщений для контекста
         const messages = [
             { role: 'system', content: systemPrompt },
-            ...senseiChatHistory.slice(-6)
+            ...senseiChatHistory.slice(-10)
         ];
 
         const response = await fetch('https://api.proxyapi.ru/openai/v1/chat/completions', {
