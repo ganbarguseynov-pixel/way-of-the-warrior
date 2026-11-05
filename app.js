@@ -4,11 +4,8 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand(); 
 
-// Переменные для графиков
-let weightChartInstance = null;
-let caloriesChartInstance = null;
-let macrosChartInstance = null;
-let waterChartInstance = null;
+let currentMetricChart = null; // Переменная для текущего открытого графика
+let currentMetricType = null;
 
 function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
@@ -247,34 +244,27 @@ function checkDayReset() {
 // --- ВЕС ---
 function saveWeightToHistory(weight) {
     let history = []; try { history = JSON.parse(localStorage.getItem('weightHistory') || '[]'); } catch(e) { history = []; }
-    const now = new Date(); 
-    // Сохраняем в формате ГГГГ-ММ-ДД для легкой сортировки
-    const dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-    
+    const now = new Date(); const dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     if (history.length > 0 && history[0].dateRaw === dateStr) { history[0].weight = parseFloat(weight); } 
     else { history.unshift({ dateRaw: dateStr, dateDisplay: now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' }), weight: parseFloat(weight) }); }
     if (history.length > 50) history.pop();
     localStorage.setItem('weightHistory', JSON.stringify(history));
 }
-
 function openWeightHistory() { 
     if (currentProfileData && document.getElementById('modal-weight-input')) document.getElementById('modal-weight-input').value = currentProfileData.weight || '';
     renderWeightHistory(); document.getElementById('weight-modal').classList.add('active'); 
 }
 function closeWeightHistory() { document.getElementById('weight-modal').classList.remove('active'); }
-
 async function saveWeightFromModal() {
     const newWeight = parseFloat(document.getElementById('modal-weight-input').value);
     if (!newWeight || newWeight <= 0) { tg.showAlert("Введите корректный вес!"); return; }
     if (currentProfileData) {
-        currentProfileData.weight = newWeight;
-        localStorage.setItem('cachedProfile', JSON.stringify(currentProfileData));
+        currentProfileData.weight = newWeight; localStorage.setItem('cachedProfile', JSON.stringify(currentProfileData));
         saveWeightToHistory(newWeight);
         await saveProgressToCloud(localStorage.getItem('tgId'), localStorage.getItem('currentEmail'), localStorage.getItem('userName'), currentProfileData, currentXP, totalBurnedCalories);
         updateDashboard(); renderWeightHistory(); tg.showAlert("Вес обновлен!");
     }
 }
-
 function renderWeightHistory() {
     const listDiv = document.getElementById('weight-list'); const diffDiv = document.getElementById('weight-diff');
     let history = []; try { history = JSON.parse(localStorage.getItem('weightHistory') || '[]'); } catch(e) { history = []; }
@@ -398,130 +388,135 @@ function renderHistory() {
     listDiv.innerHTML = html;
 }
 
-// --- СТАТИСТИКА (ГРАФИКИ) ---
-function openStatsScreen() {
-    const startInput = document.getElementById('stats-start-date'); const endInput = document.getElementById('stats-end-date');
-    if (startInput && !startInput.value) {
-        const now = new Date(); const past = new Date(now); past.setDate(now.getDate() - 7);
-        startInput.value = past.toISOString().split('T')[0]; endInput.value = now.toISOString().split('T')[0];
-    }
-    openScreen('stats-screen'); renderAllCharts();
+// --- ГРАФИКИ (СПЕЦИАЛЬНО ДЛЯ КАЖДОГО) ---
+function openMetricChart(type) {
+    currentMetricType = type;
+    const modal = document.getElementById('metric-stats-modal');
+    const title = document.getElementById('metric-stats-title');
+    const startInput = document.getElementById('metric-start-date');
+    const endInput = document.getElementById('metric-end-date');
+
+    // Настройка заголовка и цвета
+    if (type === 'water') { title.innerText = '💧 График воды'; title.style.color = '#5ac8fa'; }
+    else if (type === 'calories') { title.innerText = '🍏 График калорий'; title.style.color = '#ff3b30'; }
+    else if (type === 'macros') { title.innerText = '🥩 График БЖУ'; title.style.color = '#af52de'; }
+    else if (type === 'weight') { title.innerText = '⚖️ График веса'; title.style.color = '#ffcc00'; }
+
+    // Даты по умолчанию (последние 7 дней)
+    const now = new Date();
+    const past = new Date(); past.setDate(now.getDate() - 7);
+    startInput.value = past.toISOString().split('T')[0];
+    endInput.value = now.toISOString().split('T')[0];
+
+    // Открываем окно
+    modal.classList.add('active');
+
+    // Ждем 100мс, чтобы окно отрисовалось, и только потом рисуем график
+    setTimeout(() => { renderMetricChart(); }, 100);
 }
 
-function renderAllCharts() {
+function closeMetricChart() {
+    document.getElementById('metric-stats-modal').classList.remove('active');
+    if (currentMetricChart) { currentMetricChart.destroy(); currentMetricChart = null; }
+}
+
+function renderMetricChart() {
     if (typeof Chart === 'undefined') {
-        tg.showAlert("Графики не загрузились. Проверьте интернет.");
+        tg.showAlert("График не может загрузиться. Проверьте интернет.");
         return;
     }
 
-    const startDate = document.getElementById('stats-start-date').value;
-    const endDate = document.getElementById('stats-end-date').value;
+    const startDate = document.getElementById('metric-start-date').value;
+    const endDate = document.getElementById('metric-end-date').value;
     if (!startDate || !endDate) return;
 
-    // 1. СБОР ДАННЫХ
+    // Собираем данные из памяти
     let foodHistory = {}; try { foodHistory = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) {}
     let waterHistory = {}; try { waterHistory = JSON.parse(localStorage.getItem('waterHistory') || '{}'); } catch(e) {}
     let weightHistory = []; try { weightHistory = JSON.parse(localStorage.getItem('weightHistory') || '[]'); } catch(e) {}
 
+    // Создаем список всех дат в выбранном диапазоне
     const datesInRange = [];
     for (let d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate() + 1)) {
         datesInRange.push(d.toISOString().split('T')[0]);
     }
 
-    const labels = []; // Даты для оси X
-    const calData = [];
-    const protData = [];
-    const fatData = [];
-    const carbData = [];
-    const waterData = [];
-    const weightData = [];
+    const labels = []; // Подписи оси X (даты)
+    const dataValues = []; // Значения для линии
 
-    // Форматируем даты для графика (ДД.ММ)
     datesInRange.forEach(date => {
+        // Форматируем дату для подписи: 05.11
         labels.push(date.split('-').slice(1).reverse().join('.'));
 
-        // Еда
-        const foods = foodHistory[date] || [];
-        let c = 0, p = 0, f = 0, cb = 0;
-        foods.forEach(food => {
-            c += parseFloat(food.calories_100g || 0); p += parseFloat(food.proteins_100g || 0);
-            f += parseFloat(food.fat_100g || 0); cb += parseFloat(food.carbs_100g || 0);
-        });
-        calData.push(Math.round(c)); protData.push(Math.round(p)); fatData.push(Math.round(f)); carbData.push(Math.round(cb));
-
-        // Вода
-        const waters = waterHistory[date] || [];
-        let w = 0; waters.forEach(water => w += parseInt(water.amount || 0));
-        waterData.push(w);
-    });
-
-    // Вес (ищем записи для каждой даты, если нет - null, чтобы линия шла ровно)
-    datesInRange.forEach(date => {
-        const record = weightHistory.find(h => (h.dateRaw === date) || (h.date && h.date.split('.').reverse().join('-') === date));
-        if (record) {
-            weightData.push(record.weight);
-        } else {
-            // Если записи нет, берем предыдущую или null
-            const lastKnown = weightData.filter(w => w !== null).pop();
-            weightData.push(lastKnown || null);
+        if (currentMetricType === 'water') {
+            const waters = waterHistory[date] || [];
+            let sum = 0; waters.forEach(w => sum += parseInt(w.amount || 0));
+            dataValues.push(sum);
+        } 
+        else if (currentMetricType === 'calories') {
+            const foods = foodHistory[date] || [];
+            let sum = 0; foods.forEach(f => sum += parseFloat(f.calories_100g || 0));
+            dataValues.push(Math.round(sum));
+        }
+        else if (currentMetricType === 'weight') {
+            // Ищем запись веса на эту дату
+            const record = weightHistory.find(h => h.dateRaw === date || (h.date && h.date.split('.').reverse().join('-') === date));
+            if (record) {
+                dataValues.push(record.weight);
+            } else {
+                // Если записи нет, тянем предыдущее значение, чтобы линия не рвалась
+                const lastKnown = dataValues.filter(v => v !== null && v !== undefined).pop();
+                dataValues.push(lastKnown !== undefined ? lastKnown : null);
+            }
         }
     });
 
-    // Настройки осей и цветов
-    const chartOptions = {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: '#fff' } } },
-        scales: {
-            x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } },
-            y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }
-        }
-    };
-
-    function createOrUpdateChart(instance, canvasId, title, data, color, isWeight = false) {
-        if (instance) instance.destroy(); // Удаляем старый график
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        const newOptions = JSON.parse(JSON.stringify(chartOptions));
-        newOptions.plugins.title = { display: true, text: title, color: '#fff', font: { size: 16 } };
-        if (!isWeight) newOptions.scales.y.beginAtZero = true;
-
-        return new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: title, data: data, borderColor: color, backgroundColor: color + '33',
-                    borderWidth: 2, pointBackgroundColor: '#fff', pointBorderColor: color, pointRadius: 3, fill: true, tension: 0.3
-                }]
-            },
-            options: newOptions
+    // Если это макросы, то рисуем 3 линии
+    let datasets = [];
+    
+    if (currentMetricType === 'macros') {
+        let protData = [], fatData = [], carbData = [];
+        datesInRange.forEach(date => {
+            const foods = foodHistory[date] || [];
+            let p = 0, f = 0, c = 0;
+            foods.forEach(food => { p += parseFloat(food.proteins_100g || 0); f += parseFloat(food.fat_100g || 0); c += parseFloat(food.carbs_100g || 0); });
+            protData.push(Math.round(p)); fatData.push(Math.round(f)); carbData.push(Math.round(c));
         });
+        datasets = [
+            { label: 'Белки', data: protData, borderColor: '#34c759', backgroundColor: '#34c75933', borderWidth: 2, pointRadius: 3, fill: false, tension: 0.3 },
+            { label: 'Жиры', data: fatData, borderColor: '#ff9500', backgroundColor: '#ff950033', borderWidth: 2, pointRadius: 3, fill: false, tension: 0.3 },
+            { label: 'Углеводы', data: carbData, borderColor: '#af52de', backgroundColor: '#af52de33', borderWidth: 2, pointRadius: 3, fill: false, tension: 0.3 }
+        ];
+    } else {
+        let color = '#fff';
+        if (currentMetricType === 'water') color = '#5ac8fa';
+        if (currentMetricType === 'calories') color = '#ff3b30';
+        if (currentMetricType === 'weight') color = '#ffcc00';
+        
+        datasets = [{
+            label: 'Значение', data: dataValues, borderColor: color, backgroundColor: color + '33',
+            borderWidth: 2, pointBackgroundColor: '#fff', pointBorderColor: color, pointRadius: 4, fill: true, tension: 0.3
+        }];
     }
 
-    weightChartInstance = createOrUpdateChart(weightChartInstance, 'weightChart', 'Вес (кг)', weightData, '#ffcc00', true);
-    caloriesChartInstance = createOrUpdateChart(caloriesChartInstance, 'caloriesChart', 'Калории (ккал)', calData, '#ff3b30');
-    waterChartInstance = createOrUpdateChart(waterChartInstance, 'waterChart', 'Вода (мл)', waterData, '#5ac8fa');
+    // Уничтожаем старый график, если он был
+    if (currentMetricChart) { currentMetricChart.destroy(); }
 
-    // Для БЖУ 3 линии
-    if (macrosChartInstance) macrosChartInstance.destroy();
-    const ctxMacros = document.getElementById('macrosChart').getContext('2d');
-    const macroOptions = JSON.parse(JSON.stringify(chartOptions));
-    macroOptions.plugins.title = { display: true, text: 'БЖУ (граммы)', color: '#fff', font: { size: 16 } };
-    macroOptions.scales.y.beginAtZero = true;
-
-    macrosChartInstance = new Chart(ctxMacros, {
+    // Создаем новый
+    const ctx = document.getElementById('metric-chart-canvas').getContext('2d');
+    currentMetricChart = new Chart(ctx, {
         type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                { label: 'Белки', data: protData, borderColor: '#34c759', backgroundColor: '#34c75933', borderWidth: 2, pointRadius: 2, fill: false, tension: 0.3 },
-                { label: 'Жиры', data: fatData, borderColor: '#ff9500', backgroundColor: '#ff950033', borderWidth: 2, pointRadius: 2, fill: false, tension: 0.3 },
-                { label: 'Углеводы', data: carbData, borderColor: '#af52de', backgroundColor: '#af52de33', borderWidth: 2, pointRadius: 2, fill: false, tension: 0.3 }
-            ]
-        },
-        options: macroOptions
+        data: { labels: labels, datasets: datasets },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#fff' } } },
+            scales: {
+                x: { ticks: { color: '#8e8e93', maxRotation: 45, minRotation: 45 }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: currentMetricType !== 'weight' }
+            }
+        }
     });
 }
-// --------------------------
 
 function updateDashboard() {
     if (!currentProfileData) return; checkDayReset();
