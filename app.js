@@ -68,6 +68,7 @@ async function resolveUserRecord(tgId, email) {
     } 
 
     let mergedFood = [];
+    let mergedWater = [];
     let maxXp = 0;
     let maxBurned = 0;
     let profile = null;
@@ -77,6 +78,9 @@ async function resolveUserRecord(tgId, email) {
         if (rec.food && Array.isArray(rec.food)) {
             mergedFood = mergedFood.concat(rec.food);
         }
+        if (rec.water && Array.isArray(rec.water)) {
+            mergedWater = mergedWater.concat(rec.water);
+        }
         if (rec.xp && rec.xp > maxXp) maxXp = rec.xp;
         if (rec.burned && rec.burned > maxBurned) maxBurned = rec.burned;
         if (rec.profile && !profile) profile = rec.profile;
@@ -84,12 +88,22 @@ async function resolveUserRecord(tgId, email) {
     }); 
 
     const uniqueFood = [];
-    const seen = new Set();
+    const seenFood = new Set();
     mergedFood.forEach(f => {
         const key = JSON.stringify(f);
-        if (!seen.has(key)) {
-            seen.add(key);
+        if (!seenFood.has(key)) {
+            seenFood.add(key);
             uniqueFood.push(f);
+        }
+    }); 
+
+    const uniqueWater = [];
+    const seenWater = new Set();
+    mergedWater.forEach(w => {
+        const key = JSON.stringify(w);
+        if (!seenWater.has(key)) {
+            seenWater.add(key);
+            uniqueWater.push(w);
         }
     }); 
 
@@ -100,6 +114,7 @@ async function resolveUserRecord(tgId, email) {
         telegram_id: linkedTgId || mainRecord.telegram_id || null,
         email: linkedEmail || mainRecord.email || null,
         food: uniqueFood,
+        water: uniqueWater,
         xp: maxXp,
         burned: maxBurned,
         profile: profile || mainRecord.profile,
@@ -145,6 +160,7 @@ async function loginWithTelegram() {
             }
             if (data.name) localStorage.setItem('userName', data.name);
             if (data.food) localStorage.setItem('todayFood', JSON.stringify(data.food));
+            if (data.water) localStorage.setItem('todayWater', JSON.stringify(data.water));
         } else {
             const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose', custom_water_goal: 2000 };
             localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
@@ -216,6 +232,7 @@ async function handleEmailAuth() {
             }
             if (linkData.name) localStorage.setItem('userName', linkData.name);
             if (linkData.food) localStorage.setItem('todayFood', JSON.stringify(linkData.food));
+            if (linkData.water) localStorage.setItem('todayWater', JSON.stringify(linkData.water));
         } else {
             const defaultProfile = { age: 25, gender: 'male', weight: 70, height: 175, goal: 'lose', custom_water_goal: 2000 };
             localStorage.setItem('cachedProfile', JSON.stringify(defaultProfile));
@@ -275,15 +292,20 @@ async function syncFoodFromCloud() {
 
     const record = await resolveUserRecord(tgId, email);
     let localFood = [];
-    try { localFood = JSON.parse(localStorage.getItem('todayFood') || '[]'); } catch(e) {} 
+    let localWater = [];
+    try { localFood = JSON.parse(localStorage.getItem('todayFood') || '[]'); } catch(e) {}
+    try { localWater = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e) {} 
 
     const now = new Date();
     const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     const savedDate = localStorage.getItem('foodListDate'); 
+    const savedWaterDate = localStorage.getItem('waterListDate');
 
     if (record) {
         const cloudFood = record.food || []; 
+        const cloudWater = record.water || []; 
 
+        // Синхронизация ЕДЫ
         if (!savedDate) {
             if (cloudFood.length > 0) {
                 localStorage.setItem('todayFood', JSON.stringify(cloudFood));
@@ -303,6 +325,28 @@ async function syncFoodFromCloud() {
             localStorage.setItem('foodListDate', today);
             await supabaseClient.from('user_links').update({ food: [] }).eq('id', record.id);
         }
+
+        // Синхронизация ВОДЫ
+        if (!savedWaterDate) {
+            if (cloudWater.length > 0) {
+                localStorage.setItem('todayWater', JSON.stringify(cloudWater));
+            } else if (localWater.length > 0) {
+                await supabaseClient.from('user_links').update({ water: localWater }).eq('id', record.id);
+            }
+            localStorage.setItem('waterListDate', today);
+        } else if (savedWaterDate === today) {
+            if (cloudWater.length > 0) {
+                localStorage.setItem('todayWater', JSON.stringify(cloudWater));
+            } else if (localWater.length > 0) {
+                await supabaseClient.from('user_links').update({ water: localWater }).eq('id', record.id);
+            }
+        } else {
+            archiveWaterToHistory(localWater, savedWaterDate);
+            localStorage.setItem('todayWater', '[]');
+            localStorage.setItem('waterListDate', today);
+            await supabaseClient.from('user_links').update({ water: [] }).eq('id', record.id);
+        }
+
         updateDashboard();
     }
 } 
@@ -318,6 +362,17 @@ async function saveFoodToCloud(foodArray) {
     }
 } 
 
+async function saveWaterToCloud(waterArray) {
+    const tgId = localStorage.getItem('tgId');
+    const email = localStorage.getItem('linkedEmail') || localStorage.getItem('currentEmail');
+    if (!tgId && !email) return; 
+
+    const record = await resolveUserRecord(tgId, email);
+    if (record) {
+        await supabaseClient.from('user_links').update({ water: waterArray }).eq('id', record.id);
+    }
+}
+
 async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
     try {
         let currentTgId = tgId || localStorage.getItem('tgId');
@@ -328,14 +383,20 @@ async function saveProgressToCloud(tgId, email, name, profile, xp, burned) {
 
         const existing = await resolveUserRecord(currentTgId, currentEmail); 
 
+        // Забираем текущую воду из памяти для сохранения
+        let localWater = [];
+        try { localWater = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e) {}
+
         if (existing) {
             await supabaseClient.from('user_links').update({
                 profile: profile, xp: xp, burned: burned, name: currentName,
-                telegram_id: currentTgId || null, email: currentEmail || null
+                telegram_id: currentTgId || null, email: currentEmail || null,
+                water: localWater
             }).eq('id', existing.id);
         } else {
             await supabaseClient.from('user_links').insert([{
-                telegram_id: currentTgId, email: currentEmail, profile: profile, xp: xp, burned: burned, name: currentName
+                telegram_id: currentTgId, email: currentEmail, profile: profile, xp: xp, burned: burned, name: currentName,
+                water: localWater
             }]);
         }
     } catch (e) {
@@ -403,6 +464,9 @@ function addWater(amount) {
     try { waterArr = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e) {}
     waterArr.push({ amount: parseInt(amount), time: new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'}) });
     localStorage.setItem('todayWater', JSON.stringify(waterArr));
+    
+    // СОХРАНЯЕМ В ОБЛАКО
+    saveWaterToCloud(waterArr);
     updateDashboard();
     
     const today = localStorage.getItem('waterListDate');
@@ -414,6 +478,9 @@ function deleteWaterItem(index) {
     try { waterArr = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e) {}
     waterArr.splice(index, 1);
     localStorage.setItem('todayWater', JSON.stringify(waterArr));
+    
+    // СОХРАНЯЕМ В ОБЛАКО
+    saveWaterToCloud(waterArr);
     updateDashboard();
     
     const today = localStorage.getItem('waterListDate');
@@ -595,7 +662,6 @@ function updateDashboard() {
     if (!currentProfileData) return;
     checkDayReset();
     
-    // Обновляем кнопку быстрой воды
     updateCustomWaterBtn();
 
     // --- ЕДА ---
