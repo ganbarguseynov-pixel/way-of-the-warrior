@@ -20,8 +20,17 @@
 .custom-modal-content { background: #1c1c1e; border-radius: 16px; padding: 20px; width: 100%; max-width: 320px; box-sizing: border-box; position: relative; }
 .custom-modal-close { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 18px; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-/* Уменьшенные стили для главного экрана */
-.compact-panel { background: rgba(28, 28, 30, 0.85); border-radius: 10px; padding: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; min-width: 0; box-sizing: border-box; }
+/* Уменьшенные и ИСПРАВЛЕННЫЕ стили для главного экрана */
+.compact-panel {
+background: rgba(28, 28, 30, 0.85);
+border-radius: 10px;
+padding: 8px;
+border: 1px solid rgba(255,255,255,0.1);
+display: flex;
+flex-direction: column;
+min-width: 0;
+box-sizing: border-box;
+}
 .compact-food-list { max-height: 50px; overflow-y: auto; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px; }
 .compact-food-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px; margin-bottom: 2px; font-size: 10px; }
 .quick-btn { background: #2c2c2e; color: white; border: 1px solid #3a3a3c; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; }
@@ -30,7 +39,7 @@
 .water-btn:active { background: rgba(90, 200, 250, 0.4); }
 </style>
 </head>
-<body class="male-theme"> 
+<body class="male-theme">
 
 <div id="auth-screen" class="screen active auth-screen">
 <div class="auth-container">
@@ -44,7 +53,7 @@
 </div>
 </div>
 </div>
-</div> 
+</div>
 
 <div id="email-screen" class="screen">
 <div class="inner-screen">
@@ -54,7 +63,7 @@
 <div class="form-group"><label>Пароль</label><input type="password" id="auth-password" placeholder="Минимум 6 символов"></div>
 <button class="btn" onclick="handleEmailAuth()" id="email-submit-btn">Продолжить</button>
 </div>
-</div> 
+</div>
 
 <div id="dashboard-screen" class="screen">
 <video id="character-video" class="video-background" autoplay loop muted playsinline></video>
@@ -69,78 +78,71 @@
 <div class="character-title" id="char-title" style="font-size: 28px;">Странник</div>
 <div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
 <p class="xp-text" id="xp-text" style="font-size: 11px;">0 / 100 XP</p>
-
-<!-- БЛОК ДЛЯ ЦИТАТЫ -->
-<div id="daily-quote-container" style="margin: 25px auto 0; max-width: 90%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); padding: 12px 15px; border-radius: 12px; border-left: 3px solid var(--accent-color); text-align: left; display: none;">
-    <p id="daily-quote-text" style="margin: 0; font-size: 14px; font-style: italic; color: #eee; line-height: 1.4;"></p>
-    <p id="daily-quote-author" style="margin: 8px 0 0 0; font-size: 12px; font-weight: bold; color: var(--accent-color); text-align: right;"></p>
-</div>
-
 </div>
 
 <div class="bottom-panel" style="gap: 8px;">
-    
-    <div class="stats-row" style="margin-bottom: 0;">
-        <div class="stat-box" style="padding: 8px;"><p style="font-size: 10px;">Норма</p><h3 id="calories-norm" style="font-size: 16px;">0 ккал</h3></div>
-        <div class="stat-box" style="padding: 8px;"><p style="font-size: 10px;">Сожжено</p><h3 id="burned-total" style="font-size: 16px;">0 ккал</h3></div>
-    </div>
 
-    <!-- ВОДА И ЕДА РЯДОМ -->
-    <div style="display: flex; gap: 8px; margin-bottom: 4px; width: 100%; box-sizing: border-box;">
-        
-        <!-- Левая часть: Вода -->
-        <div class="compact-panel" style="flex: 1; border-color: rgba(90, 200, 250, 0.3);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <h4 style="margin: 0; color: #5ac8fa; font-size: 10px; text-transform: uppercase;">💧 Вода</h4>
-                <span style="font-size: 10px; color: #fff;"><span id="eaten-water">0</span>/<span id="norm-water">2000</span></span>
-            </div>
-            
-            <!-- Кнопки воды -->
-            <div style="display: flex; gap: 3px; align-items: stretch;">
-                <button class="water-btn" style="flex: 1;" onclick="addWater(200)">+200</button>
-                <button class="water-btn" style="flex: 1;" onclick="addWater(500)">+500</button>
-                <button id="custom-water-quick-btn" class="water-btn" style="flex: 1.5; background: rgba(90, 200, 250, 0.1);" onclick="quickAddCustomWater()">+Своя</button>
-                <button class="water-btn" style="width: 26px; padding: 0; background: transparent; color: #8e8e93; border-color: #3a3a3c;" onclick="openCustomWaterModal()">✎</button>
-            </div>
-            
-            <div id="today-water-list" class="compact-food-list" style="border-color: rgba(90, 200, 250, 0.2);"></div>
-        </div>
+<div class="stats-row" style="margin-bottom: 0;">
+<div class="stat-box" style="padding: 8px;"><p style="font-size: 10px;">Норма</p><h3 id="calories-norm" style="font-size: 16px;">0 ккал</h3></div>
+<div class="stat-box" style="padding: 8px;"><p style="font-size: 10px;">Сожжено</p><h3 id="burned-total" style="font-size: 16px;">0 ккал</h3></div>
+</div>
 
-        <!-- Правая часть: Еда -->
-        <div class="compact-panel" style="flex: 1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <h4 style="margin: 0; color: #fff; font-size: 10px; text-transform: uppercase;">🍏 Еда</h4>
-                <div style="display: flex; gap: 2px;">
-                    <button onclick="openHistoryScreen()" style="background: transparent; border: none; color: #34c759; font-size: 11px; cursor: pointer; padding: 0;">📜</button>
-                    <button onclick="openCustomNormModal()" style="background: transparent; border: none; color: #34c759; font-size: 11px; cursor: pointer; padding: 0;">✎</button>
-                </div>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; font-size: 10px; text-align: center;">
-                <div style="color: var(--accent-color); background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;"><span id="eaten-cal">0</span> Ккал</div>
-                <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;"><span id="eaten-prot">0</span> Бел.</div>
-                <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;"><span id="eaten-fat">0</span> Жир.</div>
-                <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;"><span id="eaten-carb">0</span> Угл.</div>
-            </div>
-            
-            <div id="today-food-list" class="compact-food-list"></div>
-            
-            <div style="display: none;">
-                <span id="norm-cal"></span><span id="norm-prot"></span><span id="norm-fat"></span><span id="norm-carb"></span>
-            </div>
-        </div>
+<!-- ВОДА И ЕДА РЯДОМ -->
+<div style="display: flex; gap: 8px; margin-bottom: 4px; width: 100%; box-sizing: border-box;">
 
-    </div>
+<!-- Левая часть: Вода -->
+<div class="compact-panel" style="flex: 1; border-color: rgba(90, 200, 250, 0.3);">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+<h4 style="margin: 0; color: #5ac8fa; font-size: 10px; text-transform: uppercase;">💧 Вода</h4>
+<span style="font-size: 10px; color: #fff;"><span id="eaten-water">0</span>/<span id="norm-water">2000</span></span>
+</div>
 
-    <div class="action-grid" style="margin-top: 4px;">
-        <button class="action-btn" onclick="window.location.href='camera.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 2px;">📸</h3><p style="font-size: 10px;">Еда</p></button>
-        <button class="action-btn" onclick="window.location.href='workout.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 2px;">💪</h3><p style="font-size: 10px;">Треня</p></button>
-        <button class="action-btn" onclick="window.location.href='timer.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 2px;">⏱</h3><p style="font-size: 10px;">Таймер</p></button>
-        <button class="action-btn" onclick="window.location.href='leaderboard.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 2px;">🏆</h3><p style="font-size: 10px;">Рейтинг</p></button>
-    </div>
+<!-- Кнопки воды -->
+<div style="display: flex; gap: 3px; align-items: stretch;">
+<button class="water-btn" style="flex: 1;" onclick="addWater(200)">+200</button>
+<button class="water-btn" style="flex: 1;" onclick="addWater(500)">+500</button>
+<button id="custom-water-quick-btn" class="water-btn" style="flex: 1.5; background: rgba(90, 200, 250, 0.1);" onclick="quickAddCustomWater()">+Своя</button>
+<button class="water-btn" style="width: 26px; padding: 0; background: transparent; color: #8e8e93; border-color: #3a3a3c;" onclick="openCustomWaterModal()">✎</button>
+</div>
+
+<div id="today-water-list" class="compact-food-list" style="border-color: rgba(90, 200, 250, 0.2);"></div>
+</div>
+
+<!-- Правая часть: Еда -->
+<div class="compact-panel" style="flex: 1;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+<h4 style="margin: 0; color: #fff; font-size: 10px; text-transform: uppercase;">🍏 Еда</h4>
+<div style="display: flex; gap: 2px;">
+<button onclick="openHistoryScreen()" style="background: transparent; border: none; color: #34c759; font-size: 11px; cursor: pointer; padding: 0;">📜</button>
+<button onclick="openCustomNormModal()" style="background: transparent; border: none; color: #34c759; font-size: 11px; cursor: pointer; padding: 0;">✎</button>
 </div>
 </div>
-</div> 
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; font-size: 10px; text-align: center;">
+<div style="color: var(--accent-color); background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;"><span id="eaten-cal">0</span> Ккал</div>
+<div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;"><span id="eaten-prot">0</span> Бел.</div>
+<div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;"><span id="eaten-fat">0</span> Жир.</div>
+<div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;"><span id="eaten-carb">0</span> Угл.</div>
+</div>
+
+<div id="today-food-list" class="compact-food-list"></div>
+
+<div style="display: none;">
+<span id="norm-cal"></span><span id="norm-prot"></span><span id="norm-fat"></span><span id="norm-carb"></span>
+</div>
+</div>
+
+</div>
+
+<div class="action-grid" style="margin-top: 4px;">
+<button class="action-btn" onclick="window.location.href='camera.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 2px;">📸</h3><p style="font-size: 10px;">Еда</p></button>
+<button class="action-btn" onclick="window.location.href='workout.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 2px;">💪</h3><p style="font-size: 10px;">Треня</p></button>
+<button class="action-btn" onclick="window.location.href='timer.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 2px;">⏱</h3><p style="font-size: 10px;">Таймер</p></button>
+<button class="action-btn" onclick="window.location.href='leaderboard.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 2px;">🏆</h3><p style="font-size: 10px;">Рейтинг</p></button>
+</div>
+</div>
+</div>
+</div>
 
 <!-- ЭКРАН ИСТОРИИ -->
 <div id="history-screen" class="screen">
@@ -149,40 +151,40 @@
 <h1 style="text-align: center; margin-bottom: 15px;">📜 История</h1>
 
 <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-        <div style="flex: 1;">
-            <label style="font-size: 11px; color: #8e8e93; margin-bottom: 4px; display: block;">С даты</label>
-            <input type="date" id="history-start-date" style="width: 100%; padding: 8px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 14px; outline: none; box-sizing: border-box;" onchange="renderHistory()">
-        </div>
-        <div style="flex: 1;">
-            <label style="font-size: 11px; color: #8e8e93; margin-bottom: 4px; display: block;">По дату</label>
-            <input type="date" id="history-end-date" style="width: 100%; padding: 8px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 14px; outline: none; box-sizing: border-box;" onchange="renderHistory()">
-        </div>
-    </div>
-    
-    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-        <button class="quick-btn" onclick="setHistoryPeriod('7days')">7 дней</button>
-        <button class="quick-btn" onclick="setHistoryPeriod('30days')">30 дней</button>
-        <button class="quick-btn" onclick="setHistoryPeriod('month')">Этот месяц</button>
-        <button class="quick-btn" onclick="setHistoryPeriod('all')">Все время</button>
-    </div>
+<div style="display: flex; gap: 10px; margin-bottom: 10px;">
+<div style="flex: 1;">
+<label style="font-size: 11px; color: #8e8e93; margin-bottom: 4px; display: block;">С даты</label>
+<input type="date" id="history-start-date" style="width: 100%; padding: 8px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 14px; outline: none; box-sizing: border-box;" onchange="renderHistory()">
+</div>
+<div style="flex: 1;">
+<label style="font-size: 11px; color: #8e8e93; margin-bottom: 4px; display: block;">По дату</label>
+<input type="date" id="history-end-date" style="width: 100%; padding: 8px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 14px; outline: none; box-sizing: border-box;" onchange="renderHistory()">
+</div>
+</div>
+
+<div style="display: flex; gap: 5px; flex-wrap: wrap;">
+<button class="quick-btn" onclick="setHistoryPeriod('7days')">7 дней</button>
+<button class="quick-btn" onclick="setHistoryPeriod('30days')">30 дней</button>
+<button class="quick-btn" onclick="setHistoryPeriod('month')">Этот месяц</button>
+<button class="quick-btn" onclick="setHistoryPeriod('all')">Все время</button>
+</div>
 </div>
 
 <div id="history-period-summary" class="history-card" style="background: rgba(52, 199, 89, 0.1); border-color: #34c759; display: none;">
-    <div style="font-size: 14px; font-weight: bold; color: #34c759; margin-bottom: 8px;">Итого за период:</div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; margin-bottom: 10px;">
-        <div><span id="hist-total-cal" style="color: var(--accent-color); font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Ккал</span></div>
-        <div><span id="hist-total-prot" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Бел.</span></div>
-        <div><span id="hist-total-fat" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Жир.</span></div>
-        <div><span id="hist-total-carb" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div>
-    </div>
-    <div style="text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-        <span style="color: #5ac8fa; font-weight: bold; font-size: 16px;" id="hist-total-water">0</span> <span style="font-size: 12px; color: #8e8e93;">мл воды</span>
-    </div>
+<div style="font-size: 14px; font-weight: bold; color: #34c759; margin-bottom: 8px;">Итого за период:</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; margin-bottom: 10px;">
+<div><span id="hist-total-cal" style="color: var(--accent-color); font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Ккал</span></div>
+<div><span id="hist-total-prot" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Бел.</span></div>
+<div><span id="hist-total-fat" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Жир.</span></div>
+<div><span id="hist-total-carb" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div>
+</div>
+<div style="text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+<span style="color: #5ac8fa; font-weight: bold; font-size: 16px;" id="hist-total-water">0</span> <span style="font-size: 12px; color: #8e8e93;">мл воды</span>
+</div>
 </div>
 
 <div id="history-list">
-    <p style="text-align: center; color: #8e8e93;">Загрузка...</p>
+<p style="text-align: center; color: #8e8e93;">Загрузка...</p>
 </div>
 </div>
 </div>
@@ -214,8 +216,8 @@
 <div class="form-group"><label>Пол</label><select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
 <div class="form-group"><label>Цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
 <div class="form-group" style="margin-top: 15px; border-top: 1px solid #3a3a3c; padding-top: 15px;">
-    <label style="color: #5ac8fa;">Норма воды (мл)</label>
-    <input type="number" id="custom-water-goal" placeholder="Напр. 2000">
+<label style="color: #5ac8fa;">Норма воды (мл)</label>
+<input type="number" id="custom-water-goal" placeholder="Напр. 2000">
 </div>
 </div>
 
@@ -223,10 +225,10 @@
 <h3 style="margin-top: 0;">Своя норма еды (опционально)</h3>
 <p style="color: #8e8e93; font-size: 12px; margin-bottom: 10px;">Если хотите задать норму вручную, впишите цифры ниже.</p>
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Калории</label><input type="number" id="custom-calories" placeholder="2000"></div>
-    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Белки (г)</label><input type="number" id="custom-protein" placeholder="150"></div>
-    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Жиры (г)</label><input type="number" id="custom-fat" placeholder="70"></div>
-    <div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Углеводы (г)</label><input type="number" id="custom-carbs" placeholder="200"></div>
+<div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Калории</label><input type="number" id="custom-calories" placeholder="2000"></div>
+<div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Белки (г)</label><input type="number" id="custom-protein" placeholder="150"></div>
+<div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Жиры (г)</label><input type="number" id="custom-fat" placeholder="70"></div>
+<div class="form-group" style="margin: 0;"><label style="font-size: 12px;">Углеводы (г)</label><input type="number" id="custom-carbs" placeholder="200"></div>
 </div>
 </div>
 
@@ -262,13 +264,14 @@
 <h3 style="margin-top: 0; text-align: center; font-size: 16px; color: #5ac8fa;">Свой объем воды</h3>
 <p style="color: #8e8e93; font-size: 12px; text-align: center; margin-bottom: 10px;">Этот объем сохранится на кнопке быстрого добавления.</p>
 <div class="form-group">
-    <label>Объем (мл)</label>
-    <input type="number" id="custom-water-input" placeholder="Напр. 300" style="font-size: 20px; text-align: center;">
+<label>Объем (мл)</label>
+<input type="number" id="custom-water-input" placeholder="Напр. 300" style="font-size: 20px; text-align: center;">
 </div>
 <button class="btn" style="margin-top: 15px; background-color: #5ac8fa; color: #fff;" onclick="addCustomWater()">Сохранить</button>
 </div>
 </div>
 
+<!-- ОКНО РЕГИСТРАЦИИ (БЕЗ ВОДЫ) -->
 <div id="onboarding-modal" class="custom-modal">
 <div class="custom-modal-content">
 <h3 style="margin-top: 0; text-align: center; font-size: 18px; color: var(--accent-color);">Добро пожаловать! 🏆</h3>
