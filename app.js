@@ -4,8 +4,9 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand(); 
 
-let currentMetricChart = null; // Переменная для текущего открытого графика
-let currentMetricType = null;
+// Переменные для графиков
+let chartWater = null, chartFoodCal = null, chartFoodMacro = null, chartWeight = null;
+let chartGlobalWeight = null, chartGlobalCal = null, chartGlobalMacro = null, chartGlobalWater = null;
 
 function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
@@ -250,11 +251,19 @@ function saveWeightToHistory(weight) {
     if (history.length > 50) history.pop();
     localStorage.setItem('weightHistory', JSON.stringify(history));
 }
-function openWeightHistory() { 
+function openWeightModal() { 
     if (currentProfileData && document.getElementById('modal-weight-input')) document.getElementById('modal-weight-input').value = currentProfileData.weight || '';
-    renderWeightHistory(); document.getElementById('weight-modal').classList.add('active'); 
+    const now = new Date(); const past = new Date(); past.setDate(now.getDate() - 7);
+    document.getElementById('weight-start-date').value = past.toISOString().split('T')[0];
+    document.getElementById('weight-end-date').value = now.toISOString().split('T')[0];
+    renderWeightHistory(); 
+    document.getElementById('weight-modal').classList.add('active'); 
+    setTimeout(() => { renderWeightChart(); }, 100);
 }
-function closeWeightHistory() { document.getElementById('weight-modal').classList.remove('active'); }
+function closeWeightModal() { 
+    document.getElementById('weight-modal').classList.remove('active'); 
+    if (chartWeight) { chartWeight.destroy(); chartWeight = null; }
+}
 async function saveWeightFromModal() {
     const newWeight = parseFloat(document.getElementById('modal-weight-input').value);
     if (!newWeight || newWeight <= 0) { tg.showAlert("Введите корректный вес!"); return; }
@@ -262,7 +271,7 @@ async function saveWeightFromModal() {
         currentProfileData.weight = newWeight; localStorage.setItem('cachedProfile', JSON.stringify(currentProfileData));
         saveWeightToHistory(newWeight);
         await saveProgressToCloud(localStorage.getItem('tgId'), localStorage.getItem('currentEmail'), localStorage.getItem('userName'), currentProfileData, currentXP, totalBurnedCalories);
-        updateDashboard(); renderWeightHistory(); tg.showAlert("Вес обновлен!");
+        updateDashboard(); renderWeightHistory(); renderWeightChart(); tg.showAlert("Вес обновлен!");
     }
 }
 function renderWeightHistory() {
@@ -283,6 +292,26 @@ function renderWeightHistory() {
     });
     listDiv.innerHTML = html;
 }
+function renderWeightChart() {
+    if (typeof Chart === 'undefined') return;
+    const start = document.getElementById('weight-start-date').value;
+    const end = document.getElementById('weight-end-date').value;
+    if (!start || !end) return;
+    let history = []; try { history = JSON.parse(localStorage.getItem('weightHistory') || '[]'); } catch(e) { history = []; }
+    const labels = []; const data = [];
+    for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0];
+        labels.push(dateStr.split('-').slice(1).reverse().join('.'));
+        const rec = history.find(h => h.dateRaw === dateStr || (h.date && h.date.split('.').reverse().join('-') === dateStr));
+        if (rec) data.push(rec.weight); else { const last = data.filter(v=>v!==null).pop(); data.push(last || null); }
+    }
+    if (chartWeight) chartWeight.destroy();
+    chartWeight = new Chart(document.getElementById('weight-chart-canvas').getContext('2d'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Вес', data: data, borderColor: '#ffcc00', backgroundColor: '#ffcc0033', borderWidth: 2, pointBackgroundColor: '#fff', pointBorderColor: '#ffcc00', pointRadius: 3, fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } } } }
+    });
+}
 
 // --- ВОДА ---
 function updateCustomWaterBtn() {
@@ -292,7 +321,7 @@ function updateCustomWaterBtn() {
 }
 function quickAddCustomWater() {
     const customAmount = localStorage.getItem('customWaterAmount');
-    if (customAmount && parseInt(customAmount) > 0) addWater(customAmount); else openCustomWaterModal();
+    if (customAmount && parseInt(customAmount) > 0) addWater(customAmount); else openWaterModal();
 }
 function addWater(amount) {
     let waterArr = []; try { waterArr = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e) {}
@@ -306,19 +335,145 @@ function deleteWaterItem(index) {
     waterArr.splice(index, 1); localStorage.setItem('todayWater', JSON.stringify(waterArr));
     syncWaterToProfile(); updateDashboard();
     const today = localStorage.getItem('waterListDate'); archiveWaterToHistory(waterArr, today);
+    renderTodayWaterList(waterArr);
 }
-function openCustomWaterModal() {
-    const saved = localStorage.getItem('customWaterAmount'); document.getElementById('custom-water-input').value = saved ? saved : '';
+function openWaterModal() {
+    const now = new Date(); const past = new Date(); past.setDate(now.getDate() - 7);
+    document.getElementById('water-start-date').value = past.toISOString().split('T')[0];
+    document.getElementById('water-end-date').value = now.toISOString().split('T')[0];
+    renderTodayWaterList(JSON.parse(localStorage.getItem('todayWater') || '[]'));
     document.getElementById('water-modal').classList.add('active');
+    setTimeout(() => { renderWaterChart(); }, 100);
 }
-function closeCustomWaterModal() { document.getElementById('water-modal').classList.remove('active'); }
-function addCustomWater() {
+function closeWaterModal() { 
+    document.getElementById('water-modal').classList.remove('active'); 
+    if (chartWater) { chartWater.destroy(); chartWater = null; }
+}
+function addWaterFromModal() {
     const val = parseInt(document.getElementById('custom-water-input').value);
-    if (val && val > 0) { localStorage.setItem('customWaterAmount', val); updateCustomWaterBtn(); addWater(val); closeCustomWaterModal(); } 
+    if (val && val > 0) { localStorage.setItem('customWaterAmount', val); updateCustomWaterBtn(); addWater(val); document.getElementById('custom-water-input').value = ''; } 
     else tg.showAlert("Введите корректный объем!");
 }
+function renderWaterChart() {
+    if (typeof Chart === 'undefined') return;
+    const start = document.getElementById('water-start-date').value;
+    const end = document.getElementById('water-end-date').value;
+    if (!start || !end) return;
+    let hist = {}; try { hist = JSON.parse(localStorage.getItem('waterHistory') || '{}'); } catch(e) {}
+    const labels = []; const data = [];
+    for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0];
+        labels.push(dateStr.split('-').slice(1).reverse().join('.'));
+        let sum = 0; (hist[dateStr] || []).forEach(w => sum += parseInt(w.amount || 0));
+        data.push(sum);
+    }
+    if (chartWater) chartWater.destroy();
+    chartWater = new Chart(document.getElementById('water-chart-canvas').getContext('2d'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Вода', data: data, borderColor: '#5ac8fa', backgroundColor: '#5ac8fa33', borderWidth: 2, pointBackgroundColor: '#fff', pointBorderColor: '#5ac8fa', pointRadius: 3, fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true } } }
+    });
+}
+function renderTodayWaterList(todayWater) {
+    const listDiv = document.getElementById('today-water-list'); if (!listDiv) return;
+    if (todayWater.length === 0) { listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; font-size: 10px;">Пока ничего не выпито</p>'; return; }
+    let html = ''; todayWater.forEach((w, index) => { html += `<div class="compact-food-item" style="border-left: 2px solid #5ac8fa;"><div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;">💧 ${w.amount} мл (${w.time})</div><button onclick="event.stopPropagation(); deleteWaterItem(${index})" style="background: none; border: none; color: #ff3b30; font-size: 14px; cursor: pointer; padding: 0;">✖</button></div>`; });
+    listDiv.innerHTML = html;
+}
 
-// --- ИСТОРИЯ И ГРАФИКИ ---
+// --- ЕДА И БЖУ ---
+function openFoodStatsModal() {
+    const now = new Date(); const past = new Date(); past.setDate(now.getDate() - 7);
+    document.getElementById('food-start-date').value = past.toISOString().split('T')[0];
+    document.getElementById('food-end-date').value = now.toISOString().split('T')[0];
+    document.getElementById('food-stats-modal').classList.add('active');
+    setTimeout(() => { renderFoodCharts(); }, 100);
+}
+function closeFoodStatsModal() { 
+    document.getElementById('food-stats-modal').classList.remove('active'); 
+    if (chartFoodCal) { chartFoodCal.destroy(); chartFoodCal = null; }
+    if (chartFoodMacro) { chartFoodMacro.destroy(); chartFoodMacro = null; }
+}
+function renderFoodCharts() {
+    if (typeof Chart === 'undefined') return;
+    const start = document.getElementById('food-start-date').value;
+    const end = document.getElementById('food-end-date').value;
+    if (!start || !end) return;
+
+    let hist = {}; try { hist = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) {}
+    const labels = []; const calData = []; const protData = []; const fatData = []; const carbData = [];
+    for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0];
+        labels.push(dateStr.split('-').slice(1).reverse().join('.'));
+        const foods = hist[dateStr] || [];
+        let c = 0, p = 0, f = 0, cb = 0;
+        foods.forEach(food => { c+=parseFloat(food.calories_100g||0); p+=parseFloat(food.proteins_100g||0); f+=parseFloat(food.fat_100g||0); cb+=parseFloat(food.carbs_100g||0); });
+        calData.push(Math.round(c)); protData.push(Math.round(p)); fatData.push(Math.round(f)); carbData.push(Math.round(cb));
+    }
+
+    if (chartFoodCal) chartFoodCal.destroy();
+    chartFoodCal = new Chart(document.getElementById('food-cal-chart-canvas').getContext('2d'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Калории', data: calData, borderColor: '#ff3b30', backgroundColor: '#ff3b3033', borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Калории (ккал)', color: '#fff' } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true } } }
+    });
+
+    if (chartFoodMacro) chartFoodMacro.destroy();
+    chartFoodMacro = new Chart(document.getElementById('food-macro-chart-canvas').getContext('2d'), {
+        type: 'line',
+        data: { labels: labels, datasets: [
+            { label: 'Белки', data: protData, borderColor: '#34c759', borderWidth: 2, pointRadius: 2, fill: false, tension: 0.3 },
+            { label: 'Жиры', data: fatData, borderColor: '#ff9500', borderWidth: 2, pointRadius: 2, fill: false, tension: 0.3 },
+            { label: 'Углеводы', data: carbData, borderColor: '#af52de', borderWidth: 2, pointRadius: 2, fill: false, tension: 0.3 }
+        ] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } }, title: { display: true, text: 'БЖУ (граммы)', color: '#fff' } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true } } }
+    });
+}
+
+// --- ГЛОБАЛЬНЫЙ АНАЛИЗ ---
+function openGlobalStatsModal() {
+    const now = new Date(); const past = new Date(); past.setDate(now.getDate() - 7);
+    document.getElementById('global-start-date').value = past.toISOString().split('T')[0];
+    document.getElementById('global-end-date').value = now.toISOString().split('T')[0];
+    openScreen('global-stats-screen');
+    setTimeout(() => { renderAllCharts(); }, 100);
+}
+function renderAllCharts() {
+    if (typeof Chart === 'undefined') return;
+    const start = document.getElementById('global-start-date').value;
+    const end = document.getElementById('global-end-date').value;
+    if (!start || !end) return;
+
+    let foodHist = {}; try { foodHist = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) {}
+    let waterHist = {}; try { waterHist = JSON.parse(localStorage.getItem('waterHistory') || '{}'); } catch(e) {}
+    let weightHist = []; try { weightHist = JSON.parse(localStorage.getItem('weightHistory') || '[]'); } catch(e) {}
+
+    const labels = []; const wData = []; const cData = []; const pData = []; const fData = []; const cbData = []; const hData = [];
+
+    for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0];
+        labels.push(dateStr.split('-').slice(1).reverse().join('.'));
+        const wRec = weightHist.find(h => h.dateRaw === dateStr || (h.date && h.date.split('.').reverse().join('-') === dateStr));
+        if (wRec) wData.push(wRec.weight); else { const last = wData.filter(v=>v!==null).pop(); wData.push(last||null); }
+        let c=0,p=0,f=0,cb=0; (foodHist[dateStr]||[]).forEach(food=>{c+=parseFloat(food.calories_100g||0);p+=parseFloat(food.proteins_100g||0);f+=parseFloat(food.fat_100g||0);cb+=parseFloat(food.carbs_100g||0);});
+        cData.push(Math.round(c)); pData.push(Math.round(p)); fData.push(Math.round(f)); cbData.push(Math.round(cb));
+        let h=0; (waterHist[dateStr]||[]).forEach(water=>h+=parseInt(water.amount||0));
+        hData.push(h);
+    }
+
+    const baseOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } } } };
+
+    if (chartGlobalWeight) chartGlobalWeight.destroy();
+    chartGlobalWeight = new Chart(document.getElementById('g-weight-chart').getContext('2d'), { type:'line', data:{labels,datasets:[{label:'Вес',data:wData,borderColor:'#ffcc00',borderWidth:2,pointRadius:2,fill:false,tension:0.3}]}, options:{...baseOpts, plugins:{...baseOpts.plugins, title:{display:true,text:'Вес (кг)',color:'#fff'}}} });
+    if (chartGlobalCal) chartGlobalCal.destroy();
+    chartGlobalCal = new Chart(document.getElementById('g-calories-chart').getContext('2d'), { type:'line', data:{labels,datasets:[{label:'Калории',data:cData,borderColor:'#ff3b30',borderWidth:2,pointRadius:2,fill:false,tension:0.3}]}, options:{...baseOpts, plugins:{...baseOpts.plugins, title:{display:true,text:'Калории (ккал)',color:'#fff'}}, scales:{...baseOpts.scales, y:{...baseOpts.scales.y, beginAtZero:true}}} });
+    if (chartGlobalMacro) chartGlobalMacro.destroy();
+    chartGlobalMacro = new Chart(document.getElementById('g-macros-chart').getContext('2d'), { type:'line', data:{labels,datasets:[{label:'Белки',data:pData,borderColor:'#34c759',borderWidth:2,pointRadius:2,fill:false,tension:0.3},{label:'Жиры',data:fData,borderColor:'#ff9500',borderWidth:2,pointRadius:2,fill:false,tension:0.3},{label:'Углеводы',data:cbData,borderColor:'#af52de',borderWidth:2,pointRadius:2,fill:false,tension:0.3}]}, options:{...baseOpts, plugins:{...baseOpts.plugins, legend:{labels:{color:'#fff'}}, title:{display:true,text:'БЖУ (граммы)',color:'#fff'}}, scales:{...baseOpts.scales, y:{...baseOpts.scales.y, beginAtZero:true}}} });
+    if (chartGlobalWater) chartGlobalWater.destroy();
+    chartGlobalWater = new Chart(document.getElementById('g-water-chart').getContext('2d'), { type:'line', data:{labels,datasets:[{label:'Вода',data:hData,borderColor:'#5ac8fa',borderWidth:2,pointRadius:2,fill:false,tension:0.3}]}, options:{...baseOpts, plugins:{...baseOpts.plugins, title:{display:true,text:'Вода (мл)',color:'#fff'}}, scales:{...baseOpts.scales, y:{...baseOpts.scales.y, beginAtZero:true}}} });
+}
+
+// --- ИСТОРИЯ ТЕКСТОМ (ТОЛЬКО ЕДА) ---
 function archiveFoodToHistory(foodArray, dateString) {
     if (!foodArray || foodArray.length === 0 || !dateString) return;
     let history = {}; try { history = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) {}
@@ -329,7 +484,6 @@ function archiveWaterToHistory(waterArray, dateString) {
     let history = {}; try { history = JSON.parse(localStorage.getItem('waterHistory') || '{}'); } catch(e) {}
     history[dateString] = waterArray; localStorage.setItem('waterHistory', JSON.stringify(history));
 }
-
 function openHistoryScreen() {
     const startInput = document.getElementById('history-start-date'); const endInput = document.getElementById('history-end-date');
     if (startInput && !startInput.value) {
@@ -352,19 +506,17 @@ function renderHistory() {
     const startInput = document.getElementById('history-start-date'); const endInput = document.getElementById('history-end-date');
     if (!listDiv || !summaryDiv || !startInput || !endInput) return;
     const startDate = startInput.value, endDate = endInput.value; if (!startDate || !endDate) return;
-    let foodHistory = {}, waterHistory = {};
+    let foodHistory = {};
     try { foodHistory = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) {}
-    try { waterHistory = JSON.parse(localStorage.getItem('waterHistory') || '{}'); } catch(e) {}
-    const allDates = new Set([...Object.keys(foodHistory), ...Object.keys(waterHistory)]);
+    const allDates = Object.keys(foodHistory); // Только еда
     const datesInRange = Array.from(allDates).filter(date => date >= startDate && date <= endDate).sort((a, b) => new Date(b) - new Date(a));
     if (datesInRange.length === 0) { summaryDiv.style.display = 'none'; listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; margin-top: 20px;">За выбранный период записей нет.</p>'; return; }
-    let periodCal = 0, periodProt = 0, periodFat = 0, periodCarb = 0, periodWater = 0, html = '';
+    let periodCal = 0, periodProt = 0, periodFat = 0, periodCarb = 0, html = '';
     datesInRange.forEach(date => {
-        const foods = foodHistory[date] || [], waters = waterHistory[date] || []; if (foods.length === 0 && waters.length === 0) return;
-        let dayCal = 0, dayProt = 0, dayFat = 0, dayCarb = 0, dayWater = 0;
+        const foods = foodHistory[date] || []; if (foods.length === 0) return;
+        let dayCal = 0, dayProt = 0, dayFat = 0, dayCarb = 0;
         foods.forEach(f => { dayCal += parseFloat(f.calories_100g || 0); dayProt += parseFloat(f.proteins_100g || 0); dayFat += parseFloat(f.fat_100g || 0); dayCarb += parseFloat(f.carbs_100g || 0); });
-        waters.forEach(w => { dayWater += parseInt(w.amount || 0); });
-        periodCal += dayCal; periodProt += dayProt; periodFat += dayFat; periodCarb += dayCarb; periodWater += dayWater;
+        periodCal += dayCal; periodProt += dayProt; periodFat += dayFat; periodCarb += dayCarb;
         const dayDisplay = date.split('-').reverse().join('.');
         html += `<div class="history-card"><div class="history-date">📅 ${dayDisplay}</div>`;
         html += `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; margin-bottom: 10px;">`;
@@ -373,10 +525,8 @@ function renderHistory() {
         html += `<div><span style="color: #fff; font-weight: bold; font-size: 14px;">${Math.round(dayFat)}</span><br><span style="font-size: 10px; color: #8e8e93;">Жир.</span></div>`;
         html += `<div><span style="color: #fff; font-weight: bold; font-size: 14px;">${Math.round(dayCarb)}</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div>`;
         html += `</div>`;
-        if (dayWater > 0) html += `<div style="text-align: center; margin-bottom: 10px; color: #5ac8fa; font-size: 13px; font-weight: bold;">💧 Выпито воды: ${dayWater} мл</div>`;
         html += `<div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">`;
         foods.forEach(f => { html += `<div class="history-food-item" style="display: flex; justify-content: space-between; margin-bottom: 5px;"><span>${f.product_name}</span><span style="color: #8e8e93;">${Math.round(f.calories_100g || 0)} ккал</span></div>`; });
-        waters.forEach(w => { html += `<div class="history-water-item" style="display: flex; justify-content: space-between; margin-bottom: 5px;"><span>💧 Вода</span><span style="color: #8e8e93;">${w.amount} мл</span></div>`; });
         html += `</div></div>`;
     });
     summaryDiv.style.display = 'block';
@@ -384,138 +534,7 @@ function renderHistory() {
     document.getElementById('hist-total-prot').innerText = Math.round(periodProt);
     document.getElementById('hist-total-fat').innerText = Math.round(periodFat);
     document.getElementById('hist-total-carb').innerText = Math.round(periodCarb);
-    document.getElementById('hist-total-water').innerText = periodWater;
     listDiv.innerHTML = html;
-}
-
-// --- ГРАФИКИ (СПЕЦИАЛЬНО ДЛЯ КАЖДОГО) ---
-function openMetricChart(type) {
-    currentMetricType = type;
-    const modal = document.getElementById('metric-stats-modal');
-    const title = document.getElementById('metric-stats-title');
-    const startInput = document.getElementById('metric-start-date');
-    const endInput = document.getElementById('metric-end-date');
-
-    // Настройка заголовка и цвета
-    if (type === 'water') { title.innerText = '💧 График воды'; title.style.color = '#5ac8fa'; }
-    else if (type === 'calories') { title.innerText = '🍏 График калорий'; title.style.color = '#ff3b30'; }
-    else if (type === 'macros') { title.innerText = '🥩 График БЖУ'; title.style.color = '#af52de'; }
-    else if (type === 'weight') { title.innerText = '⚖️ График веса'; title.style.color = '#ffcc00'; }
-
-    // Даты по умолчанию (последние 7 дней)
-    const now = new Date();
-    const past = new Date(); past.setDate(now.getDate() - 7);
-    startInput.value = past.toISOString().split('T')[0];
-    endInput.value = now.toISOString().split('T')[0];
-
-    // Открываем окно
-    modal.classList.add('active');
-
-    // Ждем 100мс, чтобы окно отрисовалось, и только потом рисуем график
-    setTimeout(() => { renderMetricChart(); }, 100);
-}
-
-function closeMetricChart() {
-    document.getElementById('metric-stats-modal').classList.remove('active');
-    if (currentMetricChart) { currentMetricChart.destroy(); currentMetricChart = null; }
-}
-
-function renderMetricChart() {
-    if (typeof Chart === 'undefined') {
-        tg.showAlert("График не может загрузиться. Проверьте интернет.");
-        return;
-    }
-
-    const startDate = document.getElementById('metric-start-date').value;
-    const endDate = document.getElementById('metric-end-date').value;
-    if (!startDate || !endDate) return;
-
-    // Собираем данные из памяти
-    let foodHistory = {}; try { foodHistory = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) {}
-    let waterHistory = {}; try { waterHistory = JSON.parse(localStorage.getItem('waterHistory') || '{}'); } catch(e) {}
-    let weightHistory = []; try { weightHistory = JSON.parse(localStorage.getItem('weightHistory') || '[]'); } catch(e) {}
-
-    // Создаем список всех дат в выбранном диапазоне
-    const datesInRange = [];
-    for (let d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate() + 1)) {
-        datesInRange.push(d.toISOString().split('T')[0]);
-    }
-
-    const labels = []; // Подписи оси X (даты)
-    const dataValues = []; // Значения для линии
-
-    datesInRange.forEach(date => {
-        // Форматируем дату для подписи: 05.11
-        labels.push(date.split('-').slice(1).reverse().join('.'));
-
-        if (currentMetricType === 'water') {
-            const waters = waterHistory[date] || [];
-            let sum = 0; waters.forEach(w => sum += parseInt(w.amount || 0));
-            dataValues.push(sum);
-        } 
-        else if (currentMetricType === 'calories') {
-            const foods = foodHistory[date] || [];
-            let sum = 0; foods.forEach(f => sum += parseFloat(f.calories_100g || 0));
-            dataValues.push(Math.round(sum));
-        }
-        else if (currentMetricType === 'weight') {
-            // Ищем запись веса на эту дату
-            const record = weightHistory.find(h => h.dateRaw === date || (h.date && h.date.split('.').reverse().join('-') === date));
-            if (record) {
-                dataValues.push(record.weight);
-            } else {
-                // Если записи нет, тянем предыдущее значение, чтобы линия не рвалась
-                const lastKnown = dataValues.filter(v => v !== null && v !== undefined).pop();
-                dataValues.push(lastKnown !== undefined ? lastKnown : null);
-            }
-        }
-    });
-
-    // Если это макросы, то рисуем 3 линии
-    let datasets = [];
-    
-    if (currentMetricType === 'macros') {
-        let protData = [], fatData = [], carbData = [];
-        datesInRange.forEach(date => {
-            const foods = foodHistory[date] || [];
-            let p = 0, f = 0, c = 0;
-            foods.forEach(food => { p += parseFloat(food.proteins_100g || 0); f += parseFloat(food.fat_100g || 0); c += parseFloat(food.carbs_100g || 0); });
-            protData.push(Math.round(p)); fatData.push(Math.round(f)); carbData.push(Math.round(c));
-        });
-        datasets = [
-            { label: 'Белки', data: protData, borderColor: '#34c759', backgroundColor: '#34c75933', borderWidth: 2, pointRadius: 3, fill: false, tension: 0.3 },
-            { label: 'Жиры', data: fatData, borderColor: '#ff9500', backgroundColor: '#ff950033', borderWidth: 2, pointRadius: 3, fill: false, tension: 0.3 },
-            { label: 'Углеводы', data: carbData, borderColor: '#af52de', backgroundColor: '#af52de33', borderWidth: 2, pointRadius: 3, fill: false, tension: 0.3 }
-        ];
-    } else {
-        let color = '#fff';
-        if (currentMetricType === 'water') color = '#5ac8fa';
-        if (currentMetricType === 'calories') color = '#ff3b30';
-        if (currentMetricType === 'weight') color = '#ffcc00';
-        
-        datasets = [{
-            label: 'Значение', data: dataValues, borderColor: color, backgroundColor: color + '33',
-            borderWidth: 2, pointBackgroundColor: '#fff', pointBorderColor: color, pointRadius: 4, fill: true, tension: 0.3
-        }];
-    }
-
-    // Уничтожаем старый график, если он был
-    if (currentMetricChart) { currentMetricChart.destroy(); }
-
-    // Создаем новый
-    const ctx = document.getElementById('metric-chart-canvas').getContext('2d');
-    currentMetricChart = new Chart(ctx, {
-        type: 'line',
-        data: { labels: labels, datasets: datasets },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: '#fff' } } },
-            scales: {
-                x: { ticks: { color: '#8e8e93', maxRotation: 45, minRotation: 45 }, grid: { color: 'rgba(255,255,255,0.1)' } },
-                y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: currentMetricType !== 'weight' }
-            }
-        }
-    });
 }
 
 function updateDashboard() {
@@ -546,15 +565,9 @@ function updateDashboard() {
 function renderTodayFoodList(todayFood) {
     const listDiv = document.getElementById('today-food-list'); if (!listDiv) return;
     if (todayFood.length === 0) { listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; font-size: 10px;">Пока ничего не съедено</p>'; return; }
-    let html = ''; todayFood.forEach((food, index) => { html += `<div class="compact-food-item"><div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%;">${food.product_name}</div><button onclick="deleteFoodItem(${index})" style="background: none; border: none; color: #ff3b30; font-size: 14px; cursor: pointer; padding: 0;">✖</button></div>`; });
+    let html = ''; todayFood.forEach((food, index) => { html += `<div class="compact-food-item"><div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%;">${food.product_name}</div><button onclick="event.stopPropagation(); deleteFoodItem(${index})" style="background: none; border: none; color: #ff3b30; font-size: 14px; cursor: pointer; padding: 0;">✖</button></div>`; });
     listDiv.innerHTML = html;
 } 
-function renderTodayWaterList(todayWater) {
-    const listDiv = document.getElementById('today-water-list'); if (!listDiv) return;
-    if (todayWater.length === 0) { listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93; font-size: 10px;">Пока ничего не выпито</p>'; return; }
-    let html = ''; todayWater.forEach((w, index) => { html += `<div class="compact-food-item" style="border-left: 2px solid #5ac8fa;"><div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;">💧 ${w.amount} мл (${w.time})</div><button onclick="deleteWaterItem(${index})" style="background: none; border: none; color: #ff3b30; font-size: 14px; cursor: pointer; padding: 0;">✖</button></div>`; });
-    listDiv.innerHTML = html;
-}
 function deleteFoodItem(index) {
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]'); todayFood.splice(index, 1);
     localStorage.setItem('todayFood', JSON.stringify(todayFood)); saveFoodToCloud(todayFood); updateDashboard();
