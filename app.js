@@ -599,15 +599,10 @@ function renderProfile(profile) {
         }
     }, 1000);
     
-    // Показ совета Сенсея при входе
+    // Показ совета Сенсея при входе (теперь без задержки в 3 часа)
     setTimeout(() => {
-        const lastAdviceTime = localStorage.getItem('lastSenseiAdviceTime');
-        const now = Date.now();
-        if (!lastAdviceTime || (now - parseInt(lastAdviceTime)) > 3 * 60 * 60 * 1000) {
-            showSenseiAdvice();
-            localStorage.setItem('lastSenseiAdviceTime', now);
-        }
-    }, 2000);
+        showSenseiAdvice();
+    }, 1500);
 }
 
 function updateCharacterUI() {
@@ -802,7 +797,7 @@ async function sendSenseiMessage() {
                 'Authorization': `Bearer ${PROXY_API_KEY}`
             },
             body: JSON.stringify({
-                model: 'deepseek-chat',
+                model: 'deepseek/deepseek-v4-flash', // Вернул модель, которую ты указывал
                 messages: messages,
                 temperature: 0.7
             })
@@ -816,13 +811,16 @@ async function sendSenseiMessage() {
             addSenseiMessage('assistant', data.choices[0].message.content);
         } else {
             console.error('API Error:', data);
-            addSenseiMessage('assistant', 'Прости, воин. Мое соединение с духами прервалось (проверь баланс API). Попробуй позже.');
+            // Выводим ошибку прямо в чат для отладки
+            let errorMsg = "Ошибка API.";
+            if (data.error && data.error.message) errorMsg = `Ошибка: ${data.error.message}`;
+            addSenseiMessage('assistant', `Прости, воин. Мое соединение с духами прервалось (${errorMsg}).`);
         }
     } catch (e) {
         console.error('Sensei API error:', e);
         const loadEl = document.getElementById('sensei-loading');
         if (loadEl) loadEl.remove();
-        addSenseiMessage('assistant', 'Прости, воин. Мое соединение с духами прервалось. Попробуй позже.');
+        addSenseiMessage('assistant', 'Прости, воин. Ошибка сети. Попробуй позже.');
     }
 }
 
@@ -834,12 +832,11 @@ function showSenseiAdvice(customText = null) {
     
     let advice = customText;
     
-    // Если текст не передан, генерируем задание на основе данных воина
     if (!advice) {
-        let todayWater = JSON.parse(localStorage.getItem('todayWater') || '[]');
+        let todayWater = []; try { todayWater = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e){}
         let eatenWater = 0; todayWater.forEach(w => eatenWater += parseInt(w.amount || 0));
         
-        let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
+        let todayFood = []; try { todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]'); } catch(e){}
         let eatenCal = 0; todayFood.forEach(f => eatenCal += parseFloat(f.calories_100g || 0));
         
         const tasks = [];
@@ -850,13 +847,14 @@ function showSenseiAdvice(customText = null) {
         if (tasks.length > 0) {
             advice = tasks[Math.floor(Math.random() * tasks.length)];
         } else {
-            // Если всё в порядке, даем задание на тренировку
             const generalTasks = [
                 "Сделай 15 отжиманий прямо сейчас. Это укрепит твой дух.",
                 "Выпей 200 мл воды. Вода — источник силы.",
                 "Запиши свой текущий вес в дневник, чтобы видеть прогресс.",
                 "Сделай растяжку на 5 минут. Тело должно быть гибким.",
-                "Съешь порцию белка (яйца, курица) для роста мышц."
+                "Съешь порцию белка (яйца, курица) для роста мышц.",
+                "Проверь свой рейтинг. Брось вызов другим воинам.",
+                "Открой дневник еды и добавь свой обед."
             ];
             advice = generalTasks[Math.floor(Math.random() * generalTasks.length)];
         }
