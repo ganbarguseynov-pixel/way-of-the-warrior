@@ -4,7 +4,11 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand(); 
 
-// Переменные для графиков
+// ================= НАСТРОЙКИ СЕНСЕЯ =================
+const PROXYAPI_KEY = 'sk-HQWY8HQ6KEHVAt6mnKNpTa6XgMys9wDv'; // Твой ключ
+const SENSEI_MODEL = 'deepseek/deepseek-v4-flash'; // Дешевая и умная модель
+// ====================================================
+
 let chartWaterDiary = null;
 let chartFoodCalDiary = null;
 let chartFoodMacroDiary = null;
@@ -254,13 +258,11 @@ function saveWeightToHistory(weight) {
     if (history.length > 50) history.pop();
     localStorage.setItem('weightHistory', JSON.stringify(history));
 }
-
 function openWeightDiary() {
     if (currentProfileData && document.getElementById('modal-weight-input')) document.getElementById('modal-weight-input').value = currentProfileData.weight || '';
     setPeriod('weight', '7days');
     openScreen('weight-diary-screen');
 }
-
 async function saveWeightFromDiary() {
     const newWeight = parseFloat(document.getElementById('modal-weight-input').value);
     if (!newWeight || newWeight <= 0) { tg.showAlert("Введите корректный вес!"); return; }
@@ -271,14 +273,11 @@ async function saveWeightFromDiary() {
         updateDashboard(); renderWeightDiary(); tg.showAlert("Вес обновлен!");
     }
 }
-
 function renderWeightDiary() {
     const start = document.getElementById('weight-start-date').value;
     const end = document.getElementById('weight-end-date').value;
     if (!start || !end) return;
-
     let history = []; try { history = JSON.parse(localStorage.getItem('weightHistory') || '[]'); } catch(e) { history = []; }
-    
     const labels = []; const data = [];
     for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
@@ -286,14 +285,12 @@ function renderWeightDiary() {
         const rec = history.find(h => h.dateRaw === dateStr || (h.date && h.date.split('.').reverse().join('-') === dateStr));
         if (rec) data.push(rec.weight); else { const last = data.filter(v=>v!==null).pop(); data.push(last || null); }
     }
-
     if (chartWeightDiary) chartWeightDiary.destroy();
     chartWeightDiary = new Chart(document.getElementById('weight-diary-chart').getContext('2d'), {
         type: 'line',
         data: { labels: labels, datasets: [{ label: 'Вес', data: data, borderColor: '#ffcc00', backgroundColor: '#ffcc0033', borderWidth: 2, pointBackgroundColor: '#fff', pointBorderColor: '#ffcc00', pointRadius: 3, fill: true, tension: 0.3 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } } } }
     });
-
     const validData = data.filter(v => v !== null);
     const diffDiv = document.getElementById('weight-diff');
     const summaryDiv = document.getElementById('weight-summary');
@@ -355,28 +352,22 @@ function renderWaterDiary() {
     const start = document.getElementById('water-start-date').value;
     const end = document.getElementById('water-end-date').value;
     if (!start || !end) return;
-
     let hist = {}; try { hist = JSON.parse(localStorage.getItem('waterHistory') || '{}'); } catch(e) {}
     const labels = []; const data = []; let total = 0;
-    
     for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
         labels.push(dateStr.split('-').slice(1).reverse().join('.'));
         let sum = 0; (hist[dateStr] || []).forEach(w => sum += parseInt(w.amount || 0));
-        data.push(sum);
-        total += sum;
+        data.push(sum); total += sum;
     }
-
     if (chartWaterDiary) chartWaterDiary.destroy();
     chartWaterDiary = new Chart(document.getElementById('water-diary-chart').getContext('2d'), {
         type: 'line',
         data: { labels: labels, datasets: [{ label: 'Вода', data: data, borderColor: '#5ac8fa', backgroundColor: '#5ac8fa33', borderWidth: 2, pointBackgroundColor: '#fff', pointBorderColor: '#5ac8fa', pointRadius: 3, fill: true, tension: 0.3 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true } } }
     });
-
     document.getElementById('water-summary').style.display = 'block';
     document.getElementById('water-total-ml').innerText = total;
-
     const listDiv = document.getElementById('water-diary-list');
     let listHtml = '';
     const dates = Object.keys(hist).filter(date => date >= start && date <= end).sort((a, b) => new Date(b) - new Date(a));
@@ -384,11 +375,8 @@ function renderWaterDiary() {
         const waters = hist[date] || [];
         if (waters.length === 0) return;
         let dayTotal = 0; waters.forEach(w => dayTotal += parseInt(w.amount));
-        
         listHtml += `<div class="history-card"><div class="history-date">📅 ${date.split('-').reverse().join('.')} <span style="float:right; font-size: 12px; color:#5ac8fa;">${dayTotal} мл</span></div>`;
-        waters.forEach(w => {
-            listHtml += `<div class="history-water-item"><span>💧 Вода</span><span style="color:#8e8e93;">${w.amount} мл (${w.time || ''})</span></div>`;
-        });
+        waters.forEach(w => { listHtml += `<div class="history-water-item"><span>💧 Вода</span><span style="color:#8e8e93;">${w.amount} мл (${w.time || ''})</span></div>`; });
         listHtml += `</div>`;
     });
     listDiv.innerHTML = listHtml || '<p style="text-align: center; color: #8e8e93;">Нет записей за этот период.</p>';
@@ -399,16 +387,13 @@ function openFoodDiary() {
     setPeriod('food', '7days');
     openScreen('food-diary-screen');
 }
-
 function renderFoodDiary() {
     const start = document.getElementById('food-start-date').value;
     const end = document.getElementById('food-end-date').value;
     if (!start || !end) return;
-
     let hist = {}; try { hist = JSON.parse(localStorage.getItem('foodHistory') || '{}'); } catch(e) {}
     const labels = []; const calData = []; const protData = []; const fatData = []; const carbData = [];
     let totalCal = 0, totalProt = 0, totalFat = 0, totalCarb = 0;
-
     for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
         labels.push(dateStr.split('-').slice(1).reverse().join('.'));
@@ -418,14 +403,12 @@ function renderFoodDiary() {
         calData.push(Math.round(c)); protData.push(Math.round(p)); fatData.push(Math.round(f)); carbData.push(Math.round(cb));
         totalCal += c; totalProt += p; totalFat += f; totalCarb += cb;
     }
-
     if (chartFoodCalDiary) chartFoodCalDiary.destroy();
     chartFoodCalDiary = new Chart(document.getElementById('food-diary-cal-chart').getContext('2d'), {
         type: 'line',
         data: { labels: labels, datasets: [{ label: 'Калории', data: calData, borderColor: '#ff3b30', backgroundColor: '#ff3b3033', borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Калории', color: '#fff' } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true } } }
     });
-
     if (chartFoodMacroDiary) chartFoodMacroDiary.destroy();
     chartFoodMacroDiary = new Chart(document.getElementById('food-diary-macro-chart').getContext('2d'), {
         type: 'line',
@@ -436,13 +419,11 @@ function renderFoodDiary() {
         ] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } }, title: { display: true, text: 'БЖУ', color: '#fff' } }, scales: { x: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#8e8e93' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true } } }
     });
-
     document.getElementById('food-summary').style.display = 'block';
     document.getElementById('food-total-cal').innerText = Math.round(totalCal);
     document.getElementById('food-total-prot').innerText = Math.round(totalProt);
     document.getElementById('food-total-fat').innerText = Math.round(totalFat);
     document.getElementById('food-total-carb').innerText = Math.round(totalCarb);
-
     const listDiv = document.getElementById('food-diary-list');
     let listHtml = '';
     const dates = Object.keys(hist).filter(date => date >= start && date <= end).sort((a, b) => new Date(b) - new Date(a));
@@ -508,14 +489,12 @@ function renderAllCharts() {
     chartGlobalWater = new Chart(document.getElementById('g-water-chart').getContext('2d'), { type:'line', data:{labels,datasets:[{label:'Вода',data:hData,borderColor:'#5ac8fa',borderWidth:2,pointRadius:2,fill:false,tension:0.3}]}, options:{...baseOpts, plugins:{...baseOpts.plugins, title:{display:true,text:'Вода (мл)',color:'#fff'}}, scales:{...baseOpts.scales, y:{...baseOpts.scales.y, beginAtZero:true}}} });
 }
 
-// --- УТИЛИТЫ ---
 function setPeriod(type, period) {
     const startInput = document.getElementById(type + '-start-date'); const endInput = document.getElementById(type + '-end-date');
     const now = new Date(); endInput.value = now.toISOString().split('T')[0];
     if (period === '7days') { const past = new Date(now); past.setDate(now.getDate() - 7); startInput.value = past.toISOString().split('T')[0]; } 
     else if (period === '30days') { const past = new Date(now); past.setDate(now.getDate() - 30); startInput.value = past.toISOString().split('T')[0]; } 
     else if (period === 'month') { const firstDay = new Date(now.getFullYear(), now.getMonth(), 1); startInput.value = firstDay.toISOString().split('T')[0]; }
-    
     if (type === 'water') renderWaterDiary();
     if (type === 'food') renderFoodDiary();
     if (type === 'weight') renderWeightDiary();
@@ -732,3 +711,93 @@ function stopShakeTest() {
     isShakeTesting = false; document.getElementById('test-shake-btn').style.display = 'block'; document.getElementById('stop-shake-btn').style.display = 'none';
     tg.showAlert("Максимум: " + maxShakeValue);
 }
+
+// ================= ЛОГИКА СЕНСЕЯ =================
+let senseiChatHistory = [];
+
+function openSensei() {
+    document.getElementById('sensei-modal').classList.add('active');
+    if (senseiChatHistory.length === 0) {
+        addSenseiMessage("sensei", `Привет, воин! Я твой Сенсей. Вижу, ты ведешь дневник. Чем могу помочь? Спрашивай про тренировки, питание или мотивацию.`);
+    }
+}
+
+function closeSensei() {
+    document.getElementById('sensei-modal').classList.remove('active');
+}
+
+function addSenseiMessage(role, text) {
+    const chatBox = document.getElementById('sensei-chat-box');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-msg ${role}`;
+    msgDiv.innerText = text;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    senseiChatHistory.push({ role: role === 'sensei' ? 'model' : 'user', parts: [{ text: text }] });
+}
+
+async function sendSenseiMsg() {
+    const input = document.getElementById('sensei-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    addSenseiMessage('user', text);
+    input.value = '';
+
+    const chatBox = document.getElementById('sensei-chat-box');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'chat-msg sensei';
+    loadingDiv.innerText = 'Думает...';
+    chatBox.appendChild(loadingDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    try {
+        const now = new Date();
+        const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+        let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
+        let todayWater = JSON.parse(localStorage.getItem('todayWater') || '[]');
+        
+        let eatenCal = 0;
+        todayFood.forEach(f => eatenCal += parseFloat(f.calories_100g || 0));
+        let eatenWater = 0;
+        todayWater.forEach(w => eatenWater += parseInt(w.amount || 0));
+        const norm = calculateNutrition(currentProfileData);
+        const waterGoal = currentProfileData.custom_water_goal || 2000;
+
+        const systemPrompt = `Ты — Сенсей, мудрый и строгий наставник в фитнес-приложении. Ты общаешься с пользователем по имени ${localStorage.getItem('userName') || 'Атлет'}. 
+        Его цель: ${currentProfileData.goal === 'lose' ? 'похудеть' : 'набрать массу'}. 
+        Норма калорий: ${norm.calories} ккал, белки: ${norm.protein}г, жиры: ${norm.fat}г, углеводы: ${norm.carbs}г.
+        Сегодня он съел: ${Math.round(eatenCal)} ккал. Выпил воды: ${eatenWater} мл из ${waterGoal} мл.
+        Твоя задача: давать короткие, мотивирующие советы. Если он съел много калорий — скажи об этом. Если выпил мало воды — напомни. Отвечай в стиле самурая/мастера боевых искусств. Не пиши длинные тексты, только суть.`;
+
+        const response = await fetch('https://api.proxyapi.ru/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${PROXYAPI_KEY}`
+            },
+            body: JSON.stringify({
+                model: SENSEI_MODEL,
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    ...senseiChatHistory.slice(-10)
+                ]
+            })
+        });
+
+        const data = await response.json();
+        chatBox.removeChild(loadingDiv);
+
+        if (data.choices && data.choices.length > 0) {
+            addSenseiMessage('sensei', data.choices[0].message.content);
+        } else {
+            addSenseiMessage('sensei', 'Прости, воин. Я задумался. Попробуй еще раз.');
+        }
+
+    } catch (e) {
+        chatBox.removeChild(loadingDiv);
+        addSenseiMessage('sensei', 'Ошибка связи с моим разумом. Проверь интернет.');
+        console.error(e);
+    }
+}
+// ====================================================
