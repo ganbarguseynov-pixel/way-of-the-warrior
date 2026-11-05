@@ -13,22 +13,39 @@
 /* Стили для истории */
 .history-card { background: #1c1c1e; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #2c2c2e; }
 .history-date { color: var(--accent-color); font-weight: bold; font-size: 15px; margin-bottom: 5px; }
-.history-stats { color: #8e8e93; font-size: 12px; margin-bottom: 10px; }
-.history-food-item { font-size: 12px; color: #fff; margin-bottom: 3px; padding-left: 10px; border-left: 2px solid #34c759; }
+.history-food-item { font-size: 12px; color: #fff; margin-bottom: 5px; padding-left: 10px; border-left: 2px solid #34c759; display: flex; justify-content: space-between; }
+.history-water-item { font-size: 12px; color: #fff; margin-bottom: 5px; padding-left: 10px; border-left: 2px solid #5ac8fa; display: flex; justify-content: space-between; }
+.history-weight-item { font-size: 14px; color: #fff; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; }
+
 .custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
 .custom-modal.active { display: flex; }
 .custom-modal-content { background: #1c1c1e; border-radius: 16px; padding: 20px; width: 100%; max-width: 400px; box-sizing: border-box; position: relative; max-height: 90vh; overflow-y: auto;}
 .custom-modal-close { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 18px; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;}
+
+/* Карточки на главном экране */
 .compact-panel { background: rgba(28, 28, 30, 0.85); border-radius: 10px; padding: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; min-width: 0; box-sizing: border-box; cursor: pointer; transition: 0.2s;}
 .compact-panel:active { background: rgba(50, 50, 55, 0.9); }
 .compact-food-list { max-height: 50px; overflow-y: auto; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px; }
 .compact-food-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px; margin-bottom: 2px; font-size: 10px; }
+
+/* Кнопки */
 .quick-btn { background: #2c2c2e; color: white; border: 1px solid #3a3a3c; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; }
+.quick-btn:active { background: #3a3a3c; }
 .water-btn { background: rgba(90, 200, 250, 0.2); border: 1px solid #5ac8fa; color: #5ac8fa; border-radius: 4px; padding: 2px 4px; font-size: 10px; cursor: pointer; font-weight: bold; text-align: center; }
 .weight-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; margin-right: 5px; }
 .analysis-btn { background: rgba(255, 204, 0, 0.2); border: 1px solid var(--accent-color); color: var(--accent-color); padding: 6px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; }
+
+/* Кнопка Дневник внутри карточки */
+.diary-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.diary-btn:active { background: rgba(255,255,255,0.3); }
+
+/* Стили для графиков */
 .chart-container { background: #2c2c2e; border-radius: 12px; padding: 10px; margin-top: 15px; position: relative; height: 200px; width: 100%; box-sizing: border-box;}
-.chart-title { font-size: 12px; color: #fff; text-align: center; margin-bottom: 5px; font-weight: bold;}
+
+/* Блоки итогов */
+.summary-box { background: rgba(52, 199, 89, 0.1); border: 1px solid #34c759; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+.summary-title { font-size: 14px; font-weight: bold; color: #34c759; margin-bottom: 8px; }
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; }
 </style>
 </head>
 <body class="male-theme"> 
@@ -72,7 +89,7 @@
 <p class="xp-text" id="xp-text" style="font-size: 11px;">0 / 100 XP</p>
 
 <div style="text-align: center;">
-    <button class="weight-btn" onclick="openWeightModal()">
+    <button class="weight-btn" onclick="openWeightDiary()">
         ⚖️ <span id="current-weight-display">0</span> кг
     </button>
     <button class="analysis-btn" onclick="openGlobalStatsModal()">
@@ -87,13 +104,16 @@
         <div class="stat-box" style="padding: 8px;"><p style="font-size: 10px;">Сожжено</p><h3 id="burned-total" style="font-size: 16px;">0 ккал</h3></div>
     </div>
 
+    <!-- Панели Воды и Еды -->
     <div style="display: flex; gap: 8px; margin-bottom: 4px; width: 100%; box-sizing: border-box;">
         
-        <!-- Вода (Клик открывает окно с графиком воды) -->
-        <div class="compact-panel" style="flex: 1; border-color: rgba(90, 200, 250, 0.3);" onclick="openWaterModal()">
+        <!-- Вода -->
+        <div class="compact-panel" style="flex: 1; border-color: rgba(90, 200, 250, 0.3);" onclick="openWaterDiary()">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <div style="display: flex; align-items: center; gap: 4px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
                     <h4 style="margin: 0; color: #5ac8fa; font-size: 10px; text-transform: uppercase;">💧 Вода</h4>
+                    <!-- Кнопка Дневник -->
+                    <button class="diary-btn" onclick="event.stopPropagation(); openWaterDiary()">📜 Дневник</button>
                 </div>
                 <span style="font-size: 10px; color: #fff;"><span id="eaten-water">0</span>/<span id="norm-water">2000</span></span>
             </div>
@@ -105,14 +125,15 @@
             <div id="today-water-list" class="compact-food-list" style="border-color: rgba(90, 200, 250, 0.2);"></div>
         </div>
 
-        <!-- Еда (Клик открывает окно с графиком еды) -->
-        <div class="compact-panel" style="flex: 1;" onclick="openFoodStatsModal()">
+        <!-- Еда -->
+        <div class="compact-panel" style="flex: 1;" onclick="openFoodDiary()">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <div style="display: flex; align-items: center; gap: 4px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
                     <h4 style="margin: 0; color: #fff; font-size: 10px; text-transform: uppercase;">🍏 Еда</h4>
+                    <!-- Кнопка Дневник -->
+                    <button class="diary-btn" onclick="event.stopPropagation(); openFoodDiary()">📜 Дневник</button>
                 </div>
                 <div style="display: flex; gap: 2px;" onclick="event.stopPropagation();">
-                    <button onclick="openHistoryScreen()" style="background: transparent; border: none; color: #34c759; font-size: 11px; cursor: pointer; padding: 0;">📜</button>
                     <button onclick="openCustomNormModal()" style="background: transparent; border: none; color: #34c759; font-size: 11px; cursor: pointer; padding: 0;">✎</button>
                 </div>
             </div>
@@ -137,7 +158,118 @@
 </div>
 </div> 
 
-<!-- ЭКРАН ОБЩЕГО АНАЛИЗА (ВСЕ ГРАФИКИ) -->
+<!-- ================= ДНЕВНИК ВОДЫ ================= -->
+<div id="water-diary-screen" class="screen">
+<div class="inner-screen">
+<button class="back-btn" onclick="closeScreen('water-diary-screen')">← Назад</button>
+<h1 style="text-align: center; margin-bottom: 15px;">📜 Дневник воды</h1>
+
+<div style="display: flex; gap: 8px; margin-bottom: 15px;">
+    <input type="number" id="custom-water-input" placeholder="Мл" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #3a3a3c; background: #2c2c2e; color: white; font-size: 16px; text-align: center;">
+    <button class="btn" style="width: auto; margin: 0; padding: 10px 15px; background-color: #5ac8fa; color: #fff; font-size: 14px;" onclick="addWaterFromDiary()">Добавить</button>
+</div>
+
+<div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">От</label><input type="date" id="water-start-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderWaterDiary()"></div>
+        <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">До</label><input type="date" id="water-end-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderWaterDiary()"></div>
+    </div>
+    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+        <button class="quick-btn" onclick="setPeriod('water', '7days')">7 дней</button>
+        <button class="quick-btn" onclick="setPeriod('water', '30days')">30 дней</button>
+        <button class="quick-btn" onclick="setPeriod('water', 'month')">Этот месяц</button>
+    </div>
+</div>
+
+<div id="water-summary" class="summary-box" style="border-color: #5ac8fa; background: rgba(90, 200, 250, 0.1); display: none;">
+    <div class="summary-title" style="color: #5ac8fa;">Итого выпито:</div>
+    <div style="text-align: center; font-size: 20px; font-weight: bold; color: #fff;">
+        <span id="water-total-ml">0</span> мл
+    </div>
+</div>
+
+<!-- График (внутри дневника) -->
+<div class="chart-container"><canvas id="water-diary-chart"></canvas></div>
+
+<!-- История (внутри дневника) -->
+<div id="water-diary-list" style="margin-top: 15px;"></div>
+</div>
+</div>
+
+<!-- ================= ДНЕВНИК ЕДЫ ================= -->
+<div id="food-diary-screen" class="screen">
+<div class="inner-screen">
+<button class="back-btn" onclick="closeScreen('food-diary-screen')">← Назад</button>
+<h1 style="text-align: center; margin-bottom: 15px;">📜 Дневник еды</h1>
+
+<div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">От</label><input type="date" id="food-start-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderFoodDiary()"></div>
+        <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">До</label><input type="date" id="food-end-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderFoodDiary()"></div>
+    </div>
+    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+        <button class="quick-btn" onclick="setPeriod('food', '7days')">7 дней</button>
+        <button class="quick-btn" onclick="setPeriod('food', '30days')">30 дней</button>
+        <button class="quick-btn" onclick="setPeriod('food', 'month')">Этот месяц</button>
+    </div>
+</div>
+
+<div id="food-summary" class="summary-box" style="display: none;">
+    <div class="summary-title">Итого за период:</div>
+    <div class="summary-grid">
+        <div><span id="food-total-cal" style="color: var(--accent-color); font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Ккал</span></div>
+        <div><span id="food-total-prot" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Бел.</span></div>
+        <div><span id="food-total-fat" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Жир.</span></div>
+        <div><span id="food-total-carb" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div>
+    </div>
+</div>
+
+<!-- Графики (внутри дневника) -->
+<div class="chart-container" style="height: 180px;"><canvas id="food-diary-cal-chart"></canvas></div>
+<div class="chart-container" style="height: 180px; margin-top: 10px;"><canvas id="food-diary-macro-chart"></canvas></div>
+
+<!-- История (внутри дневника) -->
+<div id="food-diary-list" style="margin-top: 15px;"></div>
+</div>
+</div>
+
+<!-- ================= ДНЕВНИК ВЕСА ================= -->
+<div id="weight-diary-screen" class="screen">
+<div class="inner-screen">
+<button class="back-btn" onclick="closeScreen('weight-diary-screen')">← Назад</button>
+<h1 style="text-align: center; margin-bottom: 15px;">📜 Дневник веса</h1>
+
+<div style="display: flex; gap: 8px; margin-bottom: 15px;">
+    <input type="number" id="modal-weight-input" step="0.1" style="flex: 1; padding: 10px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 16px; text-align: center; outline: none;">
+    <button class="btn" style="width: auto; margin: 0; padding: 10px 15px; background-color: #34c759; color: white; font-size: 14px;" onclick="saveWeightFromDiary()">Записать</button>
+</div>
+
+<div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">От</label><input type="date" id="weight-start-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderWeightDiary()"></div>
+        <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">До</label><input type="date" id="weight-end-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderWeightDiary()"></div>
+    </div>
+    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+        <button class="quick-btn" onclick="setPeriod('weight', '7days')">7 дней</button>
+        <button class="quick-btn" onclick="setPeriod('weight', '30days')">30 дней</button>
+        <button class="quick-btn" onclick="setPeriod('weight', 'month')">Этот месяц</button>
+    </div>
+</div>
+
+<div id="weight-summary" class="summary-box" style="border-color: #ffcc00; background: rgba(255, 204, 0, 0.1); display: none;">
+    <div class="summary-title" style="color: #ffcc00;">Разница за период:</div>
+    <div id="weight-diff" style="text-align: center; font-size: 20px; font-weight: bold; color: #fff;"></div>
+</div>
+
+<!-- График (внутри дневника) -->
+<div class="chart-container"><canvas id="weight-diary-chart"></canvas></div>
+
+<!-- История (внутри дневника) -->
+<div id="weight-diary-list" style="margin-top: 15px;"></div>
+</div>
+</div>
+
+<!-- ================= ОБЩИЙ АНАЛИЗ ================= -->
 <div id="global-stats-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('global-stats-screen')">← Назад</button>
@@ -155,87 +287,7 @@
 </div>
 </div>
 
-<!-- ОКНО ВОДЫ (ТОЛЬКО ВОДА) -->
-<div id="water-modal" class="custom-modal">
-<div class="custom-modal-content">
-<button class="custom-modal-close" onclick="closeWaterModal()">✖</button>
-<h3 style="margin-top: 0; text-align: center; font-size: 18px; color: #5ac8fa;">💧 Вода</h3>
-<div style="display: flex; gap: 8px; margin-bottom: 15px;">
-    <input type="number" id="custom-water-input" placeholder="Мл" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #3a3a3c; background: #2c2c2e; color: white; font-size: 16px; text-align: center;">
-    <button class="btn" style="width: auto; margin: 0; padding: 10px 15px; background-color: #5ac8fa; color: #fff; font-size: 14px;" onclick="addWaterFromModal()">Добавить</button>
-</div>
-<div style="display: flex; gap: 10px; margin-bottom: 15px;">
-    <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">От</label><input type="date" id="water-start-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderWaterChart()"></div>
-    <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">До</label><input type="date" id="water-end-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderWaterChart()"></div>
-</div>
-<div class="chart-container" style="margin-top: 0; height: 180px;"><canvas id="water-chart-canvas"></canvas></div>
-<div id="water-history-list" style="margin-top: 15px; max-height: 25vh; overflow-y: auto;"></div>
-</div>
-</div>
-
-<!-- ОКНО ЕДЫ (ТОЛЬКО КАЛОРИИ И БЖУ) -->
-<div id="food-stats-modal" class="custom-modal">
-<div class="custom-modal-content">
-<button class="custom-modal-close" onclick="closeFoodStatsModal()">✖</button>
-<h3 style="margin-top: 0; text-align: center; font-size: 18px; color: #34c759;">🍏 Калории и БЖУ</h3>
-<div style="display: flex; gap: 10px; margin-bottom: 15px;">
-    <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">От</label><input type="date" id="food-start-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderFoodCharts()"></div>
-    <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">До</label><input type="date" id="food-end-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderFoodCharts()"></div>
-</div>
-<div class="chart-container" style="margin-top: 0; height: 180px;"><canvas id="food-cal-chart-canvas"></canvas></div>
-<div class="chart-container" style="margin-top: 10px; height: 180px;"><canvas id="food-macro-chart-canvas"></canvas></div>
-</div>
-</div>
-
-<!-- ОКНО ВЕСА (ТОЛЬКО ВЕС) -->
-<div id="weight-modal" class="custom-modal">
-<div class="custom-modal-content">
-<button class="custom-modal-close" onclick="closeWeightModal()">✖</button>
-<h3 style="margin-top: 0; text-align: center; font-size: 18px; color: var(--accent-color);">⚖️ Вес</h3>
-<div style="display: flex; gap: 8px; margin-bottom: 15px;">
-    <input type="number" id="modal-weight-input" step="0.1" style="flex: 1; padding: 10px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 16px; text-align: center; outline: none;">
-    <button class="btn" style="width: auto; margin: 0; padding: 10px 15px; background-color: #34c759; color: white; font-size: 14px;" onclick="saveWeightFromModal()">Сохранить</button>
-</div>
-<div style="display: flex; gap: 10px; margin-bottom: 15px;">
-    <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">От</label><input type="date" id="weight-start-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderWeightChart()"></div>
-    <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">До</label><input type="date" id="weight-end-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderWeightChart()"></div>
-</div>
-<div class="chart-container" style="margin-top: 0; height: 180px;"><canvas id="weight-chart-canvas"></canvas></div>
-<div id="weight-diff" style="text-align: center; font-size: 14px; margin-top: 10px; margin-bottom: 10px; color: #8e8e93;"></div>
-<div id="weight-list" style="max-height: 25vh; overflow-y: auto;"></div>
-</div>
-</div>
-
-<!-- ДНЕВНИК ЕДЫ (История текстом) -->
-<div id="history-screen" class="screen">
-<div class="inner-screen">
-<button class="back-btn" onclick="closeScreen('history-screen')">← Назад</button>
-<h1 style="text-align: center; margin-bottom: 15px;">📜 Дневник еды</h1>
-<div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-        <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93; margin-bottom: 4px; display: block;">С даты</label><input type="date" id="history-start-date" style="width: 100%; padding: 8px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 14px; outline: none; box-sizing: border-box;" onchange="renderHistory()"></div>
-        <div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93; margin-bottom: 4px; display: block;">По дату</label><input type="date" id="history-end-date" style="width: 100%; padding: 8px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 14px; outline: none; box-sizing: border-box;" onchange="renderHistory()"></div>
-    </div>
-    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-        <button class="quick-btn" onclick="setHistoryPeriod('7days')">7 дней</button>
-        <button class="quick-btn" onclick="setHistoryPeriod('30days')">30 дней</button>
-        <button class="quick-btn" onclick="setHistoryPeriod('month')">Этот месяц</button>
-        <button class="quick-btn" onclick="setHistoryPeriod('all')">Все время</button>
-    </div>
-</div>
-<div id="history-period-summary" class="history-card" style="background: rgba(52, 199, 89, 0.1); border-color: #34c759; display: none;">
-    <div style="font-size: 14px; font-weight: bold; color: #34c759; margin-bottom: 8px;">Итого за период:</div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center;">
-        <div><span id="hist-total-cal" style="color: var(--accent-color); font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Ккал</span></div>
-        <div><span id="hist-total-prot" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Бел.</span></div>
-        <div><span id="hist-total-fat" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Жир.</span></div>
-        <div><span id="hist-total-carb" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div>
-    </div>
-</div>
-<div id="history-list"><p style="text-align: center; color: #8e8e93;">Загрузка...</p></div>
-</div>
-</div>
-
+<!-- Настройки профиля -->
 <div id="profile-settings-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
@@ -283,6 +335,7 @@
 </div>
 </div>
 
+<!-- Модальные окна -->
 <div id="norm-modal" class="custom-modal">
 <div class="custom-modal-content">
 <button class="custom-modal-close" onclick="closeCustomNormModal()">✖</button>
