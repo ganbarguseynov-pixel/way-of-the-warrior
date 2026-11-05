@@ -137,7 +137,6 @@ async function loginWithTelegram() {
             localStorage.setItem('cachedXP', data.xp || 0);
             localStorage.setItem('cachedBurned', data.burned || 0);
             
-            // Восстанавливаем воду из профиля
             const today = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
             if (data.profile.water && data.profile.waterDate === today) {
                 localStorage.setItem('todayWater', JSON.stringify(data.profile.water));
@@ -220,7 +219,6 @@ async function handleEmailAuth() {
             localStorage.setItem('cachedXP', linkData.xp || 0);
             localStorage.setItem('cachedBurned', linkData.burned || 0);
 
-            // Восстанавливаем воду из профиля
             const today = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
             if (linkData.profile.water && linkData.profile.waterDate === today) {
                 localStorage.setItem('todayWater', JSON.stringify(linkData.profile.water));
@@ -269,14 +267,16 @@ async function saveOnboardingData() {
     const height = document.getElementById('onboarding-height').value;
     const gender = document.getElementById('onboarding-gender').value;
     const goal = document.getElementById('onboarding-goal').value;
-    const water = document.getElementById('onboarding-water').value || 2000; 
 
     if (!age || !weight || !height) {
         tg.showAlert("Пожалуйста, заполни возраст, вес и рост!");
         return;
     } 
 
-    const profile = { age, gender, weight, height, goal, custom_calories: '', custom_protein: '', custom_fat: '', custom_carbs: '', custom_water_goal: parseInt(water) };
+    // АВТОМАТИЧЕСКИЙ РАСЧЕТ НОРМЫ ВОДЫ (30 мл на 1 кг веса)
+    const calculatedWater = weight ? Math.round(parseFloat(weight) * 30) : 2000;
+
+    const profile = { age, gender, weight, height, goal, custom_calories: '', custom_protein: '', custom_fat: '', custom_carbs: '', custom_water_goal: calculatedWater };
     localStorage.setItem('cachedProfile', JSON.stringify(profile)); 
 
     const tgId = localStorage.getItem('tgId');
@@ -287,7 +287,7 @@ async function saveOnboardingData() {
 
     document.getElementById('onboarding-modal').classList.remove('active');
     renderProfile(profile);
-    tg.showAlert("Отлично! Данные сохранены.");
+    tg.showAlert("Отлично! Твоя норма воды рассчитана автоматически.");
 } 
 
 async function syncFoodFromCloud() {
@@ -340,7 +340,6 @@ async function saveFoodToCloud(foodArray) {
     }
 } 
 
-// НОВАЯ ФУНКЦИЯ ДЛЯ СОХРАНЕНИЯ ВОДЫ В ПРОФИЛЬ
 async function syncWaterToProfile() {
     let todayWater = [];
     try { todayWater = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e) {}
@@ -445,7 +444,7 @@ function addWater(amount) {
     waterArr.push({ amount: parseInt(amount), time: new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'}) });
     localStorage.setItem('todayWater', JSON.stringify(waterArr));
     
-    syncWaterToProfile(); // СОХРАНЯЕМ В ОБЛАКО
+    syncWaterToProfile(); 
     updateDashboard();
     
     const today = localStorage.getItem('waterListDate');
@@ -458,7 +457,7 @@ function deleteWaterItem(index) {
     waterArr.splice(index, 1);
     localStorage.setItem('todayWater', JSON.stringify(waterArr));
     
-    syncWaterToProfile(); // СОХРАНЯЕМ В ОБЛАКО
+    syncWaterToProfile(); 
     updateDashboard();
     
     const today = localStorage.getItem('waterListDate');
@@ -484,7 +483,6 @@ function addCustomWater() {
         tg.showAlert("Введите корректный объем!");
     }
 }
-// --------------------------
 
 // --- ИСТОРИЯ ---
 function archiveFoodToHistory(foodArray, dateString) {
@@ -634,7 +632,6 @@ function renderHistory() {
 
     listDiv.innerHTML = html;
 }
-// --------------------------
 
 function updateDashboard() {
     if (!currentProfileData) return;
@@ -642,7 +639,6 @@ function updateDashboard() {
     
     updateCustomWaterBtn();
 
-    // --- ЕДА ---
     const norm = calculateNutrition(currentProfileData);
     let todayFood = JSON.parse(localStorage.getItem('todayFood') || '[]');
     
@@ -681,7 +677,6 @@ function updateDashboard() {
 
     renderTodayFoodList(todayFood);
 
-    // --- ВОДА ---
     let todayWater = [];
     try { todayWater = JSON.parse(localStorage.getItem('todayWater') || '[]'); } catch(e) {}
     
