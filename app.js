@@ -59,11 +59,7 @@ async function resolveUserRecord(tgId, email) {
         }
         return r;
     } 
-    let mergedFood = [];
-    let maxXp = 0;
-    let maxBurned = 0;
-    let profile = null;
-    let name = null; 
+    let mergedFood = [], maxXp = 0, maxBurned = 0, profile = null, name = null; 
     records.forEach(rec => {
         if (rec.food && Array.isArray(rec.food)) mergedFood = mergedFood.concat(rec.food);
         if (rec.xp && rec.xp > maxXp) maxXp = rec.xp;
@@ -71,12 +67,8 @@ async function resolveUserRecord(tgId, email) {
         if (rec.profile && !profile) profile = rec.profile;
         if (rec.name && !name) name = rec.name;
     }); 
-    const uniqueFood = [];
-    const seen = new Set();
-    mergedFood.forEach(f => {
-        const key = JSON.stringify(f);
-        if (!seen.has(key)) { seen.add(key); uniqueFood.push(f); }
-    }); 
+    const uniqueFood = [], seen = new Set();
+    mergedFood.forEach(f => { const key = JSON.stringify(f); if (!seen.has(key)) { seen.add(key); uniqueFood.push(f); } }); 
     const mainRecord = records[0];
     const idsToDelete = records.slice(1).map(r => r.id); 
     const updateData = {
@@ -303,15 +295,43 @@ function saveWeightToHistory(weight) {
     localStorage.setItem('weightHistory', JSON.stringify(history));
 }
 
-function openWeightHistory() { renderWeightHistory(); document.getElementById('weight-modal').classList.add('active'); }
+function openWeightHistory() { 
+    if (currentProfileData && document.getElementById('modal-weight-input')) {
+        document.getElementById('modal-weight-input').value = currentProfileData.weight || '';
+    }
+    renderWeightHistory(); 
+    document.getElementById('weight-modal').classList.add('active'); 
+}
 function closeWeightHistory() { document.getElementById('weight-modal').classList.remove('active'); }
+
+// НОВАЯ ФУНКЦИЯ ДЛЯ СОХРАНЕНИЯ ВЕСА ИЗ ОКНА
+async function saveWeightFromModal() {
+    const newWeight = parseFloat(document.getElementById('modal-weight-input').value);
+    if (!newWeight || newWeight <= 0) {
+        tg.showAlert("Введите корректный вес!");
+        return;
+    }
+    
+    if (currentProfileData) {
+        currentProfileData.weight = newWeight;
+        localStorage.setItem('cachedProfile', JSON.stringify(currentProfileData));
+        
+        saveWeightToHistory(newWeight);
+        
+        await saveProgressToCloud(localStorage.getItem('tgId'), localStorage.getItem('currentEmail'), localStorage.getItem('userName'), currentProfileData, currentXP, totalBurnedCalories);
+        
+        updateDashboard(); 
+        renderWeightHistory();
+        tg.showAlert("Вес обновлен!");
+    }
+}
 
 function renderWeightHistory() {
     const listDiv = document.getElementById('weight-list');
     const diffDiv = document.getElementById('weight-diff');
     let history = [];
     try { history = JSON.parse(localStorage.getItem('weightHistory') || '[]'); } catch(e) { history = []; }
-    if (history.length === 0) { listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93;">Нет записей. Измените вес в настройках, чтобы начать.</p>'; diffDiv.innerText = ""; return; }
+    if (history.length === 0) { listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93;">Нет записей.</p>'; diffDiv.innerText = ""; return; }
     const currentW = history[0].weight;
     const oldestW = history[history.length - 1].weight;
     const diff = (currentW - oldestW).toFixed(1);
