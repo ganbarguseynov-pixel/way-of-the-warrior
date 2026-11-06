@@ -1,43 +1,12 @@
-const OFOX_API_KEY='sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPmKOuTmo';
 const supabaseUrl='https://qnpriwfxzuoymoumdtrl.supabase.co';
 const supabaseKey='sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
 const supabaseClient=supabase.createClient(supabaseUrl,supabaseKey);
 const tg=window.Telegram.WebApp;
 tg.ready();
 tg.expand();
+
 let chartWaterDiary=null,chartFoodCalDiary=null,chartFoodMacroDiary=null,chartWeightDiary=null,chartGlobalWeight=null,chartGlobalCal=null,chartGlobalMacro=null,chartGlobalWater=null;
 
-window.addEventListener('load',()=>{
-const dummy=document.createElement('div');
-dummy.innerHTML=`<div id="workout-timer-modal" class="custom-modal" style="z-index: 2000;"><div class="custom-modal-content" style="text-align: center;"><h3 id="workout-timer-title" style="color: #ff3b30; margin-top: 0;">Тренировка 🥋</h3><div style="display: none;"><p id="workout-timer-desc"></p></div><div style="font-size: 56px; font-weight: bold; font-family: monospace; margin-bottom: 20px; color: #34c759;" id="workout-timer-display">00:45</div><div style="display: flex; gap: 10px; margin-bottom: 10px;"><button class="btn" id="workout-timer-btn" onclick="toggleWorkoutTimer()" style="background: #34c759; color: #fff; margin: 0; flex: 1;">Старт</button><button class="btn" onclick="nextWorkoutStep()" style="background: #007aff; color: #fff; margin: 0; flex: 1;">Далее</button></div><button class="btn" onclick="finishWorkoutTimer()" style="background: transparent; color: #ff3b30; margin-top: 10px;">Завершить</button></div></div><div id="workout-celebration-modal" class="custom-modal" style="z-index: 2100;"><div class="custom-modal-content" style="text-align: center;"><h1 style="font-size: 80px; margin: 0 0 10px 0;">🏆</h1><h2 style="margin-top: 0;">Тренировка завершена!</h2><p style="color: #8e8e93; margin-bottom: 20px;">Отличная работа, воин.</p><div style="background: rgba(255,255,255,0.05); border-left: 4px solid var(--accent-color); padding: 15px; border-radius: 8px; text-align: left; margin-bottom: 20px;"><p id="workout-finish-quote" style="font-style: italic; font-size: 16px; margin-bottom: 10px; color: #fff;">"Цитата"</p><p id="workout-finish-author" style="text-align: right; font-weight: bold; font-size: 14px; color: #8e8e93; margin: 0;">— Автор</p></div><button class="btn" onclick="closeWorkoutCelebration()" style="background: var(--accent-color); color: #000; font-weight: bold;">Принять</button></div></div>`;
-const tTimer=dummy.querySelector('#workout-timer-modal');
-const tCeleb=dummy.querySelector('#workout-celebration-modal');
-if(tTimer)document.body.appendChild(tTimer);
-if(tCeleb)document.body.appendChild(tCeleb);
-const t=document.getElementById('sensei-advice-modal');
-if(t){
-const e=t.querySelector('.sensei-advice-content');
-if(e){
-const n=document.createElement('button');
-n.id='start-workout-btn';
-n.className='btn';
-n.style='background-color: #34c759; color: white; margin-top: 10px; display: none; font-weight: bold;';
-n.innerText='🏋️ Начать тренировку';
-n.onclick=(event)=>{event.preventDefault();event.stopPropagation();const e=document.getElementById('sensei-advice-modal').getAttribute('data-advice-text');e&&startWorkout(e)};
-e.appendChild(n);
-}
-}
-});
-
-let workoutSteps=[],currentStepIndex=0,currentPhase='work',workoutInterval=null,isWorkoutRunning=!1,workoutTimeLeft=0;
-function parseWorkout(e){const t=[];const n=e.split('\n');for(let e of n){const n=e.match(/([А-Яа-яЁёA-Za-z\s]+)[\.\s]*\((\d+)\s*сек\)(?:\s*,?\s*отдых\s*(\d+)\s*сек)?/i);if(n){let e=n[1].trim();e=e.replace(/^\d+[\.\s]*/,'').trim(),t.push({name:e||"Упражнение",work:parseInt(n[2]),rest:n[3]?parseInt(n[3]):15})}}return t}
-function startWorkout(e){workoutSteps=parseWorkout(e),workoutSteps.length===0&&(workoutSteps=[{name:"Приседания",work:45,rest:15},{name:"Отжимания",work:30,rest:10},{name:"Планка",work:60,rest:20}]),currentStepIndex=0,currentPhase='work',workoutTimeLeft=workoutSteps[0].work;const t=document.getElementById('workout-timer-desc');t&&(t.innerText=e);const n=document.getElementById('workout-celebration-modal');n&&n.classList.remove('active');const s=document.getElementById('workout-timer-modal');s&&s.classList.add('active'),clearInterval(workoutInterval),isWorkoutRunning=!1,document.getElementById('workout-timer-btn').innerText="Старт";const a=document.getElementById('workout-timer-title');a&&(a.style.color='#ff3b30'),updateTimerDisplay()}
-function updateTimerDisplay(){if(currentStepIndex>=workoutSteps.length){showWorkoutCelebration();return}const e=workoutSteps[currentStepIndex];if(currentPhase==='work')document.getElementById('workout-timer-title').innerText=e.name,document.getElementById('workout-timer-title').style.color='#ff3b30',workoutTimeLeft=e.work;else{if(e.rest===0){currentStepIndex++,updateTimerDisplay();return}document.getElementById('workout-timer-title').innerText="Отдых ☕",document.getElementById('workout-timer-title').style.color='#34c759',workoutTimeLeft=e.rest}const t=String(Math.floor(workoutTimeLeft/60)).padStart(2,'0'),n=String(workoutTimeLeft%60).padStart(2,'0');document.getElementById('workout-timer-display').innerText=`${t}:${n}`}
-function nextWorkoutStep(){clearInterval(workoutInterval),isWorkoutRunning=!1,document.getElementById('workout-timer-btn').innerText="Старт",currentPhase==='work'&&workoutSteps[currentStepIndex].rest>0?(currentPhase='rest',updateTimerDisplay()):(currentStepIndex++,currentPhase='work',updateTimerDisplay())}
-function toggleWorkoutTimer(){const e=document.getElementById('workout-timer-btn');if(currentStepIndex>=workoutSteps.length){startWorkout(document.getElementById('workout-timer-desc').innerText);return}isWorkoutRunning?(clearInterval(workoutInterval),e.innerText="Продолжить",isWorkoutRunning=!1):(e.innerText="Пауза",isWorkoutRunning=!0,workoutInterval=setInterval(()=>{if(workoutTimeLeft>0)workoutTimeLeft--;else{if(currentPhase==='work'){const e=workoutSteps[currentStepIndex];e.rest>0?(currentPhase='rest',updateTimerDisplay()):(currentStepIndex++,currentPhase='work',updateTimerDisplay())}else currentStepIndex++,currentPhase='work',updateTimerDisplay()}const e=String(Math.floor(workoutTimeLeft/60)).padStart(2,'0'),t=String(workoutTimeLeft%60).padStart(2,'0');document.getElementById('workout-timer-display').innerText=`${e}:${t}`},1e3))}
-function finishWorkoutTimer(){showWorkoutCelebration()}
-function showWorkoutCelebration(){clearInterval(workoutInterval);const e=document.getElementById('workout-timer-modal');e&&e.classList.remove('active');const t=document.getElementById('workout-celebration-modal');t&&t.classList.add('active');const n=new Audio("12. Scroll Win 02.mp3");n.play().catch(e=>console.log("Audio error:",e));let s={text:"Ты не проиграл, пока не остановился.",author:"Майк Тайсон"};typeof allQuotes!=='undefined'&&allQuotes.length>0&&(s=allQuotes[Math.floor(Math.random()*allQuotes.length)]);document.getElementById('workout-finish-quote').innerText=`«${s.text}»`,document.getElementById('workout-finish-author').innerText=`— ${s.author}`}
-function closeWorkoutCelebration(){const e=document.getElementById('workout-celebration-modal');e&&e.classList.remove('active');const t=document.getElementById('sensei-advice-modal');t&&t.classList.remove('active');const n=document.getElementById('sensei-chat-modal');n&&n.classList.remove('active');openScreen('dashboard-screen')}
 function openScreen(e){document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));const t=document.getElementById(e);t&&t.classList.add('active')}
 function closeScreen(e){document.getElementById(e).classList.remove('active');localStorage.getItem('cachedProfile')?document.getElementById('dashboard-screen').classList.add('active'):document.getElementById('auth-screen').classList.add('active')}
 
@@ -115,12 +84,6 @@ const s=t[n];
 e.src.indexOf(s.video)===-1&&(e.src=s.video,e.load(),e.play().catch(e=>console.log("Autoplay blocked")))
 }
 },1000);
-setTimeout(()=>{
-if (window.name.indexOf('sensei_advice_shown') === -1) {
-showSenseiAdvice();
-window.name = window.name ? window.name + '|sensei_advice_shown' : 'sensei_advice_shown';
-}
-},1500);
 }
 
 function updateCharacterUI(){
@@ -130,7 +93,6 @@ for(let n=0;n<e.length;n++){
 if(currentXP>=e[n].xp) t=n;
 }
 const n=e[t];
-currentLevelIndex!==-1&&t>currentLevelIndex&&setTimeout(()=>{showSenseiAdvice("Поздравляю с новым уровнем, воин! Ты становишься сильнее. Продолжай в том же духе.")},1000);
 currentLevelIndex=t;
 document.getElementById('char-level')&&(document.getElementById('char-level').innerText="Уровень "+(t+1));
 document.getElementById('char-title')&&(document.getElementById('char-title').innerText=n.title);
@@ -155,171 +117,3 @@ async function logout(){confirm("Выйти из аккаунта? Прогре�
 let isShakeTesting=!1,maxShakeValue=0;
 async function startShakeTest(){if(!isShakeTesting){if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function')try{const e=await DeviceMotionEvent.requestPermission();if(e!=='granted'){tg.showAlert("Нет доступа.");return}}catch(e){return}isShakeTesting=!0,maxShakeValue=0,document.getElementById('test-shake-btn').style.display='none',document.getElementById('stop-shake-btn').style.display='block',window.addEventListener('devicemotion',function(e){if(!isShakeTesting)return;const t=e.accelerationIncludingGravity;if(t){const e=Math.abs(t.x||0)+Math.abs(t.y||0)+Math.abs(t.z||0);Math.round(e)>maxShakeValue&&(maxShakeValue=Math.round(e))}}),tg.showAlert("Тряси телефон!")}}
 function stopShakeTest(){isShakeTesting=!1,document.getElementById('test-shake-btn').style.display='block',document.getElementById('stop-shake-btn').style.display='none',tg.showAlert("Максимум: "+maxShakeValue)}
-
-let senseiChatHistory=[];
-try{const e=localStorage.getItem('senseiChatHistory');e&&(senseiChatHistory=JSON.parse(e))}catch(e){console.error("Ошибка чтения истории чата",e)}
-senseiChatHistory=senseiChatHistory.filter(e=>!e.content.includes("Ошибка API")&&!e.content.includes("соединение с духами"));
-
-function getSenseiContext(){
-let e=currentProfileData||{weight:70,height:175,goal:'lose',age:25,gender:'male',food_preference:''};
-let t=calculateNutrition(e),n=e.goal==='lose'?'Похудеть':'Набрать массу',s=e.custom_water_goal||2000,a=e.food_preference?e.food_preference:'Нет особых предпочтений';
-let o=[];try{o=JSON.parse(localStorage.getItem('todayWater')||'[]')}catch(e){}
-let r=0;o.forEach(e=>r+=parseInt(e.amount||0));
-let l=[];try{l=JSON.parse(localStorage.getItem('todayFood')||'[]')}catch(e){}
-let c=0,d=0,i=0,u=0;l.forEach(e=>{c+=parseFloat(e.calories_100g||0),d+=parseFloat(e.proteins_100g||0),i+=parseFloat(e.fat_100g||0),u+=parseFloat(e.carbs_100g||0)});
-const m=new Date().getHours();let p=m<12?"Утро (завтрак)":m<18?"День (обед)":"Вечер (ужин)";
-return`Ученик: Пол: ${e.gender==='male'?'Мужской':'Женский'}, Возраст: ${e.age}, Вес: ${e.weight}кг, Рост: ${e.height}см. Цель: ${n}.\nВремя суток: ${p}.\nПредпочтения в еде: ${a}.\nНорма на день: ${t.calories} ккал, Белки: ${t.protein}г, Жиры: ${t.fat}г, Углеводы: ${t.carbs}г. Вода: ${s} мл.\nУже съедено за сегодня: ${Math.round(c)} ккал, Белки: ${Math.round(d)}г, Жиры: ${Math.round(i)}г, Углеводы: ${Math.round(u)}г. Вода: ${r} мл.`}
-
-function openSenseiChat(){
-document.getElementById('sensei-chat-modal').classList.add('active');
-const e=document.getElementById('sensei-chat-box');
-e.innerHTML='';
-if(senseiChatHistory.length===0){
-addSenseiMessage('assistant','Приветствую, воин! Я твой Сенсей. Вижу, ты ведешь дневник. Чем могу помочь? Спрашивай про тренировки, питание или мотивацию.');
-}else{
-senseiChatHistory.forEach(t=>{
-const n=document.createElement('div');
-n.className=t.role==='user'?'sensei-msg user-msg':'sensei-msg bot-msg';
-let s=t.content.replace(/\\n/g,'\n').replace(/\*/g,'');
-n.innerText=s;
-if(t.role==='assistant'){
-const e=s.toLowerCase();
-if(e.includes('приседани')||e.includes('отжимани')||e.includes('планк')||e.includes('выпад')||e.includes('берпи')||e.includes('упражнени')||e.includes('тренировк')||e.includes('сек')){
-const e=document.createElement('button');
-e.className='btn';e.style='background: #34c759; color: white; margin-top: 10px; padding: 8px; font-size: 12px; border-radius: 8px; width: auto; font-weight: bold;';
-e.innerText='🏋️ Начать тренировку';e.onclick=()=>startWorkout(s);n.appendChild(e);
-}
-}
-e.appendChild(n);
-});
-e.scrollTop=e.scrollHeight;
-}
-}
-
-function closeSenseiChat(){document.getElementById('sensei-chat-modal').classList.remove('active')}
-
-function addSenseiMessage(e,t){
-const n=document.getElementById('sensei-chat-box');
-if(!n)return;
-if(senseiChatHistory.length>0){const n=senseiChatHistory[senseiChatHistory.length-1];if(n.role===e&&n.content===t)return}
-const s=document.createElement('div');
-s.className=e==='user'?'sensei-msg user-msg':'sensei-msg bot-msg';
-let a=t.replace(/\\n/g,'\n').replace(/\*/g,'');
-s.innerText=a;
-if(e==='assistant'){
-const e=a.toLowerCase();
-if(e.includes('приседани')||e.includes('отжимани')||e.includes('планк')||e.includes('выпад')||e.includes('берпи')||e.includes('упражнени')||e.includes('тренировк')||e.includes('сек')){
-const e=document.createElement('button');
-e.className='btn';e.style='background: #34c759; color: white; margin-top: 10px; padding: 8px; font-size: 12px; border-radius: 8px; width: auto; font-weight: bold;';
-e.innerText='🏋️ Начать тренировку';e.onclick=()=>startWorkout(a);s.appendChild(e);
-}
-}
-n.appendChild(s);
-n.scrollTop=n.scrollHeight;
-senseiChatHistory.push({role:e,content:t});
-senseiChatHistory.length>100&&(senseiChatHistory=senseiChatHistory.slice(senseiChatHistory.length-100));
-localStorage.setItem('senseiChatHistory',JSON.stringify(senseiChatHistory));
-}
-
-async function sendSenseiMessage(){
-const e=document.getElementById('sensei-input'),t=e.value.trim();
-if(!t)return;
-e.value='';
-addSenseiMessage('user',t);
-const n=document.getElementById('sensei-chat-box'),s=document.createElement('div');
-s.className='sensei-msg bot-msg';s.innerText='Анализирую...';s.id='sensei-loading';
-n.appendChild(s);n.scrollTop=n.scrollHeight;
-try{
-const userCtx=getSenseiContext();
-const promptText=`[СИСТЕМА: Ты Сенсей. Данные ученика: ${userCtx}. КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО спрашивать то, что уже есть в профиле (вес, рост, возраст, цель). Отвечай кратко (макс 3-4 предложения), но ОБЯЗАТЕЛЬНО договаривай мысль до конца, не обрывай предложения. Если просят сложный план (питание, тренировка), напиши короткое вступление и задай наводящий вопрос. Только русский, без звездочек. Формат тренировки: 1. Название (X сек), отдых Y сек] \n\n`;
-
-const a=senseiChatHistory.slice(-10).map(e=>({role:e.role==='assistant'?'model':'user',parts:[{text:e.content}]}));
-if(a.length > 0) {
-a[a.length - 1].parts[0].text = promptText + a[a.length - 1].parts[0].text;
-} else {
-a.push({role:'user',parts:[{text: promptText + t}]});
-}
-
-const o=await fetch('https://api.ofox.ai/gemini/v1beta/models/google/gemini-2.5-flash-lite:generateContent',{
-method:'POST',
-headers:{'Content-Type':'application/json','x-goog-api-key':OFOX_API_KEY},
-body:JSON.stringify({contents:a,generationConfig:{maxOutputTokens:500}})
-});
-const r=await o.json(),l=document.getElementById('sensei-loading');
-l&&l.remove();
-if(r.candidates&&r.candidates[0]&&r.candidates[0].content&&r.candidates[0].content.parts[0]){
-addSenseiMessage('assistant',r.candidates[0].content.parts[0].text);
-} else {
-console.error('API Error:',r);
-addSenseiMessage('assistant',`Прости, воин. Ошибка API: ${r.error?.message||'Неизвестная ошибка.'}`);
-}
-}catch(e){
-const t=document.getElementById('sensei-loading');
-t&&t.remove();
-addSenseiMessage('assistant','Прости, воин. Ошибка сети. Попробуй позже.')
-}
-}
-
-function showSenseiAdvice(e=null){
-const t=document.getElementById('sensei-advice-text'),n=document.getElementById('sensei-advice-modal');
-if(!t||!n)return;
-let s=e;
-if(!s){
-let e=currentProfileData||{weight:70,height:175,goal:'lose',age:25,gender:'male',food_preference:''};
-let t=calculateNutrition(e),a=[];try{a=JSON.parse(localStorage.getItem('todayWater')||'[]')}catch(e){}
-let o=0;a.forEach(e=>o+=parseInt(e.amount||0));
-let r=[];try{r=JSON.parse(localStorage.getItem('todayFood')||'[]')}catch(e){}
-let l=0;r.forEach(e=>l+=parseFloat(e.calories_100g||0));
-let c="Съешь порцию белка и овощей.";
-l===0?c="Съешь углеводы (овсянка) и белок (яйца) на завтрак.":l>t.calories?c="Ты превысил норму калорий. Исключи углеводы до конца дня.":e.goal==='lose'&&(c="Съешь куриную грудку (150г) и салат.");
-let d=`Выпей еще ${Math.max(0,2000-o)} мл воды.`;o>=2000&&(d="Вода в норме. Продолжай пить по чуть-чуть.");
-const i=["1. Приседания (45 сек), отдых 15 сек\n2. Отжимания (30 сек), отдых 10 сек\n3. Планка (60 сек), отдых 20 сек","1. Выпады (40 сек), отдых 15 сек\n2. Берпи (30 сек), отдых 15 сек\n3. Планка (45 сек), отдых 15 сек","1. Отжимания (45 сек), отдых 15 сек\n2. Приседания (60 сек), отдых 20 сек"],u=i[Math.floor(Math.random()*i.length)];
-s=`🍗 Питание: ${c}\n💧 Вода: ${d}\n💪 Тренировка: \n${u}`;
-}
-let a=s.replace(/\\n/g,'\n').replace(/\*/g,'');
-t.style.whiteSpace='pre-wrap';n.setAttribute('data-advice-text',a);t.innerText=a;
-const o=document.getElementById('start-workout-btn');
-o&&(a.includes('Тренировка')||a.includes('сек')?o.style.display='block':o.style.display='none');
-n.classList.add('active');
-}
-
-function closeSenseiAdvice(){const e=document.getElementById('sensei-advice-modal');e&&e.classList.remove('active')}
-
-function openChatFromAdvice(){
-const e=document.getElementById('sensei-advice-modal'),t=e.getAttribute('data-advice-text');
-closeSenseiAdvice();openSenseiChat();
-t&&t!=='Загрузка...'&&(addSenseiMessage('assistant',t),setTimeout(()=>{document.getElementById('sensei-input').focus()},300));
-}
-
-function toggleVoiceInput(){
-const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-if(!SpeechRecognition){
-tg.showAlert("Голосовой ввод не поддерживается на этом устройстве.");
-return;
-}
-if(!window.voiceRecognition){
-window.voiceRecognition=new SpeechRecognition();
-window.voiceRecognition.lang='ru-RU';
-window.voiceRecognition.interimResults=!1;
-window.voiceRecognition.maxAlternatives=1;
-window.voiceRecognition.onstart=function(){
-window.isListening=!0;
-const e=document.getElementById('sensei-mic-btn');
-e&&(e.innerText='🛑',e.style.background='#ff3b30');
-};
-window.voiceRecognition.onresult=function(e){
-const t=e.results[0][0].transcript;
-document.getElementById('sensei-input').value=t;
-};
-window.voiceRecognition.onerror=function(e){
-console.error("Speech error:",e.error);
-if(e.error==='not-allowed')tg.showAlert("Разрешите доступ к микрофону в настройках.");
-};
-window.voiceRecognition.onend=function(){
-window.isListening=!1;
-const e=document.getElementById('sensei-mic-btn');
-e&&(e.innerText='🎤',e.style.background='#3a3a3c');
-};
-}
-window.isListening?window.voiceRecognition.stop():window.voiceRecognition.start();
-}
