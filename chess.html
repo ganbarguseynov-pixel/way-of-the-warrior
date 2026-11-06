@@ -29,7 +29,15 @@
     .piece { position: relative; z-index: 2; pointer-events: none; }
     .hp-bar { position: absolute; bottom: 2px; left: 10%; width: 80%; height: 5px; background: #000; border-radius: 3px; z-index: 3; pointer-events: none; }
     .hp-fill { height: 100%; background: #34c759; border-radius: 3px; transition: width 0.3s; }
-    .lvl-badge { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: bold; color: #fff; background: #ff3b30; padding: 0 4px; border-radius: 10px; z-index: 4; pointer-events: none; border: 1px solid #000; }
+    
+    /* НОВЫЙ БЕЙДЖ УРОВНЯ (АККУРАТНЫЙ) */
+    .lvl-badge { 
+        position: absolute; top: 1px; right: 1px; 
+        font-size: 10px; font-weight: bold; color: #fff; 
+        background: rgba(0,0,0,0.8); width: 16px; height: 16px; 
+        line-height: 16px; text-align: center; border-radius: 50%; 
+        z-index: 4; pointer-events: none; border: 1px solid #fff;
+    }
 
     .bottom-ui { width: 95vw; max-width: 400px; margin-top: auto; padding-bottom: 75px; display: flex; flex-direction: column; gap: 10px; }
     
@@ -38,15 +46,19 @@
     .elixir-fill { height: 100%; width: 0%; transition: width 0.3s; }
     .elixir-text { font-weight: bold; font-size: 18px; min-width: 30px; text-align: center; }
     
-    /* Эликсир Черных (Сверху) */
+    /* Эликсир Черных */
     .elixir-black { background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 12px; margin-top: 5px; }
     .elixir-black .elixir-fill { background: linear-gradient(90deg, #8e8e93, #000); }
     .elixir-black .elixir-text { color: #8e8e93; }
     
-    /* Эликсир Белых (Снизу) */
+    /* Эликсир Белых */
     .elixir-white { background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 12px; }
     .elixir-white .elixir-fill { background: linear-gradient(90deg, #af52de, #ff2d55); }
     .elixir-white .elixir-text { color: #ff2d55; }
+
+    /* Анимация тряски для шкалы эликсира */
+    @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 75% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
+    .shake { animation: shake 0.3s ease-in-out; }
 
     .controls { display: flex; gap: 5px; }
     .btn { background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; padding: 10px; border-radius: 8px; font-size: 12px; cursor: pointer; flex: 1;}
@@ -126,12 +138,22 @@ const INITIAL_BOARD = [
 let boardState = [], selectedCell = null, validMoves = [];
 let whiteElixir = 5, blackElixir = 5, elixirInterval = null;
 
+// ЭФФЕКТ ТРЯСКИ ПРИ НЕХВАТКЕ ЭЛИКСИРА
+function triggerShake(elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    el.classList.add('shake');
+    setTimeout(() => el.classList.remove('shake'), 300);
+}
+
 function initGame() {
+    // УРОВЕНЬ 5 ДЛЯ ВСЕХ ФИГУР
     boardState = INITIAL_BOARD.map(row => row.map(pieceCode => {
         if (!pieceCode) return null;
         let type = pieceCode.toLowerCase();
         let color = pieceCode === pieceCode.toUpperCase() ? 'white' : 'black';
-        return { type: type, color: color, level: 1, hp: 1, maxHp: 1, cost: PIECES[type].cost, icon: PIECES[type].icon, hasMoved: false };
+        let level = 5; 
+        return { type: type, color: color, level: level, hp: level, maxHp: level, cost: PIECES[type].cost, icon: PIECES[type].icon, hasMoved: false };
     }));
     selectedCell = null; validMoves = [];
     whiteElixir = 5; blackElixir = 5;
@@ -163,7 +185,6 @@ function renderBoard() {
                 pieceEl.style.textShadow = piece.color === 'white' ? '0 0 2px #000' : '0 0 2px #fff';
                 
                 const lvlBadge = document.createElement('div'); lvlBadge.className = 'lvl-badge'; lvlBadge.innerText = piece.level;
-                if (piece.type === 'k') lvlBadge.style.background = '#ffcc00';
                 
                 const hpBar = document.createElement('div'); hpBar.className = 'hp-bar';
                 const hpFill = document.createElement('div'); hpFill.className = 'hp-fill';
@@ -237,13 +258,13 @@ function handleCellClick(r, c) {
         if (move) {
             const attacker = boardState[selectedCell.r][selectedCell.c];
             
-            // Проверка эликсира в зависимости от цвета
+            // Проверка эликсира (БЕЗ ALERT, С ТРЯСКОЙ)
             if (attacker.color === 'white' && whiteElixir < attacker.cost) {
-                alert(`Белым не хватает эликсира! Нужно ${attacker.cost}, есть ${whiteElixir}.`);
+                triggerShake('white-elixir-fill');
                 selectedCell = null; validMoves = []; renderBoard(); return;
             }
             if (attacker.color === 'black' && blackElixir < attacker.cost) {
-                alert(`Черным не хватает эликсира! Нужно ${attacker.cost}, есть ${blackElixir}.`);
+                triggerShake('black-elixir-fill');
                 selectedCell = null; validMoves = []; renderBoard(); return;
             }
 
@@ -265,7 +286,10 @@ function handleCellClick(r, c) {
                 let damage = attacker.level; clickedPiece.hp -= damage;
                 if (clickedPiece.hp <= 0) {
                     boardState[r][c] = attacker; boardState[selectedCell.r][selectedCell.c] = null;
-                    if (clickedPiece.type === 'k') endGame(attacker.color);
+                    if (clickedPiece.type === 'k') {
+                        clearInterval(elixirInterval);
+                        setTimeout(() => alert(`Игра окончена! Победили ${attacker.color === 'white' ? 'Белые' : 'Черные'}!`), 100);
+                    }
                 }
             } else { 
                 boardState[r][c] = attacker; 
@@ -278,7 +302,6 @@ function handleCellClick(r, c) {
             selectedCell = null; validMoves = []; renderBoard(); 
         }
     } else {
-        // Выбор фигуры (можно выбирать и белых, и черных в любое время)
         if (clickedPiece) { 
             selectedCell = { r, c }; 
             validMoves = getValidMoves(r, c); 
@@ -292,11 +315,6 @@ function testLevelUp() {
         let p = boardState[r][c];
         if (p && p.type === 'k' && p.color === 'white') { p.level += 5; p.maxHp = p.level; p.hp = p.level; renderBoard(); return; }
     }
-}
-
-function endGame(winnerColor) { 
-    clearInterval(elixirInterval); 
-    setTimeout(() => alert(`Игра окончена! Победили ${winnerColor === 'white' ? 'Белые' : 'Черные'}!`), 100); 
 }
 
 function resetGame() { initGame(); }
