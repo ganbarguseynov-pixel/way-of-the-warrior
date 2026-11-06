@@ -147,14 +147,44 @@ DECK_CARDS.forEach(card=>{let cardDiv=document.createElement('div');
 cardDiv.className=`card ${card.rarity}`;
 cardDiv.innerHTML=`<div class="card-elixir">${card.elixir}</div><div class="card-icon">${card.icon}</div><div class="card-name">${card.name}</div><div class="card-level">${card.level}-й ур.</div>`;
 grid.appendChild(cardDiv);});}
+
 const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
 const DEFAULT_BOARD=[['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
 let setupBoard=[];let selectedSetupCell=null;let editMode=false;let snapshotBeforeEdit=null;
+
 function formatNum(n){if(Number.isInteger(n))return n.toString();return Number(n.toFixed(2)).toString();}
-function createPiece(code){if(!code)return null;let type=code.toLowerCase();let color=code===code.toUpperCase()?'white':'black';let level=1;return{type:type,color:color,level:level,hp:level,maxHp:level,cost:PIECES[type].cost,icon:PIECES[type].icon};}
-function initSetup(){let initialData=DEFAULT_BOARD;const saved=localStorage.getItem('chessSetup');if(saved){try{const parsed=JSON.parse(saved);if(parsed&&parsed.length===8)initialData=parsed;}catch(e){}}
-setupBoard=initialData.map(row=>row.map(pc=>createPiece(pc)));
-selectedSetupCell=null;editMode=false;updateSetupUI();renderSetupBoard();}
+
+// Исправленная функция создания фигуры
+function createPiece(pc){
+    if(!pc)return null;
+    let type, color;
+    if(typeof pc === 'string'){
+        type = pc.toLowerCase();
+        color = pc === pc.toUpperCase() ? 'white' : 'black';
+    } else if (typeof pc === 'object'){
+        type = pc.type;
+        color = pc.color;
+    } else {
+        return null;
+    }
+    if(!PIECES[type]) return null;
+    let level = 1;
+    return{type:type,color:color,level:level,hp:level,maxHp:level,cost:PIECES[type].cost,icon:PIECES[type].icon};
+}
+
+function initSetup(){
+    let initialData=DEFAULT_BOARD;
+    const saved=localStorage.getItem('chessSetup');
+    if(saved){
+        try{
+            const parsed=JSON.parse(saved);
+            if(parsed&&parsed.length===8)initialData=parsed;
+        }catch(e){}
+    }
+    setupBoard=initialData.map(row=>row.map(pc=>createPiece(pc)));
+    selectedSetupCell=null;editMode=false;updateSetupUI();renderSetupBoard();
+}
+
 function updateSetupUI(){
 const hint=document.getElementById('setup-hint');
 const btnEdit=document.getElementById('btn-edit');
@@ -171,6 +201,7 @@ editControls.style.display='none';
 boardEl.classList.remove('edit-mode');boardEl.classList.add('view-mode');
 hint.innerHTML='Текущая расстановка <span class="lock-badge">🔒 Закреплено</span>';
 }}
+
 function renderSetupBoard(){const boardEl=document.getElementById('setup-board');boardEl.innerHTML='';
 for(let r=0;r<8;r++){for(let c=0;c<8;c++){
 const cell=document.createElement('div');
@@ -190,19 +221,18 @@ const hpText=document.createElement('div');hpText.className='hp-text-below';
 hpText.innerText=`${formatNum(piece.hp)}/${formatNum(piece.maxHp)}`;
 cell.appendChild(pieceEl);cell.appendChild(costBadge);cell.appendChild(hpBar);cell.appendChild(hpText);}
 boardEl.appendChild(cell);}}}
+
 function handleSetupClick(r,c){
 if(!editMode)return;
 const clickedPiece=setupBoard[r][c];
 if(selectedSetupCell){
 if(selectedSetupCell.r===r&&selectedSetupCell.c===c){selectedSetupCell=null;renderSetupBoard();return;}
 const selectedPiece=setupBoard[selectedSetupCell.r][selectedSetupCell.c];
-// Обмен двух белых фигур
 if(clickedPiece&&clickedPiece.color==='white'){
 setupBoard[r][c]=selectedPiece;
 setupBoard[selectedSetupCell.r][selectedSetupCell.c]=clickedPiece;
 selectedSetupCell=null;renderSetupBoard();return;
 }
-// Перемещение в пустую клетку зоны 6-7
 if((r===6||r===7)&&!clickedPiece){
 setupBoard[r][c]=selectedPiece;
 setupBoard[selectedSetupCell.r][selectedSetupCell.c]=null;
@@ -212,8 +242,8 @@ selectedSetupCell=null;renderSetupBoard();return;
 }
 if(clickedPiece&&clickedPiece.color==='white'){
 selectedSetupCell={r,c};renderSetupBoard();
-}
-}
+}}
+
 function enterEditMode(){
 snapshotBeforeEdit=JSON.parse(JSON.stringify(setupBoard));
 editMode=true;selectedSetupCell=null;updateSetupUI();renderSetupBoard();
@@ -225,7 +255,12 @@ updateSetupUI();renderSetupBoard();
 showToast('Изменения отменены','#ff9500');
 }
 function saveSetup(){
-localStorage.setItem('chessSetup',JSON.stringify(setupBoard));
+// ИСПРАВЛЕНО: сохраняем в виде массива строк (как ждет игра)
+const saveData = setupBoard.map(row => row.map(p => {
+    if (!p) return null;
+    return p.color === 'white' ? p.type.toUpperCase() : p.type;
+}));
+localStorage.setItem('chessSetup',JSON.stringify(saveData));
 editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null;
 updateSetupUI();renderSetupBoard();
 showToast('✅ Расстановка сохранена!','#34c759');
