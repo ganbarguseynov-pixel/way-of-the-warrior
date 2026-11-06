@@ -10,7 +10,64 @@
         margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden; user-select: none;
     }
     
-    /* ШАПКА */
+    /* ЭКРАНЫ */
+    .screen { display: none; flex-direction: column; width: 100%; align-items: center; flex: 1; overflow-y: auto; }
+    .screen.active { display: flex; }
+
+    /* --- ЭКРАН ИГРЫ (НА ВЕСЬ ЭКРАН) --- */
+    .game-top-bar {
+        width: 95vw; max-width: 400px; display: flex; align-items: center; gap: 10px; margin-top: 10px;
+    }
+    .deck-btn {
+        background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; padding: 8px 12px; border-radius: 8px;
+        font-size: 14px; font-weight: bold; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .deck-btn:active { background: #3a3a3c; }
+    
+    .elixir-container { display: flex; align-items: center; gap: 10px; padding: 5px 10px; }
+    .elixir-fill-bg { flex: 1; height: 16px; background: #000; border-radius: 8px; overflow: hidden; position: relative; }
+    .elixir-fill { height: 100%; width: 0%; transition: width 0.3s; }
+    .elixir-text { font-weight: bold; font-size: 18px; min-width: 30px; text-align: center; }
+    
+    .elixir-black { background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 12px; flex: 1; }
+    .elixir-black .elixir-fill { background: linear-gradient(90deg, #8e8e93, #000); }
+    .elixir-black .elixir-text { color: #8e8e93; }
+    
+    .elixir-white { background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 12px; width: 100%; margin-bottom: 5px;}
+    .elixir-white .elixir-fill { background: linear-gradient(90deg, #af52de, #ff2d55); }
+    .elixir-white .elixir-text { color: #ff2d55; }
+
+    .board-container { 
+        position: relative; width: 95vw; max-width: 400px; aspect-ratio: 1/1; 
+        margin-top: 10px; border: 2px solid #3a3a3c; border-radius: 8px; overflow: hidden; 
+    }
+    .board { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: 100%; height: 100%; }
+    .cell { position: relative; display: flex; justify-content: center; align-items: center; font-size: 32px; cursor: pointer; }
+    .cell.white { background-color: #d1d1d6; }
+    .cell.black { background-color: #8e8e93; }
+    .cell.selected { background-color: rgba(52, 199, 89, 0.7) !important; }
+    .cell.valid-move { box-shadow: inset 0 0 0 3px #ffcc00; }
+    .cell.setup-zone { background-color: rgba(255, 204, 0, 0.2) !important; }
+    
+    .piece { position: relative; z-index: 2; pointer-events: none; }
+    .hp-bar { position: absolute; bottom: 2px; left: 10%; width: 80%; height: 5px; background: #000; border-radius: 3px; z-index: 3; pointer-events: none; }
+    .hp-fill { height: 100%; background: #34c759; border-radius: 3px; transition: width 0.3s; }
+    .lvl-badge { 
+        position: absolute; top: 1px; right: 1px; font-size: 10px; font-weight: bold; color: #fff; 
+        background: rgba(0,0,0,0.8); width: 16px; height: 16px; line-height: 16px; 
+        text-align: center; border-radius: 50%; z-index: 4; pointer-events: none; border: 1px solid #fff;
+    }
+
+    .bottom-ui { width: 95vw; max-width: 400px; margin-top: auto; padding-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+    
+    @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 75% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
+    .shake { animation: shake 0.3s ease-in-out; }
+    .controls { display: flex; gap: 5px; margin-top: 5px; }
+    .btn { background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; padding: 12px; border-radius: 8px; font-size: 13px; cursor: pointer; flex: 1;}
+    .btn-gold { background: #ffcc00; color: #000; border: none; font-weight: bold; }
+    .btn-green { background: #34c759; color: #000; border: none; font-weight: bold; }
+
+    /* --- ЭКРАН КОЛОДЫ --- */
     .top-bar {
         width: 100%; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;
         background: #1c1c1e; border-bottom: 1px solid #3a3a3c; z-index: 10;
@@ -28,52 +85,6 @@
     .tab-btn.active { background: #af52de; color: #fff; border-color: #af52de; }
     .tab-btn.back-btn { flex: 0.5; background: rgba(255,255,255,0.1); color: #fff; border: none; }
 
-    /* ЭКРАНЫ */
-    .screen { display: none; flex-direction: column; width: 100%; align-items: center; flex: 1; overflow-y: auto; padding-bottom: 20px; }
-    .screen.active { display: flex; }
-
-    /* ИГРОВОЙ ЭКРАН */
-    .board-container { 
-        position: relative; width: 95vw; max-width: 400px; aspect-ratio: 1/1; 
-        margin-top: 10px; border: 2px solid #3a3a3c; border-radius: 8px; overflow: hidden; 
-    }
-    .board { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: 100%; height: 100%; }
-    .cell { position: relative; display: flex; justify-content: center; align-items: center; font-size: 32px; cursor: pointer; }
-    .cell.white { background-color: #d1d1d6; }
-    .cell.black { background-color: #8e8e93; }
-    .cell.selected { background-color: rgba(52, 199, 89, 0.7) !important; }
-    .cell.valid-move { box-shadow: inset 0 0 0 3px #ffcc00; }
-    .cell.setup-zone { background-color: rgba(255, 204, 0, 0.2) !important; } /* Подсветка зоны расстановки */
-    
-    .piece { position: relative; z-index: 2; pointer-events: none; }
-    .hp-bar { position: absolute; bottom: 2px; left: 10%; width: 80%; height: 5px; background: #000; border-radius: 3px; z-index: 3; pointer-events: none; }
-    .hp-fill { height: 100%; background: #34c759; border-radius: 3px; transition: width 0.3s; }
-    .lvl-badge { 
-        position: absolute; top: 1px; right: 1px; font-size: 10px; font-weight: bold; color: #fff; 
-        background: rgba(0,0,0,0.8); width: 16px; height: 16px; line-height: 16px; 
-        text-align: center; border-radius: 50%; z-index: 4; pointer-events: none; border: 1px solid #fff;
-    }
-
-    .bottom-ui { width: 95vw; max-width: 400px; margin-top: auto; padding-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
-    .elixir-container { display: flex; align-items: center; gap: 10px; padding: 5px 10px; }
-    .elixir-fill-bg { flex: 1; height: 16px; background: #000; border-radius: 8px; overflow: hidden; position: relative; }
-    .elixir-fill { height: 100%; width: 0%; transition: width 0.3s; }
-    .elixir-text { font-weight: bold; font-size: 18px; min-width: 30px; text-align: center; }
-    .elixir-black { background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 12px; margin-top: 10px;}
-    .elixir-black .elixir-fill { background: linear-gradient(90deg, #8e8e93, #000); }
-    .elixir-black .elixir-text { color: #8e8e93; }
-    .elixir-white { background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 12px; }
-    .elixir-white .elixir-fill { background: linear-gradient(90deg, #af52de, #ff2d55); }
-    .elixir-white .elixir-text { color: #ff2d55; }
-    
-    @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 75% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
-    .shake { animation: shake 0.3s ease-in-out; }
-    .controls { display: flex; gap: 5px; margin-top: 5px; }
-    .btn { background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; padding: 12px; border-radius: 8px; font-size: 13px; cursor: pointer; flex: 1;}
-    .btn-gold { background: #ffcc00; color: #000; border: none; font-weight: bold; }
-    .btn-green { background: #34c759; color: #000; border: none; font-weight: bold; }
-
-    /* ЭКРАН КОЛОДЫ */
     .deck-area { width: 95vw; max-width: 400px; padding: 10px; display: flex; flex-direction: column; gap: 15px; }
     .deck-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
     .card { 
@@ -92,34 +103,23 @@
 </head>
 <body>
 
-<!-- ВЕРХНЯЯ ПАНЕЛЬ -->
-<div class="top-bar">
-    <div class="currency-row">
-        <div class="currency coins">🪙 1250</div>
-        <div class="currency gems">💎 50</div>
-    </div>
-    <div class="tabs">
-        <button class="tab-btn back-btn" onclick="window.location.href='index.html'">←</button>
-        <button class="tab-btn active" id="tab-game-btn" onclick="switchTab('game')">Игра</button>
-        <button class="tab-btn" id="tab-deck-btn" onclick="switchTab('deck')">Колода</button>
-    </div>
-</div>
-
-<!-- ЭКРАН ИГРЫ -->
+<!-- ЭКРАН ИГРЫ (БЕЗ ЛИШНИХ ПАНЕЛЕЙ) -->
 <div id="screen-game" class="screen active">
-    <div class="elixir-container elixir-black" style="width: 95vw; max-width: 400px; margin-top: 10px;">
-        <div class="elixir-text" id="black-elixir-text">5</div>
-        <div class="elixir-fill-bg"><div class="elixir-fill" id="black-elixir-fill"></div></div>
-    </div>
-
-    <div class="header" style="border: none; background: transparent; padding: 5px;">
-        <div class="vs-text" id="game-status" style="font-size: 16px; font-weight: bold; color: #ff3b30;">РЕАЛЬНОЕ ВРЕМЯ</div>
+    
+    <!-- Верхняя строка: Кнопка колоды + Эликсир черных -->
+    <div class="game-top-bar">
+        <button class="deck-btn" onclick="switchTab('deck')">🃏 Колода</button>
+        <div class="elixir-container elixir-black">
+            <div class="elixir-text" id="black-elixir-text">5</div>
+            <div class="elixir-fill-bg"><div class="elixir-fill" id="black-elixir-fill"></div></div>
+        </div>
     </div>
 
     <div class="board-container">
         <div class="board" id="board"></div>
     </div>
 
+    <!-- Нижняя панель: Эликсир белых + Управление -->
     <div class="bottom-ui">
         <div class="elixir-container elixir-white">
             <div class="elixir-text" id="white-elixir-text">5</div>
@@ -138,6 +138,18 @@
 
 <!-- ЭКРАН КОЛОДЫ -->
 <div id="screen-deck" class="screen">
+    <div class="top-bar">
+        <div class="currency-row">
+            <div class="currency coins">🪙 1250</div>
+            <div class="currency gems">💎 50</div>
+        </div>
+        <!-- ВКЛАДКА КОЛОДА ТЕПЕРЬ СЛЕВА -->
+        <div class="tabs">
+            <button class="tab-btn back-btn" onclick="window.location.href='index.html'">←</button>
+            <button class="tab-btn active" id="tab-deck-btn" onclick="switchTab('deck')">Колода</button>
+            <button class="tab-btn" id="tab-game-btn" onclick="switchTab('game')">Игра</button>
+        </div>
+    </div>
     <div class="deck-area">
         <h2 style="text-align: center; margin: 10px 0; color: #af52de;">Моя Колода</h2>
         <div class="deck-grid" id="deck-grid"></div>
@@ -149,19 +161,21 @@
 function switchTab(tab) {
     document.getElementById('screen-game').classList.remove('active');
     document.getElementById('screen-deck').classList.remove('active');
-    document.getElementById('tab-game-btn').classList.remove('active');
-    document.getElementById('tab-deck-btn').classList.remove('active');
+    
+    const btnGame = document.getElementById('tab-game-btn');
+    const btnDeck = document.getElementById('tab-deck-btn');
+    if(btnGame) btnGame.classList.remove('active');
+    if(btnDeck) btnDeck.classList.remove('active');
 
     if (tab === 'game') {
         document.getElementById('screen-game').classList.add('active');
-        document.getElementById('tab-game-btn').classList.add('active');
     } else {
         document.getElementById('screen-deck').classList.add('active');
-        document.getElementById('tab-deck-btn').classList.add('active');
+        if(btnDeck) btnDeck.classList.add('active');
     }
 }
 
-// --- КОЛОДА ---
+// --- ДАННЫЕ КОЛОДЫ ---
 const DECK_CARDS = [
     { name: 'Пешка', icon: '♟', elixir: 1, level: 1, rarity: 'common' },
     { name: 'Конь', icon: '♞', elixir: 2, level: 1, rarity: 'rare' },
@@ -214,7 +228,6 @@ function triggerShake(elementId) {
     setTimeout(() => el.classList.remove('shake'), 300);
 }
 
-// Функция создания фигуры
 function createPiece(pieceCode) {
     if (!pieceCode) return null;
     let type = pieceCode.toLowerCase();
@@ -226,7 +239,6 @@ function createPiece(pieceCode) {
 function initGame(useSavedSetup = false) {
     let initialData = DEFAULT_BOARD;
     
-    // Если есть сохраненная расстановка, загружаем её
     if (useSavedSetup) {
         const saved = localStorage.getItem('chessSetup');
         if (saved) {
@@ -245,8 +257,6 @@ function initGame(useSavedSetup = false) {
     
     document.getElementById('game-controls').style.display = 'flex';
     document.getElementById('setup-controls').style.display = 'none';
-    document.getElementById('game-status').innerText = 'РЕАЛЬНОЕ ВРЕМЯ';
-    document.getElementById('game-status').style.color = '#ff3b30';
 
     clearInterval(elixirInterval);
     elixirInterval = setInterval(() => {
@@ -265,18 +275,15 @@ function startSetupMode() {
     selectedCell = null; validMoves = [];
     document.getElementById('game-controls').style.display = 'none';
     document.getElementById('setup-controls').style.display = 'flex';
-    document.getElementById('game-status').innerText = 'РАССТАНОВКА (Белые)';
-    document.getElementById('game-status').style.color = '#ffcc00';
     renderBoard();
 }
 
 function cancelSetup() {
     isSetupMode = false;
-    initGame(true); // Возвращаемся к сохраненной или дефолтной
+    initGame(true);
 }
 
 function saveSetupAndPlay() {
-    // Сохраняем только фигуры на доске
     localStorage.setItem('chessSetup', JSON.stringify(boardState));
     isSetupMode = false;
     initGame(true);
@@ -292,8 +299,6 @@ function renderBoard() {
             
             if (selectedCell && selectedCell.r === r && selectedCell.c === c) cell.classList.add('selected');
             if (validMoves.some(m => m.r === r && m.c === c)) cell.classList.add('valid-move');
-            
-            // Подсветка зоны расстановки для белых (ряды 6 и 7)
             if (isSetupMode && (r === 6 || r === 7)) cell.classList.add('setup-zone');
             
             const piece = boardState[r][c];
@@ -324,7 +329,6 @@ function updateElixirUI() {
     document.getElementById('black-elixir-text').innerText = blackElixir;
 }
 
-// Логика ходов (для боя)
 function getValidMoves(r, c) {
     const piece = boardState[r][c]; if (!piece) return [];
     let moves = [];
@@ -373,42 +377,28 @@ function handleCellClick(r, c) {
     const clickedPiece = boardState[r][c];
     
     if (isSetupMode) {
-        // ЛОГИКА РАССТАНОВКИ (Только для белых, только 2 ряда)
         if (selectedCell) {
             if (selectedCell.r === r && selectedCell.c === c) {
                 selectedCell = null; renderBoard(); return;
             }
-            
             const attacker = boardState[selectedCell.r][selectedCell.c];
-            
-            // Если кликнули на свою другую фигуру
             if (clickedPiece && clickedPiece.color === 'white') {
                 selectedCell = { r, c }; renderBoard(); return;
             }
-            
-            // Проверка: можно ли сюда ставить (не дальше 2-х рядов)
             if ((r === 6 || r === 7) && !clickedPiece) {
                 boardState[r][c] = attacker;
                 boardState[selectedCell.r][selectedCell.c] = null;
                 selectedCell = null;
-            } else if (clickedPiece && clickedPiece.color === 'black') {
-                // В расстановке нельзя есть черных
-                selectedCell = null;
-            } else {
-                selectedCell = null;
-            }
+            } else { selectedCell = null; }
             renderBoard();
             return;
         }
-
-        // Выбор фигуры (только белые)
         if (clickedPiece && clickedPiece.color === 'white') {
             selectedCell = { r, c }; renderBoard();
         }
         return;
     }
 
-    // --- ЛОГИКА БОЯ (ВНЕ РАССТАНОВКИ) ---
     if (selectedCell) {
         const move = validMoves.find(m => m.r === r && m.c === c);
         if (move) {
