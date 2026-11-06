@@ -12,7 +12,6 @@
         min-height: 100vh; user-select: none;
     }
     
-    /* ВЕРХНЯЯ ПАНЕЛЬ */
     .top-bar {
         width: 100%; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;
         background: #1c1c1e; border-bottom: 1px solid #3a3a3c; z-index: 10;
@@ -22,7 +21,7 @@
     .currency.coins { color: #ffcc00; border: 1px solid #ffcc00; }
     .currency.gems { color: #34c759; border: 1px solid #34c759; }
     
-    .tabs { display: flex; gap: 10px; width: 100%; }
+    .main-tabs { display: flex; gap: 10px; width: 100%; }
     .tab-btn {
         flex: 1; background: #2c2c2e; color: #8e8e93; border: 1px solid #3a3a3c; padding: 10px;
         border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px;
@@ -30,7 +29,16 @@
     .tab-btn.active { background: #af52de; color: #fff; border-color: #af52de; }
     .tab-btn.back-btn { flex: 0.5; background: rgba(255,255,255,0.1); color: #fff; border: none; }
 
-    /* СЕТКА КАРТ */
+    .sub-tabs { display: flex; gap: 5px; margin-top: 5px; }
+    .sub-tab-btn {
+        flex: 1; background: #1c1c1e; color: #8e8e93; border: 1px solid #3a3a3c; padding: 8px;
+        border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 12px;
+    }
+    .sub-tab-btn.active { background: #475569; color: #fff; }
+
+    .screen { display: none; flex-direction: column; width: 100%; align-items: center; flex: 1; overflow-y: auto; padding-bottom: 20px;}
+    .screen.active { display: flex; }
+
     .deck-area { width: 95vw; max-width: 400px; padding: 10px; display: flex; flex-direction: column; gap: 15px; }
     .deck-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
     .card { 
@@ -45,6 +53,48 @@
     .card-icon { font-size: 30px; margin-top: 15px; color: #fff; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
     .card-name { font-size: 10px; color: #fff; text-align: center; font-weight: bold; }
     .card-level { font-size: 9px; color: #ffcc00; background: rgba(0,0,0,0.8); padding: 2px 5px; border-radius: 4px; width: 90%; text-align: center; margin-top: 5px;}
+
+    .setup-area { width: 95vw; max-width: 400px; display: flex; flex-direction: column; align-items: center; gap: 15px; padding-top: 10px; }
+    .board-container { 
+        position: relative; width: 100%; aspect-ratio: 1/1; 
+        border: 3px solid #475569; border-radius: 12px; overflow: hidden; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    .board { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: 100%; height: 100%; }
+    .cell { position: relative; display: flex; justify-content: center; align-items: center; font-size: 32px; cursor: pointer; }
+    .cell.white { background-color: #94a3b8; }
+    .cell.black { background-color: #475569; }
+    .cell.selected { background-color: rgba(52, 199, 89, 0.9) !important; box-shadow: inset 0 0 10px #fff; }
+    .cell.setup-zone { background-color: rgba(255, 204, 0, 0.3) !important; }
+    
+    .piece { position: relative; z-index: 2; pointer-events: none; }
+    
+    /* ТАКОЙ ЖЕ ДИЗАЙН ИНФОРМАЦИИ, КАК В ИГРЕ */
+    .top-cost-badge {
+        position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
+        background: #af52de; color: white; border-radius: 50%; width: 20px; height: 20px;
+        font-size: 11px; font-weight: bold; display: flex; justify-content: center; align-items: center;
+        border: 2px solid #fff; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .bottom-hp-bar {
+        position: absolute; bottom: 1px; left: 5%; width: 90%; height: 16px;
+        border-radius: 4px; display: flex; justify-content: space-between; align-items: center;
+        z-index: 10; border: 1px solid #000; padding: 0 2px; box-sizing: border-box;
+        transition: background 0.3s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        background: #34c759; /* В меню всегда полное здоровье */
+    }
+    .hp-num {
+        font-size: 10px; font-weight: bold; color: #000;
+        background: rgba(255,255,255,0.8); padding: 0 2px; border-radius: 3px; line-height: 12px;
+    }
+    .lvl-num {
+        font-size: 11px; font-weight: 900; background: #000; color: #fff;
+        padding: 0 6px; border-radius: 10px; line-height: 14px;
+        position: absolute; left: 50%; transform: translateX(-50%);
+        border: 1px solid #fff;
+    }
+
+    .btn-green { background: #22c55e; color: #000; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px;}
 </style>
 </head>
 <body>
@@ -54,19 +104,51 @@
         <div class="currency coins">🪙 1250</div>
         <div class="currency gems">💎 50</div>
     </div>
-    <div class="tabs">
+    <div class="main-tabs">
         <button class="tab-btn back-btn" onclick="window.location.href='index.html'">←</button>
         <button class="tab-btn active" onclick="window.location.reload()">Колода</button>
         <button class="tab-btn" onclick="window.location.href='chess-game.html'">Игра</button>
     </div>
+    <div class="sub-tabs">
+        <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
+        <button class="sub-tab-btn" id="sub-tab-setup-btn" onclick="switchSubTab('setup')">⚙️ Расстановка</button>
+    </div>
 </div>
 
-<div class="deck-area">
-    <h2 style="text-align: center; margin: 10px 0; color: #af52de;">Моя Колода</h2>
-    <div class="deck-grid" id="deck-grid"></div>
+<!-- ЭКРАН КАРТ -->
+<div id="screen-cards" class="screen active">
+    <div class="deck-area">
+        <div class="deck-grid" id="deck-grid"></div>
+    </div>
+</div>
+
+<!-- ЭКРАН РАССТАНОВКИ -->
+<div id="screen-setup" class="screen">
+    <div class="setup-area">
+        <p style="text-align: center; color: #94a3b8; font-size: 12px; margin: 0;">Нажми на свою фигуру, затем на пустую клетку в первых двух рядах, чтобы переместить её.</p>
+        <div class="board-container">
+            <div class="board" id="setup-board"></div>
+        </div>
+        <button class="btn-green" onclick="saveSetupAndReturn()">✅ Сохранить расстановку</button>
+    </div>
 </div>
 
 <script>
+function switchSubTab(tab) {
+    document.getElementById('screen-cards').classList.remove('active');
+    document.getElementById('screen-setup').classList.remove('active');
+    document.getElementById('sub-tab-cards-btn').classList.remove('active');
+    document.getElementById('sub-tab-setup-btn').classList.remove('active');
+
+    if (tab === 'cards') {
+        document.getElementById('screen-cards').classList.add('active');
+        document.getElementById('sub-tab-cards-btn').classList.add('active');
+    } else {
+        document.getElementById('screen-setup').classList.add('active');
+        document.getElementById('sub-tab-setup-btn').classList.add('active');
+    }
+}
+
 const DECK_CARDS = [
     { name: 'Пешка', icon: '♟', elixir: 1, level: 1, rarity: 'common' },
     { name: 'Конь', icon: '♞', elixir: 2, level: 1, rarity: 'rare' },
@@ -94,7 +176,118 @@ function renderDeck() {
     });
 }
 
+const PIECES = {
+    'p': { name: 'Пешка', icon: '♟', cost: 1 }, 'n': { name: 'Конь', icon: '♞', cost: 2 },
+    'b': { name: 'Слон', icon: '♝', cost: 3 }, 'r': { name: 'Ладья', icon: '♜', cost: 4 },
+    'k': { name: 'Король', icon: '♚', cost: 5 }, 'q': { name: 'Ферзь', icon: '♛', cost: 6 }
+};
+
+const DEFAULT_BOARD = [
+    ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'], ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+    [null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null],
+    [null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null],
+    ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'], ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+];
+
+let setupBoard = [];
+let selectedSetupCell = null;
+
+function createPiece(pieceCode) {
+    if (!pieceCode) return null;
+    let type = pieceCode.toLowerCase();
+    let color = pieceCode === pieceCode.toUpperCase() ? 'white' : 'black';
+    let level = 1; 
+    return { type: type, color: color, level: level, hp: level, maxHp: level, cost: PIECES[type].cost, icon: PIECES[type].icon };
+}
+
+function initSetup() {
+    let initialData = DEFAULT_BOARD;
+    const saved = localStorage.getItem('chessSetup');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.length === 8) initialData = parsed;
+        } catch(e) {}
+    }
+    
+    setupBoard = initialData.map(row => row.map(pieceCode => createPiece(pieceCode)));
+    selectedSetupCell = null;
+    renderSetupBoard();
+}
+
+function renderSetupBoard() {
+    const boardEl = document.getElementById('setup-board'); boardEl.innerHTML = '';
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const cell = document.createElement('div');
+            cell.className = `cell ${(r + c) % 2 === 0 ? 'white' : 'black'}`;
+            if (r === 6 || r === 7) cell.classList.add('setup-zone');
+            
+            cell.onclick = () => handleSetupClick(r, c);
+            
+            if (selectedSetupCell && selectedSetupCell.r === r && selectedSetupCell.c === c) {
+                cell.classList.add('selected');
+            }
+            
+            const piece = setupBoard[r][c];
+            if (piece) {
+                const pieceEl = document.createElement('div'); pieceEl.className = 'piece'; pieceEl.innerText = piece.icon;
+                pieceEl.style.color = piece.color === 'white' ? '#fff' : '#000';
+                pieceEl.style.textShadow = piece.color === 'white' ? '0 0 2px #000' : '0 0 2px #fff';
+                
+                const costBadge = document.createElement('div'); costBadge.className = 'top-cost-badge'; costBadge.innerText = piece.cost;
+                
+                const hpBar = document.createElement('div'); hpBar.className = 'bottom-hp-bar';
+                hpBar.innerHTML = `<span class="hp-num">${piece.hp}</span><span class="lvl-num">${piece.level}</span><span class="hp-num">${piece.maxHp}</span>`;
+                
+                cell.appendChild(pieceEl); 
+                cell.appendChild(costBadge); 
+                cell.appendChild(hpBar);
+            }
+            boardEl.appendChild(cell);
+        }
+    }
+}
+
+function handleSetupClick(r, c) {
+    const clickedPiece = setupBoard[r][c];
+    
+    if (selectedSetupCell) {
+        if (selectedSetupCell.r === r && selectedSetupCell.c === c) {
+            selectedSetupCell = null; renderSetupBoard(); return;
+        }
+        
+        const attacker = setupBoard[selectedSetupCell.r][selectedSetupCell.c];
+        
+        if (clickedPiece && clickedPiece.color === 'white') {
+            selectedSetupCell = { r, c }; renderSetupBoard(); return;
+        }
+        
+        if ((r === 6 || r === 7) && !clickedPiece) {
+            setupBoard[r][c] = attacker;
+            setupBoard[selectedSetupCell.r][selectedSetupCell.c] = null;
+            selectedSetupCell = null;
+        } else {
+            selectedSetupCell = null;
+        }
+        renderSetupBoard();
+        return;
+    }
+    
+    if (clickedPiece && clickedPiece.color === 'white') {
+        selectedSetupCell = { r, c }; 
+        renderSetupBoard();
+    }
+}
+
+function saveSetupAndReturn() {
+    localStorage.setItem('chessSetup', JSON.stringify(setupBoard));
+    alert("Расстановка сохранена! Теперь она будет использоваться в игре.");
+    switchSubTab('cards');
+}
+
 renderDeck();
+initSetup();
 </script>
 </body>
 </html>
