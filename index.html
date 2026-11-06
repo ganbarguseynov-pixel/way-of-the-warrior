@@ -36,7 +36,6 @@
 
 /* СТИЛИ ДЛЯ СТРИКА */
 .streak-badge { position: absolute; top: 15px; left: 15px; background: rgba(255, 87, 34, 0.15); border: 1px solid #ff5722; color: #ff5722; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; z-index: 40; display: flex; align-items: center; gap: 5px; cursor: pointer; transition: 0.3s; }
-/* Анимация пульсации для доступной награды */
 @keyframes pulse-fire {
     0% { transform: scale(1); box-shadow: 0 0 15px #ff5722; background: rgba(255, 87, 34, 0.4); color: #fff; }
     50% { transform: scale(1.1); box-shadow: 0 0 25px #ff5722; background: rgba(255, 87, 34, 0.6); color: #fff; }
@@ -71,7 +70,7 @@
 <div id="dashboard-screen" class="screen">
 <video id="character-video" class="video-background" autoplay loop muted playsinline></video>
 <div class="overlay" style="justify-content: flex-end; padding-bottom: 10px;">
-<!-- СТРИК (ТЕПЕРЬ КЛИКАБЕЛЬНЫЙ) -->
+<!-- СТРИК -->
 <div id="streak-display" class="streak-badge" onclick="claimStreakReward()">🔥 0</div>
 
 <div style="display: flex; justify-content: space-between; position: absolute; top: 0px; left: 0px; right: 0px; z-index: 30; padding: 5px 10px; gap: 5px;">
@@ -86,6 +85,8 @@
 <div style="text-align: center;">
 <button class="weight-btn" onclick="openWeightDiary()">⚖️ <span id="current-weight-display">0</span> кг</button>
 <button class="analysis-btn" onclick="openGlobalStatsModal()">📈 Анализ</button>
+<!-- КНОПКА ШАХМАТ ЗДЕСЬ -->
+<button class="analysis-btn" onclick="window.location.href='chess.html'" style="border-color: #af52de; color: #af52de; background: rgba(175, 82, 222, 0.1);">♟️ Шахматы</button>
 </div>
 </div>
 <div class="bottom-panel" style="gap: 8px;">
