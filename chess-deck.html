@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Chess Royale - Колода</title>
 <style>
-body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;}
+body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;padding-bottom:80px;}
 .top-bar{width:100%;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,#1a1a2e,#0f0f1e);border-bottom:1px solid rgba(255,255,255,0.1);z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.5);}
 .currency-row{display:flex;justify-content:space-between;align-items:center;}
 .currency{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:10px;font-weight:bold;box-shadow:inset 0 2px 4px rgba(0,0,0,0.6),inset 0 -1px 0 rgba(255,255,255,0.1);}
@@ -56,19 +56,18 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 .lock-badge{display:inline-block;background:linear-gradient(145deg,#475569,#1e293b);color:#ffcc00;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:bold;margin-left:6px;box-shadow:0 2px 4px rgba(0,0,0,0.5);}
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120px);background:linear-gradient(135deg,#1e293b,#0f172a);color:#fff;padding:14px 24px;border-radius:12px;font-weight:bold;z-index:9999;border:2px solid #34c759;box-shadow:0 10px 30px rgba(0,0,0,0.8),0 0 20px rgba(52,199,89,0.4);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);font-size:14px;text-align:center;max-width:80vw;}
 .toast.show{transform:translateX(-50%) translateY(0);}
-.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -8px 24px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.05);}
-.nav-btn{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;transition:0.2s;}
-.nav-btn .icon-wrap{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);box-shadow:0 4px 8px rgba(0,0,0,0.5),inset 0 2px 3px rgba(255,255,255,0.08),inset 0 -3px 6px rgba(0,0,0,0.6);transition:all 0.3s;}
-.nav-btn .icon{font-size:22px;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.6));transition:transform 0.3s;}
+.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 15px rgba(0,0,0,0.7);}
+.nav-btn{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;transition:0.2s;}
+.nav-btn .icon-wrap{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);box-shadow:0 3px 6px rgba(0,0,0,0.5),inset 0 2px 3px rgba(255,255,255,0.08),inset 0 -3px 6px rgba(0,0,0,0.6);transition:all 0.3s;}
+.nav-btn .icon{font-size:20px;text-shadow:0 1px 2px rgba(0,0,0,0.6);transition:transform 0.3s;}
 .nav-btn.active{color:#ffcc00;}
-.nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500);box-shadow:0 4px 12px rgba(255,204,0,0.5),0 0 20px rgba(255,204,0,0.4),inset 0 2px 3px rgba(255,255,255,0.4),inset 0 -3px 6px rgba(180,100,0,0.4);}
+.nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500);box-shadow:0 3px 10px rgba(255,204,0,0.4),inset 0 2px 3px rgba(255,255,255,0.4);}
 .nav-btn.active .icon{transform:scale(1.12);}
-.deck-stack{position:relative;width:26px;height:30px;}
-.deck-stack .deck-card{position:absolute;width:18px;height:24px;border-radius:3px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 2px 4px rgba(0,0,0,0.6);}
+.deck-stack{position:relative;width:24px;height:28px;}
+.deck-stack .deck-card{position:absolute;width:16px;height:22px;border-radius:3px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 1px 3px rgba(0,0,0,0.6);}
 .deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c);}
 .deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe);}
-.deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,0.6);}
-.nav-btn.active .deck-stack .deck-card{box-shadow:0 3px 6px rgba(0,0,0,0.7),0 0 8px rgba(255,255,255,0.3);}
+.deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900;}
 </style>
 </head>
 <body>
@@ -107,20 +106,32 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </div>
 
 <div class="bottom-nav">
-<button class="nav-btn active" onclick="window.location.href='chess-deck.html'">
-<div class="icon-wrap">
-<div class="deck-stack">
-<div class="deck-card"></div>
-<div class="deck-card"></div>
-<div class="deck-card">♠</div>
-</div>
-</div>
-<span>Колода</span>
-</button>
-<button class="nav-btn" onclick="window.location.href='chess-main.html'">
-<div class="icon-wrap"><span class="icon">🏰</span></div>
-<span>Главная</span>
-</button>
+    <button class="nav-btn" onclick="window.location.href='chess-shop.html'">
+        <div class="icon-wrap"><span class="icon">🎁</span></div>
+        <span>Магазин</span>
+    </button>
+    <button class="nav-btn active" onclick="window.location.href='chess-deck.html'">
+        <div class="icon-wrap">
+            <div class="deck-stack">
+                <div class="deck-card"></div>
+                <div class="deck-card"></div>
+                <div class="deck-card">♠</div>
+            </div>
+        </div>
+        <span>Колода</span>
+    </button>
+    <button class="nav-btn" onclick="window.location.href='chess-main.html'">
+        <div class="icon-wrap"><span class="icon">⚔️</span></div>
+        <span>Бой</span>
+    </button>
+    <button class="nav-btn" onclick="window.location.href='chess-social.html'">
+        <div class="icon-wrap"><span class="icon">🛡️</span></div>
+        <span>Общение</span>
+    </button>
+    <button class="nav-btn" onclick="window.location.href='leaderboard.html'">
+        <div class="icon-wrap"><span class="icon">🏆</span></div>
+        <span>Рейтинг</span>
+    </button>
 </div>
 
 <script>
