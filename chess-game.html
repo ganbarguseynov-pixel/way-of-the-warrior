@@ -12,15 +12,10 @@
         min-height: 100vh; user-select: none;
     }
     
+    /* ВЕРХНЯЯ ПАНЕЛЬ ТОЛЬКО ДЛЯ ЭЛИКСИРА ЧЕРНЫХ */
     .game-top-bar {
         width: 95vw; max-width: 400px; display: flex; align-items: center; gap: 10px; margin-top: 10px;
     }
-    .deck-btn {
-        background: rgba(0,0,0,0.6); color: #fff; border: 1px solid #3a3a3c; padding: 8px 12px; border-radius: 8px;
-        font-size: 14px; font-weight: bold; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    }
-    .deck-btn:active { background: rgba(255,255,255,0.2); }
-    
     .elixir-container { display: flex; align-items: center; gap: 10px; padding: 5px 10px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid #3a3a3c; }
     .elixir-fill-bg { flex: 1; height: 16px; background: #000; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.2);}
     .elixir-fill { height: 100%; width: 0%; transition: width 0.3s; }
@@ -55,7 +50,6 @@
     
     .piece { position: relative; z-index: 2; pointer-events: none; margin-bottom: 6px; }
     
-    /* УМЕНЬШЕННЫЙ БЕЙДЖ СТОИМОСТИ СВЕРХУ */
     .top-cost-badge {
         position: absolute; top: -4px; left: 50%; transform: translateX(-50%);
         background: #af52de; color: white; border-radius: 50%; width: 14px; height: 14px;
@@ -63,19 +57,14 @@
         border: 1px solid #fff; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
     
-    /* ПОЛОСКА ЗДОРОВЬЯ (ТОЛЬКО УРОВЕНЬ В ЦЕНТРЕ) */
     .bottom-hp-bar {
         position: absolute; bottom: 10px; left: 5%; width: 90%; height: 10px;
         border-radius: 3px; display: flex; justify-content: center; align-items: center;
         z-index: 10; border: 1px solid #000; box-sizing: border-box;
         transition: background 0.3s; box-shadow: inset 0 2px 2px rgba(0,0,0,0.3);
     }
-    .lvl-num {
-        font-size: 9px; font-weight: 900; color: #000;
-        line-height: 10px; pointer-events: none;
-    }
+    .lvl-num { font-size: 9px; font-weight: 900; color: #000; line-height: 10px; pointer-events: none; }
     
-    /* ЦИФРЫ ХП СНИЗУ ПОД ПОЛОСКОЙ */
     .hp-text-below {
         position: absolute; bottom: 0px; left: 0; width: 100%;
         text-align: center; font-size: 8px; font-weight: bold; color: #fff;
@@ -83,7 +72,8 @@
         text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; 
     }
 
-    .bottom-ui { width: 95vw; max-width: 400px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 15px; }
+    /* НИЖНЯЯ ПАНЕЛЬ (РУКА + НАВИГАЦИЯ) */
+    .bottom-ui { width: 95vw; max-width: 400px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 60px; }
     
     .hand-container { display: flex; justify-content: space-between; gap: 5px; margin-top: 5px; }
     
@@ -101,11 +91,24 @@
     .hand-icon { font-size: 28px; margin-top: 10px; }
     .hand-name { font-size: 9px; font-weight: bold; color: #fff; text-align: center; }
     
-    @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 75% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
-    .shake { animation: shake 0.3s ease-in-out; }
     .controls { display: flex; gap: 5px; }
     .btn { background: #334155; color: #fff; border: 1px solid #475569; padding: 12px; border-radius: 8px; font-size: 13px; cursor: pointer; flex: 1; font-weight: bold;}
     .btn-red { background: #ef4444; color: #fff; border: none; }
+
+    /* СТИЛИ НИЖНЕЙ НАВИГАЦИИ */
+    .bottom-nav {
+        position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+        background: #1e293b; border-top: 2px solid #334155;
+        display: flex; justify-content: space-around; align-items: center;
+        z-index: 999; padding-bottom: env(safe-area-inset-bottom);
+    }
+    .nav-btn {
+        background: transparent; border: none; color: #94a3b8;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        font-size: 10px; font-weight: bold; cursor: pointer; flex: 1; height: 100%; gap: 2px; transition: 0.2s;
+    }
+    .nav-btn span.icon { font-size: 24px; }
+    .nav-btn.active { color: #ffcc00; }
 
     .promotion-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
     .promotion-modal.active { display: flex; }
@@ -118,7 +121,6 @@
 <body>
 
 <div class="game-top-bar">
-    <button class="deck-btn" onclick="window.location.href='chess-deck.html'">🃏 Колода</button>
     <div class="elixir-container elixir-black">
         <div class="elixir-text" id="black-elixir-text">5</div>
         <div class="elixir-fill-bg"><div class="elixir-fill" id="black-elixir-fill"></div></div>
@@ -142,6 +144,18 @@
     <div class="controls">
         <button class="btn btn-red" onclick="resetGame()">🔄 Сброс партии</button>
     </div>
+</div>
+
+<!-- НИЖНЯЯ НАВИГАЦИЯ -->
+<div class="bottom-nav">
+    <button class="nav-btn active" onclick="window.location.reload()">
+        <span class="icon">⚔️</span>
+        <span>Игра</span>
+    </button>
+    <button class="nav-btn" onclick="window.location.href='chess-deck.html'">
+        <span class="icon">🃏</span>
+        <span>Колода</span>
+    </button>
 </div>
 
 <div id="promotion-modal" class="promotion-modal">
