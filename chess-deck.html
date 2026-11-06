@@ -21,14 +21,6 @@
     .currency.coins { color: #ffcc00; border: 1px solid #ffcc00; }
     .currency.gems { color: #34c759; border: 1px solid #34c759; }
     
-    .main-tabs { display: flex; gap: 10px; width: 100%; }
-    .tab-btn {
-        flex: 1; background: #2c2c2e; color: #8e8e93; border: 1px solid #3a3a3c; padding: 10px;
-        border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px;
-    }
-    .tab-btn.active { background: #af52de; color: #fff; border-color: #af52de; }
-    .tab-btn.back-btn { flex: 0.5; background: rgba(255,255,255,0.1); color: #fff; border: none; }
-
     .sub-tabs { display: flex; gap: 5px; margin-top: 5px; }
     .sub-tab-btn {
         flex: 1; background: #1c1c1e; color: #8e8e93; border: 1px solid #3a3a3c; padding: 8px;
@@ -36,7 +28,7 @@
     }
     .sub-tab-btn.active { background: #475569; color: #fff; }
 
-    .screen { display: none; flex-direction: column; width: 100%; align-items: center; flex: 1; overflow-y: auto; padding-bottom: 20px;}
+    .screen { display: none; flex-direction: column; width: 100%; align-items: center; flex: 1; overflow-y: auto; padding-bottom: 80px;}
     .screen.active { display: flex; }
 
     .deck-area { width: 95vw; max-width: 400px; padding: 10px; display: flex; flex-direction: column; gap: 15px; }
@@ -83,10 +75,7 @@
         transition: background 0.3s; box-shadow: inset 0 2px 2px rgba(0,0,0,0.3);
         background: #34c759; 
     }
-    .lvl-num {
-        font-size: 9px; font-weight: 900; color: #000;
-        line-height: 10px; pointer-events: none;
-    }
+    .lvl-num { font-size: 9px; font-weight: 900; color: #000; line-height: 10px; pointer-events: none; }
     
     .hp-text-below {
         position: absolute; bottom: 0px; left: 0; width: 100%;
@@ -96,6 +85,21 @@
     }
 
     .btn-green { background: #22c55e; color: #000; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px;}
+
+    /* СТИЛИ НИЖНЕЙ НАВИГАЦИИ */
+    .bottom-nav {
+        position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+        background: #1e293b; border-top: 2px solid #334155;
+        display: flex; justify-content: space-around; align-items: center;
+        z-index: 999; padding-bottom: env(safe-area-inset-bottom);
+    }
+    .nav-btn {
+        background: transparent; border: none; color: #94a3b8;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        font-size: 10px; font-weight: bold; cursor: pointer; flex: 1; height: 100%; gap: 2px; transition: 0.2s;
+    }
+    .nav-btn span.icon { font-size: 24px; }
+    .nav-btn.active { color: #ffcc00; }
 </style>
 </head>
 <body>
@@ -104,11 +108,6 @@
     <div class="currency-row">
         <div class="currency coins">🪙 1250</div>
         <div class="currency gems">💎 50</div>
-    </div>
-    <div class="main-tabs">
-        <button class="tab-btn back-btn" onclick="window.location.href='index.html'">←</button>
-        <button class="tab-btn active" onclick="window.location.reload()">Колода</button>
-        <button class="tab-btn" onclick="window.location.href='chess-game.html'">Игра</button>
     </div>
     <div class="sub-tabs">
         <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
@@ -130,6 +129,18 @@
         </div>
         <button class="btn-green" onclick="saveSetupAndReturn()">✅ Сохранить расстановку</button>
     </div>
+</div>
+
+<!-- НИЖНЯЯ НАВИГАЦИЯ -->
+<div class="bottom-nav">
+    <button class="nav-btn" onclick="window.location.href='chess-game.html'">
+        <span class="icon">⚔️</span>
+        <span>Игра</span>
+    </button>
+    <button class="nav-btn active" onclick="window.location.reload()">
+        <span class="icon">🃏</span>
+        <span>Колода</span>
+    </button>
 </div>
 
 <script>
