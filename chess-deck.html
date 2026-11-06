@@ -5,311 +5,241 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Chess Royale - Колода</title>
 <style>
-    body {
-        background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
-        color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; 
-        min-height: 100vh; user-select: none;
-    }
-    
-    .top-bar {
-        width: 100%; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;
-        background: #1c1c1e; border-bottom: 1px solid #3a3a3c; z-index: 10;
-    }
-    .currency-row { display: flex; justify-content: space-between; align-items: center; }
-    .currency { display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 8px; font-weight: bold; }
-    .currency.coins { color: #ffcc00; border: 1px solid #ffcc00; }
-    .currency.gems { color: #34c759; border: 1px solid #34c759; }
-    
-    .sub-tabs { display: flex; gap: 5px; margin-top: 5px; }
-    .sub-tab-btn {
-        flex: 1; background: #1c1c1e; color: #8e8e93; border: 1px solid #3a3a3c; padding: 8px;
-        border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 12px;
-    }
-    .sub-tab-btn.active { background: #475569; color: #fff; }
-
-    .screen { display: none; flex-direction: column; width: 100%; align-items: center; flex: 1; overflow-y: auto; padding-bottom: 80px;}
-    .screen.active { display: flex; }
-
-    .deck-area { width: 95vw; max-width: 400px; padding: 10px; display: flex; flex-direction: column; gap: 15px; }
-    .deck-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
-    .card { 
-        background: #1c1c1e; border-radius: 8px; aspect-ratio: 3/4; 
-        display: flex; flex-direction: column; justify-content: space-between; align-items: center; 
-        position: relative; padding: 5px; border: 2px solid #3a3a3c; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    }
-    .card.common { border-color: #8e8e93; }
-    .card.rare { border-color: #ff9500; background: linear-gradient(180deg, #1c1c1e, rgba(255, 149, 0, 0.1)); }
-    .card.epic { border-color: #af52de; background: linear-gradient(180deg, #1c1c1e, rgba(175, 82, 222, 0.1)); }
-    .card-elixir { position: absolute; top: -5px; left: -5px; background: #ff2d55; color: #fff; font-weight: bold; font-size: 12px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid #fff; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-    .card-icon { font-size: 30px; margin-top: 15px; color: #fff; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
-    .card-name { font-size: 10px; color: #fff; text-align: center; font-weight: bold; }
-    .card-level { font-size: 9px; color: #ffcc00; background: rgba(0,0,0,0.8); padding: 2px 5px; border-radius: 4px; width: 90%; text-align: center; margin-top: 5px;}
-
-    .setup-area { width: 95vw; max-width: 400px; display: flex; flex-direction: column; align-items: center; gap: 15px; padding-top: 10px; }
-    .board-container { 
-        position: relative; width: 100%; aspect-ratio: 1/1; 
-        border: 3px solid #475569; border-radius: 12px; overflow: hidden; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-    }
-    .board { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: 100%; height: 100%; }
-    .cell { position: relative; display: flex; justify-content: center; align-items: center; font-size: 32px; cursor: pointer; }
-    .cell.white { background-color: #94a3b8; }
-    .cell.black { background-color: #475569; }
-    .cell.selected { background-color: rgba(52, 199, 89, 0.9) !important; box-shadow: inset 0 0 10px #fff; }
-    .cell.setup-zone { background-color: rgba(255, 204, 0, 0.3) !important; }
-    
-    .piece { position: relative; z-index: 2; pointer-events: none; margin-bottom: 6px; }
-    
-    .top-cost-badge {
-        position: absolute; top: -4px; left: 50%; transform: translateX(-50%);
-        background: #af52de; color: white; border-radius: 50%; width: 14px; height: 14px;
-        font-size: 9px; font-weight: bold; display: flex; justify-content: center; align-items: center;
-        border: 1px solid #fff; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.5);
-    }
-    
-    .bottom-hp-bar {
-        position: absolute; bottom: 10px; left: 5%; width: 90%; height: 10px;
-        border-radius: 3px; display: flex; justify-content: center; align-items: center;
-        z-index: 10; border: 1px solid #000; box-sizing: border-box;
-        transition: background 0.3s; box-shadow: inset 0 2px 2px rgba(0,0,0,0.3);
-        background: #34c759; 
-    }
-    .lvl-num { font-size: 9px; font-weight: 900; color: #000; line-height: 10px; pointer-events: none; }
-    
-    .hp-text-below {
-        position: absolute; bottom: 0px; left: 0; width: 100%;
-        text-align: center; font-size: 8px; font-weight: bold; color: #fff;
-        z-index: 10; pointer-events: none; white-space: nowrap;
-        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; 
-    }
-
-    .btn-green { background: #22c55e; color: #000; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px;}
-
-    /* СТИЛИ НИЖНЕЙ НАВИГАЦИИ */
-    .bottom-nav {
-        position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
-        background: #1e293b; border-top: 2px solid #334155;
-        display: flex; justify-content: space-around; align-items: center;
-        z-index: 999; padding-bottom: env(safe-area-inset-bottom);
-    }
-    .nav-btn {
-        background: transparent; border: none; color: #94a3b8;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        font-size: 10px; font-weight: bold; cursor: pointer; flex: 1; height: 100%; gap: 2px; transition: 0.2s;
-    }
-    .nav-btn span.icon { font-size: 24px; }
-    .nav-btn.active { color: #ffcc00; }
+body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;}
+.top-bar{width:100%;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,#1a1a2e,#0f0f1e);border-bottom:1px solid rgba(255,255,255,0.1);z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.5);}
+.currency-row{display:flex;justify-content:space-between;align-items:center;}
+.currency{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:10px;font-weight:bold;box-shadow:inset 0 2px 4px rgba(0,0,0,0.6),inset 0 -1px 0 rgba(255,255,255,0.1);}
+.currency.coins{color:#ffcc00;border:1px solid #ffcc00;text-shadow:0 0 8px rgba(255,204,0,0.5);}
+.currency.gems{color:#34c759;border:1px solid #34c759;text-shadow:0 0 8px rgba(52,199,89,0.5);}
+.sub-tabs{display:flex;gap:5px;margin-top:5px;}
+.sub-tab-btn{flex:1;background:linear-gradient(145deg,#1e293b,#0f172a);color:#8e8e93;border:1px solid #3a3a3c;padding:10px;border-radius:8px;font-weight:bold;cursor:pointer;transition:0.2s;font-size:12px;box-shadow:0 3px 6px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08);}
+.sub-tab-btn:active{transform:scale(0.97);}
+.sub-tab-btn.active{background:linear-gradient(145deg,#64748b,#334155);color:#fff;border-color:#94a3b8;box-shadow:0 4px 10px rgba(100,116,139,0.5),inset 0 1px 0 rgba(255,255,255,0.25);}
+.screen{display:none;flex-direction:column;width:100%;align-items:center;flex:1;overflow-y:auto;padding-bottom:90px;}
+.screen.active{display:flex;}
+.deck-area{width:95vw;max-width:400px;padding:10px;display:flex;flex-direction:column;gap:15px;}
+.deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
+.card{background:linear-gradient(145deg,#1e293b,#0f172a);border-radius:10px;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:space-between;align-items:center;position:relative;padding:5px;border:2px solid #3a3a3c;box-shadow:0 6px 10px rgba(0,0,0,0.5),inset 0 2px 2px rgba(255,255,255,0.08),inset 0 -3px 5px rgba(0,0,0,0.5);}
+.card.common{border-color:#8e8e93;}
+.card.rare{border-color:#ff9500;background:linear-gradient(145deg,#1e293b,#2a1a00);box-shadow:0 6px 12px rgba(255,149,0,0.3),inset 0 2px 2px rgba(255,255,255,0.08),inset 0 -3px 5px rgba(0,0,0,0.5);}
+.card.epic{border-color:#af52de;background:linear-gradient(145deg,#1e293b,#1a0f2e);box-shadow:0 6px 12px rgba(175,82,222,0.3),inset 0 2px 2px rgba(255,255,255,0.08),inset 0 -3px 5px rgba(0,0,0,0.5);}
+.card-elixir{position:absolute;top:-6px;left:-6px;background:linear-gradient(145deg,#ff6b7a,#c0392b);color:#fff;font-weight:900;font-size:12px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:2;box-shadow:0 2px 5px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.5);}
+.card-icon{font-size:30px;margin-top:15px;color:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,0.7));}
+.card-name{font-size:10px;color:#fff;text-align:center;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.8);}
+.card-level{font-size:9px;color:#ffcc00;background:rgba(0,0,0,0.8);padding:2px 5px;border-radius:4px;width:90%;text-align:center;margin-top:5px;box-shadow:inset 0 1px 2px rgba(0,0,0,0.5);}
+.setup-area{width:95vw;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:15px;padding-top:10px;}
+.setup-hint{text-align:center;color:#94a3b8;font-size:12px;margin:0;min-height:18px;padding:0 10px;}
+.board-container{position:relative;width:100%;aspect-ratio:1/1;border:4px solid #475569;border-radius:14px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.95),0 8px 20px rgba(0,0,0,0.7),0 0 0 2px rgba(255,255,255,0.06),inset 0 0 40px rgba(0,0,0,0.6);background:linear-gradient(145deg,#1a1f2e,#0f1420);}
+.board{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:100%;height:100%;}
+.cell{position:relative;display:flex;justify-content:center;align-items:center;font-size:32px;cursor:pointer;transition:filter 0.15s;}
+.cell.white{background:linear-gradient(145deg,#b8c4d4 0%,#94a3b8 50%,#7a8ba0 100%);box-shadow:inset 1px 1px 2px rgba(255,255,255,0.5),inset -1px -1px 3px rgba(0,0,0,0.25);}
+.cell.black{background:linear-gradient(145deg,#4a5a6e 0%,#3a4a5e 50%,#2a3a4e 100%);box-shadow:inset 1px 1px 2px rgba(255,255,255,0.15),inset -1px -1px 3px rgba(0,0,0,0.5);}
+.cell.selected{background:linear-gradient(145deg,#4ade80,#22c55e 60%,#15803d)!important;box-shadow:inset 0 0 12px rgba(255,255,255,0.7),0 0 15px rgba(74,222,128,0.8)!important;}
+.cell.setup-zone{background-color:rgba(255,204,0,0.15);}
+.board.view-mode .cell{cursor:default;}
+.board.view-mode .cell.setup-zone{background-color:rgba(255,204,0,0.08);}
+.board.edit-mode .cell.setup-zone{background-color:rgba(255,204,0,0.28);animation:zonePulse 2s infinite alternate;}
+@keyframes zonePulse{from{background-color:rgba(255,204,0,0.18);}to{background-color:rgba(255,204,0,0.35);}}
+.piece{position:relative;z-index:2;pointer-events:none;margin-bottom:8px;filter:drop-shadow(0 4px 5px rgba(0,0,0,0.8)) drop-shadow(0 1px 0 rgba(255,255,255,0.15));}
+.top-cost-badge{position:absolute;top:-4px;left:50%;transform:translateX(-50%);background:linear-gradient(145deg,#c084fc,#7c3aed);color:#fff;border-radius:50%;width:15px;height:15px;font-size:9px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1.5px solid #fff;z-index:10;box-shadow:0 2px 5px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.5);}
+.bottom-hp-bar{position:absolute;bottom:12px;left:5%;width:90%;height:11px;border-radius:4px;display:flex;justify-content:center;align-items:center;z-index:10;border:1px solid #000;box-sizing:border-box;background:linear-gradient(180deg,#34c759,#34c75999);box-shadow:inset 0 2px 3px rgba(0,0,0,0.5),inset 0 -1px 2px rgba(255,255,255,0.3),0 1px 2px rgba(0,0,0,0.7);}
+.lvl-num{font-size:9px;font-weight:900;color:#000;line-height:11px;pointer-events:none;}
+.hp-text-below{position:absolute;bottom:1px;left:0;width:100%;text-align:center;font-size:8px;font-weight:bold;color:#fff;z-index:10;pointer-events:none;white-space:nowrap;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 1px 3px rgba(0,0,0,0.9);}
+.btn-action{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;box-shadow:0 6px 12px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.2);transition:transform 0.1s;border:none;}
+.btn-action:active{transform:scale(0.97);}
+.btn-edit{background:linear-gradient(145deg,#3b82f6,#1e40af);color:#fff;}
+.btn-save{background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;}
+.btn-cancel{background:linear-gradient(145deg,#475569,#1e293b);color:#fff;border:1px solid #64748b;}
+.setup-buttons{width:100%;display:flex;flex-direction:column;gap:8px;padding:0 10px;}
+.setup-buttons-row{display:flex;gap:8px;width:100%;}
+.setup-buttons-row .btn-action{flex:1;}
+.lock-badge{display:inline-block;background:linear-gradient(145deg,#475569,#1e293b);color:#ffcc00;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:bold;margin-left:6px;box-shadow:0 2px 4px rgba(0,0,0,0.5);}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120px);background:linear-gradient(135deg,#1e293b,#0f172a);color:#fff;padding:14px 24px;border-radius:12px;font-weight:bold;z-index:9999;border:2px solid #34c759;box-shadow:0 10px 30px rgba(0,0,0,0.8),0 0 20px rgba(52,199,89,0.4);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);font-size:14px;text-align:center;max-width:80vw;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -8px 24px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.05);}
+.nav-btn{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;transition:0.2s;}
+.nav-btn .icon-wrap{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);box-shadow:0 4px 8px rgba(0,0,0,0.5),inset 0 2px 3px rgba(255,255,255,0.08),inset 0 -3px 6px rgba(0,0,0,0.6);transition:all 0.3s;}
+.nav-btn .icon{font-size:22px;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.6));transition:transform 0.3s;}
+.nav-btn.active{color:#ffcc00;}
+.nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500);box-shadow:0 4px 12px rgba(255,204,0,0.5),0 0 20px rgba(255,204,0,0.4),inset 0 2px 3px rgba(255,255,255,0.4),inset 0 -3px 6px rgba(180,100,0,0.4);}
+.nav-btn.active .icon{transform:scale(1.12);}
+.deck-stack{position:relative;width:26px;height:30px;}
+.deck-stack .deck-card{position:absolute;width:18px;height:24px;border-radius:3px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 2px 4px rgba(0,0,0,0.6);}
+.deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c);}
+.deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe);}
+.deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,0.6);}
+.nav-btn.active .deck-stack .deck-card{box-shadow:0 3px 6px rgba(0,0,0,0.7),0 0 8px rgba(255,255,255,0.3);}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <div class="currency-row">
-        <div class="currency coins">🪙 1250</div>
-        <div class="currency gems">💎 50</div>
-    </div>
-    <div class="sub-tabs">
-        <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
-        <button class="sub-tab-btn" id="sub-tab-setup-btn" onclick="switchSubTab('setup')">⚙️ Расстановка</button>
-    </div>
+<div class="currency-row">
+<div class="currency coins">🪙 1250</div>
+<div class="currency gems">💎 50</div>
+</div>
+<div class="sub-tabs">
+<button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
+<button class="sub-tab-btn" id="sub-tab-setup-btn" onclick="switchSubTab('setup')">⚙️ Расстановка</button>
+</div>
 </div>
 
 <div id="screen-cards" class="screen active">
-    <div class="deck-area">
-        <div class="deck-grid" id="deck-grid"></div>
-    </div>
+<div class="deck-area">
+<div class="deck-grid" id="deck-grid"></div>
+</div>
 </div>
 
 <div id="screen-setup" class="screen">
-    <div class="setup-area">
-        <p style="text-align: center; color: #94a3b8; font-size: 12px; margin: 0;">Нажми на свою фигуру, затем на пустую клетку в первых двух рядах, чтобы переместить её.</p>
-        <div class="board-container">
-            <div class="board" id="setup-board"></div>
-        </div>
-        <button class="btn-green" onclick="saveSetupAndReturn()">✅ Сохранить расстановку</button>
-    </div>
+<div class="setup-area">
+<p class="setup-hint" id="setup-hint">Ваша текущая расстановка</p>
+<div class="board-container">
+<div class="board view-mode" id="setup-board"></div>
+</div>
+<div class="setup-buttons">
+<button id="btn-edit" class="btn-action btn-edit" onclick="enterEditMode()">✏️ Редактировать расстановку</button>
+<div id="edit-controls" class="setup-buttons-row" style="display:none;">
+<button id="btn-cancel" class="btn-action btn-cancel" onclick="cancelEdit()">✖ Отмена</button>
+<button id="btn-save" class="btn-action btn-save" onclick="saveSetup()">💾 Сохранить</button>
+</div>
+</div>
+</div>
 </div>
 
-<!-- НИЖНЯЯ НАВИГАЦИЯ -->
 <div class="bottom-nav">
-    <button class="nav-btn" onclick="window.location.href='chess-game.html'">
-        <span class="icon">⚔️</span>
-        <span>Игра</span>
-    </button>
-    <button class="nav-btn active" onclick="window.location.reload()">
-        <span class="icon">🃏</span>
-        <span>Колода</span>
-    </button>
+<button class="nav-btn active" onclick="window.location.reload()">
+<div class="icon-wrap">
+<div class="deck-stack">
+<div class="deck-card"></div>
+<div class="deck-card"></div>
+<div class="deck-card">♠</div>
+</div>
+</div>
+<span>Колода</span>
+</button>
+<button class="nav-btn" onclick="window.location.href='chess-game.html'">
+<div class="icon-wrap"><span class="icon">♞</span></div>
+<span>Игра</span>
+</button>
 </div>
 
 <script>
-function switchSubTab(tab) {
-    document.getElementById('screen-cards').classList.remove('active');
-    document.getElementById('screen-setup').classList.remove('active');
-    document.getElementById('sub-tab-cards-btn').classList.remove('active');
-    document.getElementById('sub-tab-setup-btn').classList.remove('active');
-
-    if (tab === 'cards') {
-        document.getElementById('screen-cards').classList.add('active');
-        document.getElementById('sub-tab-cards-btn').classList.add('active');
-    } else {
-        document.getElementById('screen-setup').classList.add('active');
-        document.getElementById('sub-tab-setup-btn').classList.add('active');
-    }
+function switchSubTab(tab){
+document.getElementById('screen-cards').classList.remove('active');
+document.getElementById('screen-setup').classList.remove('active');
+document.getElementById('sub-tab-cards-btn').classList.remove('active');
+document.getElementById('sub-tab-setup-btn').classList.remove('active');
+if(tab==='cards'){document.getElementById('screen-cards').classList.add('active');document.getElementById('sub-tab-cards-btn').classList.add('active');}
+else{document.getElementById('screen-setup').classList.add('active');document.getElementById('sub-tab-setup-btn').classList.add('active');}
 }
-
-const DECK_CARDS = [
-    { name: 'Пешка', icon: '♟', elixir: 1, level: 1, rarity: 'common' },
-    { name: 'Конь', icon: '♞', elixir: 2, level: 1, rarity: 'rare' },
-    { name: 'Слон', icon: '♝', elixir: 3, level: 1, rarity: 'rare' },
-    { name: 'Ладья', icon: '♜', elixir: 4, level: 1, rarity: 'epic' },
-    { name: 'Король', icon: '♚', elixir: 5, level: 1, rarity: 'epic' },
-    { name: 'Ферзь', icon: '♛', elixir: 6, level: 1, rarity: 'epic' },
-    { name: 'Ярость', icon: '⚡', elixir: 2, level: 1, rarity: 'common' },
-    { name: 'Щит', icon: '🛡️', elixir: 3, level: 1, rarity: 'common' }
+const DECK_CARDS=[
+{name:'Пешка',icon:'♟',elixir:1,level:1,rarity:'common'},
+{name:'Конь',icon:'♞',elixir:2,level:1,rarity:'rare'},
+{name:'Слон',icon:'♝',elixir:3,level:1,rarity:'rare'},
+{name:'Ладья',icon:'♜',elixir:4,level:1,rarity:'epic'},
+{name:'Король',icon:'♚',elixir:5,level:1,rarity:'epic'},
+{name:'Ферзь',icon:'♛',elixir:6,level:1,rarity:'epic'},
+{name:'Ярость',icon:'⚡',elixir:2,level:1,rarity:'common'},
+{name:'Щит',icon:'🛡️',elixir:3,level:1,rarity:'common'}
 ];
-
-function renderDeck() {
-    const grid = document.getElementById('deck-grid');
-    grid.innerHTML = '';
-    DECK_CARDS.forEach(card => {
-        let cardDiv = document.createElement('div');
-        cardDiv.className = `card ${card.rarity}`;
-        cardDiv.innerHTML = `
-            <div class="card-elixir">${card.elixir}</div>
-            <div class="card-icon">${card.icon}</div>
-            <div class="card-name">${card.name}</div>
-            <div class="card-level">${card.level}-й ур.</div>
-        `;
-        grid.appendChild(cardDiv);
-    });
+function renderDeck(){const grid=document.getElementById('deck-grid');grid.innerHTML='';
+DECK_CARDS.forEach(card=>{let cardDiv=document.createElement('div');
+cardDiv.className=`card ${card.rarity}`;
+cardDiv.innerHTML=`<div class="card-elixir">${card.elixir}</div><div class="card-icon">${card.icon}</div><div class="card-name">${card.name}</div><div class="card-level">${card.level}-й ур.</div>`;
+grid.appendChild(cardDiv);});}
+const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
+const DEFAULT_BOARD=[['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
+let setupBoard=[];let selectedSetupCell=null;let editMode=false;let snapshotBeforeEdit=null;
+function formatNum(n){if(Number.isInteger(n))return n.toString();return Number(n.toFixed(2)).toString();}
+function createPiece(code){if(!code)return null;let type=code.toLowerCase();let color=code===code.toUpperCase()?'white':'black';let level=1;return{type:type,color:color,level:level,hp:level,maxHp:level,cost:PIECES[type].cost,icon:PIECES[type].icon};}
+function initSetup(){let initialData=DEFAULT_BOARD;const saved=localStorage.getItem('chessSetup');if(saved){try{const parsed=JSON.parse(saved);if(parsed&&parsed.length===8)initialData=parsed;}catch(e){}}
+setupBoard=initialData.map(row=>row.map(pc=>createPiece(pc)));
+selectedSetupCell=null;editMode=false;updateSetupUI();renderSetupBoard();}
+function updateSetupUI(){
+const hint=document.getElementById('setup-hint');
+const btnEdit=document.getElementById('btn-edit');
+const editControls=document.getElementById('edit-controls');
+const boardEl=document.getElementById('setup-board');
+if(editMode){
+btnEdit.style.display='none';
+editControls.style.display='flex';
+boardEl.classList.remove('view-mode');boardEl.classList.add('edit-mode');
+hint.innerHTML='✏️ Режим редактирования: выбери фигуру, затем пустую клетку или другую белую фигуру (для обмена)';
+}else{
+btnEdit.style.display='block';
+editControls.style.display='none';
+boardEl.classList.remove('edit-mode');boardEl.classList.add('view-mode');
+hint.innerHTML='Текущая расстановка <span class="lock-badge">🔒 Закреплено</span>';
+}}
+function renderSetupBoard(){const boardEl=document.getElementById('setup-board');boardEl.innerHTML='';
+for(let r=0;r<8;r++){for(let c=0;c<8;c++){
+const cell=document.createElement('div');
+cell.className=`cell ${(r+c)%2===0?'white':'black'}`;
+if(r===6||r===7)cell.classList.add('setup-zone');
+cell.onclick=()=>handleSetupClick(r,c);
+if(selectedSetupCell&&selectedSetupCell.r===r&&selectedSetupCell.c===c)cell.classList.add('selected');
+const piece=setupBoard[r][c];
+if(piece){
+const pieceEl=document.createElement('div');pieceEl.className='piece';pieceEl.innerText=piece.icon;
+pieceEl.style.color=piece.color==='white'?'#fff':'#0a0a0a';
+pieceEl.style.textShadow=piece.color==='white'?'0 1px 0 #666,0 2px 0 #444,0 3px 4px rgba(0,0,0,0.9)':'0 1px 0 #555,0 2px 3px rgba(255,255,255,0.3),0 3px 4px rgba(0,0,0,0.9)';
+const costBadge=document.createElement('div');costBadge.className='top-cost-badge';costBadge.innerText=piece.cost;
+const hpBar=document.createElement('div');hpBar.className='bottom-hp-bar';
+hpBar.innerHTML=`<span class="lvl-num">${formatNum(piece.level)}</span>`;
+const hpText=document.createElement('div');hpText.className='hp-text-below';
+hpText.innerText=`${formatNum(piece.hp)}/${formatNum(piece.maxHp)}`;
+cell.appendChild(pieceEl);cell.appendChild(costBadge);cell.appendChild(hpBar);cell.appendChild(hpText);}
+boardEl.appendChild(cell);}}}
+function handleSetupClick(r,c){
+if(!editMode)return;
+const clickedPiece=setupBoard[r][c];
+if(selectedSetupCell){
+if(selectedSetupCell.r===r&&selectedSetupCell.c===c){selectedSetupCell=null;renderSetupBoard();return;}
+const selectedPiece=setupBoard[selectedSetupCell.r][selectedSetupCell.c];
+// Обмен двух белых фигур
+if(clickedPiece&&clickedPiece.color==='white'){
+setupBoard[r][c]=selectedPiece;
+setupBoard[selectedSetupCell.r][selectedSetupCell.c]=clickedPiece;
+selectedSetupCell=null;renderSetupBoard();return;
 }
-
-const PIECES = {
-    'p': { name: 'Пешка', icon: '♟', cost: 1 }, 'n': { name: 'Конь', icon: '♞', cost: 2 },
-    'b': { name: 'Слон', icon: '♝', cost: 3 }, 'r': { name: 'Ладья', icon: '♜', cost: 4 },
-    'k': { name: 'Король', icon: '♚', cost: 5 }, 'q': { name: 'Ферзь', icon: '♛', cost: 6 }
-};
-
-const DEFAULT_BOARD = [
-    ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'], ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-    [null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null],
-    [null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null],
-    ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'], ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
-];
-
-let setupBoard = [];
-let selectedSetupCell = null;
-
-function formatNum(num) {
-    if (Number.isInteger(num)) return num.toString();
-    return Number(num.toFixed(2)).toString(); 
+// Перемещение в пустую клетку зоны 6-7
+if((r===6||r===7)&&!clickedPiece){
+setupBoard[r][c]=selectedPiece;
+setupBoard[selectedSetupCell.r][selectedSetupCell.c]=null;
+selectedSetupCell=null;renderSetupBoard();return;
 }
-
-function createPiece(pieceCode) {
-    if (!pieceCode) return null;
-    let type = pieceCode.toLowerCase();
-    let color = pieceCode === pieceCode.toUpperCase() ? 'white' : 'black';
-    let level = 1; 
-    return { type: type, color: color, level: level, hp: level, maxHp: level, cost: PIECES[type].cost, icon: PIECES[type].icon };
+selectedSetupCell=null;renderSetupBoard();return;
 }
-
-function initSetup() {
-    let initialData = DEFAULT_BOARD;
-    const saved = localStorage.getItem('chessSetup');
-    if (saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            if (parsed && parsed.length === 8) initialData = parsed;
-        } catch(e) {}
-    }
-    
-    setupBoard = initialData.map(row => row.map(pieceCode => createPiece(pieceCode)));
-    selectedSetupCell = null;
-    renderSetupBoard();
+if(clickedPiece&&clickedPiece.color==='white'){
+selectedSetupCell={r,c};renderSetupBoard();
 }
-
-function renderSetupBoard() {
-    const boardEl = document.getElementById('setup-board'); boardEl.innerHTML = '';
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const cell = document.createElement('div');
-            cell.className = `cell ${(r + c) % 2 === 0 ? 'white' : 'black'}`;
-            if (r === 6 || r === 7) cell.classList.add('setup-zone');
-            
-            cell.onclick = () => handleSetupClick(r, c);
-            
-            if (selectedSetupCell && selectedSetupCell.r === r && selectedSetupCell.c === c) {
-                cell.classList.add('selected');
-            }
-            
-            const piece = setupBoard[r][c];
-            if (piece) {
-                const pieceEl = document.createElement('div'); pieceEl.className = 'piece'; pieceEl.innerText = piece.icon;
-                pieceEl.style.color = piece.color === 'white' ? '#fff' : '#000';
-                pieceEl.style.textShadow = piece.color === 'white' ? '0 0 2px #000' : '0 0 2px #fff';
-                
-                const costBadge = document.createElement('div'); costBadge.className = 'top-cost-badge'; costBadge.innerText = piece.cost;
-                
-                const hpBar = document.createElement('div'); hpBar.className = 'bottom-hp-bar';
-                
-                let lvlDisplay = formatNum(piece.level);
-                hpBar.innerHTML = `<span class="lvl-num">${lvlDisplay}</span>`;
-                
-                let hpDisplay = formatNum(piece.hp);
-                let maxHpDisplay = formatNum(piece.maxHp);
-                const hpText = document.createElement('div');
-                hpText.className = 'hp-text-below';
-                hpText.innerText = `${hpDisplay}/${maxHpDisplay}`;
-                
-                cell.appendChild(pieceEl); 
-                cell.appendChild(costBadge); 
-                cell.appendChild(hpBar);
-                cell.appendChild(hpText);
-            }
-            boardEl.appendChild(cell);
-        }
-    }
 }
-
-function handleSetupClick(r, c) {
-    const clickedPiece = setupBoard[r][c];
-    
-    if (selectedSetupCell) {
-        if (selectedSetupCell.r === r && selectedSetupCell.c === c) {
-            selectedSetupCell = null; renderSetupBoard(); return;
-        }
-        
-        const attacker = setupBoard[selectedSetupCell.r][selectedSetupCell.c];
-        
-        if (clickedPiece && clickedPiece.color === 'white') {
-            selectedSetupCell = { r, c }; renderSetupBoard(); return;
-        }
-        
-        if ((r === 6 || r === 7) && !clickedPiece) {
-            setupBoard[r][c] = attacker;
-            setupBoard[selectedSetupCell.r][selectedSetupCell.c] = null;
-            selectedSetupCell = null;
-        } else {
-            selectedSetupCell = null;
-        }
-        renderSetupBoard();
-        return;
-    }
-    
-    if (clickedPiece && clickedPiece.color === 'white') {
-        selectedSetupCell = { r, c }; 
-        renderSetupBoard();
-    }
+function enterEditMode(){
+snapshotBeforeEdit=JSON.parse(JSON.stringify(setupBoard));
+editMode=true;selectedSetupCell=null;updateSetupUI();renderSetupBoard();
 }
-
-function saveSetupAndReturn() {
-    localStorage.setItem('chessSetup', JSON.stringify(setupBoard));
-    alert("Расстановка сохранена! Теперь она будет использоваться в игре.");
-    switchSubTab('cards');
+function cancelEdit(){
+if(snapshotBeforeEdit){setupBoard=snapshotBeforeEdit;}
+editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null;
+updateSetupUI();renderSetupBoard();
+showToast('Изменения отменены','#ff9500');
 }
-
+function saveSetup(){
+localStorage.setItem('chessSetup',JSON.stringify(setupBoard));
+editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null;
+updateSetupUI();renderSetupBoard();
+showToast('✅ Расстановка сохранена!','#34c759');
+}
+function showToast(msg,color){
+const toast=document.createElement('div');
+toast.className='toast';
+toast.style.borderColor=color;
+toast.style.boxShadow=`0 10px 30px rgba(0,0,0,0.8),0 0 20px ${color}66`;
+toast.innerText=msg;
+document.body.appendChild(toast);
+setTimeout(()=>toast.classList.add('show'),50);
+setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),400);},2200);
+}
 renderDeck();
 initSetup();
 </script>
