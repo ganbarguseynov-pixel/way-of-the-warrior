@@ -5,68 +5,80 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Chess Royale - Игра</title>
 <style>
-body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow-x:hidden;user-select:none;}
 .game-top-bar{width:95vw;max-width:400px;display:flex;align-items:center;gap:10px;margin-top:10px;}
-.elixir-container{position:relative;display:flex;align-items:center;gap:12px;padding:8px 14px;background:linear-gradient(180deg,#1a1a2e 0%,#0a0a14 100%);border-radius:16px;border:1px solid rgba(255,255,255,0.15);box-shadow:0 6px 16px rgba(0,0,0,0.6),inset 0 2px 3px rgba(255,255,255,0.1),inset 0 -3px 8px rgba(0,0,0,0.8);}
-.elixir-fill-bg{position:relative;flex:1;height:22px;background:linear-gradient(180deg,#050510 0%,#0a0a18 100%);border-radius:12px;overflow:hidden;box-shadow:inset 0 4px 8px rgba(0,0,0,0.9),inset 0 -2px 4px rgba(0,0,0,0.7),0 1px 0 rgba(255,255,255,0.1);}
-.elixir-fill{height:100%;width:0%;border-radius:12px;transition:width 0.4s cubic-bezier(0.4,0,0.2,1);position:relative;overflow:hidden;}
-.elixir-fill::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent);animation:elixirShimmer 2.5s infinite;pointer-events:none;}
-.elixir-fill::after{content:'';position:absolute;top:2px;left:6px;right:6px;height:32%;background:linear-gradient(180deg,rgba(255,255,255,0.55),rgba(255,255,255,0));border-radius:8px;pointer-events:none;}
-@keyframes elixirShimmer{0%{left:-100%;}100%{left:100%;}}
-.elixir-text{font-weight:900;font-size:20px;min-width:32px;text-align:center;font-family:'Arial Black',sans-serif;letter-spacing:-1px;}
-.elixir-black{flex:1;}
-.elixir-black .elixir-fill{background:linear-gradient(180deg,#a855f7 0%,#7c3aed 45%,#4c1d95 100%);box-shadow:0 0 18px rgba(168,85,247,0.8),inset 0 2px 4px rgba(255,255,255,0.4),inset 0 -3px 6px rgba(0,0,0,0.5);}
-.elixir-black .elixir-text{color:#c4b5fd;text-shadow:0 0 10px rgba(196,181,253,0.9),0 2px 3px rgba(0,0,0,0.9),0 -1px 0 rgba(255,255,255,0.2);}
-.elixir-white{width:95vw;max-width:400px;margin-bottom:5px;}
-.elixir-white .elixir-fill{background:linear-gradient(180deg,#ff6b7a 0%,#e11d48 45%,#7f1d1d 100%);box-shadow:0 0 18px rgba(255,107,122,0.8),inset 0 2px 4px rgba(255,255,255,0.4),inset 0 -3px 6px rgba(0,0,0,0.5);}
-.elixir-white .elixir-text{color:#ff8a95;text-shadow:0 0 10px rgba(255,138,149,0.9),0 2px 3px rgba(0,0,0,0.9),0 -1px 0 rgba(255,255,255,0.2);}
+.elixir-container{position:relative;display:flex;align-items:center;gap:12px;padding:6px 12px;background:linear-gradient(180deg,#1a1a2e 0%,#0a0a14 100%);border-radius:16px;border:1px solid rgba(255,255,255,0.15);box-shadow:0 4px 10px rgba(0,0,0,0.6),inset 0 2px 3px rgba(255,255,255,0.1),inset 0 -3px 8px rgba(0,0,0,0.8);width:100%;}
+.elixir-fill-bg{position:relative;flex:1;height:20px;background:linear-gradient(180deg,#050510 0%,#0a0a18 100%);border-radius:10px;overflow:hidden;box-shadow:inset 0 4px 8px rgba(0,0,0,0.9),inset 0 -2px 4px rgba(0,0,0,0.7);}
+.elixir-fill{height:100%;width:0%;border-radius:10px;transition:width 0.3s ease-out;position:relative;overflow:hidden;will-change:width;}
+.elixir-fill::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);animation:elixirShimmer 2.5s infinite;pointer-events:none;will-change:transform;}
+.elixir-fill::after{content:'';position:absolute;top:2px;left:4px;right:4px;height:35%;background:linear-gradient(180deg,rgba(255,255,255,0.5),rgba(255,255,255,0));border-radius:6px;pointer-events:none;}
+@keyframes elixirShimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+.elixir-text{font-weight:900;font-size:18px;min-width:28px;text-align:center;font-family:'Arial Black',sans-serif;letter-spacing:-0.5px;}
+.elixir-black .elixir-fill{background:linear-gradient(180deg,#a855f7 0%,#7c3aed 45%,#4c1d95 100%);box-shadow:0 0 15px rgba(168,85,247,0.7),inset 0 2px 4px rgba(255,255,255,0.4),inset 0 -3px 6px rgba(0,0,0,0.5);}
+.elixir-black .elixir-text{color:#c4b5fd;text-shadow:0 0 8px rgba(196,181,253,0.9),0 2px 3px rgba(0,0,0,0.9);}
+.elixir-white{margin-bottom:5px;}
+.elixir-white .elixir-fill{background:linear-gradient(180deg,#ff6b7a 0%,#e11d48 45%,#7f1d1d 100%);box-shadow:0 0 15px rgba(255,107,122,0.7),inset 0 2px 4px rgba(255,255,255,0.4),inset 0 -3px 6px rgba(0,0,0,0.5);}
+.elixir-white .elixir-text{color:#ff8a95;text-shadow:0 0 8px rgba(255,138,149,0.9),0 2px 3px rgba(0,0,0,0.9);}
 .board-wrapper{flex:1;display:flex;align-items:center;justify-content:center;width:100%;margin:10px 0;perspective:1200px;}
-.board-container{position:relative;width:95vw;max-width:400px;aspect-ratio:1/1;border:4px solid #475569;border-radius:14px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.95),0 8px 20px rgba(0,0,0,0.7),0 0 0 2px rgba(255,255,255,0.06),inset 0 0 40px rgba(0,0,0,0.6);background:linear-gradient(145deg,#1a1f2e,#0f1420);}
+.board-container{position:relative;width:95vw;max-width:400px;aspect-ratio:1/1;border:3px solid #475569;border-radius:14px;overflow:hidden;box-shadow:0 15px 40px rgba(0,0,0,0.9),0 5px 15px rgba(0,0,0,0.6),inset 0 0 30px rgba(0,0,0,0.6);background:linear-gradient(145deg,#1a1f2e,#0f1420);}
 .board{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:100%;height:100%;}
-.cell{position:relative;display:flex;justify-content:center;align-items:center;font-size:32px;cursor:pointer;transition:filter 0.15s,transform 0.1s;}
-.cell.white{background:linear-gradient(145deg,#b8c4d4 0%,#94a3b8 50%,#7a8ba0 100%);box-shadow:inset 1px 1px 2px rgba(255,255,255,0.5),inset -1px -1px 3px rgba(0,0,0,0.25);}
-.cell.black{background:linear-gradient(145deg,#4a5a6e 0%,#3a4a5e 50%,#2a3a4e 100%);box-shadow:inset 1px 1px 2px rgba(255,255,255,0.15),inset -1px -1px 3px rgba(0,0,0,0.5);}
-.cell:active{filter:brightness(1.15);}
-.cell.selected{background:linear-gradient(145deg,#4ade80,#22c55e 60%,#15803d)!important;box-shadow:inset 0 0 12px rgba(255,255,255,0.7),0 0 15px rgba(74,222,128,0.8)!important;}
-.cell.valid-move{box-shadow:inset 0 0 0 3px #ffcc00,inset 0 0 12px rgba(255,204,0,0.6);}
-.cell.valid-move::after{content:'';position:absolute;width:18%;height:18%;border-radius:50%;background:radial-gradient(circle,#ffcc00,#b8860b);box-shadow:0 0 8px rgba(255,204,0,0.9);}
-.cell.highlight-piece{animation:pulsePiece 1.2s infinite alternate;cursor:pointer;}
-@keyframes pulsePiece{from{box-shadow:inset 0 0 6px #34c759,0 0 8px rgba(52,199,89,0.5);}to{box-shadow:inset 0 0 18px #34c759,inset 0 0 0 3px #34c759,0 0 15px rgba(52,199,89,0.9);}}
-.piece{position:relative;z-index:2;pointer-events:none;margin-bottom:8px;filter:drop-shadow(0 4px 5px rgba(0,0,0,0.8)) drop-shadow(0 1px 0 rgba(255,255,255,0.15));transition:transform 0.2s;}
-.top-cost-badge{position:absolute;top:-4px;left:50%;transform:translateX(-50%);background:linear-gradient(145deg,#c084fc,#7c3aed);color:#fff;border-radius:50%;width:15px;height:15px;font-size:9px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1.5px solid #fff;z-index:10;box-shadow:0 2px 5px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.5);}
-.bottom-hp-bar{position:absolute;bottom:12px;left:5%;width:90%;height:11px;border-radius:4px;display:flex;justify-content:center;align-items:center;z-index:10;border:1px solid #000;box-sizing:border-box;transition:background 0.3s;box-shadow:inset 0 2px 3px rgba(0,0,0,0.5),inset 0 -1px 2px rgba(255,255,255,0.3),0 1px 2px rgba(0,0,0,0.7);}
-.lvl-num{font-size:9px;font-weight:900;color:#000;line-height:11px;pointer-events:none;}
-.hp-text-below{position:absolute;bottom:1px;left:0;width:100%;text-align:center;font-size:8px;font-weight:bold;color:#fff;z-index:10;pointer-events:none;white-space:nowrap;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 1px 3px rgba(0,0,0,0.9);}
+.cell{position:relative;display:flex;justify-content:center;align-items:center;font-size:32px;cursor:pointer;transition:filter 0.1s;}
+.cell.white{background:linear-gradient(145deg,#b8c4d4 0%,#94a3b8 50%,#7a8ba0 100%);box-shadow:inset 1px 1px 2px rgba(255,255,255,0.4),inset -1px -1px 3px rgba(0,0,0,0.2);}
+.cell.black{background:linear-gradient(145deg,#4a5a6e 0%,#3a4a5e 50%,#2a3a4e 100%);box-shadow:inset 1px 1px 2px rgba(255,255,255,0.1),inset -1px -1px 3px rgba(0,0,0,0.4);}
+.cell:active{filter:brightness(1.1);}
+.cell.selected{background:linear-gradient(145deg,#4ade80,#22c55e 60%,#15803d)!important;box-shadow:inset 0 0 10px rgba(255,255,255,0.6)!important;}
+.cell.valid-move{box-shadow:inset 0 0 0 3px #ffcc00,inset 0 0 10px rgba(255,204,0,0.4);}
+.cell.valid-move::after{content:'';position:absolute;width:18%;height:18%;border-radius:50%;background:radial-gradient(circle,#ffcc00,#b8860b);box-shadow:0 0 6px rgba(255,204,0,0.8);}
+.cell.highlight-piece{box-shadow:inset 0 0 0 3px #34c759,inset 0 0 15px #34c759;cursor:pointer;}
+
+.piece{position:relative;z-index:2;pointer-events:none;margin-bottom:6px;text-shadow:0 3px 4px rgba(0,0,0,0.8),0 1px 0 rgba(255,255,255,0.1);animation:floatPiece 3s ease-in-out infinite;will-change:transform;}
+@keyframes floatPiece{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+
+/* Анимации боя */
+.piece.attack{animation:attackAnim 0.3s ease-out !important;}
+.piece.attack-strong{animation:attackStrongAnim 0.4s ease-out !important;}
+.piece.pain{animation:painAnim 0.3s ease-out !important;}
+.piece.death{animation:deathAnim 0.4s ease-in forwards !important;}
+
+@keyframes attackAnim{0%{transform:scale(1);}50%{transform:scale(1.3) translateY(-10px);filter:brightness(1.5);}100%{transform:scale(1);}}
+@keyframes attackStrongAnim{0%{transform:scale(1);}30%{transform:scale(1.5) translateY(-15px) rotate(15deg);filter:brightness(2) drop-shadow(0 0 10px red);}60%{transform:scale(1.2) translateY(-5px) rotate(-15deg);}100%{transform:scale(1);}}
+@keyframes painAnim{0%,100%{transform:translateX(0) scale(1);}25%{transform:translateX(-6px) scale(0.85);filter:brightness(2) sepia(1) hue-rotate(-50deg) saturate(5);}75%{transform:translateX(6px) scale(0.85);filter:brightness(2) sepia(1) hue-rotate(-50deg) saturate(5);}}
+@keyframes deathAnim{0%{transform:scale(1) rotate(0);opacity:1;}100%{transform:scale(0) rotate(180deg);opacity:0;}}
+
+.top-cost-badge{position:absolute;top:-6px;left:50%;transform:translateX(-50%);background:linear-gradient(145deg,#c084fc,#7c3aed);color:#fff;border-radius:50%;width:15px;height:15px;font-size:9px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1.5px solid #fff;z-index:10;box-shadow:0 2px 4px rgba(0,0,0,0.6);}
+.bottom-hp-bar{position:absolute;bottom:10px;left:5%;width:90%;height:10px;border-radius:4px;display:flex;justify-content:center;align-items:center;z-index:10;border:1px solid #000;box-sizing:border-box;transition:background 0.3s;box-shadow:inset 0 2px 3px rgba(0,0,0,0.5),inset 0 -1px 2px rgba(255,255,255,0.3),0 1px 2px rgba(0,0,0,0.7);}
+.lvl-num{font-size:9px;font-weight:900;color:#000;line-height:10px;pointer-events:none;}
+.hp-text-below{position:absolute;bottom:0px;left:0;width:100%;text-align:center;font-size:8px;font-weight:bold;color:#fff;z-index:10;pointer-events:none;white-space:nowrap;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 1px 3px rgba(0,0,0,0.9);}
 .bottom-ui{width:95vw;max-width:400px;display:flex;flex-direction:column;gap:10px;padding-bottom:80px;}
 .hand-container{display:flex;justify-content:space-between;gap:5px;margin-top:5px;}
-.hand-card{flex:1;background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #3a3a3c;border-radius:10px;aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:5px;cursor:pointer;transition:transform 0.12s,border-color 0.2s;box-shadow:0 6px 10px rgba(0,0,0,0.6),inset 0 2px 2px rgba(255,255,255,0.08),inset 0 -3px 5px rgba(0,0,0,0.5);position:relative;}
+.hand-card{flex:1;background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #3a3a3c;border-radius:10px;aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:5px;cursor:pointer;transition:transform 0.12s,border-color 0.2s;box-shadow:0 4px 8px rgba(0,0,0,0.5),inset 0 2px 2px rgba(255,255,255,0.08),inset 0 -3px 5px rgba(0,0,0,0.5);position:relative;}
 .hand-card:active{transform:scale(0.94) translateY(2px);}
-.hand-card.active{border-color:#34c759;box-shadow:0 0 20px #34c759,inset 0 0 15px rgba(52,199,89,0.4);background:linear-gradient(145deg,#064e3b,#022c22);transform:translateY(-3px);}
-.hand-cost{position:absolute;top:-6px;left:-6px;background:linear-gradient(145deg,#c084fc,#7c3aed);color:#fff;font-size:12px;font-weight:900;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.5);}
-.hand-icon{font-size:30px;margin-top:12px;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.7));}
+.hand-card.active{border-color:#34c759;box-shadow:0 0 15px #34c759,inset 0 0 10px rgba(52,199,89,0.3);background:linear-gradient(145deg,#064e3b,#022c22);transform:translateY(-3px);}
+.hand-cost{position:absolute;top:-6px;left:-6px;background:linear-gradient(145deg,#c084fc,#7c3aed);color:#fff;font-size:12px;font-weight:900;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.6);}
+.hand-icon{font-size:30px;margin-top:12px;text-shadow:0 2px 3px rgba(0,0,0,0.7);}
 .hand-name{font-size:9px;font-weight:bold;color:#fff;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,0.8);}
 .controls{display:flex;gap:5px;}
-.btn{background:linear-gradient(145deg,#475569,#2a3444);color:#fff;border:1px solid #64748b;padding:12px;border-radius:10px;font-size:13px;cursor:pointer;flex:1;font-weight:bold;box-shadow:0 4px 8px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.15);transition:transform 0.1s;}
+.btn{background:linear-gradient(145deg,#475569,#2a3444);color:#fff;border:1px solid #64748b;padding:12px;border-radius:10px;font-size:13px;cursor:pointer;flex:1;font-weight:bold;box-shadow:0 3px 6px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.15);transition:transform 0.1s;}
 .btn:active{transform:scale(0.97);}
-.btn-red{background:linear-gradient(145deg,#ef4444,#b91c1c);border-color:#dc2626;box-shadow:0 4px 10px rgba(239,68,68,0.4),inset 0 1px 0 rgba(255,255,255,0.2);}
-.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -8px 24px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.05);}
+.btn-red{background:linear-gradient(145deg,#ef4444,#b91c1c);border-color:#dc2626;box-shadow:0 3px 8px rgba(239,68,68,0.3),inset 0 1px 0 rgba(255,255,255,0.2);}
+.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 15px rgba(0,0,0,0.7);}
 .nav-btn{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;transition:0.2s;}
-.nav-btn .icon-wrap{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);box-shadow:0 4px 8px rgba(0,0,0,0.5),inset 0 2px 3px rgba(255,255,255,0.08),inset 0 -3px 6px rgba(0,0,0,0.6);transition:all 0.3s;}
-.nav-btn .icon{font-size:22px;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.6));transition:transform 0.3s;}
+.nav-btn .icon-wrap{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);box-shadow:0 3px 6px rgba(0,0,0,0.5),inset 0 2px 3px rgba(255,255,255,0.08),inset 0 -3px 6px rgba(0,0,0,0.6);transition:all 0.3s;}
+.nav-btn .icon{font-size:22px;text-shadow:0 1px 2px rgba(0,0,0,0.6);transition:transform 0.3s;}
 .nav-btn.active{color:#ffcc00;}
-.nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500);box-shadow:0 4px 12px rgba(255,204,0,0.5),0 0 20px rgba(255,204,0,0.4),inset 0 2px 3px rgba(255,255,255,0.4),inset 0 -3px 6px rgba(180,100,0,0.4);}
+.nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500);box-shadow:0 3px 10px rgba(255,204,0,0.4),inset 0 2px 3px rgba(255,255,255,0.4);}
 .nav-btn.active .icon{transform:scale(1.12);}
 .deck-stack{position:relative;width:26px;height:30px;}
-.deck-stack .deck-card{position:absolute;width:18px;height:24px;border-radius:3px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 2px 4px rgba(0,0,0,0.6);}
+.deck-stack .deck-card{position:absolute;width:18px;height:24px;border-radius:3px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 1px 3px rgba(0,0,0,0.6);}
 .deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c);}
 .deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe);}
 .deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,0.6);}
-.nav-btn.active .deck-stack .deck-card{box-shadow:0 3px 6px rgba(0,0,0,0.7),0 0 8px rgba(255,255,255,0.3);}
 .promotion-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:1000;justify-content:center;align-items:center;}
 .promotion-modal.active{display:flex;}
-.promotion-content{background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #475569;border-radius:16px;padding:25px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.9),inset 0 1px 0 rgba(255,255,255,0.1);}
+.promotion-content{background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #475569;border-radius:16px;padding:25px;text-align:center;box-shadow:0 15px 40px rgba(0,0,0,0.9),inset 0 1px 0 rgba(255,255,255,0.1);}
 .promotion-options{display:flex;gap:12px;margin-top:18px;}
-.promotion-btn{font-size:38px;background:linear-gradient(145deg,#475569,#2a3444);border:2px solid #64748b;border-radius:12px;padding:10px;cursor:pointer;box-shadow:0 6px 12px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.15);transition:transform 0.1s;}
+.promotion-btn{font-size:38px;background:linear-gradient(145deg,#475569,#2a3444);border:2px solid #64748b;border-radius:12px;padding:10px;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.15);transition:transform 0.1s;}
 .promotion-btn:active{transform:scale(0.92);background:linear-gradient(145deg,#64748b,#3a4758);}
 </style>
 </head>
@@ -128,18 +140,64 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </div>
 
 <script>
+// === ЗВУКОВОЙ ДВИЖОК (Web Audio API) ===
+let audioCtx = null;
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playSound(type) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+
+    if (type === 'move') {
+        osc.type = 'sine'; osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+        gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now); osc.stop(now + 0.1);
+    } else if (type === 'hit') {
+        osc.type = 'square'; osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.15);
+        gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now); osc.stop(now + 0.15);
+    } else if (type === 'pain') {
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, now);
+        osc.frequency.linearRampToValueAtTime(500, now + 0.1);
+        osc.frequency.linearRampToValueAtTime(200, now + 0.2);
+        gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+    } else if (type === 'kill') {
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+        gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+        const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain();
+        osc2.connect(gain2); gain2.connect(audioCtx.destination);
+        osc2.type = 'square'; osc2.frequency.setValueAtTime(80, now);
+        osc2.frequency.exponentialRampToValueAtTime(30, now + 0.2);
+        gain2.gain.setValueAtTime(0.2, now); gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc2.start(now); osc2.stop(now + 0.2);
+    }
+}
+
 const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
 const DEFAULT_BOARD=[['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
 let boardState=[],selectedCell=null,validMoves=[];
 let whiteElixir=5,blackElixir=5,elixirInterval=null;
 let currentHand=['p','n','b','r'],selectedCardType=null;
 let enPassantTarget=null,promotionTarget=null,gameActive=true;
+let isAnimating = false; // Флаг для блокировки кликов во время боя
+
 function triggerShake(id){const el=document.getElementById(id);if(!el)return;el.style.transform='translateX(-6px)';setTimeout(()=>el.style.transform='translateX(6px)',80);setTimeout(()=>el.style.transform='',160);}
 function formatNum(n){if(Number.isInteger(n))return n.toString();return Number(n.toFixed(2)).toString();}
 function createPiece(code){if(!code)return null;let type=code.toLowerCase();let color=code===code.toUpperCase()?'white':'black';let level=1;return{type:type,color:color,level:level,hp:level,maxHp:level,cost:PIECES[type].cost,icon:PIECES[type].icon,hasMoved:false};}
 function initGame(){let initialData=DEFAULT_BOARD;const saved=localStorage.getItem('chessSetup');if(saved){try{const parsed=JSON.parse(saved);if(parsed&&parsed.length===8)initialData=parsed;}catch(e){}}
 boardState=initialData.map(row=>row.map(pc=>createPiece(pc)));
-selectedCell=null;validMoves=[];selectedCardType=null;whiteElixir=5;blackElixir=5;enPassantTarget=null;promotionTarget=null;gameActive=true;
+selectedCell=null;validMoves=[];selectedCardType=null;whiteElixir=5;blackElixir=5;enPassantTarget=null;promotionTarget=null;gameActive=true;isAnimating=false;
 document.getElementById('promotion-modal').classList.remove('active');
 clearInterval(elixirInterval);
 elixirInterval=setInterval(()=>{if(gameActive){if(whiteElixir<10)whiteElixir++;if(blackElixir<10)blackElixir++;updateElixirUI();}},1000);
@@ -148,6 +206,7 @@ function renderBoard(){const boardEl=document.getElementById('board');boardEl.in
 for(let r=0;r<8;r++){for(let c=0;c<8;c++){
 const cell=document.createElement('div');
 cell.className=`cell ${(r+c)%2===0?'white':'black'}`;
+cell.dataset.r = r; cell.dataset.c = c;
 cell.onclick=()=>handleCellClick(r,c);
 if(selectedCell&&selectedCell.r===r&&selectedCell.c===c)cell.classList.add('selected');
 if(validMoves.some(m=>m.r===r&&m.c===c))cell.classList.add('valid-move');
@@ -157,6 +216,7 @@ if(selectedCardType===piece.type){if(piece.color==='white'&&whiteElixir>=piece.c
 const pieceEl=document.createElement('div');pieceEl.className='piece';pieceEl.innerText=piece.icon;
 pieceEl.style.color=piece.color==='white'?'#fff':'#0a0a0a';
 pieceEl.style.textShadow=piece.color==='white'?'0 1px 0 #666,0 2px 0 #444,0 3px 4px rgba(0,0,0,0.9)':'0 1px 0 #555,0 2px 3px rgba(255,255,255,0.3),0 3px 4px rgba(0,0,0,0.9)';
+pieceEl.style.animationDelay=`${((r*8)+c)*0.1}s`;
 const costBadge=document.createElement('div');costBadge.className='top-cost-badge';costBadge.innerText=piece.cost;
 const hpBar=document.createElement('div');hpBar.className='bottom-hp-bar';
 let hpPercent=(piece.hp/piece.maxHp)*100;
@@ -187,25 +247,126 @@ if(piece.type==='p'){let dir=piece.color==='white'?-1:1;if(isEmpty(b[r+dir]?.[c]
 if(!ignoreCost){moves=moves.filter(move=>{let tempBoard=JSON.parse(JSON.stringify(b));if(move.castling){let rookFromC=move.c===6?7:0;let rookToC=move.c===6?5:3;tempBoard[r][rookToC]=tempBoard[r][rookFromC];tempBoard[r][rookFromC]=null;}if(move.enPassant){tempBoard[r][move.c]=null;}tempBoard[move.r][move.c]=tempBoard[r][c];tempBoard[r][c]=null;return!isKingInCheck(piece.color,tempBoard);});}
 return moves;}
 function isSquareAttacked(r,c,byColor,boardData=null){let b=boardData||boardState;for(let i=0;i<8;i++){for(let j=0;j<8;j++){let p=b[i][j];if(p&&p.color===byColor){let moves=getValidMoves(i,j,b,true);if(moves.some(m=>m.r===r&&m.c===c))return true;}}}return false;}
-function handleCellClick(r,c){if(!gameActive)return;const clickedPiece=boardState[r][c];
-if(selectedCell){const move=validMoves.find(m=>m.r===r&&m.c===c);
-if(move){const attacker=boardState[selectedCell.r][selectedCell.c];
-if(attacker.color==='white'&&whiteElixir<attacker.cost){triggerShake('white-elixir-fill');selectedCell=null;validMoves=[];renderBoard();return;}
-if(attacker.color==='black'&&blackElixir<attacker.cost){triggerShake('black-elixir-fill');selectedCell=null;validMoves=[];renderBoard();return;}
-if(attacker.color==='white'){whiteElixir-=attacker.cost;}else{blackElixir-=attacker.cost;}
-updateElixirUI();
-if(move.castling){let rookFromC=move.c===6?7:0;let rookToC=move.c===6?5:3;boardState[selectedCell.r][rookToC]=boardState[selectedCell.r][rookFromC];boardState[selectedCell.r][rookFromC]=null;boardState[selectedCell.r][rookToC].hasMoved=true;}
-if(move.enPassant){let capturedR=selectedCell.r;let capturedC=move.c;boardState[capturedR][capturedC]=null;}
-if(clickedPiece&&clickedPiece.color!==attacker.color){let damage=attacker.level;clickedPiece.hp-=damage;if(clickedPiece.hp<=0){boardState[r][c]=attacker;boardState[selectedCell.r][selectedCell.c]=null;}}else{boardState[r][c]=attacker;boardState[selectedCell.r][selectedCell.c]=null;}
-if(attacker.type==='p'&&Math.abs(r-selectedCell.r)===2){enPassantTarget={r:(r+selectedCell.r)/2,c:c};}else{enPassantTarget=null;}
-attacker.hasMoved=true;
-let promoRow=(attacker.color==='white')?0:7;
-if(attacker.type==='p'&&r===promoRow){promotionTarget={r:r,c:c,color:attacker.color};document.getElementById('promotion-modal').classList.add('active');}
-selectedCell=null;validMoves=[];selectedCardType=null;
-renderBoard();renderHand();
-setTimeout(()=>{['white','black'].forEach(color=>{if(isKingInCheck(color,boardState)){for(let rr=0;rr<8;rr++)for(let cc=0;cc<8;cc++){if(boardState[rr][cc]&&boardState[rr][cc].type==='k'&&boardState[rr][cc].color===color){boardState[rr][cc].hp-=1;if(boardState[rr][cc].hp<=0){endGame(color==='white'?'Черные':'Белые','Король пал!');}}}renderBoard();}});checkGameEnd();},150);
-}else{selectedCell=null;validMoves=[];renderBoard();}
-}else{if(clickedPiece){if(selectedCardType&&clickedPiece.type!==selectedCardType)return;selectedCell={r,c};validMoves=getValidMoves(r,c);selectedCardType=null;renderBoard();renderHand();}}}
+
+function handleCellClick(r,c){
+    if(!gameActive || isAnimating) return; 
+    const clickedPiece=boardState[r][c];
+    
+    if(selectedCell){
+        const move=validMoves.find(m=>m.r===r&&m.c===c);
+        if(move){
+            initAudio(); // Включаем звук при первом действии
+            isAnimating = true; // Блокируем доску
+            
+            const attacker=boardState[selectedCell.r][selectedCell.c];
+            
+            if(attacker.color==='white'&&whiteElixir<attacker.cost){triggerShake('white-elixir-fill');selectedCell=null;validMoves=[];renderBoard();isAnimating=false;return;}
+            if(attacker.color==='black'&&blackElixir<attacker.cost){triggerShake('black-elixir-fill');selectedCell=null;validMoves=[];renderBoard();isAnimating=false;return;}
+            
+            if(attacker.color==='white'){whiteElixir-=attacker.cost;}else{blackElixir-=attacker.cost;}
+            updateElixirUI();
+
+            const fromR = selectedCell.r, fromC = selectedCell.c;
+            const attackerEl = document.querySelector(`.cell[data-r="${fromR}"][data-c="${fromC}"] .piece`);
+            
+            // Логика боя
+            if(clickedPiece&&clickedPiece.color!==attacker.color){
+                const defenderEl = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"] .piece`);
+                let damage = attacker.level;
+                clickedPiece.hp -= damage;
+                let isKilled = clickedPiece.hp <= 0;
+
+                // Анимации и звуки
+                if (isKilled) {
+                    playSound('kill');
+                    if(attackerEl) { attackerEl.style.animation='none'; attackerEl.classList.add('attack-strong'); }
+                    if(defenderEl) { defenderEl.style.animation='none'; defenderEl.classList.add('death'); }
+                } else {
+                    playSound('hit');
+                    setTimeout(()=>playSound('pain'), 50);
+                    if(attackerEl) { attackerEl.style.animation='none'; attackerEl.classList.add('attack'); }
+                    if(defenderEl) { defenderEl.style.animation='none'; defenderEl.classList.add('pain'); }
+                }
+
+                // Ждем окончания анимации и обновляем состояние
+                setTimeout(() => {
+                    if (isKilled) {
+                        boardState[r][c] = attacker; // Убийца встает на место жертвы
+                    }
+                    boardState[fromR][fromC] = null;
+                    
+                    attacker.hasMoved = true;
+                    let promoRow = (attacker.color === 'white') ? 0 : 7;
+                    if (attacker.type === 'p' && r === promoRow) {
+                        promotionTarget = { r: r, c: c, color: attacker.color };
+                        document.getElementById('promotion-modal').classList.add('active');
+                    }
+
+                    selectedCell = null; validMoves = []; selectedCardType = null;
+                    renderBoard(); renderHand();
+                    isAnimating = false;
+                    
+                    setTimeout(()=>checkKingAndEnd(), 150);
+
+                }, 450); // 450мс на анимацию
+
+            } else {
+                // Обычный ход без боя
+                playSound('move');
+                
+                if(move.castling){
+                    let rookFromC=move.c===6?7:0; let rookToC=move.c===6?5:3;
+                    boardState[fromR][rookToC]=boardState[fromR][rookFromC];
+                    boardState[fromR][rookFromC]=null; boardState[fromR][rookToC].hasMoved=true;
+                }
+                if(move.enPassant){ boardState[fromR][c]=null; }
+
+                boardState[r][c] = attacker;
+                boardState[fromR][fromC] = null;
+                
+                if(attacker.type==='p'&&Math.abs(r-fromR)===2){enPassantTarget={r:(r+fromR)/2,c:c};}else{enPassantTarget=null;}
+                attacker.hasMoved=true;
+
+                let promoRow=(attacker.color==='white')?0:7;
+                if(attacker.type==='p'&&r===promoRow){
+                    promotionTarget={r:r,c:c,color:attacker.color};
+                    document.getElementById('promotion-modal').classList.add('active');
+                }
+
+                selectedCell=null;validMoves=[];selectedCardType=null;
+                renderBoard();renderHand();
+                isAnimating = false;
+
+                setTimeout(()=>checkKingAndEnd(), 150);
+            }
+        } else {
+            selectedCell=null; validMoves=[]; renderBoard();
+        }
+    } else {
+        if(clickedPiece){
+            if(selectedCardType&&clickedPiece.type!==selectedCardType)return;
+            selectedCell={r,c}; validMoves=getValidMoves(r,c); selectedCardType=null; renderBoard(); renderHand();
+        }
+    }
+}
+
+function checkKingAndEnd() {
+    ['white','black'].forEach(color=>{
+        if(isKingInCheck(color,boardState)){
+            for(let rr=0;rr<8;rr++) for(let cc=0;cc<8;cc++){
+                if(boardState[rr][cc]&&boardState[rr][cc].type==='k'&&boardState[rr][cc].color===color){
+                    boardState[rr][cc].hp-=1;
+                    if(boardState[rr][cc].hp<=0){
+                        endGame(color==='white'?'Черные':'Белые','Король пал!');
+                    }
+                }
+            }
+            renderBoard();
+        }
+    });
+    checkGameEnd();
+}
+
 function selectPromotion(newType){if(promotionTarget){let p=boardState[promotionTarget.r][promotionTarget.c];p.type=newType;p.icon=PIECES[newType].icon;p.cost=PIECES[newType].cost;}document.getElementById('promotion-modal').classList.remove('active');promotionTarget=null;renderBoard();setTimeout(checkGameEnd,100);}
 function resetGame(){if(confirm("Начать партию заново с сохраненной расстановкой?")){initGame();}}
 initGame();
