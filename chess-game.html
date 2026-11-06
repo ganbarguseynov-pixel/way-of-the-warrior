@@ -46,7 +46,6 @@
     .cell.black { background-color: #475569; }
     .cell.selected { background-color: rgba(52, 199, 89, 0.9) !important; box-shadow: inset 0 0 10px #fff; }
     .cell.valid-move { box-shadow: inset 0 0 0 3px #ffcc00; }
-    .cell.setup-zone { background-color: rgba(255, 204, 0, 0.3) !important; }
     
     .cell.highlight-piece { animation: pulse-piece 1s infinite alternate; cursor: pointer; }
     @keyframes pulse-piece {
@@ -55,20 +54,31 @@
     }
     
     .piece { position: relative; z-index: 2; pointer-events: none; }
-    .hp-bar { position: absolute; bottom: 2px; left: 10%; width: 80%; height: 6px; background: #000; border-radius: 3px; z-index: 3; pointer-events: none; border: 1px solid rgba(255,255,255,0.2);}
-    .hp-fill { height: 100%; background: #34c759; border-radius: 3px; transition: width 0.3s; }
     
-    .lvl-badge { 
-        position: absolute; top: 2px; left: 2px; font-size: 10px; font-weight: bold; color: #fff; 
-        background: #ff3b30; width: 18px; height: 18px; line-height: 18px; 
-        text-align: center; border-radius: 50%; z-index: 4; pointer-events: none; border: 1px solid #fff;
+    /* СТИЛЬ СТОИМОСТИ СВЕРХУ */
+    .top-cost-badge {
+        position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
+        background: #af52de; color: white; border-radius: 50%; width: 20px; height: 20px;
+        font-size: 11px; font-weight: bold; display: flex; justify-content: center; align-items: center;
+        border: 2px solid #fff; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
     
-    .cost-badge {
-        position: absolute; top: 2px; right: 2px; font-size: 10px; font-weight: bold; color: #fff;
-        background: #af52de; width: 18px; height: 18px; line-height: 18px;
-        text-align: center; border-radius: 50%; z-index: 4; pointer-events: none; border: 1px solid #fff;
-        box-shadow: 0 0 5px rgba(175, 82, 222, 0.8);
+    /* СТИЛЬ ЗДОРОВЬЯ И УРОВНЯ СНИЗУ */
+    .bottom-hp-bar {
+        position: absolute; bottom: 1px; left: 5%; width: 90%; height: 16px;
+        border-radius: 4px; display: flex; justify-content: space-between; align-items: center;
+        z-index: 10; border: 1px solid #000; padding: 0 2px; box-sizing: border-box;
+        transition: background 0.3s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .hp-num {
+        font-size: 10px; font-weight: bold; color: #000;
+        background: rgba(255,255,255,0.8); padding: 0 2px; border-radius: 3px; line-height: 12px;
+    }
+    .lvl-num {
+        font-size: 11px; font-weight: 900; background: #000; color: #fff;
+        padding: 0 6px; border-radius: 10px; line-height: 14px;
+        position: absolute; left: 50%; transform: translateX(-50%);
+        border: 1px solid #fff;
     }
 
     .bottom-ui { width: 95vw; max-width: 400px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 15px; }
@@ -93,8 +103,7 @@
     .shake { animation: shake 0.3s ease-in-out; }
     .controls { display: flex; gap: 5px; }
     .btn { background: #334155; color: #fff; border: 1px solid #475569; padding: 12px; border-radius: 8px; font-size: 13px; cursor: pointer; flex: 1; font-weight: bold;}
-    .btn-gold { background: #eab308; color: #000; border: none; }
-    .btn-green { background: #22c55e; color: #000; border: none; }
+    .btn-red { background: #ef4444; color: #fff; border: none; }
 
     .promotion-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
     .promotion-modal.active { display: flex; }
@@ -128,13 +137,8 @@
     
     <div class="hand-container" id="hand-container"></div>
 
-    <div class="controls" id="game-controls">
-        <button class="btn btn-gold" onclick="startSetupMode()">⚙️ Расстановка</button>
-        <button class="btn" onclick="resetGame()">🔄 Сброс</button>
-    </div>
-    <div class="controls" id="setup-controls" style="display: none;">
-        <button class="btn btn-green" onclick="saveSetupAndPlay()">✅ Сохранить и играть</button>
-        <button class="btn" onclick="cancelSetup()">❌ Отмена</button>
+    <div class="controls">
+        <button class="btn btn-red" onclick="resetGame()">🔄 Сброс партии</button>
     </div>
 </div>
 
@@ -166,7 +170,6 @@ const DEFAULT_BOARD = [
 
 let boardState = [], selectedCell = null, validMoves = [];
 let whiteElixir = 5, blackElixir = 5, elixirInterval = null;
-let isSetupMode = false;
 let currentHand = ['p', 'n', 'b', 'r'];
 let selectedCardType = null;
 
@@ -203,18 +206,15 @@ function initGame() {
     
     selectedCell = null; validMoves = []; selectedCardType = null;
     whiteElixir = 5; blackElixir = 5;
-    isSetupMode = false;
     enPassantTarget = null;
     promotionTarget = null;
     gameActive = true;
     
-    document.getElementById('game-controls').style.display = 'flex';
-    document.getElementById('setup-controls').style.display = 'none';
     document.getElementById('promotion-modal').classList.remove('active');
 
     clearInterval(elixirInterval);
     elixirInterval = setInterval(() => {
-        if (!isSetupMode && gameActive) {
+        if (gameActive) {
             if (whiteElixir < 10) whiteElixir++;
             if (blackElixir < 10) blackElixir++;
             updateElixirUI();
@@ -222,25 +222,6 @@ function initGame() {
     }, 1000);
 
     renderBoard(); renderHand(); updateElixirUI();
-}
-
-function startSetupMode() {
-    isSetupMode = true;
-    selectedCell = null; validMoves = []; selectedCardType = null;
-    document.getElementById('game-controls').style.display = 'none';
-    document.getElementById('setup-controls').style.display = 'flex';
-    renderBoard(); renderHand();
-}
-
-function cancelSetup() {
-    isSetupMode = false;
-    initGame();
-}
-
-function saveSetupAndPlay() {
-    localStorage.setItem('chessSetup', JSON.stringify(boardState));
-    isSetupMode = false;
-    initGame();
 }
 
 function renderBoard() {
@@ -253,7 +234,6 @@ function renderBoard() {
             
             if (selectedCell && selectedCell.r === r && selectedCell.c === c) cell.classList.add('selected');
             if (validMoves.some(m => m.r === r && m.c === c)) cell.classList.add('valid-move');
-            if (isSetupMode && (r === 6 || r === 7)) cell.classList.add('setup-zone');
             
             const piece = boardState[r][c];
             if (piece) {
@@ -266,16 +246,20 @@ function renderBoard() {
                 pieceEl.style.color = piece.color === 'white' ? '#fff' : '#000';
                 pieceEl.style.textShadow = piece.color === 'white' ? '0 0 2px #000' : '0 0 2px #fff';
                 
-                const lvlBadge = document.createElement('div'); lvlBadge.className = 'lvl-badge'; lvlBadge.innerText = piece.level;
-                const costBadge = document.createElement('div'); costBadge.className = 'cost-badge'; costBadge.innerText = piece.cost;
+                const costBadge = document.createElement('div'); costBadge.className = 'top-cost-badge'; costBadge.innerText = piece.cost;
                 
-                const hpBar = document.createElement('div'); hpBar.className = 'hp-bar';
-                const hpFill = document.createElement('div'); hpFill.className = 'hp-fill';
-                let hpPercent = (piece.hp / piece.maxHp) * 100; hpFill.style.width = `${hpPercent}%`;
-                if(hpPercent <= 30) hpFill.style.background = '#ff3b30';
-                hpBar.appendChild(hpFill);
+                const hpBar = document.createElement('div'); hpBar.className = 'bottom-hp-bar';
+                let hpPercent = (piece.hp / piece.maxHp) * 100;
+                let barColor = '#34c759'; // Зеленый
+                if (hpPercent <= 30) barColor = '#ff3b30'; // Красный
+                else if (hpPercent <= 60) barColor = '#ffcc00'; // Желтый
+                hpBar.style.background = barColor;
                 
-                cell.appendChild(pieceEl); cell.appendChild(lvlBadge); cell.appendChild(costBadge); cell.appendChild(hpBar);
+                hpBar.innerHTML = `<span class="hp-num">${piece.hp}</span><span class="lvl-num">${piece.level}</span><span class="hp-num">${piece.maxHp}</span>`;
+                
+                cell.appendChild(pieceEl); 
+                cell.appendChild(costBadge); 
+                cell.appendChild(hpBar);
             }
             boardEl.appendChild(cell);
         }
@@ -465,20 +449,6 @@ function handleCellClick(r, c) {
     if (!gameActive) return;
     const clickedPiece = boardState[r][c];
     
-    if (isSetupMode) {
-        if (selectedCell) {
-            if (selectedCell.r === r && selectedCell.c === c) { selectedCell = null; renderBoard(); return; }
-            const attacker = boardState[selectedCell.r][selectedCell.c];
-            if (clickedPiece && clickedPiece.color === 'white') { selectedCell = { r, c }; renderBoard(); return; }
-            if ((r === 6 || r === 7) && !clickedPiece) {
-                boardState[r][c] = attacker; boardState[selectedCell.r][selectedCell.c] = null; selectedCell = null;
-            } else { selectedCell = null; }
-            renderBoard(); return;
-        }
-        if (clickedPiece && clickedPiece.color === 'white') { selectedCell = { r, c }; renderBoard(); }
-        return;
-    }
-
     if (selectedCell) {
         const move = validMoves.find(m => m.r === r && m.c === c);
         if (move) {
@@ -529,7 +499,6 @@ function handleCellClick(r, c) {
             selectedCell = null; validMoves = []; selectedCardType = null;
             renderBoard(); renderHand();
             
-            // АВТО-УРОН КОРОЛЮ
             setTimeout(() => {
                 ['white', 'black'].forEach(color => {
                     if (isKingInCheck(color, boardState)) {
@@ -544,7 +513,6 @@ function handleCellClick(r, c) {
                         renderBoard();
                     }
                 });
-                // ПРОВЕРКА НА МАТ И ПАТ
                 checkGameEnd();
             }, 150);
 
@@ -576,8 +544,7 @@ function selectPromotion(newType) {
 }
 
 function resetGame() { 
-    if (confirm("Сбросить игру к стандартной расстановке?")) {
-        localStorage.removeItem('chessSetup');
+    if (confirm("Начать партию заново с сохраненной расстановкой?")) {
         initGame(); 
     }
 }
