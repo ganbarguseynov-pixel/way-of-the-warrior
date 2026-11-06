@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Chess Royale - Главная</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;height:100vh;height:100dvh;overflow:hidden;user-select:none;}
+.top-bar{width:100%;padding:10px;display:flex;justify-content:space-between;align-items:flex-start;background:linear-gradient(180deg,rgba(0,0,0,0.8),transparent);position:absolute;top:0;z-index:10;}
+.profile-badge{display:flex;align-items:center;gap:10px;background:linear-gradient(145deg,#1a1a2e,#0a0a14);padding:6px 12px;border-radius:12px;border:2px solid #3b82f6;box-shadow:0 4px 10px rgba(0,0,0,0.6);}
+.avatar{width:40px;height:40px;background:linear-gradient(145deg,#ffcc00,#ff9500);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:inset 0 2px 4px rgba(255,255,255,0.5);}
+.profile-info{display:flex;flex-direction:column;}
+.profile-name{font-size:14px;font-weight:900;}
+.profile-level{font-size:10px;color:#94a3b8;}
+.currencies{display:flex;gap:5px;flex-direction:column;}
+.currency{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.7);padding:4px 8px;border-radius:8px;font-size:12px;font-weight:bold;border:1px solid rgba(255,255,255,0.1);}
+.currency.trophy{color:#ffcc00;border-color:#ffcc00;}
+.currency.coin{color:#ffd700;}
+.currency.gem{color:#34c759;}
+
+.arena-container{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding:20px;margin-top:60px;}
+.arena-card{width:90vw;max-width:400px;background:linear-gradient(180deg,#1e293b,#0f172a);border-radius:20px;border:3px solid #475569;box-shadow:0 20px 50px rgba(0,0,0,0.9),inset 0 0 40px rgba(0,0,0,0.6);padding:20px;text-align:center;position:relative;overflow:hidden;}
+.arena-glow{position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at top,#3b82f6 0%,transparent 70%);opacity:0.2;pointer-events:none;}
+.arena-title{font-size:20px;font-weight:900;color:#ffcc00;text-shadow:0 2px 4px rgba(0,0,0,0.8);margin-bottom:5px;z-index:2;position:relative;}
+.arena-subtitle{font-size:12px;color:#94a3b8;margin-bottom:15px;z-index:2;position:relative;}
+.arena-image{width:100%;height:150px;background:url('https://images.unsplash.com/photo-1614036417651-efe5912149d8?q=80&w=600&auto=format&fit=crop') center/cover;border-radius:12px;border:2px solid #64748b;margin-bottom:15px;position:relative;z-index:2;}
+.arena-progress-bg{width:100%;height:16px;background:#000;border-radius:10px;overflow:hidden;box-shadow:inset 0 4px 8px rgba(0,0,0,0.9);position:relative;z-index:2;}
+.arena-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#3b82f6,#00f2fe);border-radius:10px;transition:width 0.5s;}
+.arena-trophies{display:flex;justify-content:space-between;width:100%;font-size:11px;color:#ccc;margin-top:5px;font-weight:bold;position:relative;z-index:2;}
+
+.bottom-actions{width:100%;padding:20px;display:flex;flex-direction:column;align-items:center;gap:15px;margin-bottom:65px;}
+.btn-battle{width:90vw;max-width:400px;padding:18px;background:linear-gradient(180deg,#ffcc00,#ff9500);border:3px solid #fff;border-radius:16px;font-size:24px;font-weight:900;color:#000;text-transform:uppercase;letter-spacing:1px;box-shadow:0 8px 0 #b45309,0 15px 20px rgba(0,0,0,0.6),inset 0 2px 4px rgba(255,255,255,0.8);cursor:pointer;transition:transform 0.1s,box-shadow 0.1s;text-shadow:0 1px 0 rgba(255,255,255,0.5);position:relative;overflow:hidden;}
+.btn-battle:active{transform:translateY(4px);box-shadow:0 4px 0 #b45309,0 5px 10px rgba(0,0,0,0.6),inset 0 2px 4px rgba(255,255,255,0.8);}
+.btn-battle::after{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent);animation:shine 3s infinite;transform:skewX(-20deg);}
+@keyframes shine{0%{left:-100%;}20%{left:200%;}100%{left:200%;}}
+
+.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 15px rgba(0,0,0,0.7);}
+.nav-btn{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;transition:0.2s;}
+.nav-btn .icon-wrap{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);box-shadow:0 3px 6px rgba(0,0,0,0.5),inset 0 2px 3px rgba(255,255,255,0.08),inset 0 -3px 6px rgba(0,0,0,0.6);transition:all 0.3s;}
+.nav-btn .icon{font-size:22px;text-shadow:0 1px 2px rgba(0,0,0,0.6);transition:transform 0.3s;}
+.nav-btn.active{color:#ffcc00;}
+.nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500);box-shadow:0 3px 10px rgba(255,204,0,0.4),inset 0 2px 3px rgba(255,255,255,0.4);}
+.nav-btn.active .icon{transform:scale(1.12);}
+.deck-stack{position:relative;width:26px;height:30px;}
+.deck-stack .deck-card{position:absolute;width:18px;height:24px;border-radius:3px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 1px 3px rgba(0,0,0,0.6);}
+.deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c);}
+.deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe);}
+.deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,0.6);}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="profile-badge">
+        <div class="avatar">👑</div>
+        <div class="profile-info">
+            <span class="profile-name" id="player-name">Атлет</span>
+            <span class="profile-level">Уровень 1</span>
+        </div>
+    </div>
+    <div class="currencies">
+        <div class="currency trophy">🏆 <span id="trophies-count">0</span></div>
+        <div class="currency coin">🪙 <span id="coins-count">1250</span></div>
+        <div class="currency gem">💎 <span id="gems-count">50</span></div>
+    </div>
+</div>
+
+<div class="arena-container">
+    <div class="arena-card">
+        <div class="arena-glow"></div>
+        <div class="arena-title">Арена 1: Лесная поляна</div>
+        <div class="arena-subtitle">Добро пожаловать в Шахматный Рояль!</div>
+        <div class="arena-image"></div>
+        <div class="arena-progress-bg"><div class="arena-progress-fill" id="arena-progress"></div></div>
+        <div class="arena-trophies">
+            <span>🏆 <span id="current-trophies">0</span></span>
+            <span>До следующей: <span id="next-arena-req">300</span></span>
+        </div>
+    </div>
+</div>
+
+<div class="bottom-actions">
+    <button class="btn-battle" onclick="startBattle()">⚔️ В БОЙ</button>
+</div>
+
+<div class="bottom-nav">
+    <button class="nav-btn active" onclick="window.location.reload()">
+        <div class="icon-wrap"><span class="icon">🏰</span></div>
+        <span>Главная</span>
+    </button>
+    <button class="nav-btn" onclick="window.location.href='chess-deck.html'">
+        <div class="icon-wrap">
+            <div class="deck-stack">
+                <div class="deck-card"></div>
+                <div class="deck-card"></div>
+                <div class="deck-card">♠</div>
+            </div>
+        </div>
+        <span>Колода</span>
+    </button>
+</div>
+
+<script>
+// Загружаем данные (или ставим по умолчанию)
+let trophies = parseInt(localStorage.getItem('cr_trophies') || '0');
+let coins = parseInt(localStorage.getItem('cr_coins') || '1250');
+let gems = parseInt(localStorage.getItem('cr_gems') || '50');
+let playerName = localStorage.getItem('userName') || "Атлет";
+
+// Обновляем интерфейс
+document.getElementById('player-name').innerText = playerName;
+document.getElementById('trophies-count').innerText = trophies;
+document.getElementById('coins-count').innerText = coins;
+document.getElementById('gems-count').innerText = gems;
+document.getElementById('current-trophies').innerText = trophies;
+
+// Логика Арены (пока 1 арена, нужно 300 кубков для перехода)
+const nextReq = 300;
+document.getElementById('next-arena-req').innerText = nextReq;
+let progress = Math.min((trophies / nextReq) * 100, 100);
+document.getElementById('arena-progress').style.width = progress + '%';
+
+// Кнопка "В БОЙ"
+function startBattle() {
+    // Устанавливаем флаг, что играем против бота
+    localStorage.setItem('vsBot', 'true');
+    // Переходим в игру
+    window.location.href = 'chess-game.html';
+}
+</script>
+</body>
+</html>
