@@ -13,11 +13,11 @@
         width: 100%; padding: 10px; box-sizing: border-box; display: flex; justify-content: center; align-items: center;
         background: #1c1c1e; border-bottom: 1px solid #3a3a3c;
     }
-    .turn-indicator { font-size: 16px; font-weight: bold; color: #ffcc00; }
+    .vs-text { font-size: 18px; font-weight: bold; color: #ff3b30; letter-spacing: 2px; }
     
     .board-container { 
         position: relative; width: 95vw; max-width: 400px; aspect-ratio: 1/1; 
-        margin-top: 10px; border: 2px solid #3a3a3c; border-radius: 8px; overflow: hidden; 
+        margin-top: 5px; border: 2px solid #3a3a3c; border-radius: 8px; overflow: hidden; 
     }
     .board { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: 100%; height: 100%; }
     .cell { position: relative; display: flex; justify-content: center; align-items: center; font-size: 32px; cursor: pointer; }
@@ -32,12 +32,23 @@
     .lvl-badge { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: bold; color: #fff; background: #ff3b30; padding: 0 4px; border-radius: 10px; z-index: 4; pointer-events: none; border: 1px solid #000; }
 
     .bottom-ui { width: 95vw; max-width: 400px; margin-top: auto; padding-bottom: 75px; display: flex; flex-direction: column; gap: 10px; }
-    .elixir-bar-container { background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 12px; padding: 5px 10px; display: flex; align-items: center; gap: 10px; }
+    
+    .elixir-container { display: flex; align-items: center; gap: 10px; padding: 5px 10px; }
     .elixir-fill-bg { flex: 1; height: 16px; background: #000; border-radius: 8px; overflow: hidden; position: relative; }
-    .elixir-fill { height: 100%; background: linear-gradient(90deg, #af52de, #ff2d55); width: 0%; transition: width 0.3s; }
-    .elixir-text { font-weight: bold; color: #ff2d55; font-size: 18px; min-width: 30px; text-align: right;}
+    .elixir-fill { height: 100%; width: 0%; transition: width 0.3s; }
+    .elixir-text { font-weight: bold; font-size: 18px; min-width: 30px; text-align: center; }
+    
+    /* Эликсир Черных (Сверху) */
+    .elixir-black { background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 12px; margin-top: 5px; }
+    .elixir-black .elixir-fill { background: linear-gradient(90deg, #8e8e93, #000); }
+    .elixir-black .elixir-text { color: #8e8e93; }
+    
+    /* Эликсир Белых (Снизу) */
+    .elixir-white { background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 12px; }
+    .elixir-white .elixir-fill { background: linear-gradient(90deg, #af52de, #ff2d55); }
+    .elixir-white .elixir-text { color: #ff2d55; }
 
-    .controls { display: flex; gap: 5px; margin-top: 5px; }
+    .controls { display: flex; gap: 5px; }
     .btn { background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; padding: 10px; border-radius: 8px; font-size: 12px; cursor: pointer; flex: 1;}
 
     /* НИЖНЯЯ НАВИГАЦИЯ */
@@ -59,6 +70,34 @@
 </head>
 <body>
 
+<!-- Эликсир Черных -->
+<div class="elixir-container elixir-black" style="width: 95vw; max-width: 400px; margin-top: 10px;">
+    <div class="elixir-text" id="black-elixir-text">5</div>
+    <div class="elixir-fill-bg"><div class="elixir-fill" id="black-elixir-fill"></div></div>
+</div>
+
+<div class="header" style="border: none; background: transparent; padding: 5px;">
+    <div class="vs-text">РЕАЛЬНОЕ ВРЕМЯ</div>
+</div>
+
+<div class="board-container">
+    <div class="board" id="board"></div>
+</div>
+
+<div class="bottom-ui">
+    <!-- Эликсир Белых -->
+    <div class="elixir-container elixir-white">
+        <div class="elixir-text" id="white-elixir-text">5</div>
+        <div class="elixir-fill-bg"><div class="elixir-fill" id="white-elixir-fill"></div></div>
+    </div>
+    
+    <div class="controls">
+        <button class="btn" onclick="testLevelUp()">👑 +5 lvl Белому</button>
+        <button class="btn" onclick="resetGame()">🔄 Сброс</button>
+    </div>
+</div>
+
+<!-- НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ -->
 <div class="bottom-nav">
     <button class="nav-btn active" onclick="window.location.href='index.html'">
         <span class="icon">🏋️</span>
@@ -68,26 +107,6 @@
         <span class="icon">♟️</span>
         <span>Chess Royale</span>
     </button>
-</div>
-
-<div class="header">
-    <div class="turn-indicator" id="turn-text">Ход Белых ♔</div>
-</div>
-
-<div class="board-container">
-    <div class="board" id="board"></div>
-</div>
-
-<div class="bottom-ui">
-    <div class="elixir-bar-container">
-        <div class="elixir-fill-bg"><div class="elixir-fill" id="elixir-fill"></div></div>
-        <div class="elixir-text" id="elixir-text">0</div>
-    </div>
-    
-    <div class="controls">
-        <button class="btn" onclick="testLevelUp()">👑 Прокачать Короля</button>
-        <button class="btn" onclick="resetGame()">🔄 Сброс</button>
-    </div>
 </div>
 
 <script>
@@ -104,7 +123,8 @@ const INITIAL_BOARD = [
     ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'], ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
 ];
 
-let boardState = [], selectedCell = null, currentTurn = 'white', elixir = 5, elixirInterval = null, validMoves = [];
+let boardState = [], selectedCell = null, validMoves = [];
+let whiteElixir = 5, blackElixir = 5, elixirInterval = null;
 
 function initGame() {
     boardState = INITIAL_BOARD.map(row => row.map(pieceCode => {
@@ -113,12 +133,17 @@ function initGame() {
         let color = pieceCode === pieceCode.toUpperCase() ? 'white' : 'black';
         return { type: type, color: color, level: 1, hp: 1, maxHp: 1, cost: PIECES[type].cost, icon: PIECES[type].icon, hasMoved: false };
     }));
-    currentTurn = 'white'; elixir = 5; selectedCell = null; validMoves = [];
+    selectedCell = null; validMoves = [];
+    whiteElixir = 5; blackElixir = 5;
     
     clearInterval(elixirInterval);
-    elixirInterval = setInterval(() => { if (elixir < 10) { elixir++; updateElixirUI(); } }, 1000);
+    elixirInterval = setInterval(() => {
+        if (whiteElixir < 10) whiteElixir++;
+        if (blackElixir < 10) blackElixir++;
+        updateElixirUI();
+    }, 1000);
 
-    renderBoard(); updateElixirUI(); updateTurnUI();
+    renderBoard(); updateElixirUI();
 }
 
 function renderBoard() {
@@ -153,8 +178,12 @@ function renderBoard() {
     }
 }
 
-function updateElixirUI() { document.getElementById('elixir-fill').style.width = (elixir / 10 * 100) + '%'; document.getElementById('elixir-text').innerText = elixir; }
-function updateTurnUI() { const turnEl = document.getElementById('turn-text'); turnEl.innerText = currentTurn === 'white' ? 'Ход Белых ♔' : 'Ход Черных ♚'; turnEl.style.color = currentTurn === 'white' ? '#fff' : '#ff3b30'; }
+function updateElixirUI() { 
+    document.getElementById('white-elixir-fill').style.width = (whiteElixir / 10 * 100) + '%'; 
+    document.getElementById('white-elixir-text').innerText = whiteElixir;
+    document.getElementById('black-elixir-fill').style.width = (blackElixir / 10 * 100) + '%'; 
+    document.getElementById('black-elixir-text').innerText = blackElixir;
+}
 
 function getValidMoves(r, c) {
     const piece = boardState[r][c]; if (!piece) return [];
@@ -202,13 +231,28 @@ function getValidMoves(r, c) {
 
 function handleCellClick(r, c) {
     const clickedPiece = boardState[r][c];
+    
     if (selectedCell) {
         const move = validMoves.find(m => m.r === r && m.c === c);
         if (move) {
             const attacker = boardState[selectedCell.r][selectedCell.c];
-            if (elixir < attacker.cost) { alert(`Недостаточно эликсира! Нужно ${attacker.cost}, у вас ${elixir}.`); selectedCell = null; validMoves = []; renderBoard(); return; }
-            elixir -= attacker.cost; updateElixirUI();
+            
+            // Проверка эликсира в зависимости от цвета
+            if (attacker.color === 'white' && whiteElixir < attacker.cost) {
+                alert(`Белым не хватает эликсира! Нужно ${attacker.cost}, есть ${whiteElixir}.`);
+                selectedCell = null; validMoves = []; renderBoard(); return;
+            }
+            if (attacker.color === 'black' && blackElixir < attacker.cost) {
+                alert(`Черным не хватает эликсира! Нужно ${attacker.cost}, есть ${blackElixir}.`);
+                selectedCell = null; validMoves = []; renderBoard(); return;
+            }
 
+            // Тратим эликсир
+            if (attacker.color === 'white') { whiteElixir -= attacker.cost; }
+            else { blackElixir -= attacker.cost; }
+            updateElixirUI();
+
+            // Рокировка
             if (move.castling) {
                 let rookFromC = move.c === 6 ? 7 : 0; let rookToC = move.c === 6 ? 5 : 3;
                 boardState[selectedCell.r][rookToC] = boardState[selectedCell.r][rookFromC];
@@ -216,20 +260,30 @@ function handleCellClick(r, c) {
             }
             attacker.hasMoved = true;
 
+            // Атака или ход
             if (clickedPiece && clickedPiece.color !== attacker.color) {
                 let damage = attacker.level; clickedPiece.hp -= damage;
                 if (clickedPiece.hp <= 0) {
                     boardState[r][c] = attacker; boardState[selectedCell.r][selectedCell.c] = null;
                     if (clickedPiece.type === 'k') endGame(attacker.color);
                 }
-            } else { boardState[r][c] = attacker; boardState[selectedCell.r][selectedCell.c] = null; }
+            } else { 
+                boardState[r][c] = attacker; 
+                boardState[selectedCell.r][selectedCell.c] = null; 
+            }
 
             selectedCell = null; validMoves = [];
-            currentTurn = currentTurn === 'white' ? 'black' : 'white';
-            updateTurnUI(); renderBoard();
-        } else { selectedCell = null; validMoves = []; renderBoard(); }
+            renderBoard();
+        } else { 
+            selectedCell = null; validMoves = []; renderBoard(); 
+        }
     } else {
-        if (clickedPiece && clickedPiece.color === currentTurn) { selectedCell = { r, c }; validMoves = getValidMoves(r, c); renderBoard(); }
+        // Выбор фигуры (можно выбирать и белых, и черных в любое время)
+        if (clickedPiece) { 
+            selectedCell = { r, c }; 
+            validMoves = getValidMoves(r, c); 
+            renderBoard(); 
+        }
     }
 }
 
@@ -240,7 +294,11 @@ function testLevelUp() {
     }
 }
 
-function endGame(winnerColor) { clearInterval(elixirInterval); setTimeout(() => alert(`Игра окончена! Победили ${winnerColor === 'white' ? 'Белые' : 'Черные'}!`), 100); }
+function endGame(winnerColor) { 
+    clearInterval(elixirInterval); 
+    setTimeout(() => alert(`Игра окончена! Победили ${winnerColor === 'white' ? 'Белые' : 'Черные'}!`), 100); 
+}
+
 function resetGame() { initGame(); }
 initGame();
 </script>
