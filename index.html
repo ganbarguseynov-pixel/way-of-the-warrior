@@ -62,8 +62,6 @@
 .sensei-input-area { display: flex; padding: 15px; background: #2c2c2e; border-top: 1px solid #3a3a3c; gap: 10px; align-items: center; }
 .sensei-input-area input { flex: 1; padding: 12px; border-radius: 20px; border: none; background: #1c1c1e; color: #fff; font-size: 15px; outline: none; }
 .sensei-send-btn { background: var(--accent-color); color: #000; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-
-/* Стиль для кнопки микрофона */
 .sensei-mic-btn { background: #3a3a3c; color: white; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
 
 /* Стили для всплывающего окна Сенсея (Shadow Fight) */
@@ -402,7 +400,6 @@
 <!-- Сообщения будут тут -->
 </div>
 <div class="sensei-input-area">
-<!-- НОВАЯ КНОПКА МИКРОФОНА -->
 <button id="sensei-mic-btn" class="sensei-mic-btn" onclick="toggleVoiceInput()">🎤</button>
 <input type="text" id="sensei-input" placeholder="Задай вопрос..." onkeypress="if(event.key === 'Enter') sendSenseiMessage()">
 <button class="sensei-send-btn" onclick="sendSenseiMessage()">➤</button>
