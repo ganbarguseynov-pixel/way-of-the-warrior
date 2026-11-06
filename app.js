@@ -116,9 +116,9 @@ e.src.indexOf(s.video)===-1&&(e.src=s.video,e.load(),e.play().catch(e=>console.l
 }
 },1000);
 setTimeout(()=>{
-if (!sessionStorage.getItem('senseiStartupAdviceShown')) {
+if (window.name.indexOf('sensei_advice_shown') === -1) {
 showSenseiAdvice();
-sessionStorage.setItem('senseiStartupAdviceShown', 'true');
+window.name = window.name ? window.name + '|sensei_advice_shown' : 'sensei_advice_shown';
 }
 },1500);
 }
