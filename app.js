@@ -31,13 +31,107 @@ function calculateNutrition(e){if(e.custom_calories&&e.custom_calories>0)return{
 function checkDayReset(){const e=new Date(),t=e.getFullYear()+'-'+String(e.getMonth()+1).padStart(2,'0')+'-'+String(e.getDate()).padStart(2,'0');localStorage.getItem('foodListDate')!==t&&(localStorage.setItem('todayFood','[]'),localStorage.setItem('foodListDate',t)),localStorage.getItem('waterListDate')!==t&&(localStorage.setItem('todayWater','[]'),localStorage.setItem('waterListDate',t))}
 function saveWeightToHistory(e){let t=[];try{t=JSON.parse(localStorage.getItem('weightHistory')||'[]')}catch(e){t=[]}const n=new Date(),s=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');t.length>0&&t[0].dateRaw===s?t[0].weight=parseFloat(e):t.unshift({dateRaw:s,dateDisplay:n.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}),weight:parseFloat(e)}),t.length>50&&t.pop(),localStorage.setItem('weightHistory',JSON.stringify(t))}
 
+// === ЛОГИКА СТРИКА (РУЧНОЙ ЗАБОР) ===
+function checkDailyStreak() {
+    const today = new Date().toISOString().split('T')[0];
+    let lastLogin = localStorage.getItem('lastLoginDate');
+    let streak = parseInt(localStorage.getItem('streakCount') || '0');
+    
+    if (lastLogin === today) {
+        // Уже заходили сегодня. Проверяем, забрали ли награду.
+        let isPending = localStorage.getItem('streakPendingReward') === 'true';
+        updateStreakUI(streak, isPending);
+        return; 
+    }
+    
+    let yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    let yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    if (lastLogin === yesterdayStr) {
+        streak += 1; // Продолжаем стрик
+    } else {
+        streak = 1; // Стрик сгорел или это первый вход
+    }
+
+    // Сохраняем данные, но НЕ начисляем XP (ждем клика)
+    localStorage.setItem('lastLoginDate', today);
+    localStorage.setItem('streakCount', streak);
+    localStorage.setItem('streakPendingReward', 'true');
+    
+    updateStreakUI(streak, true);
+}
+
+function claimStreakReward() {
+    if (localStorage.getItem('streakPendingReward') === 'true') {
+        let streak = parseInt(localStorage.getItem('streakCount') || '1');
+        let bonusXP = Math.min(streak * 10, 50);
+        
+        currentXP += bonusXP;
+        localStorage.setItem('cachedXP', currentXP);
+        localStorage.setItem('streakPendingReward', 'false');
+        
+        updateCharacterUI();
+        saveProgressToCloud(localStorage.getItem('tgId'), localStorage.getItem('currentEmail'), localStorage.getItem('userName'), currentProfileData, currentXP, totalBurnedCalories);
+        
+        showMotivationToast(`🔥 Награда получена!`, `Ты получаешь +${bonusXP} XP за ${streak} дней подряд!`, '🔥');
+        updateStreakUI(streak, false);
+    } else {
+        let streak = parseInt(localStorage.getItem('streakCount') || '0');
+        showMotivationToast(`🔥 Твой стрик: ${streak} дн.`, `Завтра зайди снова, чтобы получить еще больше XP!`, '🔥');
+    }
+}
+
+function updateStreakUI(streak, isPending) {
+    const el = document.getElementById('streak-display');
+    if (el) {
+        el.innerText = `🔥 ${streak}`;
+        if (isPending) {
+            el.classList.add('streak-pending');
+        } else {
+            el.classList.remove('streak-pending');
+        }
+    }
+}
+// ================================
+
 function openWeightDiary(){currentProfileData&&document.getElementById('modal-weight-input')&&(document.getElementById('modal-weight-input').value=currentProfileData.weight||''),setPeriod('weight','7days'),openScreen('weight-diary-screen')}
 async function saveWeightFromDiary(){const e=parseFloat(document.getElementById('modal-weight-input').value);if(!e||e<=0){tg.showAlert("Введите корректный вес!");return}currentProfileData&&(currentProfileData.weight=e,localStorage.setItem('cachedProfile',JSON.stringify(currentProfileData)),saveWeightToHistory(e),await saveProgressToCloud(localStorage.getItem('tgId'),localStorage.getItem('currentEmail'),localStorage.getItem('userName'),currentProfileData,currentXP,totalBurnedCalories),updateDashboard(),renderWeightDiary(),tg.showAlert("Вес обновлен!"))}
 function renderWeightDiary(){const e=document.getElementById('weight-start-date').value,t=document.getElementById('weight-end-date').value;if(!e||!t)return;let n=[];try{n=JSON.parse(localStorage.getItem('weightHistory')||'[]')}catch(e){n=[]}const s=[],a=[];for(let o=new Date(e);o<=new Date(t);o.setDate(o.getDate()+1)){const e=o.toISOString().split('T')[0];s.push(e.split('-').slice(1).reverse().join('.'));const r=n.find(t=>t.dateRaw===e||t.date&&t.date.split('.').reverse().join('-')===e);if(r)a.push(r.weight);else{const e=a.filter(e=>e!==null).pop();a.push(e||null)}}chartWeightDiary&&chartWeightDiary.destroy(),chartWeightDiary=new Chart(document.getElementById('weight-diary-chart').getContext('2d'),{type:'line',data:{labels:s,datasets:[{label:'Вес',data:a,borderColor:'#ffcc00',backgroundColor:'#ffcc0033',borderWidth:2,pointBackgroundColor:'#fff',pointBorderColor:'#ffcc00',pointRadius:3,fill:!0,tension:.3}]},options:{responsive:!0,maintainAspectRatio:!1,plugins:{legend:{display:!1}},scales:{x:{ticks:{color:'#8e8e93'},grid:{color:'rgba(255,255,255,0.1)'}},y:{ticks:{color:'#8e8e93'},grid:{color:'rgba(255,255,255,0.1)'}}}}});const o=a.filter(e=>e!==null),r=document.getElementById('weight-diff'),l=document.getElementById('weight-summary');if(o.length>1){l.style.display='block';const e=(o[o.length-1]-o[0]).toFixed(1);e>0?r.innerHTML=`Набрано: <span style="color: #ff3b30;">+${e} кг</span>`:e<0?r.innerHTML=`Сброшено: <span style="color: #34c759;">${e} кг</span>`:r.innerHTML="Вес не изменился"}else l.style.display='none';const c=document.getElementById('weight-diary-list');let d='';n.filter(t=>t.dateRaw>=e&&t.dateRaw<=t).forEach(e=>{d+=`<div class="history-weight-item"> <span style="color: var(--accent-color);">${e.dateDisplay||e.date}</span> <span>${e.weight} кг</span> </div>`}),c.innerHTML=d||'<p style="text-align: center; color: #8e8e93;">Нет записей за этот период.</p>'}
 
 function updateCustomWaterBtn(){const e=document.getElementById('custom-water-quick-btn');if(!e)return;const t=localStorage.getItem('customWaterAmount');t&&parseInt(t)>0?e.innerText=`+${t}`:e.innerText="+Своя"}
 function quickAddCustomWater(){const e=localStorage.getItem('customWaterAmount');e&&parseInt(e)>0?addWater(e):openWaterDiary()}
-function addWater(e){let t=[];try{t=JSON.parse(localStorage.getItem('todayWater')||'[]')}catch(e){}t.push({amount:parseInt(e),time:new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}),localStorage.setItem('todayWater',JSON.stringify(t)),syncWaterToProfile(),updateDashboard();const n=localStorage.getItem('waterListDate');archiveWaterToHistory(t,n)}
+
+// === ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ ===
+function showMotivationToast(title, desc, icon='🏆') {
+    const toast = document.createElement('div');
+    toast.className = 'motivation-toast';
+    toast.innerHTML = `<div class="motivation-icon">${icon}</div><div class="motivation-text"><h3>${title}</h3><p>${desc}</p></div>`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 100);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 500);
+    }, 4000);
+}
+// ===============================
+
+function addWater(e){
+    let t=[];try{t=JSON.parse(localStorage.getItem('todayWater')||'[]')}catch(e){}
+    t.push({amount:parseInt(e),time:new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})});
+    localStorage.setItem('todayWater',JSON.stringify(t));
+    
+    let totalWater = 0; t.forEach(w => totalWater += parseInt(w.amount));
+    let normWater = currentProfileData ? (currentProfileData.custom_water_goal || 2000) : 2000;
+    let oldTotalWater = totalWater - parseInt(e);
+    
+    if (oldTotalWater < normWater && totalWater >= normWater) {
+        showMotivationToast("Вода в норме! 💧", "Ты выпил свою дневную норму. Отличная работа, воин!", "💧");
+    }
+
+    syncWaterToProfile();updateDashboard();const n=localStorage.getItem('waterListDate');archiveWaterToHistory(t,n);
+}
+
 function deleteWaterItem(e){let t=[];try{t=JSON.parse(localStorage.getItem('todayWater')||'[]')}catch(e){}t.splice(e,1),localStorage.setItem('todayWater',JSON.stringify(t)),syncWaterToProfile(),updateDashboard();const n=localStorage.getItem('waterListDate');archiveWaterToHistory(t,n),renderTodayWaterList(t)}
 function openWaterDiary(){setPeriod('water','7days'),renderTodayWaterList(JSON.parse(localStorage.getItem('todayWater')||'[]')),openScreen('water-diary-screen')}
 function addWaterFromDiary(){const e=parseInt(document.getElementById('custom-water-input').value);e&&e>0?(localStorage.setItem('customWaterAmount',e),updateCustomWaterBtn(),addWater(e),document.getElementById('custom-water-input').value=''):tg.showAlert("Введите корректный объем!")}
@@ -72,6 +166,10 @@ document.getElementById('burned-total')&&(document.getElementById('burned-total'
 updateDashboard();
 updateCharacterUI();
 openScreen('dashboard-screen');
+
+// ЗАПУСКАЕМ ПРОВЕРКУ СТРИКА ПРИ ВХОДЕ
+checkDailyStreak();
+
 setTimeout(()=>{
 const e=document.getElementById('character-video');
 if(e){
