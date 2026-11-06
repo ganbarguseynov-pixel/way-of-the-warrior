@@ -115,9 +115,11 @@ const s=t[n];
 e.src.indexOf(s.video)===-1&&(e.src=s.video,e.load(),e.play().catch(e=>console.log("Autoplay blocked")))
 }
 },1000);
-// Убрана 6-часовая задержка, теперь совет вылезает при каждом заходе
 setTimeout(()=>{
+if (!sessionStorage.getItem('senseiStartupAdviceShown')) {
 showSenseiAdvice();
+sessionStorage.setItem('senseiStartupAdviceShown', 'true');
+}
 },1500);
 }
 
