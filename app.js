@@ -93,8 +93,50 @@ function openCustomNormModal(){currentProfileData&&(document.getElementById('mod
 function closeCustomNormModal(){document.getElementById('norm-modal').classList.remove('active')}
 function saveCustomNormFromModal(){currentProfileData&&(currentProfileData.custom_calories=document.getElementById('modal-calories').value,currentProfileData.custom_protein=document.getElementById('modal-protein').value,currentProfileData.custom_fat=document.getElementById('modal-fat').value,currentProfileData.custom_carbs=document.getElementById('modal-carbs').value,localStorage.setItem('cachedProfile',JSON.stringify(currentProfileData)),saveProgressToCloud(localStorage.getItem('tgId'),localStorage.getItem('currentEmail'),localStorage.getItem('userName'),currentProfileData,currentXP,totalBurnedCalories),updateDashboard(),closeCustomNormModal())}
 
-function renderProfile(e){currentProfileData=e,userGender=e.gender||'male',document.body.className=userGender==='female'?'female-theme':'male-theme',currentXP=parseInt(localStorage.getItem('cachedXP')||0),totalBurnedCalories=parseInt(localStorage.getItem('cachedBurned')||0),document.getElementById('burned-total')&&(document.getElementById('burned-total').innerText=totalBurnedCalories+" ккал"),updateDashboard(),updateCharacterUI(),openScreen('dashboard-screen'),setTimeout(()=>{const e=document.getElementById('character-video');if(e){const t=levelsData[userGender];let n=0;for(let e=0;e<t.length;e++)currentXP>=t[e].xp&&(n=e);const s=t[n];e.src.indexOf(s.video)===-1&&(e.src=s.video,e.load(),e.play().catch(e=>console.log("Autoplay blocked")))}},1000);const t=localStorage.getItem('lastSenseiAdviceTime'),n=Date.now();(!t||n-parseInt(t)>216e5)&&setTimeout(()=>{showSenseiAdvice(),localStorage.setItem('lastSenseiAdviceTime',Date.now())},1500)}
-function updateCharacterUI(){const e=levelsData[userGender];let t=0;for(let n=0;n<e.length;n++)currentXP>=e[n].xp&&(t=n);const n=e[t];currentLevelIndex!==-1&&t>currentLevelIndex&&setTimeout(()=>{showSenseiAdvice("Поздравляю с новым уровнем, воин! Ты становишься сильнее. Продолжай в том же духе.")},1000),currentLevelIndex=t,document.getElementById('char-level')&&(document.getElementById('char-level').innerText="Уровень "+(t+1)),document.getElementById('char-title')&&(document.getElementById('char-title').innerText=n.title),document.getElementById('xp-text')&&(document.getElementById('xp-text').innerText=currentXP+" XP");let s=100;t+1<e.length&&(s=e[t+1].xp);let a=currentXP/s*100;a>100&&(a=100),document.getElementById('xp-bar')&&(document.getElementById('xp-bar').style.width=a+"%")}
+function renderProfile(e){
+currentProfileData=e;
+userGender=e.gender||'male';
+document.body.className=userGender==='female'?'female-theme':'male-theme';
+currentXP=parseInt(localStorage.getItem('cachedXP')||0);
+totalBurnedCalories=parseInt(localStorage.getItem('cachedBurned')||0);
+document.getElementById('burned-total')&&(document.getElementById('burned-total').innerText=totalBurnedCalories+" ккал");
+updateDashboard();
+updateCharacterUI();
+openScreen('dashboard-screen');
+setTimeout(()=>{
+const e=document.getElementById('character-video');
+if(e){
+const t=levelsData[userGender];
+let n=0;
+for(let i=0;i<t.length;i++){
+if(currentXP>=t[i].xp) n=i;
+}
+const s=t[n];
+e.src.indexOf(s.video)===-1&&(e.src=s.video,e.load(),e.play().catch(e=>console.log("Autoplay blocked")))
+}
+},1000);
+const t=localStorage.getItem('lastSenseiAdviceTime'),n=Date.now();
+(!t||n-parseInt(t)>216e5)&&setTimeout(()=>{showSenseiAdvice(),localStorage.setItem('lastSenseiAdviceTime',Date.now())},1500)
+}
+
+function updateCharacterUI(){
+const e=levelsData[userGender];
+let t=0;
+for(let n=0;n<e.length;n++){
+if(currentXP>=e[n].xp) t=n;
+}
+const n=e[t];
+currentLevelIndex!==-1&&t>currentLevelIndex&&setTimeout(()=>{showSenseiAdvice("Поздравляю с новым уровнем, воин! Ты становишься сильнее. Продолжай в том же духе.")},1000);
+currentLevelIndex=t;
+document.getElementById('char-level')&&(document.getElementById('char-level').innerText="Уровень "+(t+1));
+document.getElementById('char-title')&&(document.getElementById('char-title').innerText=n.title);
+document.getElementById('xp-text')&&(document.getElementById('xp-text').innerText=currentXP+" XP");
+let s=100;
+t+1<e.length&&(s=e[t+1].xp);
+let a=currentXP/s*100;
+a>100&&(a=100);
+document.getElementById('xp-bar')&&(document.getElementById('xp-bar').style.width=a+"%");
+}
 
 function openProfileSettings(){try{const e=localStorage.getItem('loginType')||'telegram';if(e==='telegram'){document.getElementById('link-title').innerText="Привязка Email",document.getElementById('link-desc').innerText="Привяжите Email, чтобы заходить с любого устройства.";const e=localStorage.getItem('linkedEmail');e?document.getElementById('link-email-form').innerHTML=`<p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Email привязан: ${e}</p><button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkEmail()">Отвязать Email</button>`:document.getElementById('link-email-form').innerHTML=`<div class="form-group" style="margin-bottom: 10px;"><input type="email" id="link-email" placeholder="your@email.com" style="padding: 10px;"></div><div class="form-group" style="margin-bottom: 10px;"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)" style="padding: 10px;"></div><button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkEmailToTelegram()">Привязать Email</button>`,document.getElementById('link-email-form').style.display='block',document.getElementById('link-tg-form').style.display='none'}else{document.getElementById('link-title').innerText="Привязка Telegram",document.getElementById('link-desc').innerText="Ваш Telegram ID для входа с телефона.";const e=localStorage.getItem('tgId');e?document.getElementById('link-tg-form').innerHTML=`<p style="color: #34c759; font-size: 14px; font-weight: bold; margin-top: 10px;">✅ Telegram привязан: ${e}</p><button class="btn" style="background-color: #ff3b30; color: white; margin-top: 10px; padding: 12px; font-size: 15px;" onclick="unlinkTelegram()">Отвязать Telegram</button>`:tg.initDataUnsafe&&tg.initDataUnsafe.user&&(document.getElementById('link-tg-form').innerHTML=`<p style="font-size: 14px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b>${tg.initDataUnsafe.user.id}</b></p><button class="btn" style="padding: 12px; font-size: 15px;" onclick="linkTelegramToEmail()">Привязать Telegram</button>`),document.getElementById('link-email-form').style.display='none',document.getElementById('link-tg-form').style.display='block'}const t=localStorage.getItem('cachedProfile');if(t){const e=JSON.parse(t);document.getElementById('age')&&(document.getElementById('age').value=e.age||''),document.getElementById('weight')&&(document.getElementById('weight').value=e.weight||''),document.getElementById('height')&&(document.getElementById('height').value=e.height||''),document.getElementById('gender')&&(document.getElementById('gender').value=e.gender||'male'),document.getElementById('goal')&&(document.getElementById('goal').value=e.goal||'lose'),document.getElementById('custom-calories')&&(document.getElementById('custom-calories').value=e.custom_calories||''),document.getElementById('custom-protein')&&(document.getElementById('custom-protein').value=e.custom_protein||''),document.getElementById('custom-fat')&&(document.getElementById('custom-fat').value=e.custom_fat||''),document.getElementById('custom-carbs')&&(document.getElementById('custom-carbs').value=e.custom_carbs||''),document.getElementById('custom-water-goal')&&(document.getElementById('custom-water-goal').value=e.custom_water_goal||''),document.getElementById('food-preference')&&(document.getElementById('food-preference').value=e.food_preference||'')}openScreen('profile-settings-screen')}catch(e){tg.showAlert("Не удалось открыть настройки.")}}
 
@@ -185,14 +227,15 @@ s.className='sensei-msg bot-msg';s.innerText='Анализирую...';s.id='sen
 n.appendChild(s);n.scrollTop=n.scrollHeight;
 try{
 const userCtx=getSenseiContext();
-// ИСПРАВЛЕНИЕ 1: Добавлен контекст пользователя и указание договаривать мысль
-const promptText=`Ты — Сенсей. Твои данные об ученике УЖЕ ЕСТЬ: ${userCtx}. НИКОГДА не спрашивай то, что уже есть в профиле (вес, рост, возраст, цель). Отвечай кратко (максимум 3 предложения), но ОБЯЗАТЕЛЬНО договаривай мысль до конца, не обрывай предложения. Если ученик просит сложный план (питание, тренировка), напиши короткое вступление (1 предложение) и задай наводящий вопрос (например: "Готов узнать тренировку?"). Только когда он ответит, ты продолжишь. Пиши ТОЛЬКО на русском. ЗАПРЕЩЕН английский. Без звездочек. Если составляешь тренировку, пиши упражнения СТРОГО в формате: \n1. Название (X сек), отдых Y сек\n2. Название (X сек), отдых Y сек\nИспользуй только: Приседания, Отжимания, Планка, Выпады, Берпи.`;
+const promptText=`[СИСТЕМА: Ты Сенсей. Данные ученика: ${userCtx}. КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО спрашивать то, что уже есть в профиле (вес, рост, возраст, цель). Отвечай кратко (макс 3-4 предложения), но ОБЯЗАТЕЛЬНО договаривай мысль до конца, не обрывай предложения. Если просят сложный план (питание, тренировка), напиши короткое вступление и задай наводящий вопрос. Только русский, без звездочек. Формат тренировки: 1. Название (X сек), отдых Y сек] \n\n`;
 
 const a=senseiChatHistory.slice(-10).map(e=>({role:e.role==='assistant'?'model':'user',parts:[{text:e.content}]}));
-// Всегда добавляем системный промпт с характеристиками
-a.unshift({role:'user',parts:[{text:promptText}]});
+if(a.length > 0) {
+a[a.length - 1].parts[0].text = promptText + a[a.length - 1].parts[0].text;
+} else {
+a.push({role:'user',parts:[{text: promptText + t}]});
+}
 
-// ИСПРАВЛЕНИЕ 2: Увеличен лимит до 500, чтобы не обрывало текст
 const o=await fetch('https://api.ofox.ai/gemini/v1beta/models/google/gemini-2.5-flash-lite:generateContent',{
 method:'POST',
 headers:{'Content-Type':'application/json','x-goog-api-key':OFOX_API_KEY},
@@ -200,7 +243,12 @@ body:JSON.stringify({contents:a,generationConfig:{maxOutputTokens:500}})
 });
 const r=await o.json(),l=document.getElementById('sensei-loading');
 l&&l.remove();
-r.candidates&&r.candidates[0]&&r.candidates[0].content&&r.candidates[0].content.parts[0]?addSenseiMessage('assistant',r.candidates[0].content.parts[0].text):(console.error('API Error:',r),addSenseiMessage('assistant',`Прости, воин. Ошибка API: ${r.error?.message||'Неизвестная ошибка.'}`))
+if(r.candidates&&r.candidates[0]&&r.candidates[0].content&&r.candidates[0].content.parts[0]){
+addSenseiMessage('assistant',r.candidates[0].content.parts[0].text);
+} else {
+console.error('API Error:',r);
+addSenseiMessage('assistant',`Прости, воин. Ошибка API: ${r.error?.message||'Неизвестная ошибка.'}`);
+}
 }catch(e){
 const t=document.getElementById('sensei-loading');
 t&&t.remove();
@@ -239,7 +287,6 @@ closeSenseiAdvice();openSenseiChat();
 t&&t!=='Загрузка...'&&(addSenseiMessage('assistant',t),setTimeout(()=>{document.getElementById('sensei-input').focus()},300));
 }
 
-// ИСПРАВЛЕНИЕ 3: Добавлена функция для микрофона
 function toggleVoiceInput(){
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 if(!SpeechRecognition){
