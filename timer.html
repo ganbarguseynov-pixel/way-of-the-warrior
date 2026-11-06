@@ -35,7 +35,7 @@
 <p id="finish-author" style="text-align: right; font-weight: bold; font-size: 14px; color: var(--hint-color);">— Автор</p>
 </div>
 
-<button class="btn" onclick="goBackToMain()">Вернуться на главную</button>
+<button class="btn" onclick="goBackToMain()">Принять</button>
 </div>
 
 <script>
@@ -48,66 +48,66 @@ let timerInterval;
 let sessionCalories = 0;
 
 function updateDisplay() {
-    document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`;
+document.getElementById('timer-display').innerText = `${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(timeLeft%60).padStart(2,'0')}`;
 }
 
 function toggleTimer() {
-    const btn = document.getElementById('timer-btn');
-    if (isRunning) {
-        clearInterval(timerInterval);
-        btn.innerText = "Старт";
-        isRunning = false;
-    } else {
-        btn.innerText = "Пауза";
-        isRunning = true;
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            updateDisplay();
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                btn.innerText = "Старт";
-                isRunning = false;
-                tg.showAlert("Время вышло!");
-            }
-        }, 1000);
-    }
+const btn = document.getElementById('timer-btn');
+if (isRunning) {
+clearInterval(timerInterval);
+btn.innerText = "Старт";
+isRunning = false;
+} else {
+btn.innerText = "Пауза";
+isRunning = true;
+timerInterval = setInterval(() => {
+timeLeft--;
+updateDisplay();
+if (timeLeft <= 0) {
+clearInterval(timerInterval);
+btn.innerText = "Старт";
+isRunning = false;
+tg.showAlert("Время вышло!");
+}
+}, 1000);
+}
 }
 
 function resetTimer() {
-    clearInterval(timerInterval);
-    isRunning = false;
-    timeLeft = 45;
-    updateDisplay();
-    document.getElementById('timer-btn').innerText = "Старт";
+clearInterval(timerInterval);
+isRunning = false;
+timeLeft = 45;
+updateDisplay();
+document.getElementById('timer-btn').innerText = "Старт";
 }
 
 function completeSet() {
-    sessionCalories += 15;
-    let pending = localStorage.getItem('cachedXP') || 0;
-    localStorage.setItem('cachedXP', parseInt(pending) + 15);
-    tg.showAlert("+15 XP добавлено!");
+sessionCalories += 15;
+let pending = localStorage.getItem('cachedXP') || 0;
+localStorage.setItem('cachedXP', parseInt(pending) + 15);
+tg.showAlert("+15 XP добавлено!");
 }
 
 function finishWorkout() {
-    const winAudio = new Audio("12. Scroll Win 02.mp3");
-    winAudio.play().catch(e => console.log("Ошибка звука победы:", e));
+const winAudio = new Audio("12. Scroll Win 02.mp3");
+winAudio.play().catch(e => console.log("Ошибка звука победы:", e));
 
-    document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
+document.getElementById('finish-stats').innerText = `Отличная работа. Ты сжег ${sessionCalories} ккал.`;
 
-    let q = { text: "Ты не проиграл, пока не остановился.", author: "Майк Тайсон" };
-    if (typeof allQuotes !== 'undefined' && allQuotes.length > 0) {
-        q = allQuotes[Math.floor(Math.random() * allQuotes.length)];
-    }
+let q = { text: "Ты не проиграл, пока не остановился.", author: "Майк Тайсон" };
+if (typeof allQuotes !== 'undefined' && allQuotes.length > 0) {
+q = allQuotes[Math.floor(Math.random() * allQuotes.length)];
+}
 
-    document.getElementById('finish-quote').innerText = `«${q.text}»`;
-    document.getElementById('finish-author').innerText = `— ${q.author}`;
+document.getElementById('finish-quote').innerText = `«${q.text}»`;
+document.getElementById('finish-author').innerText = `— ${q.author}`;
 
-    document.getElementById('timer-view').style.display = 'none';
-    document.getElementById('finish-view').style.display = 'flex';
+document.getElementById('timer-view').style.display = 'none';
+document.getElementById('finish-view').style.display = 'flex';
 }
 
 function goBackToMain() {
-    setTimeout(() => { window.location.href = 'index.html'; }, 100);
+setTimeout(() => { window.location.href = 'index.html'; }, 100);
 }
 </script>
 <script src="quotes.js"></script>
