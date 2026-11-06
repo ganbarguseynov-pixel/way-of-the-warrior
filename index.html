@@ -174,7 +174,8 @@
 <div id="global-stats-screen" class="screen">
 <div class="inner-screen">
 <button class="back-btn" onclick="closeScreen('global-stats-screen')">← Назад</button>
-<h1 style="text-align: center; margin-bottom: 15px;">📊 Анализ всего</h1>
+<!-- ИЗМЕНЕНО ЗДЕСЬ -->
+<h1 style="text-align: center; margin-bottom: 15px;">📊 Полный Анализ</h1>
 <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;"><div style="display: flex; gap: 10px;"><div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">От</label><input type="date" id="global-start-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderAllCharts()"></div><div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">До</label><input type="date" id="global-end-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderAllCharts()"></div></div></div>
 <div class="chart-container"><canvas id="g-weight-chart"></canvas></div><div class="chart-container"><canvas id="g-calories-chart"></canvas></div><div class="chart-container"><canvas id="g-macros-chart"></canvas></div><div class="chart-container"><canvas id="g-water-chart"></canvas></div>
 </div>
