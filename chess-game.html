@@ -12,7 +12,6 @@
         min-height: 100vh; user-select: none;
     }
     
-    /* ВЕРХНЯЯ ПАНЕЛЬ */
     .game-top-bar {
         width: 95vw; max-width: 400px; display: flex; align-items: center; gap: 10px; margin-top: 10px;
     }
@@ -35,7 +34,6 @@
     .elixir-white .elixir-fill { background: linear-gradient(90deg, #af52de, #ff2d55); }
     .elixir-white .elixir-text { color: #ff2d55; }
 
-    /* ДОСКА */
     .board-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; margin: 10px 0; }
     .board-container { 
         position: relative; width: 95vw; max-width: 400px; aspect-ratio: 1/1; 
@@ -61,19 +59,18 @@
     .hp-fill { height: 100%; background: #34c759; border-radius: 3px; transition: width 0.3s; }
     
     .lvl-badge { 
-        position: absolute; top: 2px; right: 2px; font-size: 10px; font-weight: bold; color: #fff; 
-        background: rgba(0,0,0,0.9); width: 18px; height: 18px; line-height: 18px; 
+        position: absolute; top: 2px; left: 2px; font-size: 10px; font-weight: bold; color: #fff; 
+        background: #ff3b30; width: 18px; height: 18px; line-height: 18px; 
         text-align: center; border-radius: 50%; z-index: 4; pointer-events: none; border: 1px solid #fff;
     }
     
     .cost-badge {
-        position: absolute; top: 2px; left: 2px; font-size: 10px; font-weight: bold; color: #fff;
+        position: absolute; top: 2px; right: 2px; font-size: 10px; font-weight: bold; color: #fff;
         background: #af52de; width: 18px; height: 18px; line-height: 18px;
         text-align: center; border-radius: 50%; z-index: 4; pointer-events: none; border: 1px solid #fff;
         box-shadow: 0 0 5px rgba(175, 82, 222, 0.8);
     }
 
-    /* РУКА С КАРТАМИ */
     .bottom-ui { width: 95vw; max-width: 400px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 15px; }
     
     .hand-container { display: flex; justify-content: space-between; gap: 5px; margin-top: 5px; }
@@ -98,6 +95,13 @@
     .btn { background: #334155; color: #fff; border: 1px solid #475569; padding: 12px; border-radius: 8px; font-size: 13px; cursor: pointer; flex: 1; font-weight: bold;}
     .btn-gold { background: #eab308; color: #000; border: none; }
     .btn-green { background: #22c55e; color: #000; border: none; }
+
+    .promotion-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+    .promotion-modal.active { display: flex; }
+    .promotion-content { background: #1e293b; border: 2px solid #475569; border-radius: 12px; padding: 20px; text-align: center; }
+    .promotion-options { display: flex; gap: 10px; margin-top: 15px; }
+    .promotion-btn { font-size: 36px; background: #334155; border: 2px solid #475569; border-radius: 8px; padding: 10px; cursor: pointer; }
+    .promotion-btn:active { background: #475569; }
 </style>
 </head>
 <body>
@@ -122,7 +126,6 @@
         <div class="elixir-fill-bg"><div class="elixir-fill" id="white-elixir-fill"></div></div>
     </div>
     
-    <!-- РУКА С 4 КАРТАМИ -->
     <div class="hand-container" id="hand-container"></div>
 
     <div class="controls" id="game-controls">
@@ -132,6 +135,18 @@
     <div class="controls" id="setup-controls" style="display: none;">
         <button class="btn btn-green" onclick="saveSetupAndPlay()">✅ Сохранить и играть</button>
         <button class="btn" onclick="cancelSetup()">❌ Отмена</button>
+    </div>
+</div>
+
+<div id="promotion-modal" class="promotion-modal">
+    <div class="promotion-content">
+        <h3 style="margin-top: 0; color: #ffcc00;">Выбери фигуру</h3>
+        <div class="promotion-options">
+            <div class="promotion-btn" onclick="selectPromotion('q')">♛</div>
+            <div class="promotion-btn" onclick="selectPromotion('r')">♜</div>
+            <div class="promotion-btn" onclick="selectPromotion('b')">♝</div>
+            <div class="promotion-btn" onclick="selectPromotion('n')">♞</div>
+        </div>
     </div>
 </div>
 
@@ -152,10 +167,12 @@ const DEFAULT_BOARD = [
 let boardState = [], selectedCell = null, validMoves = [];
 let whiteElixir = 5, blackElixir = 5, elixirInterval = null;
 let isSetupMode = false;
-
-// Рука с картами (пока жестко задана)
-let currentHand = ['p', 'n', 'b', 'r']; 
+let currentHand = ['p', 'n', 'b', 'r'];
 let selectedCardType = null;
+
+let enPassantTarget = null; 
+let promotionTarget = null; 
+let gameActive = true;
 
 function triggerShake(elementId) {
     const el = document.getElementById(elementId);
@@ -187,13 +204,17 @@ function initGame() {
     selectedCell = null; validMoves = []; selectedCardType = null;
     whiteElixir = 5; blackElixir = 5;
     isSetupMode = false;
+    enPassantTarget = null;
+    promotionTarget = null;
+    gameActive = true;
     
     document.getElementById('game-controls').style.display = 'flex';
     document.getElementById('setup-controls').style.display = 'none';
+    document.getElementById('promotion-modal').classList.remove('active');
 
     clearInterval(elixirInterval);
     elixirInterval = setInterval(() => {
-        if (!isSetupMode) {
+        if (!isSetupMode && gameActive) {
             if (whiteElixir < 10) whiteElixir++;
             if (blackElixir < 10) blackElixir++;
             updateElixirUI();
@@ -290,36 +311,111 @@ function updateElixirUI() {
     document.getElementById('black-elixir-text').innerText = blackElixir;
 }
 
-function getValidMoves(r, c) {
-    const piece = boardState[r][c]; if (!piece) return [];
+function isKingInCheck(color, board) {
+    let kPos = null;
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            if (board[r][c] && board[r][c].type === 'k' && board[r][c].color === color) {
+                kPos = { r, c };
+            }
+        }
+    }
+    if (!kPos) return false; 
+
+    let enemyColor = color === 'white' ? 'black' : 'white';
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            let p = board[r][c];
+            if (p && p.color === enemyColor) {
+                let moves = getValidMoves(r, c, board, true); 
+                if (moves.some(m => m.r === kPos.r && m.c === kPos.c)) return true;
+            }
+        }
+    }
+    return false;
+}
+
+function hasAnyValidMoves(color) {
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            let p = boardState[r][c];
+            if (p && p.color === color) {
+                if (getValidMoves(r, c).length > 0) return true;
+            }
+        }
+    }
+    return false;
+}
+
+function checkGameEnd() {
+    if (!gameActive) return;
+    
+    let whiteInCheck = isKingInCheck('white', boardState);
+    let blackInCheck = isKingInCheck('black', boardState);
+    
+    let whiteMoves = hasAnyValidMoves('white');
+    let blackMoves = hasAnyValidMoves('black');
+
+    if (!whiteMoves && whiteInCheck) { endGame('Черные', 'МАТ!'); return; }
+    if (!blackMoves && blackInCheck) { endGame('Белые', 'МАТ!'); return; }
+    
+    if (!whiteMoves && !whiteInCheck) { endGame('Ничья', 'ПАТ!'); return; }
+    if (!blackMoves && !blackInCheck) { endGame('Ничья', 'ПАТ!'); return; }
+}
+
+function endGame(winner, reason) {
+    gameActive = false;
+    clearInterval(elixirInterval);
+    setTimeout(() => {
+        alert(`Игра окончена! ${reason}\nПобедитель: ${winner}`);
+    }, 200);
+}
+
+function getValidMoves(r, c, boardData = null, ignoreCost = false) {
+    let b = boardData || boardState;
+    const piece = b[r][c]; if (!piece) return [];
     let moves = [];
     const isEnemy = (target) => target && target.color !== piece.color;
     const isEmpty = (target) => target === null;
     const addMove = (nr, nc) => {
         if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
-            if (isEmpty(boardState[nr][nc]) || isEnemy(boardState[nr][nc])) { moves.push({ r: nr, c: nc }); return true; }
+            if (isEmpty(b[nr][nc]) || isEnemy(b[nr][nc])) { moves.push({ r: nr, c: nc }); return true; }
         }
         return false;
     };
 
     if (piece.type === 'p') {
         let dir = piece.color === 'white' ? -1 : 1;
-        if (isEmpty(boardState[r+dir]?.[c])) {
+        if (isEmpty(b[r+dir]?.[c])) {
             moves.push({r: r+dir, c: c});
-            if (!piece.hasMoved && isEmpty(boardState[r+dir*2]?.[c])) moves.push({r: r+dir*2, c: c});
+            if (!piece.hasMoved && isEmpty(b[r+dir*2]?.[c])) moves.push({r: r+dir*2, c: c});
         }
-        if (isEnemy(boardState[r+dir]?.[c-1])) moves.push({r: r+dir, c: c-1});
-        if (isEnemy(boardState[r+dir]?.[c+1])) moves.push({r: r+dir, c: c+1});
+        if (isEnemy(b[r+dir]?.[c-1])) moves.push({r: r+dir, c: c-1});
+        if (isEnemy(b[r+dir]?.[c+1])) moves.push({r: r+dir, c: c+1});
+        
+        if (enPassantTarget && enPassantTarget.r === r + dir && (enPassantTarget.c === c - 1 || enPassantTarget.c === c + 1)) {
+            moves.push({r: enPassantTarget.r, c: enPassantTarget.c, enPassant: true});
+        }
     } else if (piece.type === 'n') {
         [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr, dc]) => addMove(r+dr, c+dc));
     } else if (piece.type === 'k') {
         [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr, dc]) => addMove(r+dr, c+dc));
-        if (!piece.hasMoved) {
-            if (boardState[r][c+3] && boardState[r][c+3].type === 'r' && !boardState[r][c+3].hasMoved) {
-                if (!boardState[r][c+1] && !boardState[r][c+2]) moves.push({r: r, c: c+2, castling: true});
+        
+        if (!piece.hasMoved && !ignoreCost) {
+            let enemyColor = piece.color === 'white' ? 'black' : 'white';
+            if (b[r][c+3] && b[r][c+3].type === 'r' && !b[r][c+3].hasMoved) {
+                if (!b[r][c+1] && !b[r][c+2]) {
+                    if (!isKingInCheck(piece.color, b) && !isSquareAttacked(r, c+1, enemyColor, b) && !isSquareAttacked(r, c+2, enemyColor, b)) {
+                        moves.push({r: r, c: c+2, castling: true});
+                    }
+                }
             }
-            if (boardState[r][c-4] && boardState[r][c-4].type === 'r' && !boardState[r][c-4].hasMoved) {
-                if (!boardState[r][c-1] && !boardState[r][c-2] && !boardState[r][c-3]) moves.push({r: r, c: c-2, castling: true});
+            if (b[r][c-4] && b[r][c-4].type === 'r' && !b[r][c-4].hasMoved) {
+                if (!b[r][c-1] && !b[r][c-2] && !b[r][c-3]) {
+                    if (!isKingInCheck(piece.color, b) && !isSquareAttacked(r, c-1, enemyColor, b) && !isSquareAttacked(r, c-2, enemyColor, b)) {
+                        moves.push({r: r, c: c-2, castling: true});
+                    }
+                }
             }
         }
     } else {
@@ -328,13 +424,45 @@ function getValidMoves(r, c) {
         if (piece.type === 'r' || piece.type === 'q') dirs.push([-1,0],[1,0],[0,-1],[0,1]);
         dirs.forEach(([dr, dc]) => {
             let nr = r + dr, nc = c + dc;
-            while (addMove(nr, nc)) { if (boardState[nr][nc] !== null) break; nr += dr; nc += dc; }
+            while (addMove(nr, nc)) { if (b[nr][nc] !== null) break; nr += dr; nc += dc; }
         });
     }
+
+    if (!ignoreCost) {
+        moves = moves.filter(move => {
+            let tempBoard = JSON.parse(JSON.stringify(b));
+            if (move.castling) {
+                let rookFromC = move.c === 6 ? 7 : 0; let rookToC = move.c === 6 ? 5 : 3;
+                tempBoard[r][rookToC] = tempBoard[r][rookFromC];
+                tempBoard[r][rookFromC] = null;
+            }
+            if (move.enPassant) { tempBoard[r][move.c] = null; }
+            tempBoard[move.r][move.c] = tempBoard[r][c];
+            tempBoard[r][c] = null;
+            
+            return !isKingInCheck(piece.color, tempBoard);
+        });
+    }
+
     return moves;
 }
 
+function isSquareAttacked(r, c, byColor, boardData = null) {
+    let b = boardData || boardState;
+    for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+            let p = b[i][j];
+            if (p && p.color === byColor) {
+                let moves = getValidMoves(i, j, b, true); 
+                if (moves.some(m => m.r === r && m.c === c)) return true;
+            }
+        }
+    }
+    return false;
+}
+
 function handleCellClick(r, c) {
+    if (!gameActive) return;
     const clickedPiece = boardState[r][c];
     
     if (isSetupMode) {
@@ -368,37 +496,83 @@ function handleCellClick(r, c) {
                 boardState[selectedCell.r][rookToC] = boardState[selectedCell.r][rookFromC];
                 boardState[selectedCell.r][rookFromC] = null; boardState[selectedCell.r][rookToC].hasMoved = true;
             }
-            attacker.hasMoved = true;
+
+            if (move.enPassant) {
+                let capturedR = selectedCell.r;
+                let capturedC = move.c;
+                boardState[capturedR][capturedC] = null;
+            }
 
             if (clickedPiece && clickedPiece.color !== attacker.color) {
                 let damage = attacker.level; clickedPiece.hp -= damage;
                 if (clickedPiece.hp <= 0) {
                     boardState[r][c] = attacker; boardState[selectedCell.r][selectedCell.c] = null;
-                    if (clickedPiece.type === 'k') {
-                        clearInterval(elixirInterval);
-                        setTimeout(() => alert(`Игра окончена! Победили ${attacker.color === 'white' ? 'Белые' : 'Черные'}!`), 100);
-                    }
                 }
             } else { 
                 boardState[r][c] = attacker; boardState[selectedCell.r][selectedCell.c] = null; 
             }
 
+            if (attacker.type === 'p' && Math.abs(r - selectedCell.r) === 2) {
+                enPassantTarget = { r: (r + selectedCell.r) / 2, c: c };
+            } else {
+                enPassantTarget = null;
+            }
+
+            attacker.hasMoved = true;
+
+            let promoRow = (attacker.color === 'white') ? 0 : 7;
+            if (attacker.type === 'p' && r === promoRow) {
+                promotionTarget = { r: r, c: c, color: attacker.color };
+                document.getElementById('promotion-modal').classList.add('active');
+            }
+
             selectedCell = null; validMoves = []; selectedCardType = null;
             renderBoard(); renderHand();
+            
+            // АВТО-УРОН КОРОЛЮ
+            setTimeout(() => {
+                ['white', 'black'].forEach(color => {
+                    if (isKingInCheck(color, boardState)) {
+                        for (let rr=0; rr<8; rr++) for (let cc=0; cc<8; cc++) {
+                            if (boardState[rr][cc] && boardState[rr][cc].type === 'k' && boardState[rr][cc].color === color) {
+                                boardState[rr][cc].hp -= 1; 
+                                if (boardState[rr][cc].hp <= 0) {
+                                    endGame(color === 'white' ? 'Черные' : 'Белые', 'Король пал!');
+                                }
+                            }
+                        }
+                        renderBoard();
+                    }
+                });
+                // ПРОВЕРКА НА МАТ И ПАТ
+                checkGameEnd();
+            }, 150);
+
         } else { 
             selectedCell = null; validMoves = []; renderBoard(); 
         }
     } else {
         if (clickedPiece) { 
-            if (selectedCardType && clickedPiece.type !== selectedCardType) {
-                return;
-            }
+            if (selectedCardType && clickedPiece.type !== selectedCardType) return;
             selectedCell = { r, c }; 
             validMoves = getValidMoves(r, c); 
             selectedCardType = null;
             renderBoard(); renderHand(); 
         }
     }
+}
+
+function selectPromotion(newType) {
+    if (promotionTarget) {
+        let p = boardState[promotionTarget.r][promotionTarget.c];
+        p.type = newType;
+        p.icon = PIECES[newType].icon;
+        p.cost = PIECES[newType].cost;
+    }
+    document.getElementById('promotion-modal').classList.remove('active');
+    promotionTarget = null;
+    renderBoard();
+    setTimeout(checkGameEnd, 100);
 }
 
 function resetGame() { 
