@@ -53,32 +53,34 @@
         to { box-shadow: inset 0 0 15px #34c759, inset 0 0 0 3px #34c759; }
     }
     
-    .piece { position: relative; z-index: 2; pointer-events: none; }
+    .piece { position: relative; z-index: 2; pointer-events: none; margin-bottom: 6px; }
     
-    /* СТИЛЬ СТОИМОСТИ СВЕРХУ */
+    /* УМЕНЬШЕННЫЙ БЕЙДЖ СТОИМОСТИ СВЕРХУ */
     .top-cost-badge {
-        position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
-        background: #af52de; color: white; border-radius: 50%; width: 20px; height: 20px;
-        font-size: 11px; font-weight: bold; display: flex; justify-content: center; align-items: center;
-        border: 2px solid #fff; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        position: absolute; top: -4px; left: 50%; transform: translateX(-50%);
+        background: #af52de; color: white; border-radius: 50%; width: 14px; height: 14px;
+        font-size: 9px; font-weight: bold; display: flex; justify-content: center; align-items: center;
+        border: 1px solid #fff; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
     
-    /* СТИЛЬ ЗДОРОВЬЯ И УРОВНЯ СНИЗУ */
+    /* ПОЛОСКА ЗДОРОВЬЯ (ТОЛЬКО УРОВЕНЬ В ЦЕНТРЕ) */
     .bottom-hp-bar {
-        position: absolute; bottom: 1px; left: 5%; width: 90%; height: 16px;
-        border-radius: 4px; display: flex; justify-content: space-between; align-items: center;
-        z-index: 10; border: 1px solid #000; padding: 0 2px; box-sizing: border-box;
-        transition: background 0.3s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-    }
-    .hp-num {
-        font-size: 10px; font-weight: bold; color: #000;
-        background: rgba(255,255,255,0.8); padding: 0 2px; border-radius: 3px; line-height: 12px;
+        position: absolute; bottom: 10px; left: 5%; width: 90%; height: 10px;
+        border-radius: 3px; display: flex; justify-content: center; align-items: center;
+        z-index: 10; border: 1px solid #000; box-sizing: border-box;
+        transition: background 0.3s; box-shadow: inset 0 2px 2px rgba(0,0,0,0.3);
     }
     .lvl-num {
-        font-size: 11px; font-weight: 900; background: #000; color: #fff;
-        padding: 0 6px; border-radius: 10px; line-height: 14px;
-        position: absolute; left: 50%; transform: translateX(-50%);
-        border: 1px solid #fff;
+        font-size: 9px; font-weight: 900; color: #000;
+        line-height: 10px; pointer-events: none;
+    }
+    
+    /* ЦИФРЫ ХП СНИЗУ ПОД ПОЛОСКОЙ */
+    .hp-text-below {
+        position: absolute; bottom: 0px; left: 0; width: 100%;
+        text-align: center; font-size: 8px; font-weight: bold; color: #fff;
+        z-index: 10; pointer-events: none; white-space: nowrap;
+        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; 
     }
 
     .bottom-ui { width: 95vw; max-width: 400px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 15px; }
@@ -184,6 +186,11 @@ function triggerShake(elementId) {
     setTimeout(() => el.classList.remove('shake'), 300);
 }
 
+function formatNum(num) {
+    if (Number.isInteger(num)) return num.toString();
+    return Number(num.toFixed(2)).toString(); 
+}
+
 function createPiece(pieceCode) {
     if (!pieceCode) return null;
     let type = pieceCode.toLowerCase();
@@ -255,11 +262,19 @@ function renderBoard() {
                 else if (hpPercent <= 60) barColor = '#ffcc00'; // Желтый
                 hpBar.style.background = barColor;
                 
-                hpBar.innerHTML = `<span class="hp-num">${piece.hp}</span><span class="lvl-num">${piece.level}</span><span class="hp-num">${piece.maxHp}</span>`;
+                let lvlDisplay = formatNum(piece.level);
+                hpBar.innerHTML = `<span class="lvl-num">${lvlDisplay}</span>`;
+                
+                let hpDisplay = formatNum(piece.hp);
+                let maxHpDisplay = formatNum(piece.maxHp);
+                const hpText = document.createElement('div');
+                hpText.className = 'hp-text-below';
+                hpText.innerText = `${hpDisplay}/${maxHpDisplay}`;
                 
                 cell.appendChild(pieceEl); 
                 cell.appendChild(costBadge); 
                 cell.appendChild(hpBar);
+                cell.appendChild(hpText);
             }
             boardEl.appendChild(cell);
         }
