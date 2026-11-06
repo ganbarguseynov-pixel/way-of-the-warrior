@@ -18,7 +18,6 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 .currency.trophy{color:#ffcc00;border-color:#ffcc00;}
 .currency.coin{color:#ffd700;}
 .currency.gem{color:#34c759;}
-
 .arena-container{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding:20px;margin-top:60px;}
 .arena-card{width:90vw;max-width:400px;background:linear-gradient(180deg,#1e293b,#0f172a);border-radius:20px;border:3px solid #475569;box-shadow:0 20px 50px rgba(0,0,0,0.9),inset 0 0 40px rgba(0,0,0,0.6);padding:20px;text-align:center;position:relative;overflow:hidden;}
 .arena-glow{position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at top,#3b82f6 0%,transparent 70%);opacity:0.2;pointer-events:none;}
@@ -28,13 +27,11 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 .arena-progress-bg{width:100%;height:16px;background:#000;border-radius:10px;overflow:hidden;box-shadow:inset 0 4px 8px rgba(0,0,0,0.9);position:relative;z-index:2;}
 .arena-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#3b82f6,#00f2fe);border-radius:10px;transition:width 0.5s;}
 .arena-trophies{display:flex;justify-content:space-between;width:100%;font-size:11px;color:#ccc;margin-top:5px;font-weight:bold;position:relative;z-index:2;}
-
 .bottom-actions{width:100%;padding:20px;display:flex;flex-direction:column;align-items:center;gap:15px;margin-bottom:65px;}
 .btn-battle{width:90vw;max-width:400px;padding:18px;background:linear-gradient(180deg,#ffcc00,#ff9500);border:3px solid #fff;border-radius:16px;font-size:24px;font-weight:900;color:#000;text-transform:uppercase;letter-spacing:1px;box-shadow:0 8px 0 #b45309,0 15px 20px rgba(0,0,0,0.6),inset 0 2px 4px rgba(255,255,255,0.8);cursor:pointer;transition:transform 0.1s,box-shadow 0.1s;text-shadow:0 1px 0 rgba(255,255,255,0.5);position:relative;overflow:hidden;}
 .btn-battle:active{transform:translateY(4px);box-shadow:0 4px 0 #b45309,0 5px 10px rgba(0,0,0,0.6),inset 0 2px 4px rgba(255,255,255,0.8);}
 .btn-battle::after{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent);animation:shine 3s infinite;transform:skewX(-20deg);}
 @keyframes shine{0%{left:-100%;}20%{left:200%;}100%{left:200%;}}
-
 .bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 15px rgba(0,0,0,0.7);}
 .nav-btn{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;transition:0.2s;}
 .nav-btn .icon-wrap{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);box-shadow:0 3px 6px rgba(0,0,0,0.5),inset 0 2px 3px rgba(255,255,255,0.08),inset 0 -3px 6px rgba(0,0,0,0.6);transition:all 0.3s;}
@@ -85,10 +82,6 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </div>
 
 <div class="bottom-nav">
-    <button class="nav-btn active" onclick="window.location.reload()">
-        <div class="icon-wrap"><span class="icon">🏰</span></div>
-        <span>Главная</span>
-    </button>
     <button class="nav-btn" onclick="window.location.href='chess-deck.html'">
         <div class="icon-wrap">
             <div class="deck-stack">
@@ -99,33 +92,31 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
         </div>
         <span>Колода</span>
     </button>
+    <button class="nav-btn active" onclick="window.location.href='chess-main.html'">
+        <div class="icon-wrap"><span class="icon">🏰</span></div>
+        <span>Главная</span>
+    </button>
 </div>
 
 <script>
-// Загружаем данные (или ставим по умолчанию)
 let trophies = parseInt(localStorage.getItem('cr_trophies') || '0');
 let coins = parseInt(localStorage.getItem('cr_coins') || '1250');
 let gems = parseInt(localStorage.getItem('cr_gems') || '50');
 let playerName = localStorage.getItem('userName') || "Атлет";
 
-// Обновляем интерфейс
 document.getElementById('player-name').innerText = playerName;
 document.getElementById('trophies-count').innerText = trophies;
 document.getElementById('coins-count').innerText = coins;
 document.getElementById('gems-count').innerText = gems;
 document.getElementById('current-trophies').innerText = trophies;
 
-// Логика Арены (пока 1 арена, нужно 300 кубков для перехода)
 const nextReq = 300;
 document.getElementById('next-arena-req').innerText = nextReq;
 let progress = Math.min((trophies / nextReq) * 100, 100);
 document.getElementById('arena-progress').style.width = progress + '%';
 
-// Кнопка "В БОЙ"
 function startBattle() {
-    // Устанавливаем флаг, что играем против бота
     localStorage.setItem('vsBot', 'true');
-    // Переходим в игру
     window.location.href = 'chess-game.html';
 }
 </script>
