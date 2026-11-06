@@ -34,12 +34,11 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 @keyframes attackLunge{0%{transform:scale(1) translateY(0);}30%{transform:scale(1.4) translateY(-15px);filter:brightness(1.5) drop-shadow(0 0 10px #fff);}60%{transform:scale(1.1) translateY(0);filter:brightness(1);}100%{transform:scale(1) translateY(0);}}
 .piece.pain{animation:painCry 0.5s ease-in-out !important; z-index: 40;}
 @keyframes painCry{0%, 100%{transform:translateX(0) scale(1); filter: none;}20%{transform:translateX(-8px) scale(0.9) rotate(-10deg); filter:brightness(2) sepia(1) hue-rotate(-50deg) saturate(10);}40%{transform:translateX(8px) scale(0.9) rotate(10deg); filter:brightness(2) sepia(1) hue-rotate(-50deg) saturate(10);}60%{transform:translateX(-6px) scale(0.95) rotate(-5deg); filter:brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(8);}80%{transform:translateX(6px) scale(0.95) rotate(5deg); filter:brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(8);}}
-.piece.dying{animation:deathScream 0.6s cubic-bezier(0.1, 0.9, 0.2, 1) forwards !important; z-index: 30;}
-@keyframes deathScream{0%{transform:scale(1); filter:none; opacity:1;}30%{transform:scale(1.6) rotate(15deg); filter:brightness(3) contrast(2) drop-shadow(0 0 15px red); opacity:1;}100%{transform:scale(0) rotate(180deg); filter:brightness(5) blur(4px); opacity:0;}}
 .piece.celebrating{animation:mockLaugh 0.8s ease-in-out !important; z-index: 50;}
 @keyframes mockLaugh{0%{transform:scale(1); filter:none;}20%{transform:scale(1.3) rotate(-15deg); filter:drop-shadow(0 0 15px gold) brightness(1.5);}40%{transform:scale(1.2) rotate(15deg); filter:drop-shadow(0 0 15px gold) brightness(1.5);}60%{transform:scale(1.3) rotate(-10deg); filter:drop-shadow(0 0 15px gold) brightness(1.5);}80%{transform:scale(1.1) rotate(10deg); filter:drop-shadow(0 0 10px gold) brightness(1.2);}100%{transform:scale(1) rotate(0);}}
 .particle{position:absolute;width:6px;height:6px;border-radius:50%;pointer-events:none;z-index:100;will-change:transform,opacity;}
 @keyframes flyOut{0%{transform:translate(0,0) scale(1);opacity:1;}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0;}}
+@keyframes deathScream{0%{transform:scale(1); filter:none; opacity:1;}30%{transform:scale(1.6) rotate(15deg); filter:brightness(3) contrast(2) drop-shadow(0 0 15px red); opacity:1;}100%{transform:scale(0) rotate(180deg); filter:brightness(5) blur(4px); opacity:0;}}
 .top-cost-badge{position:absolute;top:-6px;left:50%;transform:translateX(-50%);background:linear-gradient(145deg,#c084fc,#7c3aed);color:#fff;border-radius:50%;width:15px;height:15px;font-size:9px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1.5px solid #fff;z-index:10;box-shadow:0 2px 4px rgba(0,0,0,0.6);}
 .bottom-hp-bar{position:absolute;bottom:10px;left:5%;width:90%;height:10px;border-radius:4px;display:flex;justify-content:center;align-items:center;z-index:10;border:1px solid #000;box-sizing:border-box;transition:background 0.3s;box-shadow:inset 0 2px 3px rgba(0,0,0,0.5),inset 0 -1px 2px rgba(255,255,255,0.3),0 1px 2px rgba(0,0,0,0.7);}
 .lvl-num{font-size:9px;font-weight:900;color:#000;line-height:10px;pointer-events:none;}
@@ -101,15 +100,11 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </div>
 <div class="hand-container" id="hand-container"></div>
 <div class="controls">
-<button class="btn btn-red" onclick="resetGame()">🔄 Сброс</button>
+<button class="btn btn-red" onclick="window.location.href='chess-main.html'">🏳️ Сдаться</button>
 </div>
 </div>
 
 <div class="bottom-nav">
-<button class="nav-btn" onclick="window.location.href='chess-main.html'">
-<div class="icon-wrap"><span class="icon">🏰</span></div>
-<span>Главная</span>
-</button>
 <button class="nav-btn" onclick="window.location.href='chess-deck.html'">
 <div class="icon-wrap">
 <div class="deck-stack">
@@ -120,9 +115,9 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </div>
 <span>Колода</span>
 </button>
-<button class="nav-btn active" onclick="window.location.reload()">
-<div class="icon-wrap"><span class="icon">♞</span></div>
-<span>Игра</span>
+<button class="nav-btn" onclick="window.location.href='chess-main.html'">
+<div class="icon-wrap"><span class="icon">🏰</span></div>
+<span>Главная</span>
 </button>
 </div>
 
@@ -170,13 +165,32 @@ function spawnParticles(x, y, color) {
         document.body.appendChild(p); setTimeout(() => p.remove(), 500);
     }
 }
+function spawnGhost(r, c, icon, color) {
+    const cell = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+    if(!cell) return;
+    const ghost = document.createElement('div');
+    ghost.className = 'piece';
+    ghost.innerText = icon;
+    ghost.style.color = color === 'white' ? '#fff' : '#0a0a0a';
+    ghost.style.textShadow = color === 'white' ? '0 1px 0 #666,0 2px 0 #444,0 3px 4px rgba(0,0,0,0.9)' : '0 1px 0 #555,0 2px 3px rgba(255,255,255,0.3),0 3px 4px rgba(0,0,0,0.9)';
+    ghost.style.position = 'absolute';
+    ghost.style.zIndex = '99';
+    ghost.style.pointerEvents = 'none';
+    ghost.style.inset = '0';
+    ghost.style.margin = 'auto';
+    ghost.style.width = 'fit-content';
+    ghost.style.height = 'fit-content';
+    ghost.style.animation = 'deathScream 0.6s cubic-bezier(0.1, 0.9, 0.2, 1) forwards';
+    cell.appendChild(ghost);
+    setTimeout(() => ghost.remove(), 650);
+}
+
 const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
 const DEFAULT_BOARD=[['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
 let boardState=[],selectedCell=null,validMoves=[];
 let whiteElixir=5,blackElixir=5,elixirInterval=null;
 let currentHand=['p','n','b','r'],selectedCardType=null;
 let enPassantTarget=null,promotionTarget=null,gameActive=true;
-let isAnimating = false;
 let vsBot = localStorage.getItem('vsBot') === 'true';
 
 function triggerShake(id){const el=document.getElementById(id);if(!el)return;el.style.transform='translateX(-6px)';setTimeout(()=>el.style.transform='translateX(6px)',80);setTimeout(()=>el.style.transform='',160);}
@@ -191,7 +205,7 @@ function initGame(){
     let initialData=DEFAULT_BOARD; const saved=localStorage.getItem('chessSetup');
     if(saved){ try{ const parsed=JSON.parse(saved); if(parsed&&parsed.length===8)initialData=parsed; }catch(e){} }
     boardState=initialData.map(row=>row.map(pc=>createPiece(pc)));
-    selectedCell=null;validMoves=[];selectedCardType=null;whiteElixir=5;blackElixir=5;enPassantTarget=null;promotionTarget=null;gameActive=true;isAnimating=false;
+    selectedCell=null;validMoves=[];selectedCardType=null;whiteElixir=5;blackElixir=5;enPassantTarget=null;promotionTarget=null;gameActive=true;
     document.getElementById('promotion-modal').classList.remove('active');
     clearInterval(elixirInterval);
     elixirInterval=setInterval(()=>{if(gameActive){if(whiteElixir<10)whiteElixir++;if(blackElixir<10)blackElixir++;updateElixirUI();}},1000);
@@ -246,8 +260,13 @@ function endGame(winner,reason){
             let trophies = parseInt(localStorage.getItem('cr_trophies') || '0');
             localStorage.setItem('cr_trophies', trophies + 30);
             alert(`Победа! ${reason}\nВы получили +30 🏆`);
+            window.location.href='chess-main.html';
+        } else if (winner==='Черные') {
+            alert(`Поражение! ${reason}`);
+            window.location.href='chess-main.html';
         } else {
-            alert(`Игра окончена! ${reason}\nПобедитель: ${winner}`);
+            alert(`Ничья! ${reason}`);
+            window.location.href='chess-main.html';
         }
     },300);
 }
@@ -263,102 +282,118 @@ function getValidMoves(r,c,boardData=null,ignoreCost=false){
 function isSquareAttacked(r,c,byColor,boardData=null){let b=boardData||boardState;for(let i=0;i<8;i++){for(let j=0;j<8;j++){let p=b[i][j];if(p&&p.color===byColor){let moves=getValidMoves(i,j,b,true);if(moves.some(m=>m.r===r&&m.c===c))return true;}}}return false;}
 
 function handleCellClick(r,c){
-    if(!gameActive || isAnimating) return; 
+    if(!gameActive) return; 
     const clickedPiece=boardState[r][c];
-    
     if(selectedCell){
         const move=validMoves.find(m=>m.r===r&&m.c===c);
         if(move){
-            initAudio(); isAnimating = true;
-            const attacker=boardState[selectedCell.r][selectedCell.c];
-            
-            if(attacker.color==='white'&&whiteElixir<attacker.cost){triggerShake('white-elixir-fill');selectedCell=null;validMoves=[];renderBoard();isAnimating=false;return;}
-            if(attacker.color==='black'&&blackElixir<attacker.cost){triggerShake('black-elixir-fill');selectedCell=null;validMoves=[];renderBoard();isAnimating=false;return;}
-            
-            if(attacker.color==='white'){whiteElixir-=attacker.cost;}else{blackElixir-=attacker.cost;}
-            updateElixirUI();
-
-            const fromR = selectedCell.r, fromC = selectedCell.c;
-            const attackerEl = document.querySelector(`.cell[data-r="${fromR}"][data-c="${fromC}"] .piece`);
-            
-            if(clickedPiece&&clickedPiece.color!==attacker.color){
-                const defenderEl = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"] .piece`);
-                let damage = attacker.level; clickedPiece.hp -= damage; let isKilled = clickedPiece.hp <= 0;
-                const rect = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`).getBoundingClientRect();
-                const boardRect = document.getElementById('board-wrapper').getBoundingClientRect();
-                const x = rect.left - boardRect.left + rect.width/2 - boardRect.width/2;
-                const y = rect.top - boardRect.top + rect.height/2 - boardRect.height/2;
-
-                if (isKilled) {
-                    playSound('death_scream');
-                    if(attackerEl) { attackerEl.style.animation='none'; attackerEl.classList.add('attacking'); }
-                    if(defenderEl) { defenderEl.style.animation='none'; defenderEl.classList.add('dying'); }
-                    spawnParticles(x, y, '#ff0000');
-                    setTimeout(() => {
-                        if(attackerEl) { attackerEl.classList.remove('attacking'); attackerEl.classList.add('celebrating'); }
-                        playSound('celebrate_laugh');
-                    }, 200);
-                } else {
-                    playSound('attack_hit'); setTimeout(()=>playSound('pain_cry'), 100);
-                    if(attackerEl) { attackerEl.style.animation='none'; attackerEl.classList.add('attacking'); }
-                    if(defenderEl) { defenderEl.style.animation='none'; defenderEl.classList.add('pain'); }
-                    spawnParticles(x, y, '#ffcc00');
-                }
-
-                setTimeout(() => {
-                    if (isKilled) { boardState[r][c] = attacker; }
-                    boardState[fromR][fromC] = null;
-                    attacker.hasMoved = true;
-                    let promoRow = (attacker.color === 'white') ? 0 : 7;
-                    if (attacker.type === 'p' && r === promoRow) { promotionTarget = { r: r, c: c, color: attacker.color }; document.getElementById('promotion-modal').classList.add('active'); }
-                    selectedCell = null; validMoves = []; selectedCardType = null;
-                    renderBoard(); renderHand(); isAnimating = false;
-                    setTimeout(()=>checkKingAndEnd(), 150);
-                    if (vsBot && attacker.color === 'white' && gameActive) { setTimeout(makeBotMove, 1000); }
-                }, isKilled ? 800 : 600);
-
-            } else {
-                playSound('move');
-                if(move.castling){ let rookFromC=move.c===6?7:0; let rookToC=move.c===6?5:3; boardState[fromR][rookToC]=boardState[fromR][rookFromC]; boardState[fromR][rookFromC]=null; boardState[fromR][rookToC].hasMoved=true; }
-                if(move.enPassant){ boardState[fromR][c]=null; }
-                boardState[r][c] = attacker; boardState[fromR][fromC] = null;
-                if(attacker.type==='p'&&Math.abs(r-fromR)===2){enPassantTarget={r:(r+fromR)/2,c:c};}else{enPassantTarget=null;}
-                attacker.hasMoved=true;
-                let promoRow=(attacker.color==='white')?0:7;
-                if(attacker.type==='p'&&r===promoRow){ promotionTarget={r:r,c:c,color:attacker.color}; document.getElementById('promotion-modal').classList.add('active'); }
-                selectedCell=null;validMoves=[];selectedCardType=null;
-                renderBoard();renderHand(); isAnimating = false;
-                setTimeout(()=>checkKingAndEnd(), 150);
-                if (vsBot && attacker.color === 'white' && gameActive) { setTimeout(makeBotMove, 1000); }
-            }
-        } else { selectedCell=null; validMoves=[]; renderBoard(); }
+            initAudio();
+            makeMove(selectedCell.r, selectedCell.c, r, c);
+        } else { 
+            selectedCell=null; validMoves=[]; renderBoard(); 
+        }
     } else {
-        if(clickedPiece){ if(selectedCardType&&clickedPiece.type!==selectedCardType)return; selectedCell={r,c}; validMoves=getValidMoves(r,c); selectedCardType=null; renderBoard(); renderHand(); }
+        if(clickedPiece){ 
+            if(selectedCardType&&clickedPiece.type!==selectedCardType)return; 
+            selectedCell={r,c}; validMoves=getValidMoves(r,c); selectedCardType=null; renderBoard(); renderHand(); 
+        }
     }
 }
 
-// УМНЫЙ БОТ
+function makeMove(fromR, fromC, toR, toC) {
+    const attacker = boardState[fromR][fromC];
+    const clickedPiece = boardState[toR][toC];
+    if (!attacker) return;
+
+    if(attacker.color==='white'&&whiteElixir<attacker.cost) { triggerShake('white-elixir-fill'); return; }
+    if(attacker.color==='black'&&blackElixir<attacker.cost) { triggerShake('black-elixir-fill'); return; }
+
+    if(attacker.color==='white'){whiteElixir-=attacker.cost;}else{blackElixir-=attacker.cost;}
+    updateElixirUI();
+
+    let defenderToKill = null;
+    let isAttackingPiece = false;
+
+    if(clickedPiece&&clickedPiece.color!==attacker.color){
+        isAttackingPiece = true;
+        let damage = attacker.level; clickedPiece.hp -= damage; let isKilled = clickedPiece.hp <= 0;
+        
+        const rect = document.querySelector(`.cell[data-r="${toR}"][data-c="${toC}"]`).getBoundingClientRect();
+        const boardRect = document.getElementById('board-wrapper').getBoundingClientRect();
+        const x = rect.left - boardRect.left + rect.width/2 - boardRect.width/2;
+        const y = rect.top - boardRect.top + rect.height/2 - boardRect.height/2;
+
+        if (isKilled) {
+            playSound('death_scream'); spawnParticles(x, y, '#ff0000');
+            defenderToKill = { r: toR, c: toC, icon: clickedPiece.icon, color: clickedPiece.color };
+        } else {
+            playSound('attack_hit'); setTimeout(()=>playSound('pain_cry'), 100);
+            spawnParticles(x, y, '#ffcc00');
+        }
+
+        if (isKilled) { boardState[toR][toC] = attacker; }
+        boardState[fromR][fromC] = null;
+        attacker.hasMoved = true;
+        let promoRow = (attacker.color === 'white') ? 0 : 7;
+        if (attacker.type === 'p' && toR === promoRow) { promotionTarget = { r: toR, c: toC, color: attacker.color }; document.getElementById('promotion-modal').classList.add('active'); }
+    } else {
+        playSound('move');
+        let castling = Math.abs(toC - fromC) === 2 && attacker.type === 'k';
+        let enPassant = enPassantTarget && enPassantTarget.r === toR && enPassantTarget.c === toC;
+
+        if(castling){ let rookFromC=toC===6?7:0; let rookToC=toC===6?5:3; boardState[fromR][rookToC]=boardState[fromR][rookFromC]; boardState[fromR][rookFromC]=null; boardState[fromR][rookToC].hasMoved=true; }
+        if(enPassant){ boardState[fromR][toC]=null; }
+
+        boardState[toR][toC] = attacker; boardState[fromR][fromC] = null;
+        if(attacker.type==='p'&&Math.abs(toR-fromR)===2){enPassantTarget={r:(toR+fromR)/2,c:toC};}else{enPassantTarget=null;}
+        attacker.hasMoved=true;
+        let promoRow=(attacker.color==='white')?0:7;
+        if(attacker.type==='p'&&toR===promoRow){ promotionTarget={r:toR,c:toC,color:attacker.color}; document.getElementById('promotion-modal').classList.add('active'); }
+    }
+
+    selectedCell=null; validMoves=[]; selectedCardType=null;
+    renderBoard(); renderHand();
+
+    const newAttackerEl = document.querySelector(`.cell[data-r="${toR}"][data-c="${toC}"] .piece`);
+    if (isAttackingPiece) {
+        if (newAttackerEl) {
+            newAttackerEl.classList.add('attacking');
+            setTimeout(() => { newAttackerEl.classList.remove('attacking'); newAttackerEl.classList.add('celebrating'); playSound('celebrate_laugh'); }, 300);
+            setTimeout(() => { newAttackerEl.classList.remove('celebrating'); }, 1100);
+        }
+        if (defenderToKill) {
+            spawnGhost(defenderToKill.r, defenderToKill.c, defenderToKill.icon, defenderToKill.color);
+        } else {
+            const newDefenderEl = document.querySelector(`.cell[data-r="${toR}"][data-c="${toC}"] .piece`);
+            if (newDefenderEl) {
+                newDefenderEl.classList.add('pain');
+                setTimeout(() => newDefenderEl.classList.remove('pain'), 600);
+            }
+        }
+    }
+
+    setTimeout(()=>checkKingAndEnd(), 150);
+    
+    if (vsBot && attacker.color === 'white' && gameActive) { 
+        setTimeout(makeBotMove, 800); 
+    }
+}
+
 function makeBotMove() {
-    if (!gameActive || isAnimating) return;
+    if (!gameActive) return;
     let possibleMoves = [];
     for(let r=0; r<8; r++) {
         for(let c=0; c<8; c++) {
             let p = boardState[r][c];
-            if (p && p.color === 'black') {
+            if (p && p.color === 'black' && blackElixir >= p.cost) {
                 let moves = getValidMoves(r, c);
-                if (moves.length > 0) {
-                    if (blackElixir >= p.cost) {
-                        moves.forEach(m => possibleMoves.push({fromR: r, fromC: c, toR: m.r, toC: m.c}));
-                    }
-                }
+                moves.forEach(m => possibleMoves.push({fromR: r, fromC: c, toR: m.r, toC: m.c}));
             }
         }
     }
     if (possibleMoves.length === 0) return;
-    // Выбираем случайный ход
     let move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-    handleCellClick(move.fromR, move.fromC);
-    setTimeout(() => { handleCellClick(move.toR, move.toC); }, 300);
+    makeMove(move.fromR, move.fromC, move.toR, move.toC);
 }
 
 function checkKingAndEnd() {
@@ -377,7 +412,6 @@ function checkKingAndEnd() {
 }
 
 function selectPromotion(newType){if(promotionTarget){let p=boardState[promotionTarget.r][promotionTarget.c];p.type=newType;p.icon=PIECES[newType].icon;p.cost=PIECES[newType].cost;}document.getElementById('promotion-modal').classList.remove('active');promotionTarget=null;renderBoard();setTimeout(checkGameEnd,100);}
-function resetGame(){if(confirm("Начать партию заново с сохраненной расстановкой?")){initGame();}}
 initGame();
 </script>
 </body>
