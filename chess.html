@@ -5,69 +5,106 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Chess Royale</title>
 <style>
+    /* КРАСИВЫЙ ФОН КАК В CLASH ROYALE */
     body {
-        background-color: #0d0d0d; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden; user-select: none;
+        background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; 
+        min-height: 100vh; user-select: none;
     }
     
-    /* ЭКРАНЫ */
     .screen { display: none; flex-direction: column; width: 100%; align-items: center; flex: 1; overflow-y: auto; }
     .screen.active { display: flex; }
 
-    /* --- ЭКРАН ИГРЫ (НА ВЕСЬ ЭКРАН) --- */
+    /* ВЕРХНЯЯ ПАНЕЛЬ ИГРЫ */
     .game-top-bar {
         width: 95vw; max-width: 400px; display: flex; align-items: center; gap: 10px; margin-top: 10px;
     }
     .deck-btn {
-        background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; padding: 8px 12px; border-radius: 8px;
+        background: rgba(0,0,0,0.6); color: #fff; border: 1px solid #3a3a3c; padding: 8px 12px; border-radius: 8px;
         font-size: 14px; font-weight: bold; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
-    .deck-btn:active { background: #3a3a3c; }
+    .deck-btn:active { background: rgba(255,255,255,0.2); }
     
-    .elixir-container { display: flex; align-items: center; gap: 10px; padding: 5px 10px; }
-    .elixir-fill-bg { flex: 1; height: 16px; background: #000; border-radius: 8px; overflow: hidden; position: relative; }
+    .elixir-container { display: flex; align-items: center; gap: 10px; padding: 5px 10px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid #3a3a3c; }
+    .elixir-fill-bg { flex: 1; height: 16px; background: #000; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.2);}
     .elixir-fill { height: 100%; width: 0%; transition: width 0.3s; }
     .elixir-text { font-weight: bold; font-size: 18px; min-width: 30px; text-align: center; }
     
-    .elixir-black { background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 12px; flex: 1; }
+    .elixir-black { flex: 1; }
     .elixir-black .elixir-fill { background: linear-gradient(90deg, #8e8e93, #000); }
     .elixir-black .elixir-text { color: #8e8e93; }
     
-    .elixir-white { background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 12px; width: 100%; margin-bottom: 5px;}
+    .elixir-white { width: 95vw; max-width: 400px; margin-bottom: 5px; }
     .elixir-white .elixir-fill { background: linear-gradient(90deg, #af52de, #ff2d55); }
     .elixir-white .elixir-text { color: #ff2d55; }
 
+    /* ДОСКА (БЕЗ ЧЕРНЫХ ЯМ) */
+    .board-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; margin: 10px 0; }
     .board-container { 
         position: relative; width: 95vw; max-width: 400px; aspect-ratio: 1/1; 
-        margin-top: 10px; border: 2px solid #3a3a3c; border-radius: 8px; overflow: hidden; 
+        border: 3px solid #475569; border-radius: 12px; overflow: hidden; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     }
     .board { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: 100%; height: 100%; }
-    .cell { position: relative; display: flex; justify-content: center; align-items: center; font-size: 32px; cursor: pointer; }
-    .cell.white { background-color: #d1d1d6; }
-    .cell.black { background-color: #8e8e93; }
-    .cell.selected { background-color: rgba(52, 199, 89, 0.7) !important; }
+    .cell { position: relative; display: flex; justify-content: center; align-items: center; font-size: 32px; cursor: pointer; transition: background 0.1s; }
+    .cell.white { background-color: #94a3b8; }
+    .cell.black { background-color: #475569; }
+    .cell.selected { background-color: rgba(52, 199, 89, 0.9) !important; box-shadow: inset 0 0 10px #fff; }
     .cell.valid-move { box-shadow: inset 0 0 0 3px #ffcc00; }
-    .cell.setup-zone { background-color: rgba(255, 204, 0, 0.2) !important; }
+    .cell.setup-zone { background-color: rgba(255, 204, 0, 0.3) !important; }
+    
+    /* ПОДСВЕТКА ФИГУР ПРИ ВЫБОРЕ КАРТЫ */
+    .cell.highlight-piece { animation: pulse-piece 1s infinite alternate; cursor: pointer; }
+    @keyframes pulse-piece {
+        from { box-shadow: inset 0 0 5px #34c759; }
+        to { box-shadow: inset 0 0 15px #34c759, inset 0 0 0 3px #34c759; }
+    }
     
     .piece { position: relative; z-index: 2; pointer-events: none; }
-    .hp-bar { position: absolute; bottom: 2px; left: 10%; width: 80%; height: 5px; background: #000; border-radius: 3px; z-index: 3; pointer-events: none; }
+    .hp-bar { position: absolute; bottom: 2px; left: 10%; width: 80%; height: 6px; background: #000; border-radius: 3px; z-index: 3; pointer-events: none; border: 1px solid rgba(255,255,255,0.2);}
     .hp-fill { height: 100%; background: #34c759; border-radius: 3px; transition: width 0.3s; }
+    
     .lvl-badge { 
-        position: absolute; top: 1px; right: 1px; font-size: 10px; font-weight: bold; color: #fff; 
-        background: rgba(0,0,0,0.8); width: 16px; height: 16px; line-height: 16px; 
+        position: absolute; top: 2px; right: 2px; font-size: 10px; font-weight: bold; color: #fff; 
+        background: rgba(0,0,0,0.9); width: 18px; height: 18px; line-height: 18px; 
         text-align: center; border-radius: 50%; z-index: 4; pointer-events: none; border: 1px solid #fff;
     }
+    
+    .cost-badge {
+        position: absolute; top: 2px; left: 2px; font-size: 10px; font-weight: bold; color: #fff;
+        background: #af52de; width: 18px; height: 18px; line-height: 18px;
+        text-align: center; border-radius: 50%; z-index: 4; pointer-events: none; border: 1px solid #fff;
+        box-shadow: 0 0 5px rgba(175, 82, 222, 0.8);
+    }
 
-    .bottom-ui { width: 95vw; max-width: 400px; margin-top: auto; padding-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+    /* НИЖНЯЯ ПАНЕЛЬ С РУКОЙ (КАК В CLASH ROYALE) */
+    .bottom-ui { width: 95vw; max-width: 400px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 15px; }
+    
+    .hand-container { display: flex; justify-content: space-between; gap: 5px; margin-top: 5px; }
+    
+    .hand-card {
+        flex: 1; background: #1e293b; border: 2px solid #3a3a3c; border-radius: 8px;
+        aspect-ratio: 3/4; display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+        padding: 5px; cursor: pointer; transition: transform 0.1s, border-color 0.2s;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        position: relative;
+    }
+    .hand-card:active { transform: scale(0.95); }
+    .hand-card.active { border-color: #34c759; box-shadow: 0 0 15px #34c759; background: #064e3b; }
+    
+    .hand-cost { position: absolute; top: -5px; left: -5px; background: #af52de; color: #fff; font-size: 12px; font-weight: bold; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid #fff; }
+    .hand-icon { font-size: 28px; margin-top: 10px; }
+    .hand-name { font-size: 9px; font-weight: bold; color: #fff; text-align: center; }
     
     @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 75% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
     .shake { animation: shake 0.3s ease-in-out; }
-    .controls { display: flex; gap: 5px; margin-top: 5px; }
-    .btn { background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; padding: 12px; border-radius: 8px; font-size: 13px; cursor: pointer; flex: 1;}
-    .btn-gold { background: #ffcc00; color: #000; border: none; font-weight: bold; }
-    .btn-green { background: #34c759; color: #000; border: none; font-weight: bold; }
+    .controls { display: flex; gap: 5px; }
+    .btn { background: #334155; color: #fff; border: 1px solid #475569; padding: 12px; border-radius: 8px; font-size: 13px; cursor: pointer; flex: 1; font-weight: bold;}
+    .btn-gold { background: #eab308; color: #000; border: none; }
+    .btn-green { background: #22c55e; color: #000; border: none; }
 
-    /* --- ЭКРАН КОЛОДЫ --- */
+    /* ЭКРАН КОЛОДЫ */
     .top-bar {
         width: 100%; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;
         background: #1c1c1e; border-bottom: 1px solid #3a3a3c; z-index: 10;
@@ -103,10 +140,7 @@
 </head>
 <body>
 
-<!-- ЭКРАН ИГРЫ (БЕЗ ЛИШНИХ ПАНЕЛЕЙ) -->
 <div id="screen-game" class="screen active">
-    
-    <!-- Верхняя строка: Кнопка колоды + Эликсир черных -->
     <div class="game-top-bar">
         <button class="deck-btn" onclick="switchTab('deck')">🃏 Колода</button>
         <div class="elixir-container elixir-black">
@@ -115,16 +149,23 @@
         </div>
     </div>
 
-    <div class="board-container">
-        <div class="board" id="board"></div>
+    <div class="board-wrapper">
+        <div class="board-container">
+            <div class="board" id="board"></div>
+        </div>
     </div>
 
-    <!-- Нижняя панель: Эликсир белых + Управление -->
     <div class="bottom-ui">
         <div class="elixir-container elixir-white">
             <div class="elixir-text" id="white-elixir-text">5</div>
             <div class="elixir-fill-bg"><div class="elixir-fill" id="white-elixir-fill"></div></div>
         </div>
+        
+        <!-- РУКА С 4 КАРТАМИ -->
+        <div class="hand-container" id="hand-container">
+            <!-- Карты генерируются в JS -->
+        </div>
+
         <div class="controls" id="game-controls">
             <button class="btn btn-gold" onclick="startSetupMode()">⚙️ Расстановка</button>
             <button class="btn" onclick="resetGame()">🔄 Сброс</button>
@@ -136,14 +177,12 @@
     </div>
 </div>
 
-<!-- ЭКРАН КОЛОДЫ -->
 <div id="screen-deck" class="screen">
     <div class="top-bar">
         <div class="currency-row">
             <div class="currency coins">🪙 1250</div>
             <div class="currency gems">💎 50</div>
         </div>
-        <!-- ВКЛАДКА КОЛОДА ТЕПЕРЬ СЛЕВА -->
         <div class="tabs">
             <button class="tab-btn back-btn" onclick="window.location.href='index.html'">←</button>
             <button class="tab-btn active" id="tab-deck-btn" onclick="switchTab('deck')">Колода</button>
@@ -157,11 +196,9 @@
 </div>
 
 <script>
-// --- ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ---
 function switchTab(tab) {
     document.getElementById('screen-game').classList.remove('active');
     document.getElementById('screen-deck').classList.remove('active');
-    
     const btnGame = document.getElementById('tab-game-btn');
     const btnDeck = document.getElementById('tab-deck-btn');
     if(btnGame) btnGame.classList.remove('active');
@@ -175,16 +212,11 @@ function switchTab(tab) {
     }
 }
 
-// --- ДАННЫЕ КОЛОДЫ ---
 const DECK_CARDS = [
-    { name: 'Пешка', icon: '♟', elixir: 1, level: 1, rarity: 'common' },
-    { name: 'Конь', icon: '♞', elixir: 2, level: 1, rarity: 'rare' },
-    { name: 'Слон', icon: '♝', elixir: 3, level: 1, rarity: 'rare' },
-    { name: 'Ладья', icon: '♜', elixir: 4, level: 1, rarity: 'epic' },
-    { name: 'Король', icon: '♚', elixir: 5, level: 1, rarity: 'epic' },
-    { name: 'Ферзь', icon: '♛', elixir: 6, level: 1, rarity: 'epic' },
-    { name: 'Ярость', icon: '⚡', elixir: 2, level: 1, rarity: 'common' },
-    { name: 'Щит', icon: '🛡️', elixir: 3, level: 1, rarity: 'common' }
+    { name: 'Пешка', icon: '♟', elixir: 1, level: 1, rarity: 'common', type: 'p' },
+    { name: 'Конь', icon: '♞', elixir: 2, level: 1, rarity: 'rare', type: 'n' },
+    { name: 'Слон', icon: '♝', elixir: 3, level: 1, rarity: 'rare', type: 'b' },
+    { name: 'Ладья', icon: '♜', elixir: 4, level: 1, rarity: 'epic', type: 'r' }
 ];
 
 function renderDeck() {
@@ -203,7 +235,32 @@ function renderDeck() {
     });
 }
 
-// --- ИГРОВАЯ ЛОГИКА ---
+// --- РУКА С КАРТАМИ ---
+let currentHand = ['p', 'n', 'b', 'r']; // Типы карт в руке
+let selectedCardType = null;
+
+function renderHand() {
+    const handEl = document.getElementById('hand-container');
+    handEl.innerHTML = '';
+    currentHand.forEach(type => {
+        const p = PIECES[type];
+        const card = document.createElement('div');
+        card.className = `hand-card ${selectedCardType === type ? 'active' : ''}`;
+        card.innerHTML = `
+            <div class="hand-cost">${p.cost}</div>
+            <div class="hand-icon">${p.icon}</div>
+            <div class="hand-name">${p.name}</div>
+        `;
+        card.onclick = () => {
+            if (selectedCardType === type) { selectedCardType = null; }
+            else { selectedCardType = type; selectedCell = null; validMoves = []; }
+            renderHand();
+            renderBoard();
+        };
+        handEl.appendChild(card);
+    });
+}
+
 const PIECES = {
     'p': { name: 'Пешка', icon: '♟', cost: 1 }, 'n': { name: 'Конь', icon: '♞', cost: 2 },
     'b': { name: 'Слон', icon: '♝', cost: 3 }, 'r': { name: 'Ладья', icon: '♜', cost: 4 },
@@ -251,7 +308,7 @@ function initGame(useSavedSetup = false) {
 
     boardState = initialData.map(row => row.map(pieceCode => createPiece(pieceCode)));
     
-    selectedCell = null; validMoves = [];
+    selectedCell = null; validMoves = []; selectedCardType = null;
     whiteElixir = 5; blackElixir = 5;
     isSetupMode = false;
     
@@ -267,15 +324,15 @@ function initGame(useSavedSetup = false) {
         }
     }, 1000);
 
-    renderBoard(); updateElixirUI();
+    renderBoard(); renderHand(); updateElixirUI();
 }
 
 function startSetupMode() {
     isSetupMode = true;
-    selectedCell = null; validMoves = [];
+    selectedCell = null; validMoves = []; selectedCardType = null;
     document.getElementById('game-controls').style.display = 'none';
     document.getElementById('setup-controls').style.display = 'flex';
-    renderBoard();
+    renderBoard(); renderHand();
 }
 
 function cancelSetup() {
@@ -303,11 +360,18 @@ function renderBoard() {
             
             const piece = boardState[r][c];
             if (piece) {
+                // ПОДСВЕТКА ФИГУР ПРИ ВЫБОРЕ КАРТЫ ИЗ РУКИ
+                if (selectedCardType === piece.type) {
+                    if (piece.color === 'white' && whiteElixir >= piece.cost) cell.classList.add('highlight-piece');
+                    if (piece.color === 'black' && blackElixir >= piece.cost) cell.classList.add('highlight-piece');
+                }
+
                 const pieceEl = document.createElement('div'); pieceEl.className = 'piece'; pieceEl.innerText = piece.icon;
                 pieceEl.style.color = piece.color === 'white' ? '#fff' : '#000';
                 pieceEl.style.textShadow = piece.color === 'white' ? '0 0 2px #000' : '0 0 2px #fff';
                 
                 const lvlBadge = document.createElement('div'); lvlBadge.className = 'lvl-badge'; lvlBadge.innerText = piece.level;
+                const costBadge = document.createElement('div'); costBadge.className = 'cost-badge'; costBadge.innerText = piece.cost;
                 
                 const hpBar = document.createElement('div'); hpBar.className = 'hp-bar';
                 const hpFill = document.createElement('div'); hpFill.className = 'hp-fill';
@@ -315,7 +379,7 @@ function renderBoard() {
                 if(hpPercent <= 30) hpFill.style.background = '#ff3b30';
                 hpBar.appendChild(hpFill);
                 
-                cell.appendChild(pieceEl); cell.appendChild(lvlBadge); cell.appendChild(hpBar);
+                cell.appendChild(pieceEl); cell.appendChild(lvlBadge); cell.appendChild(costBadge); cell.appendChild(hpBar);
             }
             boardEl.appendChild(cell);
         }
@@ -378,24 +442,15 @@ function handleCellClick(r, c) {
     
     if (isSetupMode) {
         if (selectedCell) {
-            if (selectedCell.r === r && selectedCell.c === c) {
-                selectedCell = null; renderBoard(); return;
-            }
+            if (selectedCell.r === r && selectedCell.c === c) { selectedCell = null; renderBoard(); return; }
             const attacker = boardState[selectedCell.r][selectedCell.c];
-            if (clickedPiece && clickedPiece.color === 'white') {
-                selectedCell = { r, c }; renderBoard(); return;
-            }
+            if (clickedPiece && clickedPiece.color === 'white') { selectedCell = { r, c }; renderBoard(); return; }
             if ((r === 6 || r === 7) && !clickedPiece) {
-                boardState[r][c] = attacker;
-                boardState[selectedCell.r][selectedCell.c] = null;
-                selectedCell = null;
+                boardState[r][c] = attacker; boardState[selectedCell.r][selectedCell.c] = null; selectedCell = null;
             } else { selectedCell = null; }
-            renderBoard();
-            return;
+            renderBoard(); return;
         }
-        if (clickedPiece && clickedPiece.color === 'white') {
-            selectedCell = { r, c }; renderBoard();
-        }
+        if (clickedPiece && clickedPiece.color === 'white') { selectedCell = { r, c }; renderBoard(); }
         return;
     }
 
@@ -404,14 +459,8 @@ function handleCellClick(r, c) {
         if (move) {
             const attacker = boardState[selectedCell.r][selectedCell.c];
             
-            if (attacker.color === 'white' && whiteElixir < attacker.cost) {
-                triggerShake('white-elixir-fill');
-                selectedCell = null; validMoves = []; renderBoard(); return;
-            }
-            if (attacker.color === 'black' && blackElixir < attacker.cost) {
-                triggerShake('black-elixir-fill');
-                selectedCell = null; validMoves = []; renderBoard(); return;
-            }
+            if (attacker.color === 'white' && whiteElixir < attacker.cost) { triggerShake('white-elixir-fill'); selectedCell = null; validMoves = []; renderBoard(); return; }
+            if (attacker.color === 'black' && blackElixir < attacker.cost) { triggerShake('black-elixir-fill'); selectedCell = null; validMoves = []; renderBoard(); return; }
 
             if (attacker.color === 'white') { whiteElixir -= attacker.cost; }
             else { blackElixir -= attacker.cost; }
@@ -434,20 +483,26 @@ function handleCellClick(r, c) {
                     }
                 }
             } else { 
-                boardState[r][c] = attacker; 
-                boardState[selectedCell.r][selectedCell.c] = null; 
+                boardState[r][c] = attacker; boardState[selectedCell.r][selectedCell.c] = null; 
             }
 
-            selectedCell = null; validMoves = [];
-            renderBoard();
+            selectedCell = null; validMoves = []; selectedCardType = null;
+            renderBoard(); renderHand();
         } else { 
             selectedCell = null; validMoves = []; renderBoard(); 
         }
     } else {
+        // ВЫБОР ФИГУРЫ
         if (clickedPiece) { 
+            // Если выбрана карта в руке, и мы кликнули на другую фигуру
+            if (selectedCardType && clickedPiece.type !== selectedCardType) {
+                return; // Нельзя выбрать другую фигуру
+            }
+            
             selectedCell = { r, c }; 
             validMoves = getValidMoves(r, c); 
-            renderBoard(); 
+            selectedCardType = null; // Сбрасываем карту при выборе фигуры
+            renderBoard(); renderHand(); 
         }
     }
 }
@@ -462,6 +517,7 @@ function resetGame() {
 // Инициализация
 initGame(true);
 renderDeck();
+renderHand();
 </script>
 </body>
 </html>
