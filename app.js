@@ -115,8 +115,10 @@ const s=t[n];
 e.src.indexOf(s.video)===-1&&(e.src=s.video,e.load(),e.play().catch(e=>console.log("Autoplay blocked")))
 }
 },1000);
-const t=localStorage.getItem('lastSenseiAdviceTime'),n=Date.now();
-(!t||n-parseInt(t)>216e5)&&setTimeout(()=>{showSenseiAdvice(),localStorage.setItem('lastSenseiAdviceTime',Date.now())},1500)
+// Убрана 6-часовая задержка, теперь совет вылезает при каждом заходе
+setTimeout(()=>{
+showSenseiAdvice();
+},1500);
 }
 
 function updateCharacterUI(){
