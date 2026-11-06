@@ -1,378 +1,239 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Шахматы RPG</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Sport App</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="style.css">
 <style>
-    body {
-        background-color: #0d0d0d;
-        color: #fff;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        margin: 0; padding: 0;
-        display: flex; flex-direction: column;
-        align-items: center; height: 100vh; overflow: hidden;
-        user-select: none;
-    }
-    .header {
-        width: 100%; padding: 10px; box-sizing: border-box;
-        display: flex; justify-content: space-between; align-items: center;
-        background: #1c1c1e; border-bottom: 1px solid #3a3a3c;
-    }
-    .turn-indicator { font-size: 16px; font-weight: bold; color: #ffcc00; }
-    
-    .board-container {
-        position: relative; width: 95vw; max-width: 400px; aspect-ratio: 1/1;
-        margin-top: 5px; border: 2px solid #3a3a3c; border-radius: 8px; overflow: hidden;
-    }
-    .board { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: 100%; height: 100%; }
-    .cell {
-        position: relative; display: flex; justify-content: center; align-items: center;
-        font-size: 30px; cursor: pointer;
-    }
-    .cell.white { background-color: #d1d1d6; }
-    .cell.black { background-color: #8e8e93; }
-    .cell.selected { background-color: rgba(52, 199, 89, 0.7) !important; }
-    .cell.valid-move { box-shadow: inset 0 0 0 3px #ffcc00; }
-    
-    .piece { position: relative; z-index: 2; pointer-events: none; }
-    .hp-bar {
-        position: absolute; bottom: 2px; left: 10%; width: 80%; height: 4px;
-        background: #000; border-radius: 3px; z-index: 3; pointer-events: none;
-    }
-    .hp-fill { height: 100%; background: #34c759; border-radius: 3px; transition: width 0.3s; }
-    
-    .lvl-badge {
-        position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
-        font-size: 9px; font-weight: bold; color: #fff; background: #ff3b30;
-        padding: 0 3px; border-radius: 10px; z-index: 4; pointer-events: none;
-        border: 1px solid #000;
-    }
+.history-card { background: #1c1c1e; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #2c2c2e; }
+.history-date { color: var(--accent-color); font-weight: bold; font-size: 15px; margin-bottom: 5px; }
+.history-food-item { font-size: 12px; color: #fff; margin-bottom: 5px; padding-left: 10px; border-left: 2px solid #34c759; display: flex; justify-content: space-between; }
+.history-water-item { font-size: 12px; color: #fff; margin-bottom: 5px; padding-left: 10px; border-left: 2px solid #5ac8fa; display: flex; justify-content: space-between; }
+.history-weight-item { font-size: 14px; color: #fff; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; }
+.custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
+.custom-modal.active { display: flex; }
+.custom-modal-content { background: #1c1c1e; border-radius: 16px; padding: 20px; width: 100%; max-width: 400px; box-sizing: border-box; position: relative; max-height: 90vh; overflow-y: auto;}
+.custom-modal-close { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 18px; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;}
+.compact-panel { background: rgba(28, 28, 30, 0.85); border-radius: 10px; padding: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; min-width: 0; box-sizing: border-box; cursor: pointer; transition: 0.2s;}
+.compact-panel:active { background: rgba(50, 50, 55, 0.9); }
+.compact-food-list { max-height: 50px; overflow-y: auto; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px; }
+.compact-food-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px; margin-bottom: 2px; font-size: 10px; }
+.quick-btn { background: #2c2c2e; color: white; border: 1px solid #3a3a3c; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; }
+.water-btn { background: rgba(90, 200, 250, 0.2); border: 1px solid #5ac8fa; color: #5ac8fa; border-radius: 4px; padding: 2px 4px; font-size: 10px; cursor: pointer; font-weight: bold; text-align: center; }
+.weight-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; margin-right: 5px; }
+.analysis-btn { background: rgba(255, 204, 0, 0.2); border: 1px solid var(--accent-color); color: var(--accent-color); padding: 6px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; }
+.diary-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 6px; padding: 2px 6px; font-size: 12px; cursor: pointer; }
+.diary-btn:active { background: rgba(255,255,255,0.3); }
+.chart-container { background: #2c2c2e; border-radius: 12px; padding: 10px; margin-top: 15px; position: relative; height: 200px; width: 100%; box-sizing: border-box;}
+.summary-box { background: rgba(52, 199, 89, 0.1); border: 1px solid #34c759; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+.summary-title { font-size: 14px; font-weight: bold; color: #34c759; margin-bottom: 8px; }
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; text-align: center; }
 
-    .bottom-ui {
-        width: 95vw; max-width: 400px; margin-top: auto; padding-bottom: 10px;
-        display: flex; flex-direction: column; gap: 5px;
-    }
-    .elixir-bar-container {
-        background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 12px; padding: 5px 10px;
-        display: flex; align-items: center; gap: 10px;
-    }
-    .elixir-fill-bg { flex: 1; height: 12px; background: #000; border-radius: 8px; overflow: hidden; position: relative; }
-    .elixir-fill { height: 100%; background: linear-gradient(90deg, #af52de, #ff2d55); width: 0%; transition: width 0.3s; }
-    .elixir-text { font-weight: bold; color: #ff2d55; font-size: 16px; min-width: 20px; text-align: right;}
+/* СТИЛИ ДЛЯ СТРИКА */
+.streak-badge { position: absolute; top: 15px; left: 15px; background: rgba(255, 87, 34, 0.15); border: 1px solid #ff5722; color: #ff5722; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; z-index: 40; display: flex; align-items: center; gap: 5px; cursor: pointer; transition: 0.3s; }
+@keyframes pulse-fire {
+    0% { transform: scale(1); box-shadow: 0 0 15px #ff5722; background: rgba(255, 87, 34, 0.4); color: #fff; }
+    50% { transform: scale(1.1); box-shadow: 0 0 25px #ff5722; background: rgba(255, 87, 34, 0.6); color: #fff; }
+    100% { transform: scale(1); box-shadow: 0 0 15px #ff5722; background: rgba(255, 87, 34, 0.4); color: #fff; }
+}
+.streak-pending { animation: pulse-fire 1.5s infinite; border: 2px solid #fff; }
 
-    .controls { display: flex; gap: 5px; margin-top: 5px; }
-    .btn { background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; padding: 8px; border-radius: 8px; font-size: 11px; cursor: pointer; flex: 1;}
+/* СТИЛИ ДЛЯ ВСПЛЫВАЮЩИХ УВЕДОМЛЕНИЙ */
+.motivation-toast { position: fixed; top: -150px; left: 50%; transform: translateX(-50%); background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 2px solid var(--accent-color); border-radius: 16px; padding: 15px 20px; display: flex; align-items: center; gap: 15px; z-index: 9999; box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(255, 204, 0, 0.3); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); width: 90%; max-width: 350px; }
+.motivation-toast.show { top: 20px; }
+.motivation-icon { font-size: 36px; }
+.motivation-text h3 { margin: 0 0 4px 0; color: var(--accent-color); font-size: 16px; }
+.motivation-text p { margin: 0; color: #fff; font-size: 13px; line-height: 1.3; }
 </style>
 </head>
-<body>
+<body class="male-theme">
 
-<div class="header">
-    <div class="turn-indicator" id="turn-text">Ход Белых ♔</div>
+<div id="auth-screen" class="screen active auth-screen">
+<div class="auth-container"><div class="auth-content"><div class="auth-title">Sport App</div><div class="inspiration-text">Стань лучшей версией себя.<br>Начни прямо сейчас.</div><div class="auth-buttons"><button class="auth-btn tg-btn" onclick="loginWithTelegram()">✈️ Продолжить через Telegram</button><div class="auth-divider"><span>или</span></div><button class="auth-btn email-btn" onclick="showEmailForm()">✉️ Войти по Email</button></div></div></div>
 </div>
 
-<div class="board-container">
-    <div class="board" id="board"></div>
+<div id="email-screen" class="screen">
+<div class="inner-screen">
+<button class="back-btn" onclick="closeScreen('email-screen')">← Назад</button>
+<h1 style="text-align: center; margin-bottom: 30px;">Вход / Регистрация</h1>
+<div class="form-group"><label>Email</label><input type="email" id="auth-email" placeholder="your@email.com"></div>
+<div class="form-group"><label>Пароль</label><input type="password" id="auth-password" placeholder="Минимум 6 символов"></div>
+<button class="btn" onclick="handleEmailAuth()" id="email-submit-btn">Продолжить</button>
+</div>
 </div>
 
-<div class="bottom-ui">
-    <div class="elixir-bar-container">
-        <div class="elixir-fill-bg"><div class="elixir-fill" id="elixir-fill"></div></div>
-        <div class="elixir-text" id="elixir-text">0</div>
-    </div>
-    <div class="controls">
-        <button class="btn" onclick="testLevelUp()">👑 Прокачать Короля</button>
-        <button class="btn" onclick="resetGame()">🔄 Сброс</button>
-    </div>
+<div id="dashboard-screen" class="screen">
+<video id="character-video" class="video-background" autoplay loop muted playsinline></video>
+<div class="overlay" style="justify-content: flex-end; padding-bottom: 10px;">
+<!-- СТРИК -->
+<div id="streak-display" class="streak-badge" onclick="claimStreakReward()">🔥 0</div>
+
+<div style="display: flex; justify-content: space-between; position: absolute; top: 0px; left: 0px; right: 0px; z-index: 30; padding: 5px 10px; gap: 5px;">
+<button class="btn" style="background-color: rgba(44,44,46,0.7); color: white; width: auto; padding: 6px 12px; font-size: 12px; margin: 0; flex: 1; margin-left: 70px;" onclick="openProfileSettings()">⚙️ Настр.</button>
+<button class="btn" style="background-color: rgba(255,59,48,0.2); color: #ff3b30; width: auto; padding: 6px 12px; font-size: 12px; margin: 0; flex: 1; border: 1px solid #ff3b30;" onclick="logout()">Выйти</button>
+</div>
+<div class="top-info" style="margin-top: 0; margin-bottom: auto;">
+<div class="character-level" id="char-level" style="font-size: 14px;">Уровень 1</div>
+<div class="character-title" id="char-title" style="font-size: 28px;">Странник</div>
+<div class="xp-bar-container"><div class="xp-bar" id="xp-bar"></div></div>
+<p class="xp-text" id="xp-text" style="font-size: 11px;">0 / 100 XP</p>
+<div style="text-align: center;">
+<button class="weight-btn" onclick="openWeightDiary()">⚖️ <span id="current-weight-display">0</span> кг</button>
+<button class="analysis-btn" onclick="openGlobalStatsModal()">📈 Анализ</button>
+<!-- НОВАЯ КНОПКА ШАХМАТ -->
+<button class="analysis-btn" onclick="window.location.href='chess.html'" style="border-color: #af52de; color: #af52de; background: rgba(175, 82, 222, 0.1);">♟️ Шахматы</button>
+</div>
+</div>
+<div class="bottom-panel" style="gap: 8px;">
+<div class="stats-row" style="margin-bottom: 0;">
+<div class="stat-box" style="padding: 8px;"><p style="font-size: 10px;">Норма</p><h3 id="calories-norm" style="font-size: 16px;">0 ккал</h3></div>
+<div class="stat-box" style="padding: 8px;"><p style="font-size: 10px;">Сожжено</p><h3 id="burned-total" style="font-size: 16px;">0 ккал</h3></div>
+</div>
+<div style="display: flex; gap: 8px; margin-bottom: 4px; width: 100%; box-sizing: border-box;">
+<div class="compact-panel" style="flex: 1; border-color: rgba(90, 200, 250, 0.3);" onclick="openWaterDiary()">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+<div style="display: flex; flex-direction: column;"><h4 style="margin: 0; color: #5ac8fa; font-size: 10px; text-transform: uppercase;">💧 Вода</h4><span style="font-size: 11px; color: #fff; font-weight: bold; margin-top: 2px;"><span id="eaten-water">0</span>/<span id="norm-water">2000</span></span></div>
+<button class="diary-btn" onclick="event.stopPropagation(); openWaterDiary()">📜 Дневник</button>
+</div>
+<div style="display: flex; gap: 3px; align-items: stretch; margin-top: 5px;" onclick="event.stopPropagation();">
+<button class="water-btn" style="flex: 1;" onclick="addWater(200)">+200</button>
+<button class="water-btn" style="flex: 1;" onclick="addWater(500)">+500</button>
+<button id="custom-water-quick-btn" class="water-btn" style="flex: 1.5; background: rgba(90, 200, 250, 0.1);" onclick="quickAddCustomWater()">+Своя</button>
+</div>
+<div id="today-water-list" class="compact-food-list" style="border-color: rgba(90, 200, 250, 0.2);"></div>
+</div>
+<div class="compact-panel" style="flex: 1;" onclick="openFoodDiary()">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+<div style="display: flex; flex-direction: column;"><h4 style="margin: 0; color: #fff; font-size: 10px; text-transform: uppercase;">🍏 Еда</h4><span style="font-size: 11px; color: #8e8e93; margin-top: 2px;">КБЖУ</span></div>
+<button class="diary-btn" onclick="event.stopPropagation(); openFoodDiary()">📜 Дневник</button>
+</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; font-size: 10px; text-align: center; margin-top: 5px;">
+<div style="color: var(--accent-color); background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;"><span id="eaten-cal">0</span> Ккал</div>
+<div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;"><span id="eaten-prot">0</span> Бел.</div>
+<div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;"><span id="eaten-fat">0</span> Жир.</div>
+<div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;"><span id="eaten-carb">0</span> Угл.</div>
+</div>
+<div id="today-food-list" class="compact-food-list"></div>
+<div style="display: none;"><span id="norm-cal"></span><span id="norm-prot"></span><span id="norm-fat"></span><span id="norm-carb"></span></div>
+</div>
+</div>
+<div class="action-grid" style="margin-top: 4px;">
+<button class="action-btn" onclick="window.location.href='camera.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 2px;">📸</h3><p style="font-size: 10px;">Еда</p></button>
+<button class="action-btn" onclick="window.location.href='workout.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 2px;">💪</h3><p style="font-size: 10px;">Треня</p></button>
+<button class="action-btn" onclick="window.location.href='timer.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 2px;">⏱</h3><p style="font-size: 10px;">Таймер</p></button>
+<button class="action-btn" onclick="window.location.href='leaderboard.html'" style="padding: 10px 5px;"><h3 style="font-size: 20px; margin-bottom: 2px;">🏆</h3><p style="font-size: 10px;">Рейтинг</p></button>
+</div>
+</div>
+</div>
 </div>
 
-<script>
-const PIECES = {
-    'p': { name: 'Пешка', icon: '♟', cost: 1 },
-    'n': { name: 'Конь', icon: '♞', cost: 2 },
-    'b': { name: 'Слон', icon: '♝', cost: 3 },
-    'r': { name: 'Ладья', icon: '♜', cost: 4 },
-    'k': { name: 'Король', icon: '♚', cost: 5 },
-    'q': { name: 'Ферзь', icon: '♛', cost: 6 }
-};
+<div id="water-diary-screen" class="screen">
+<div class="inner-screen">
+<button class="back-btn" onclick="closeScreen('water-diary-screen')">← Назад</button>
+<h1 style="text-align: center; margin-bottom: 15px;">📜 Дневник воды</h1>
+<div style="display: flex; gap: 8px; margin-bottom: 15px;"><input type="number" id="custom-water-input" placeholder="Мл" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #3a3a3c; background: #2c2c2e; color: white; font-size: 16px; text-align: center;"><button class="btn" style="width: auto; margin: 0; padding: 10px 15px; background-color: #5ac8fa; color: #fff; font-size: 14px;" onclick="addWaterFromDiary()">Добавить</button></div>
+<div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+<div style="display: flex; gap: 10px; margin-bottom: 10px;">
+<div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">От</label><input type="date" id="water-start-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderWaterDiary()"></div>
+<div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">До</label><input type="date" id="water-end-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderWaterDiary()"></div>
+</div>
+<div style="display: flex; gap: 5px; flex-wrap: wrap;">
+<button class="quick-btn" onclick="setPeriod('water', '7days')">7 дней</button><button class="quick-btn" onclick="setPeriod('water', '30days')">30 дней</button><button class="quick-btn" onclick="setPeriod('water', 'month')">Этот месяц</button>
+</div>
+</div>
+<div id="water-summary" class="summary-box" style="border-color: #5ac8fa; background: rgba(90, 200, 250, 0.1); display: none;"><div class="summary-title" style="color: #5ac8fa;">Итого выпито:</div><div style="text-align: center; font-size: 20px; font-weight: bold; color: #fff;"><span id="water-total-ml">0</span> мл</div></div>
+<div class="chart-container"><canvas id="water-diary-chart"></canvas></div>
+<div id="water-diary-list" style="margin-top: 15px;"></div>
+</div>
+</div>
 
-const INITIAL_BOARD = [
-    ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
-    ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-    [null, null, null, null, null, null, null, null],
-    [null, null, null, null, null, null, null, null],
-    [null, null, null, null, null, null, null, null],
-    [null, null, null, null, null, null, null, null],
-    ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-    ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
-];
+<div id="food-diary-screen" class="screen">
+<div class="inner-screen">
+<button class="back-btn" onclick="closeScreen('food-diary-screen')">← Назад</button>
+<h1 style="text-align: center; margin-bottom: 15px;">📜 Дневник еды</h1>
+<div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+<div style="display: flex; gap: 10px; margin-bottom: 10px;">
+<div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">От</label><input type="date" id="food-start-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderFoodDiary()"></div>
+<div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">До</label><input type="date" id="food-end-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderFoodDiary()"></div>
+</div>
+<div style="display: flex; gap: 5px; flex-wrap: wrap;">
+<button class="quick-btn" onclick="setPeriod('food', '7days')">7 дней</button><button class="quick-btn" onclick="setPeriod('food', '30days')">30 дней</button><button class="quick-btn" onclick="setPeriod('food', 'month')">Этот месяц</button>
+</div>
+</div>
+<div id="food-summary" class="summary-box" style="display: none;"><div class="summary-title">Итого за период:</div><div class="summary-grid"><div><span id="food-total-cal" style="color: var(--accent-color); font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Ккал</span></div><div><span id="food-total-prot" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Бел.</span></div><div><span id="food-total-fat" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Жир.</span></div><div><span id="food-total-carb" style="color: #fff; font-weight: bold; font-size: 16px;">0</span><br><span style="font-size: 10px; color: #8e8e93;">Угл.</span></div></div></div>
+<div class="chart-container" style="height: 180px;"><canvas id="food-diary-cal-chart"></canvas></div>
+<div class="chart-container" style="height: 180px; margin-top: 10px;"><canvas id="food-diary-macro-chart"></canvas></div>
+<div id="food-diary-list" style="margin-top: 15px;"></div>
+</div>
+</div>
 
-let boardState = [];
-let selectedCell = null;
-let currentTurn = 'white';
-let elixir = 5;
-let elixirInterval = null;
-let validMoves = [];
+<div id="weight-diary-screen" class="screen">
+<div class="inner-screen">
+<button class="back-btn" onclick="closeScreen('weight-diary-screen')">← Назад</button>
+<h1 style="text-align: center; margin-bottom: 15px;">📜 Дневник веса</h1>
+<div style="display: flex; gap: 8px; margin-bottom: 15px;"><input type="number" id="modal-weight-input" step="0.1" style="flex: 1; padding: 10px; border-radius: 8px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 16px; text-align: center; outline: none;"><button class="btn" style="width: auto; margin: 0; padding: 10px 15px; background-color: #34c759; color: white; font-size: 14px;" onclick="saveWeightFromDiary()">Записать</button></div>
+<div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+<div style="display: flex; gap: 10px; margin-bottom: 10px;">
+<div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">От</label><input type="date" id="weight-start-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderWeightDiary()"></div>
+<div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">До</label><input type="date" id="weight-end-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderWeightDiary()"></div>
+</div>
+<div style="display: flex; gap: 5px; flex-wrap: wrap;">
+<button class="quick-btn" onclick="setPeriod('weight', '7days')">7 дней</button><button class="quick-btn" onclick="setPeriod('weight', '30days')">30 дней</button><button class="quick-btn" onclick="setPeriod('weight', 'month')">Этот месяц</button>
+</div>
+</div>
+<div id="weight-summary" class="summary-box" style="border-color: #ffcc00; background: rgba(255, 204, 0, 0.1); display: none;"><div class="summary-title" style="color: #ffcc00;">Разница за период:</div><div id="weight-diff" style="text-align: center; font-size: 20px; font-weight: bold; color: #fff;"></div></div>
+<div class="chart-container"><canvas id="weight-diary-chart"></canvas></div>
+<div id="weight-diary-list" style="margin-top: 15px;"></div>
+</div>
+</div>
 
-function initGame() {
-    boardState = INITIAL_BOARD.map(row => row.map(pieceCode => {
-        if (!pieceCode) return null;
-        let type = pieceCode.toLowerCase();
-        let color = pieceCode === pieceCode.toUpperCase() ? 'white' : 'black';
-        return {
-            type: type, color: color,
-            level: 1, hp: 1, maxHp: 1,
-            cost: PIECES[type].cost, icon: PIECES[type].icon,
-            hasMoved: false
-        };
-    }));
-    
-    currentTurn = 'white';
-    elixir = 5;
-    selectedCell = null;
-    validMoves = [];
-    
-    clearInterval(elixirInterval);
-    elixirInterval = setInterval(() => {
-        if (elixir < 10) { elixir++; updateElixirUI(); }
-    }, 1000);
+<div id="global-stats-screen" class="screen">
+<div class="inner-screen">
+<button class="back-btn" onclick="closeScreen('global-stats-screen')">← Назад</button>
+<h1 style="text-align: center; margin-bottom: 15px;">📊 Полный Анализ</h1>
+<div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px;"><div style="display: flex; gap: 10px;"><div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">От</label><input type="date" id="global-start-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderAllCharts()"></div><div style="flex: 1;"><label style="font-size: 11px; color: #8e8e93;">До</label><input type="date" id="global-end-date" style="width: 100%; padding: 6px; border-radius: 6px; background: #2c2c2e; color: white; border: 1px solid #3a3a3c; font-size: 12px;" onchange="renderAllCharts()"></div></div></div>
+<div class="chart-container"><canvas id="g-weight-chart"></canvas></div><div class="chart-container"><canvas id="g-calories-chart"></canvas></div><div class="chart-container"><canvas id="g-macros-chart"></canvas></div><div class="chart-container"><canvas id="g-water-chart"></canvas></div>
+</div>
+</div>
 
-    renderBoard();
-    updateElixirUI();
-    updateTurnUI();
-}
+<div id="profile-settings-screen" class="screen">
+<div class="inner-screen">
+<button class="back-btn" onclick="closeScreen('profile-settings-screen')">← Назад</button>
+<h1 style="text-align: center; margin-bottom: 30px;">Настройки</h1>
+<div id="link-section" style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-bottom: 20px;"><h3 style="margin-top: 0;" id="link-title">Привязка аккаунта</h3><p style="color: #8e8e93; font-size: 14px; margin-bottom: 15px;" id="link-desc">Привяжите второй способ входа.</p><div id="link-email-form"><div class="form-group"><input type="email" id="link-email" placeholder="your@email.com"></div><div class="form-group"><input type="password" id="link-password" placeholder="Пароль (мин. 6 символов)"></div><button class="btn" onclick="linkEmailToTelegram()">Привязать Email</button></div><div id="link-tg-form" style="display: none;"><p style="font-size: 14px; color: #fff; margin-bottom: 10px;">Ваш Telegram ID: <b id="current-tg-id">неизвестно</b></p><button class="btn" onclick="linkTelegramToEmail()">Подтвердить привязку</button></div></div>
+<div style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-bottom: 20px;"><h3 style="margin-top: 0;">Изменить данные</h3><div class="form-group"><label>Возраст</label><input type="number" id="age" placeholder="25"></div><div class="form-group"><label>Вес (кг)</label><input type="number" id="weight" placeholder="70" step="0.1"></div><div class="form-group"><label>Рост (см)</label><input type="number" id="height" placeholder="175"></div><div class="form-group"><label>Пол</label><select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div><div class="form-group"><label>Цель</label><select id="goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div><div class="form-group" style="margin-top: 15px; border-top: 1px solid #3a3a3c; padding-top: 15px;"><label style="color: #5ac8fa;">Норма воды (мл)</label><input type="number" id="custom-water-goal" placeholder="Напр. 2000"></div><div class="form-group"><label style="color: #34c759;">Предпочтения в еде</label><input type="text" id="food-preference" placeholder="Напр: без лактозы, люблю рыбу"></div></div>
+<div style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-bottom: 20px;"><h3 style="margin-top: 0;">Своя норма еды</h3><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"><div class="form-group" style="margin: 0;"><label>Калории</label><input type="number" id="custom-calories" placeholder="2000"></div><div class="form-group" style="margin: 0;"><label>Белки (г)</label><input type="number" id="custom-protein" placeholder="150"></div><div class="form-group" style="margin: 0;"><label>Жиры (г)</label><input type="number" id="custom-fat" placeholder="70"></div><div class="form-group" style="margin: 0;"><label>Углеводы (г)</label><input type="number" id="custom-carbs" placeholder="200"></div></div></div>
+<button class="btn" onclick="saveProfile()">Сохранить все данные</button>
+<div style="background: #1c1c1e; padding: 20px; border-radius: 16px; margin-top: 20px;"><h3 style="margin-top: 0;">Тест датчиков</h3><button id="test-shake-btn" class="btn" style="background-color: #007aff; color: white;" onclick="startShakeTest()">📳 Начать тест</button><button id="stop-shake-btn" class="btn" style="background-color: #ff3b30; color: white; display: none;" onclick="stopShakeTest()">🛑 СТОП</button></div>
+</div>
+</div>
 
-function renderBoard() {
-    const boardEl = document.getElementById('board');
-    boardEl.innerHTML = '';
-    
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const cell = document.createElement('div');
-            cell.className = `cell ${(r + c) % 2 === 0 ? 'white' : 'black'}`;
-            cell.onclick = () => handleCellClick(r, c);
-            
-            if (selectedCell && selectedCell.r === r && selectedCell.c === c) cell.classList.add('selected');
-            if (validMoves.some(m => m.r === r && m.c === c)) cell.classList.add('valid-move');
-            
-            const piece = boardState[r][c];
-            if (piece) {
-                const pieceEl = document.createElement('div');
-                pieceEl.className = 'piece';
-                pieceEl.innerText = piece.icon;
-                pieceEl.style.color = piece.color === 'white' ? '#fff' : '#000';
-                pieceEl.style.textShadow = piece.color === 'white' ? '0 0 2px #000' : '0 0 2px #fff';
-                
-                const lvlBadge = document.createElement('div');
-                lvlBadge.className = 'lvl-badge';
-                lvlBadge.innerText = piece.level;
-                if (piece.type === 'k') lvlBadge.style.background = '#ffcc00';
-                
-                const hpBar = document.createElement('div');
-                hpBar.className = 'hp-bar';
-                const hpFill = document.createElement('div');
-                hpFill.className = 'hp-fill';
-                let hpPercent = (piece.hp / piece.maxHp) * 100;
-                hpFill.style.width = `${hpPercent}%`;
-                if(hpPercent <= 30) hpFill.style.background = '#ff3b30';
-                hpBar.appendChild(hpFill);
-                
-                cell.appendChild(pieceEl);
-                cell.appendChild(lvlBadge);
-                cell.appendChild(hpBar);
-            }
-            boardEl.appendChild(cell);
-        }
-    }
-}
+<div id="norm-modal" class="custom-modal">
+<div class="custom-modal-content">
+<button class="custom-modal-close" onclick="closeCustomNormModal()">✖</button>
+<h3 style="margin-top: 0; text-align: center; font-size: 16px;">Своя норма еды</h3>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"><div class="form-group" style="margin: 0;"><label>Ккал</label><input type="number" id="modal-calories" placeholder="2000"></div><div class="form-group" style="margin: 0;"><label>Белки</label><input type="number" id="modal-protein" placeholder="150"></div><div class="form-group" style="margin: 0;"><label>Жиры</label><input type="number" id="modal-fat" placeholder="70"></div><div class="form-group" style="margin: 0;"><label>Углев.</label><input type="number" id="modal-carbs" placeholder="200"></div></div>
+<button class="btn" style="margin-top: 15px;" onclick="saveCustomNormFromModal()">Сохранить</button>
+</div>
+</div>
 
-function updateElixirUI() {
-    document.getElementById('elixir-fill').style.width = (elixir / 10 * 100) + '%';
-    document.getElementById('elixir-text').innerText = elixir;
-}
+<div id="onboarding-modal" class="custom-modal">
+<div class="custom-modal-content">
+<h3 style="margin-top: 0; text-align: center; font-size: 18px; color: var(--accent-color);">Добро пожаловать! 🏆</h3>
+<p style="color: #8e8e93; font-size: 13px; text-align: center; margin-bottom: 15px;">Заполни свои данные для расчета нормы.</p>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"><div class="form-group" style="margin: 0;"><label>Возраст</label><input type="number" id="onboarding-age" placeholder="25"></div><div class="form-group" style="margin: 0;"><label>Вес (кг)</label><input type="number" id="onboarding-weight" placeholder="70" step="0.1"></div><div class="form-group" style="margin: 0;"><label>Рост (см)</label><input type="number" id="onboarding-height" placeholder="175"></div><div class="form-group" style="margin: 0;"><label>Пол</label><select id="onboarding-gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div></div>
+<div class="form-group" style="margin-top: 10px;"><label>Цель</label><select id="onboarding-goal"><option value="lose">Похудеть</option><option value="gain">Набрать массу</option></select></div>
+<div class="form-group"><label>Предпочтения в еде</label><input type="text" id="onboarding-food-preference" placeholder="Напр: без лактозы, люблю рыбу"></div>
+<button class="btn" style="margin-top: 15px;" onclick="saveOnboardingData()">Сохранить и начать</button>
+</div>
+</div>
 
-function updateTurnUI() {
-    const turnEl = document.getElementById('turn-text');
-    turnEl.innerText = currentTurn === 'white' ? 'Ход Белых ♔' : 'Ход Черных ♚';
-    turnEl.style.color = currentTurn === 'white' ? '#fff' : '#ff3b30';
-}
-
-// --- ЛОГИКА ХОДОВ ---
-function getValidMoves(r, c) {
-    const piece = boardState[r][c];
-    if (!piece) return [];
-    let moves = [];
-    
-    const isEnemy = (target) => target && target.color !== piece.color;
-    const isEmpty = (target) => target === null;
-    
-    const addMove = (nr, nc) => {
-        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
-            if (isEmpty(boardState[nr][nc]) || isEnemy(boardState[nr][nc])) {
-                moves.push({ r: nr, c: nc });
-                return true; // Можно продолжать (для дальнобойных)
-            }
-        }
-        return false;
-    };
-
-    if (piece.type === 'p') { // Пешка
-        let dir = piece.color === 'white' ? -1 : 1;
-        if (isEmpty(boardState[r+dir]?.[c])) {
-            moves.push({r: r+dir, c: c});
-            if (!piece.hasMoved && isEmpty(boardState[r+dir*2]?.[c])) moves.push({r: r+dir*2, c: c});
-        }
-        // Атака по диагонали
-        if (isEnemy(boardState[r+dir]?.[c-1])) moves.push({r: r+dir, c: c-1});
-        if (isEnemy(boardState[r+dir]?.[c+1])) moves.push({r: r+dir, c: c+1});
-    } 
-    else if (piece.type === 'n') { // Конь
-        const jumps = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
-        jumps.forEach(([dr, dc]) => addMove(r+dr, c+dc));
-    } 
-    else if (piece.type === 'k') { // Король
-        const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
-        dirs.forEach(([dr, dc]) => addMove(r+dr, c+dc));
-        // Рокировка (упрощенная проверка)
-        if (!piece.hasMoved) {
-            if (boardState[r][c+3] && boardState[r][c+3].type === 'r' && !boardState[r][c+3].hasMoved) {
-                if (!boardState[r][c+1] && !boardState[r][c+2]) moves.push({r: r, c: c+2, castling: true});
-            }
-            if (boardState[r][c-4] && boardState[r][c-4].type === 'r' && !boardState[r][c-4].hasMoved) {
-                if (!boardState[r][c-1] && !boardState[r][c-2] && !boardState[r][c-3]) moves.push({r: r, c: c-2, castling: true});
-            }
-        }
-    } 
-    else {
-        // Слон, Ладья, Ферзь
-        const dirs = [];
-        if (piece.type === 'b' || piece.type === 'q') dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
-        if (piece.type === 'r' || piece.type === 'q') dirs.push([-1,0],[1,0],[0,-1],[0,1]);
-        
-        dirs.forEach(([dr, dc]) => {
-            let nr = r + dr, nc = c + dc;
-            while (addMove(nr, nc)) {
-                if (boardState[nr][nc] !== null) break; // Если встретили фигуру, останавливаемся
-                nr += dr; nc += dc;
-            }
-        });
-    }
-    return moves;
-}
-
-// Проверка, бьет ли враг эту клетку
-function isSquareAttacked(targetR, targetC, enemyColor) {
-    for (let r=0; r<8; r++) {
-        for (let c=0; c<8; c++) {
-            let p = boardState[r][c];
-            if (p && p.color === enemyColor) {
-                // Временно ставим null, чтобы проверить ход (чтобы пешки не "видели" своих)
-                let moves = getValidMoves(r, c);
-                if (moves.some(m => m.r === targetR && m.c === targetC)) return true;
-            }
-        }
-    }
-    return false;
-}
-
-function handleCellClick(r, c) {
-    const clickedPiece = boardState[r][c];
-    
-    if (selectedCell) {
-        const move = validMoves.find(m => m.r === r && m.c === c);
-        
-        if (move) {
-            const attacker = boardState[selectedCell.r][selectedCell.c];
-            
-            // Проверка эликсира
-            if (elixir < attacker.cost) {
-                alert(`Недостаточно эликсира! Нужно ${attacker.cost}, у вас ${elixir}.`);
-                selectedCell = null; validMoves = []; renderBoard(); return;
-            }
-
-            // Тратим эликсир
-            elixir -= attacker.cost;
-            updateElixirUI();
-
-            // РОКИРОВКА
-            if (move.castling) {
-                let rookFromC = move.c === 6 ? 7 : 0;
-                let rookToC = move.c === 6 ? 5 : 3;
-                boardState[selectedCell.r][rookToC] = boardState[selectedCell.r][rookFromC];
-                boardState[selectedCell.r][rookFromC] = null;
-                boardState[selectedCell.r][rookToC].hasMoved = true;
-            }
-
-            attacker.hasMoved = true;
-
-            // ЕСЛИ ТАМ ВРАГ (АТАКА)
-            if (clickedPiece && clickedPiece.color !== attacker.color) {
-                let damage = attacker.level;
-                clickedPiece.hp -= damage;
-                
-                if (clickedPiece.hp <= 0) {
-                    // УБИЙСТВО: Атакующий встает на место
-                    boardState[r][c] = attacker;
-                    boardState[selectedCell.r][selectedCell.c] = null;
-                    if (clickedPiece.type === 'k') endGame(attacker.color);
-                } else {
-                    // ВРАГ ВЫЖИЛ: Атакующий остается на месте
-                    alert(`Вы нанесли ${damage} урона! У врага осталось ${clickedPiece.hp} HP.`);
-                }
-            } else {
-                // ПРОСТО ХОД
-                boardState[r][c] = attacker;
-                boardState[selectedCell.r][selectedCell.c] = null;
-            }
-
-            // ПРОВЕРКА КОРОЛЯ (Авто-урон)
-            let kingPos = null;
-            for(let i=0; i<8; i++) for(let j=0; j<8; j++) {
-                if(boardState[i][j] && boardState[i][j].type === 'k' && boardState[i][j].color === attacker.color) kingPos = {r: i, c: j};
-            }
-            
-            if (kingPos && isSquareAttacked(kingPos.r, kingPos.c, attacker.color === 'white' ? 'black' : 'white')) {
-                let king = boardState[kingPos.r][kingPos.c];
-                king.hp -= 1; // Урон от шаха (1 уровень)
-                alert(`ШАХ! Ваш Король получил 1 урон без траты эликсира. Осталось ${king.hp} HP.`);
-                if (king.hp <= 0) endGame(attacker.color === 'white' ? 'black' : 'white');
-            }
-
-            selectedCell = null; validMoves = [];
-            currentTurn = currentTurn === 'white' ? 'black' : 'white';
-            updateTurnUI(); renderBoard();
-        } else {
-            // Клик мимо валидного хода
-            selectedCell = null; validMoves = []; renderBoard();
-        }
-    } else {
-        if (clickedPiece && clickedPiece.color === currentTurn) {
-            selectedCell = { r, c };
-            validMoves = getValidMoves(r, c);
-            renderBoard();
-        }
-    }
-}
-
-function testLevelUp() {
-    for (let r=0; r<8; r++) for (let c=0; c<8; c++) {
-        let p = boardState[r][c];
-        if (p && p.type === 'k' && p.color === 'white') {
-            p.level += 5; p.maxHp = p.level; p.hp = p.level;
-            renderBoard();
-            return;
-        }
-    }
-}
-
-function endGame(winnerColor) {
-    clearInterval(elixirInterval);
-    setTimeout(() => alert(`Игра окончена! Победили ${winnerColor === 'white' ? 'Белые' : 'Черные'}!`), 100);
-}
-
-function resetGame() { initGame(); }
-
-initGame();
-</script>
+<script src="quotes.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
