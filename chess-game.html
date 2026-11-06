@@ -140,7 +140,6 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </div>
 
 <script>
-// === ЗВУКОВОЙ ДВИЖОК (Web Audio API) ===
 let audioCtx = null;
 function initAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -148,40 +147,40 @@ function initAudio() {
 }
 function playSound(type) {
     if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    const now = audioCtx.currentTime;
-
-    if (type === 'move') {
-        osc.type = 'sine'; osc.frequency.setValueAtTime(400, now);
-        osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-        gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-        osc.start(now); osc.stop(now + 0.1);
-    } else if (type === 'hit') {
-        osc.type = 'square'; osc.frequency.setValueAtTime(150, now);
-        osc.frequency.exponentialRampToValueAtTime(50, now + 0.15);
-        gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-        osc.start(now); osc.stop(now + 0.15);
-    } else if (type === 'pain') {
-        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, now);
-        osc.frequency.linearRampToValueAtTime(500, now + 0.1);
-        osc.frequency.linearRampToValueAtTime(200, now + 0.2);
-        gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-        osc.start(now); osc.stop(now + 0.2);
-    } else if (type === 'kill') {
-        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(600, now);
-        osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
-        gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-        osc.start(now); osc.stop(now + 0.3);
-        const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain();
-        osc2.connect(gain2); gain2.connect(audioCtx.destination);
-        osc2.type = 'square'; osc2.frequency.setValueAtTime(80, now);
-        osc2.frequency.exponentialRampToValueAtTime(30, now + 0.2);
-        gain2.gain.setValueAtTime(0.2, now); gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-        osc2.start(now); osc2.stop(now + 0.2);
-    }
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+        if (type === 'move') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(400, now);
+            osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        } else if (type === 'hit') {
+            osc.type = 'square'; osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(50, now + 0.15);
+            gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.start(now); osc.stop(now + 0.15);
+        } else if (type === 'pain') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, now);
+            osc.frequency.linearRampToValueAtTime(500, now + 0.1);
+            osc.frequency.linearRampToValueAtTime(200, now + 0.2);
+            gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            osc.start(now); osc.stop(now + 0.2);
+        } else if (type === 'kill') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+            gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now); osc.stop(now + 0.3);
+            const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain();
+            osc2.connect(gain2); gain2.connect(audioCtx.destination);
+            osc2.type = 'square'; osc2.frequency.setValueAtTime(80, now);
+            osc2.frequency.exponentialRampToValueAtTime(30, now + 0.2);
+            gain2.gain.setValueAtTime(0.2, now); gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            osc2.start(now); osc2.stop(now + 0.2);
+        }
+    } catch(e) { console.log("Audio error", e); }
 }
 
 const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
@@ -190,55 +189,108 @@ let boardState=[],selectedCell=null,validMoves=[];
 let whiteElixir=5,blackElixir=5,elixirInterval=null;
 let currentHand=['p','n','b','r'],selectedCardType=null;
 let enPassantTarget=null,promotionTarget=null,gameActive=true;
-let isAnimating = false; // Флаг для блокировки кликов во время боя
+let isAnimating = false;
 
 function triggerShake(id){const el=document.getElementById(id);if(!el)return;el.style.transform='translateX(-6px)';setTimeout(()=>el.style.transform='translateX(6px)',80);setTimeout(()=>el.style.transform='',160);}
 function formatNum(n){if(Number.isInteger(n))return n.toString();return Number(n.toFixed(2)).toString();}
-function createPiece(code){if(!code)return null;let type=code.toLowerCase();let color=code===code.toUpperCase()?'white':'black';let level=1;return{type:type,color:color,level:level,hp:level,maxHp:level,cost:PIECES[type].cost,icon:PIECES[type].icon,hasMoved:false};}
-function initGame(){let initialData=DEFAULT_BOARD;const saved=localStorage.getItem('chessSetup');if(saved){try{const parsed=JSON.parse(saved);if(parsed&&parsed.length===8)initialData=parsed;}catch(e){}}
-boardState=initialData.map(row=>row.map(pc=>createPiece(pc)));
-selectedCell=null;validMoves=[];selectedCardType=null;whiteElixir=5;blackElixir=5;enPassantTarget=null;promotionTarget=null;gameActive=true;isAnimating=false;
-document.getElementById('promotion-modal').classList.remove('active');
-clearInterval(elixirInterval);
-elixirInterval=setInterval(()=>{if(gameActive){if(whiteElixir<10)whiteElixir++;if(blackElixir<10)blackElixir++;updateElixirUI();}},1000);
-renderBoard();renderHand();updateElixirUI();}
-function renderBoard(){const boardEl=document.getElementById('board');boardEl.innerHTML='';
-for(let r=0;r<8;r++){for(let c=0;c<8;c++){
-const cell=document.createElement('div');
-cell.className=`cell ${(r+c)%2===0?'white':'black'}`;
-cell.dataset.r = r; cell.dataset.c = c;
-cell.onclick=()=>handleCellClick(r,c);
-if(selectedCell&&selectedCell.r===r&&selectedCell.c===c)cell.classList.add('selected');
-if(validMoves.some(m=>m.r===r&&m.c===c))cell.classList.add('valid-move');
-const piece=boardState[r][c];
-if(piece){
-if(selectedCardType===piece.type){if(piece.color==='white'&&whiteElixir>=piece.cost)cell.classList.add('highlight-piece');if(piece.color==='black'&&blackElixir>=piece.cost)cell.classList.add('highlight-piece');}
-const pieceEl=document.createElement('div');pieceEl.className='piece';pieceEl.innerText=piece.icon;
-pieceEl.style.color=piece.color==='white'?'#fff':'#0a0a0a';
-pieceEl.style.textShadow=piece.color==='white'?'0 1px 0 #666,0 2px 0 #444,0 3px 4px rgba(0,0,0,0.9)':'0 1px 0 #555,0 2px 3px rgba(255,255,255,0.3),0 3px 4px rgba(0,0,0,0.9)';
-pieceEl.style.animationDelay=`${((r*8)+c)*0.1}s`;
-const costBadge=document.createElement('div');costBadge.className='top-cost-badge';costBadge.innerText=piece.cost;
-const hpBar=document.createElement('div');hpBar.className='bottom-hp-bar';
-let hpPercent=(piece.hp/piece.maxHp)*100;
-let barColor='#34c759';if(hpPercent<=30)barColor='#ff3b30';else if(hpPercent<=60)barColor='#ffcc00';
-hpBar.style.background=`linear-gradient(180deg,${barColor},${barColor}99)`;
-let lvlDisplay=formatNum(piece.level);
-hpBar.innerHTML=`<span class="lvl-num">${lvlDisplay}</span>`;
-const hpText=document.createElement('div');hpText.className='hp-text-below';
-hpText.innerText=`${formatNum(piece.hp)}/${formatNum(piece.maxHp)}`;
-cell.appendChild(pieceEl);cell.appendChild(costBadge);cell.appendChild(hpBar);cell.appendChild(hpText);}
-boardEl.appendChild(cell);}}}
-function renderHand(){const handEl=document.getElementById('hand-container');handEl.innerHTML='';
-currentHand.forEach(type=>{const p=PIECES[type];const card=document.createElement('div');
-card.className=`hand-card ${selectedCardType===type?'active':''}`;
-card.innerHTML=`<div class="hand-cost">${p.cost}</div><div class="hand-icon">${p.icon}</div><div class="hand-name">${p.name}</div>`;
-card.onclick=()=>{if(selectedCardType===type){selectedCardType=null;}else{selectedCardType=type;selectedCell=null;validMoves=[];}renderHand();renderBoard();};
-handEl.appendChild(card);});}
-function updateElixirUI(){document.getElementById('white-elixir-fill').style.width=(whiteElixir/10*100)+'%';document.getElementById('white-elixir-text').innerText=whiteElixir;document.getElementById('black-elixir-fill').style.width=(blackElixir/10*100)+'%';document.getElementById('black-elixir-text').innerText=blackElixir;}
+
+// Исправленная функция создания фигуры (понимает и строки, и объекты)
+function createPiece(pc){
+    if(!pc)return null;
+    let type, color;
+    if(typeof pc === 'string'){
+        type = pc.toLowerCase();
+        color = pc === pc.toUpperCase() ? 'white' : 'black';
+    } else if (typeof pc === 'object'){
+        type = pc.type;
+        color = pc.color;
+    } else {
+        return null;
+    }
+    if(!PIECES[type]) return null;
+    let level = 1;
+    return{type:type,color:color,level:level,hp:level,maxHp:level,cost:PIECES[type].cost,icon:PIECES[type].icon,hasMoved:false};
+}
+
+function initGame(){
+    let initialData=DEFAULT_BOARD;
+    const saved=localStorage.getItem('chessSetup');
+    if(saved){
+        try{
+            const parsed=JSON.parse(saved);
+            if(parsed&&parsed.length===8)initialData=parsed;
+        }catch(e){}
+    }
+    boardState=initialData.map(row=>row.map(pc=>createPiece(pc)));
+    selectedCell=null;validMoves=[];selectedCardType=null;whiteElixir=5;blackElixir=5;enPassantTarget=null;promotionTarget=null;gameActive=true;isAnimating=false;
+    document.getElementById('promotion-modal').classList.remove('active');
+    clearInterval(elixirInterval);
+    elixirInterval=setInterval(()=>{if(gameActive){if(whiteElixir<10)whiteElixir++;if(blackElixir<10)blackElixir++;updateElixirUI();}},1000);
+    renderBoard();renderHand();updateElixirUI();
+}
+
+function renderBoard(){
+    const boardEl=document.getElementById('board');
+    if(!boardEl) return;
+    boardEl.innerHTML='';
+    for(let r=0;r<8;r++){for(let c=0;c<8;c++){
+        const cell=document.createElement('div');
+        cell.className=`cell ${(r+c)%2===0?'white':'black'}`;
+        cell.dataset.r = r; cell.dataset.c = c;
+        cell.onclick=()=>handleCellClick(r,c);
+        if(selectedCell&&selectedCell.r===r&&selectedCell.c===c)cell.classList.add('selected');
+        if(validMoves.some(m=>m.r===r&&m.c===c))cell.classList.add('valid-move');
+        const piece=boardState[r][c];
+        if(piece){
+            if(selectedCardType===piece.type){if(piece.color==='white'&&whiteElixir>=piece.cost)cell.classList.add('highlight-piece');if(piece.color==='black'&&blackElixir>=piece.cost)cell.classList.add('highlight-piece');}
+            const pieceEl=document.createElement('div');pieceEl.className='piece';pieceEl.innerText=piece.icon;
+            pieceEl.style.color=piece.color==='white'?'#fff':'#0a0a0a';
+            pieceEl.style.textShadow=piece.color==='white'?'0 1px 0 #666,0 2px 0 #444,0 3px 4px rgba(0,0,0,0.9)':'0 1px 0 #555,0 2px 3px rgba(255,255,255,0.3),0 3px 4px rgba(0,0,0,0.9)';
+            pieceEl.style.animationDelay=`${((r*8)+c)*0.1}s`;
+            const costBadge=document.createElement('div');costBadge.className='top-cost-badge';costBadge.innerText=piece.cost;
+            const hpBar=document.createElement('div');hpBar.className='bottom-hp-bar';
+            let hpPercent=(piece.hp/piece.maxHp)*100;
+            let barColor='#34c759';if(hpPercent<=30)barColor='#ff3b30';else if(hpPercent<=60)barColor='#ffcc00';
+            hpBar.style.background=`linear-gradient(180deg,${barColor},${barColor}99)`;
+            let lvlDisplay=formatNum(piece.level);
+            hpBar.innerHTML=`<span class="lvl-num">${lvlDisplay}</span>`;
+            const hpText=document.createElement('div');hpText.className='hp-text-below';
+            hpText.innerText=`${formatNum(piece.hp)}/${formatNum(piece.maxHp)}`;
+            cell.appendChild(pieceEl);cell.appendChild(costBadge);cell.appendChild(hpBar);cell.appendChild(hpText);
+        }
+        boardEl.appendChild(cell);
+    }}
+}
+
+function renderHand(){
+    const handEl=document.getElementById('hand-container');
+    if(!handEl) return;
+    handEl.innerHTML='';
+    currentHand.forEach(type=>{
+        const p=PIECES[type];const card=document.createElement('div');
+        card.className=`hand-card ${selectedCardType===type?'active':''}`;
+        card.innerHTML=`<div class="hand-cost">${p.cost}</div><div class="hand-icon">${p.icon}</div><div class="hand-name">${p.name}</div>`;
+        card.onclick=()=>{
+            initAudio(); // Разрешаем звук при клике на карту
+            if(selectedCardType===type){selectedCardType=null;}else{selectedCardType=type;selectedCell=null;validMoves=[];}
+            renderHand();renderBoard();
+        };
+        handEl.appendChild(card);
+    });
+}
+
+function updateElixirUI(){
+    document.getElementById('white-elixir-fill').style.width=(whiteElixir/10*100)+'%';
+    document.getElementById('white-elixir-text').innerText=whiteElixir;
+    document.getElementById('black-elixir-fill').style.width=(blackElixir/10*100)+'%';
+    document.getElementById('black-elixir-text').innerText=blackElixir;
+}
+
 function isKingInCheck(color,board){let kPos=null;for(let r=0;r<8;r++){for(let c=0;c<8;c++){if(board[r][c]&&board[r][c].type==='k'&&board[r][c].color===color)kPos={r,c};}}if(!kPos)return false;let enemyColor=color==='white'?'black':'white';for(let r=0;r<8;r++){for(let c=0;c<8;c++){let p=board[r][c];if(p&&p.color===enemyColor){let moves=getValidMoves(r,c,board,true);if(moves.some(m=>m.r===kPos.r&&m.c===kPos.c))return true;}}}return false;}
 function hasAnyValidMoves(color){for(let r=0;r<8;r++){for(let c=0;c<8;c++){let p=boardState[r][c];if(p&&p.color===color){if(getValidMoves(r,c).length>0)return true;}}}return false;}
 function checkGameEnd(){if(!gameActive)return;let whiteInCheck=isKingInCheck('white',boardState);let blackInCheck=isKingInCheck('black',boardState);let whiteMoves=hasAnyValidMoves('white');let blackMoves=hasAnyValidMoves('black');if(!whiteMoves&&whiteInCheck){endGame('Черные','МАТ!');return;}if(!blackMoves&&blackInCheck){endGame('Белые','МАТ!');return;}if(!whiteMoves&&!whiteInCheck){endGame('Ничья','ПАТ!');return;}if(!blackMoves&&!blackInCheck){endGame('Ничья','ПАТ!');return;}}
 function endGame(winner,reason){gameActive=false;clearInterval(elixirInterval);setTimeout(()=>{alert(`Игра окончена! ${reason}\nПобедитель: ${winner}`);},200);}
+
 function getValidMoves(r,c,boardData=null,ignoreCost=false){let b=boardData||boardState;const piece=b[r][c];if(!piece)return[];let moves=[];const isEnemy=t=>t&&t.color!==piece.color;const isEmpty=t=>t===null;const addMove=(nr,nc)=>{if(nr>=0&&nr<8&&nc>=0&&nc<8){if(isEmpty(b[nr][nc])||isEnemy(b[nr][nc])){moves.push({r:nr,c:nc});return true;}}return false;};
 if(piece.type==='p'){let dir=piece.color==='white'?-1:1;if(isEmpty(b[r+dir]?.[c])){moves.push({r:r+dir,c:c});if(!piece.hasMoved&&isEmpty(b[r+dir*2]?.[c]))moves.push({r:r+dir*2,c:c});}if(isEnemy(b[r+dir]?.[c-1]))moves.push({r:r+dir,c:c-1});if(isEnemy(b[r+dir]?.[c+1]))moves.push({r:r+dir,c:c+1});if(enPassantTarget&&enPassantTarget.r===r+dir&&(enPassantTarget.c===c-1||enPassantTarget.c===c+1)){moves.push({r:enPassantTarget.r,c:enPassantTarget.c,enPassant:true});}
 }else if(piece.type==='n'){[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr,dc])=>addMove(r+dr,c+dc));
@@ -255,8 +307,8 @@ function handleCellClick(r,c){
     if(selectedCell){
         const move=validMoves.find(m=>m.r===r&&m.c===c);
         if(move){
-            initAudio(); // Включаем звук при первом действии
-            isAnimating = true; // Блокируем доску
+            initAudio();
+            isAnimating = true;
             
             const attacker=boardState[selectedCell.r][selectedCell.c];
             
@@ -269,14 +321,12 @@ function handleCellClick(r,c){
             const fromR = selectedCell.r, fromC = selectedCell.c;
             const attackerEl = document.querySelector(`.cell[data-r="${fromR}"][data-c="${fromC}"] .piece`);
             
-            // Логика боя
             if(clickedPiece&&clickedPiece.color!==attacker.color){
                 const defenderEl = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"] .piece`);
                 let damage = attacker.level;
                 clickedPiece.hp -= damage;
                 let isKilled = clickedPiece.hp <= 0;
 
-                // Анимации и звуки
                 if (isKilled) {
                     playSound('kill');
                     if(attackerEl) { attackerEl.style.animation='none'; attackerEl.classList.add('attack-strong'); }
@@ -288,10 +338,9 @@ function handleCellClick(r,c){
                     if(defenderEl) { defenderEl.style.animation='none'; defenderEl.classList.add('pain'); }
                 }
 
-                // Ждем окончания анимации и обновляем состояние
                 setTimeout(() => {
                     if (isKilled) {
-                        boardState[r][c] = attacker; // Убийца встает на место жертвы
+                        boardState[r][c] = attacker;
                     }
                     boardState[fromR][fromC] = null;
                     
@@ -308,10 +357,9 @@ function handleCellClick(r,c){
                     
                     setTimeout(()=>checkKingAndEnd(), 150);
 
-                }, 450); // 450мс на анимацию
+                }, 450);
 
             } else {
-                // Обычный ход без боя
                 playSound('move');
                 
                 if(move.castling){
