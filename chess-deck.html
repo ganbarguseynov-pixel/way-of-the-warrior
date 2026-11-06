@@ -75,8 +75,8 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 
 <div class="top-bar">
 <div class="currency-row">
-<div class="currency coins">🪙 1250</div>
-<div class="currency gems">💎 50</div>
+<div class="currency coins">🪙 <span id="deck-coins">1250</span></div>
+<div class="currency gems">💎 <span id="deck-gems">50</span></div>
 </div>
 <div class="sub-tabs">
 <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
@@ -107,7 +107,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </div>
 
 <div class="bottom-nav">
-<button class="nav-btn active" onclick="window.location.reload()">
+<button class="nav-btn active" onclick="window.location.href='chess-deck.html'">
 <div class="icon-wrap">
 <div class="deck-stack">
 <div class="deck-card"></div>
@@ -117,13 +117,18 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </div>
 <span>Колода</span>
 </button>
-<button class="nav-btn" onclick="window.location.href='chess-game.html'">
-<div class="icon-wrap"><span class="icon">♞</span></div>
-<span>Игра</span>
+<button class="nav-btn" onclick="window.location.href='chess-main.html'">
+<div class="icon-wrap"><span class="icon">🏰</span></div>
+<span>Главная</span>
 </button>
 </div>
 
 <script>
+let coins = parseInt(localStorage.getItem('cr_coins') || '1250');
+let gems = parseInt(localStorage.getItem('cr_gems') || '50');
+document.getElementById('deck-coins').innerText = coins;
+document.getElementById('deck-gems').innerText = gems;
+
 function switchSubTab(tab){
 document.getElementById('screen-cards').classList.remove('active');
 document.getElementById('screen-setup').classList.remove('active');
@@ -153,130 +158,58 @@ const DEFAULT_BOARD=[['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p',
 let setupBoard=[];let selectedSetupCell=null;let editMode=false;let snapshotBeforeEdit=null;
 
 function formatNum(n){if(Number.isInteger(n))return n.toString();return Number(n.toFixed(2)).toString();}
-
-// Исправленная функция создания фигуры
 function createPiece(pc){
-    if(!pc)return null;
-    let type, color;
-    if(typeof pc === 'string'){
-        type = pc.toLowerCase();
-        color = pc === pc.toUpperCase() ? 'white' : 'black';
-    } else if (typeof pc === 'object'){
-        type = pc.type;
-        color = pc.color;
-    } else {
-        return null;
-    }
-    if(!PIECES[type]) return null;
-    let level = 1;
+    if(!pc)return null; let type, color;
+    if(typeof pc === 'string'){ type = pc.toLowerCase(); color = pc === pc.toUpperCase() ? 'white' : 'black'; } else if (typeof pc === 'object'){ type = pc.type; color = pc.color; } else { return null; }
+    if(!PIECES[type]) return null; let level = 1;
     return{type:type,color:color,level:level,hp:level,maxHp:level,cost:PIECES[type].cost,icon:PIECES[type].icon};
 }
-
 function initSetup(){
-    let initialData=DEFAULT_BOARD;
-    const saved=localStorage.getItem('chessSetup');
-    if(saved){
-        try{
-            const parsed=JSON.parse(saved);
-            if(parsed&&parsed.length===8)initialData=parsed;
-        }catch(e){}
-    }
+    let initialData=DEFAULT_BOARD; const saved=localStorage.getItem('chessSetup');
+    if(saved){ try{ const parsed=JSON.parse(saved); if(parsed&&parsed.length===8)initialData=parsed; }catch(e){} }
     setupBoard=initialData.map(row=>row.map(pc=>createPiece(pc)));
     selectedSetupCell=null;editMode=false;updateSetupUI();renderSetupBoard();
 }
-
 function updateSetupUI(){
-const hint=document.getElementById('setup-hint');
-const btnEdit=document.getElementById('btn-edit');
-const editControls=document.getElementById('edit-controls');
-const boardEl=document.getElementById('setup-board');
-if(editMode){
-btnEdit.style.display='none';
-editControls.style.display='flex';
-boardEl.classList.remove('view-mode');boardEl.classList.add('edit-mode');
-hint.innerHTML='✏️ Режим редактирования: выбери фигуру, затем пустую клетку или другую белую фигуру (для обмена)';
-}else{
-btnEdit.style.display='block';
-editControls.style.display='none';
-boardEl.classList.remove('edit-mode');boardEl.classList.add('view-mode');
-hint.innerHTML='Текущая расстановка <span class="lock-badge">🔒 Закреплено</span>';
-}}
-
+const hint=document.getElementById('setup-hint'); const btnEdit=document.getElementById('btn-edit'); const editControls=document.getElementById('edit-controls'); const boardEl=document.getElementById('setup-board');
+if(editMode){ btnEdit.style.display='none'; editControls.style.display='flex'; boardEl.classList.remove('view-mode');boardEl.classList.add('edit-mode'); hint.innerHTML='✏️ Режим редактирования: выбери фигуру, затем пустую клетку или другую белую фигуру (для обмена)'; }
+else{ btnEdit.style.display='block'; editControls.style.display='none'; boardEl.classList.remove('edit-mode');boardEl.classList.add('view-mode'); hint.innerHTML='Текущая расстановка <span class="lock-badge">🔒 Закреплено</span>'; }
+}
 function renderSetupBoard(){const boardEl=document.getElementById('setup-board');boardEl.innerHTML='';
 for(let r=0;r<8;r++){for(let c=0;c<8;c++){
-const cell=document.createElement('div');
-cell.className=`cell ${(r+c)%2===0?'white':'black'}`;
-if(r===6||r===7)cell.classList.add('setup-zone');
-cell.onclick=()=>handleSetupClick(r,c);
+const cell=document.createElement('div'); cell.className=`cell ${(r+c)%2===0?'white':'black'}`; if(r===6||r===7)cell.classList.add('setup-zone'); cell.onclick=()=>handleSetupClick(r,c);
 if(selectedSetupCell&&selectedSetupCell.r===r&&selectedSetupCell.c===c)cell.classList.add('selected');
 const piece=setupBoard[r][c];
 if(piece){
-const pieceEl=document.createElement('div');pieceEl.className='piece';pieceEl.innerText=piece.icon;
-pieceEl.style.color=piece.color==='white'?'#fff':'#0a0a0a';
-pieceEl.style.textShadow=piece.color==='white'?'0 1px 0 #666,0 2px 0 #444,0 3px 4px rgba(0,0,0,0.9)':'0 1px 0 #555,0 2px 3px rgba(255,255,255,0.3),0 3px 4px rgba(0,0,0,0.9)';
+const pieceEl=document.createElement('div');pieceEl.className='piece';pieceEl.innerText=piece.icon; pieceEl.style.color=piece.color==='white'?'#fff':'#0a0a0a'; pieceEl.style.textShadow=piece.color==='white'?'0 1px 0 #666,0 2px 0 #444,0 3px 4px rgba(0,0,0,0.9)':'0 1px 0 #555,0 2px 3px rgba(255,255,255,0.3),0 3px 4px rgba(0,0,0,0.9)';
 const costBadge=document.createElement('div');costBadge.className='top-cost-badge';costBadge.innerText=piece.cost;
-const hpBar=document.createElement('div');hpBar.className='bottom-hp-bar';
-hpBar.innerHTML=`<span class="lvl-num">${formatNum(piece.level)}</span>`;
-const hpText=document.createElement('div');hpText.className='hp-text-below';
-hpText.innerText=`${formatNum(piece.hp)}/${formatNum(piece.maxHp)}`;
+const hpBar=document.createElement('div');hpBar.className='bottom-hp-bar'; hpBar.innerHTML=`<span class="lvl-num">${formatNum(piece.level)}</span>`;
+const hpText=document.createElement('div');hpText.className='hp-text-below'; hpText.innerText=`${formatNum(piece.hp)}/${formatNum(piece.maxHp)}`;
 cell.appendChild(pieceEl);cell.appendChild(costBadge);cell.appendChild(hpBar);cell.appendChild(hpText);}
 boardEl.appendChild(cell);}}}
-
 function handleSetupClick(r,c){
-if(!editMode)return;
-const clickedPiece=setupBoard[r][c];
+if(!editMode)return; const clickedPiece=setupBoard[r][c];
 if(selectedSetupCell){
 if(selectedSetupCell.r===r&&selectedSetupCell.c===c){selectedSetupCell=null;renderSetupBoard();return;}
 const selectedPiece=setupBoard[selectedSetupCell.r][selectedSetupCell.c];
-if(clickedPiece&&clickedPiece.color==='white'){
-setupBoard[r][c]=selectedPiece;
-setupBoard[selectedSetupCell.r][selectedSetupCell.c]=clickedPiece;
+if(clickedPiece&&clickedPiece.color==='white'){ setupBoard[r][c]=selectedPiece; setupBoard[selectedSetupCell.r][selectedSetupCell.c]=clickedPiece; selectedSetupCell=null;renderSetupBoard();return; }
+if((r===6||r===7)&&!clickedPiece){ setupBoard[r][c]=selectedPiece; setupBoard[selectedSetupCell.r][selectedSetupCell.c]=null; selectedSetupCell=null;renderSetupBoard();return; }
 selectedSetupCell=null;renderSetupBoard();return;
 }
-if((r===6||r===7)&&!clickedPiece){
-setupBoard[r][c]=selectedPiece;
-setupBoard[selectedSetupCell.r][selectedSetupCell.c]=null;
-selectedSetupCell=null;renderSetupBoard();return;
+if(clickedPiece&&clickedPiece.color==='white'){ selectedSetupCell={r,c};renderSetupBoard(); }
 }
-selectedSetupCell=null;renderSetupBoard();return;
-}
-if(clickedPiece&&clickedPiece.color==='white'){
-selectedSetupCell={r,c};renderSetupBoard();
-}}
-
-function enterEditMode(){
-snapshotBeforeEdit=JSON.parse(JSON.stringify(setupBoard));
-editMode=true;selectedSetupCell=null;updateSetupUI();renderSetupBoard();
-}
-function cancelEdit(){
-if(snapshotBeforeEdit){setupBoard=snapshotBeforeEdit;}
-editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null;
-updateSetupUI();renderSetupBoard();
-showToast('Изменения отменены','#ff9500');
-}
+function enterEditMode(){ snapshotBeforeEdit=JSON.parse(JSON.stringify(setupBoard)); editMode=true;selectedSetupCell=null;updateSetupUI();renderSetupBoard(); }
+function cancelEdit(){ if(snapshotBeforeEdit){setupBoard=snapshotBeforeEdit;} editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null; updateSetupUI();renderSetupBoard(); showToast('Изменения отменены','#ff9500'); }
 function saveSetup(){
-// ИСПРАВЛЕНО: сохраняем в виде массива строк (как ждет игра)
-const saveData = setupBoard.map(row => row.map(p => {
-    if (!p) return null;
-    return p.color === 'white' ? p.type.toUpperCase() : p.type;
-}));
+const saveData = setupBoard.map(row => row.map(p => { if (!p) return null; return p.color === 'white' ? p.type.toUpperCase() : p.type; }));
 localStorage.setItem('chessSetup',JSON.stringify(saveData));
-editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null;
-updateSetupUI();renderSetupBoard();
-showToast('✅ Расстановка сохранена!','#34c759');
+editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null; updateSetupUI();renderSetupBoard(); showToast('✅ Расстановка сохранена!','#34c759');
 }
 function showToast(msg,color){
-const toast=document.createElement('div');
-toast.className='toast';
-toast.style.borderColor=color;
-toast.style.boxShadow=`0 10px 30px rgba(0,0,0,0.8),0 0 20px ${color}66`;
-toast.innerText=msg;
-document.body.appendChild(toast);
-setTimeout(()=>toast.classList.add('show'),50);
-setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),400);},2200);
+const toast=document.createElement('div'); toast.className='toast'; toast.style.borderColor=color; toast.style.boxShadow=`0 10px 30px rgba(0,0,0,0.8),0 0 20px ${color}66`; toast.innerText=msg;
+document.body.appendChild(toast); setTimeout(()=>toast.classList.add('show'),50); setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),400);},2200);
 }
-renderDeck();
-initSetup();
+renderDeck(); initSetup();
 </script>
 </body>
 </html>
