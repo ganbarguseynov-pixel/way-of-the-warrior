@@ -1,12 +1,13 @@
 /* ============================================================
-   net.js — сеть: очередь, матч, бот, ничья (VER 15)
-   Результат показывается сразу, отчёт в базу уходит в фоне.
+   net.js — сеть: очередь, матч, бот, ничья (VER 16)
+   Пишет журнал ходов и отправляет повтор в базу.
    ============================================================ */
 (function (global) {
 'use strict';
 
 const RECORD_KEY = 'arenaActiveMatch';
 const STATE_KEY  = 'arenaActiveState';
+const LOG_KEY    = 'arenaMoveLog';
 const SETUP_KEY  = 'chessSetup';
 const NAME_KEY   = 'userName';
 
@@ -21,35 +22,30 @@ const AWAY_GRACE_MS = 15000;
 const CATCHUP_STEP = 1.2;
 const CATCHUP_MAX  = 600;
 
+const LOG_MAX = 700;
+
 const BOT_NAMES = [
-  /* русские */
   'Дмитрий','Алексей','Максим','Артём','Сергей','Кирилл','Иван','Никита',
   'Роман','Егор','Даниил','Михаил','Андрей','Павел','Владислав','Глеб',
   'Тимур','Матвей','Саша','Лёша','Светлана','Ольга','Анна','Мария',
   'Дарья','Полина','Вера','Настя',
 
-  /* английские */
   'James','Oliver','Lucas','Ethan','Noah','Liam','Mason','Logan',
   'Ryan','Tyler','Dylan','Owen','Emily','Sophie','Chloe','Mia',
   'Grace','Hannah','Olivia','Ruby','Alice','Ella',
 
-  /* прозвища */
   'Shadow','Blade','Raven','Hunter','Ghost','Falcon','Viper','Storm',
   'Nova','Echo','Frost','Ember','Wolf','Crow','Ace','Rook','Bishop','Pawnstar',
 
-  /* испанские и португальские */
   'Diego','Mateo','Santiago','Javier','Alejandro','Rodrigo','Thiago',
   'João','Pedro','Rafael','Sofía','Valentina','Camila','Isabella','Lucía',
 
-  /* немецкие, французские, итальянские */
   'Lukas','Felix','Jonas','Maximilian','Sebastian','Antoine','Julien',
   'Mathis','Hugo','Léa','Marco','Lorenzo','Matteo','Giulia','Alessandro','Chiara',
 
-  /* японские, китайские, корейские */
   'Yuki','Haruto','Sora','Ren','Kenji','Aiko','Yuna','Sakura',
   'Chen','Wei','Jun','Mei','Lin','Hiroshi','Minjun','Jihoon','Seoyeon','Hyunwoo',
 
-  /* турецкие, арабские, скандинавские, балканские */
   'Emre','Kerem','Yusuf','Elif','Zeynep','Omar','Karim','Youssef','Fatima','Zara',
   'Lars','Erik','Nils','Anders','Marko','Nikola','Petra','Ivan'
 ];
@@ -85,7 +81,10 @@ const Net = {
   botTimer: null,
   fallbackTimer: null,
 
-  lastSeen: 0
+  lastSeen: 0,
+
+  replayLog: [],
+  logMark: 0
 };
 
 Net.on = function (evt, fn){
@@ -139,6 +138,48 @@ function slimState(s){
     winner:    s.winner
   };
 }
+
+/* ---------------- журнал ходов ---------------- */
+
+function logAt(s){
+  const e = (s && typeof s.elapsed === 'number') ? s.elapsed : 0;
+  return Math.round(e * 100) / 100;
+}
+
+Net._logReset = function (){
+  Net.replayLog = [];
+  Net.logMark = 0;
+  try { localStorage.removeItem(LOG_KEY); } catch (e){}
+};
+
+Net._logSave = function (force){
+  const now = Date.now();
+  if (!force && now - Net.logMark < 800) return;
+  Net.logMark = now;
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(Net.replayLog || [])); } catch (e){}
+};
+
+Net._logMove = function (side, fx, fy, tx, ty, promo, s){
+  if (!Net.replayLog) Net.replayLog = [];
+  if (Net.replayLog.length >= LOG_MAX) return;
+
+  Net.replayLog.push({
+    t: 'm',
+    s: side,
+    at: logAt(s),
+    fx: fx, fy: fy, tx: tx, ty: ty,
+    p: promo || 'q'
+  });
+  Net._logSave(false);
+};
+
+Net._logEvent = function (kind, side, s){
+  if (!Net.replayLog) Net.replayLog = [];
+  if (Net.replayLog.length >= LOG_MAX) return;
+
+  Net.replayLog.push({ t: kind, s: side, at: logAt(s) });
+  Net._logSave(false);
+};
 
 /* ---------------- расстановка ---------------- */
 
@@ -202,7 +243,6 @@ Net.refresh = async function (){
   return Net.me;
 };
 
-/* смена ника: одинаковые ники у разных игроков разрешены */
 Net.rename = async function (raw){
   const name = String(raw || '').trim().slice(0, 16);
   if (name.length < 2) return { ok:false, error:'Слишком короткий ник' };
@@ -268,6 +308,7 @@ Net._clearMatch = function (){
 
   try { localStorage.removeItem(RECORD_KEY); } catch (e){}
   try { localStorage.removeItem(STATE_KEY); } catch (e){}
+  try { localStorage.removeItem(LOG_KEY); } catch (e){}
 };
 
 /* ---------------- очередь ---------------- */
@@ -501,7 +542,9 @@ Net._attach = async function (){
   });
 
   ch.on('broadcast', { event: 'result' }, function (msg){
-    Net._finish(payloadOf(msg));
+    const p = payloadOf(msg);
+    if (p && p.moves) Net._saveReplay(p);
+    Net._finish(p);
   });
 
   ch.on('presence', { event: 'sync' }, function (){
@@ -530,6 +573,7 @@ Net._beginMatch = async function (m){
   Net.finishing = false;
   Net.state     = null;
   Net.lastSeen  = Date.now();
+  Net._logReset();
 
   const myCups = Net.me ? Net.me.cups : 0;
   const meP    = { key: Net.key,  name: Net.name,  cups: myCups };
@@ -602,6 +646,7 @@ Net._startBotMatch = async function (){
   Net.finishing = false;
   Net.state     = null;
   Net.lastSeen  = Date.now();
+  Net._logReset();
 
   Net.players = {
     a: { key: Net.key,  name: Net.name, cups: myCups },
@@ -686,7 +731,12 @@ Net._autoMove = function (s, side){
 
   const promo = Arena.PROMO_CHOICES[Math.floor(Math.random() * Arena.PROMO_CHOICES.length)];
   const res = Arena.move(s, side, pick.fx, pick.fy, pick.tx, pick.ty, promo);
-  return !!(res && res.ok);
+
+  if (res && res.ok){
+    Net._logMove(side, pick.fx, pick.fy, pick.tx, pick.ty, promo, s);
+    return true;
+  }
+  return false;
 };
 
 Net._botMove = function (){
@@ -875,6 +925,18 @@ Net._applyIntent = function (msg, side){
     return;
   }
 
+  if (res && res.ok){
+    if (msg.t === 'move'){
+      Net._logMove(side, msg.fx, msg.fy, msg.tx, msg.ty, msg.promo, s);
+    } else if (msg.t === 'resign'){
+      Net._logEvent('r', side, s);
+    } else if (msg.t === 'draw'){
+      Net._logEvent('d', side, s);
+    } else if (msg.t === 'undraw'){
+      Net._logEvent('u', side, s);
+    }
+  }
+
   if (s.over){
     Net._hostFinish();
     return;
@@ -885,7 +947,6 @@ Net._applyIntent = function (msg, side){
 
 /* ---------------- конец боя ---------------- */
 
-/* локальная оценка кубков — чтобы результат показать мгновенно */
 Net._estimateCups = function (winner){
   const myCups = Net.me ? Net.me.cups : 0;
   const oppCups = Net.players
@@ -922,6 +983,37 @@ Net._localCups = async function (winner){
   return cups;
 };
 
+/* запись повтора в базу */
+Net._saveReplay = function (p){
+  if (!p || !p.moves || !p.moves.length) return;
+  if (!Net.sb || !Net.key) return;
+  if (p.replaySaved) return;
+  p.replaySaved = true;
+
+  const mySide = Net.mySide || p.mySide || 'a';
+  const opp = Net.players
+    ? (mySide === 'a' ? Net.players.b : Net.players.a)
+    : null;
+
+  const matchId = p.matchId || Net.matchId;
+  if (!matchId) return;
+
+  Net.sb.rpc('arena_save_replay', {
+    p_match:    matchId,
+    p_player:   Net.key,
+    p_side:     mySide,
+    p_arena:    p.arena || Net.arena || 1,
+    p_winner:   p.winner || null,
+    p_opponent: (opp && opp.name) || 'Соперник',
+    p_seconds:  Math.round(p.seconds || 0),
+    p_setup_a:  p.setup_a || null,
+    p_setup_b:  p.setup_b || null,
+    p_moves:    p.moves
+  }).then(function (res){
+    if (res.error) console.error('[net] replay save failed', res.error);
+  });
+};
+
 Net._hostFinish = function (){
   if (Net.timer){ clearInterval(Net.timer); Net.timer = null; }
   if (Net.finished || Net.finishing) return;
@@ -936,21 +1028,27 @@ Net._hostFinish = function (){
     s.winner === 'a' ? Net.players.a.key :
     s.winner === 'b' ? Net.players.b.key : null;
 
+  Net._logSave(true);
+
   const payload = {
     winner:  s.winner,
     matchId: Net.matchId,
-    cups:    Net._estimateCups(s.winner)
+    arena:   Net.arena,
+    cups:    Net._estimateCups(s.winner),
+    seconds: Math.round(s.elapsed || 0),
+    setup_a: Net.setups ? Net.setups.a : null,
+    setup_b: Net.setups ? Net.setups.b : null,
+    moves:   Net.replayLog || []
   };
 
-  /* сопернику сообщаем сразу */
+  Net._saveReplay(payload);
+
   if (Net.matchCh && !isBot){
     Net.matchCh.send({ type: 'broadcast', event: 'result', payload: payload });
   }
 
-  /* экран результата — без ожидания сети */
   Net._finish(payload);
 
-  /* отчёт в базу уже в фоне */
   if (isBot){
     Net._localCups(s.winner).catch(function(){});
   } else if (winnerKey){
@@ -1007,6 +1105,11 @@ Net.tryResume = async function (){
   Net.botMode   = isBot;
   Net.state     = null;
   Net.lastSeen  = Date.now();
+
+  try {
+    const savedLog = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+    Net.replayLog = Array.isArray(savedLog) ? savedLog : [];
+  } catch (e){ Net.replayLog = []; }
 
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); } catch (e){}
@@ -1132,7 +1235,6 @@ Net._finish = function (payload){
 
   Net.botMode = false;
 
-  /* показываем результат немедленно */
   Net.emit('result', {
     winner:   payload.winner,
     mySide:   Net.mySide,
@@ -1143,7 +1245,6 @@ Net._finish = function (payload){
     opponent: opp
   });
 
-  /* профиль обновляем уже после отрисовки экрана */
   Net.refresh().catch(function(){});
 };
 
