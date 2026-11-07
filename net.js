@@ -1,6 +1,6 @@
 /* ============================================================
-   net.js — сеть: очередь, матч, бот, ничья (VER 12)
-   Бой переживает выход из приложения и продолжается.
+   net.js — сеть: очередь, матч, бот, ничья (VER 13)
+   Бой идёт по реальному времени. Вышел — соперник продолжает.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -13,7 +13,14 @@ const PUSH_MS = 200;
 const TICK_MS = 100;
 
 const SEARCH_LIMIT_MS = 3000;
-const RESUME_LIMIT_MS = 60 * 60 * 1000;
+const RESUME_LIMIT_MS = 6 * 60 * 60 * 1000;
+
+/* сколько секунд отсутствия уже считаются «ушёл из боя» */
+const AWAY_GRACE_MS = 15000;
+
+/* шаг догоняющей симуляции */
+const CATCHUP_STEP = 1.2;
+const CATCHUP_MAX  = 600;
 
 const BOT_NAMES = [
   'Дмитрий','Алексей','Максим','Артём','Сергей','Кирилл','Иван',
@@ -49,7 +56,9 @@ const Net = {
 
   botMode: false,
   botTimer: null,
-  fallbackTimer: null
+  fallbackTimer: null,
+
+  lastSeen: 0
 };
 
 Net.on = function (evt, fn){
@@ -85,6 +94,7 @@ function slimState(s){
     players:   s.players,
     board:     s.board,
     energy:    s.energy,
+    energyAcc: s.energyAcc,
     traps:     s.traps,
     returns:   s.returns,
     elapsed:   s.elapsed,
@@ -198,8 +208,10 @@ Net._saveState = function (force){
   if (!force && now - Net.saveMark < 1000) return;
   Net.saveMark = now;
 
-  try { localStorage.setItem(STATE_KEY, JSON.stringify(Net.state)); }
-  catch (e){}
+  try {
+    Net.state.savedAt = now;
+    localStorage.setItem(STATE_KEY, JSON.stringify(Net.state));
+  } catch (e){}
 };
 
 Net._clearMatch = function (){
@@ -418,9 +430,18 @@ Net._attach = async function (){
 
   ch.on('broadcast', { event: 'state' }, function (msg){
     if (Net.host) return;
+
     Net.state = payloadOf(msg);
     if (Net.resumeTimer){ clearTimeout(Net.resumeTimer); Net.resumeTimer = null; }
     Net.emit('state', Net.state);
+
+    if (Net.state && Net.state.over && !Net.finished){
+      Net._finish({
+        winner:  Net.state.winner,
+        matchId: Net.matchId,
+        cups:    null
+      });
+    }
   });
 
   ch.on('broadcast', { event: 'hello' }, function (){
@@ -460,6 +481,7 @@ Net._beginMatch = async function (m){
   Net.arena    = m.arena || 1;
   Net.finished = false;
   Net.state    = null;
+  Net.lastSeen = Date.now();
 
   const myCups = Net.me ? Net.me.cups : 0;
   const meP    = { key: Net.key,  name: Net.name,  cups: myCups };
@@ -529,6 +551,7 @@ Net._startBotMatch = async function (){
   Net.arena    = Math.min(Arena.arenaOf(myCups), Arena.arenaOf(rivalCups));
   Net.finished = false;
   Net.state    = null;
+  Net.lastSeen = Date.now();
 
   Net.players = {
     a: { key: Net.key,  name: Net.name, cups: myCups },
@@ -572,22 +595,22 @@ Net._botTick = function (){
   }, wait);
 };
 
-Net._botMove = function (){
-  const s = Net.state;
-  if (!s || s.over) return;
-  if (s.energy.b < 1) return;
+/* ---------------- искусственный игрок ---------------- */
+
+Net._pickMove = function (s, side){
+  if (!s || s.over) return null;
 
   const moves = [];
 
   for (let y = 0; y < 8; y++){
     for (let x = 0; x < 8; x++){
       const pc = s.board[y][x];
-      if (!pc || pc.side !== 'b') continue;
+      if (!pc || pc.side !== side) continue;
       if (pc.asleep) continue;
       if (pc.chained) continue;
 
       const cost = Arena.moveCost(s, pc);
-      if (s.energy.b < cost) continue;
+      if (s.energy[side] < cost) continue;
 
       const list = Arena.legalMoves(s, x, y);
       for (let i = 0; i < list.length; i++){
@@ -600,19 +623,75 @@ Net._botMove = function (){
     }
   }
 
-  if (!moves.length) return;
+  if (!moves.length) return null;
 
   const caps = [];
   for (let i = 0; i < moves.length; i++) if (moves[i].cap) caps.push(moves[i]);
 
   const pool = (caps.length && Math.random() < 0.75) ? caps : moves;
-  const pick = pool[Math.floor(Math.random() * pool.length)];
+  return pool[Math.floor(Math.random() * pool.length)];
+};
 
-  Net._applyIntent({
-    t:'move',
-    fx:pick.fx, fy:pick.fy,
-    tx:pick.tx, ty:pick.ty
-  }, 'b');
+Net._autoMove = function (s, side){
+  const pick = Net._pickMove(s, side);
+  if (!pick) return false;
+
+  const res = Arena.move(s, side, pick.fx, pick.fy, pick.tx, pick.ty);
+  return !!(res && res.ok);
+};
+
+Net._botMove = function (){
+  const s = Net.state;
+  if (!s || s.over) return;
+
+  if (!Net._autoMove(s, 'b')) return;
+  Net._push();
+};
+
+/* ---------------- догон времени, пока игрока не было ---------------- */
+
+Net._catchUp = function (s, awayMs, absentSide){
+  if (!s || s.over) return;
+
+  const foe = (absentSide === 'a') ? 'b' : 'a';
+
+  let left  = Math.min(awayMs / 1000, CATCHUP_MAX);
+  let guard = 0;
+
+  while (left > 0 && !s.over && guard < CATCHUP_MAX){
+    guard++;
+
+    const dt = Math.min(CATCHUP_STEP, left);
+    left -= dt;
+
+    Arena.tick(s, dt);
+    if (s.over) break;
+
+    /* отсутствующий не ходит — играет только соперник */
+    Net._autoMove(s, foe);
+  }
+
+  if (!s.over && awayMs > AWAY_GRACE_MS){
+    Arena.finish(s, foe);
+  }
+};
+
+Net.checkAway = function (){
+  const now = Date.now();
+  const away = now - (Net.lastSeen || now);
+  Net.lastSeen = now;
+
+  if (Net.finished) return;
+  if (!Net.state || !Net.host) return;
+  if (away < 2500) return;
+
+  Net._catchUp(Net.state, away, Net.mySide);
+
+  if (Net.state.over){
+    Net._hostFinish();
+  } else {
+    Net._push();
+  }
 };
 
 /* ---------------- запуск боя ---------------- */
@@ -633,6 +712,7 @@ Net._hostStart = function (){
   });
 
   Net.saveMark = 0;
+  Net.lastSeen = Date.now();
   Net._push();
   Net._startLoop();
 };
@@ -649,6 +729,8 @@ Net._startLoop = function (){
     const now = performance.now();
     const dt  = Math.min(0.2, (now - last) / 1000);
     last = now;
+
+    Net.lastSeen = Date.now();
 
     Arena.tick(Net.state, dt);
 
@@ -844,12 +926,13 @@ Net.tryResume = async function (){
   Net.finished = false;
   Net.botMode  = isBot;
   Net.state    = null;
+  Net.lastSeen = Date.now();
 
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); } catch (e){}
   if (saved && !saved.board) saved = null;
 
-  /* бой с подставным соперником: восстанавливаем у себя */
+  /* бой с ботом: состояние живёт на телефоне */
   if (isBot){
     if (!saved){
       Net._clearMatch();
@@ -858,9 +941,11 @@ Net.tryResume = async function (){
       return false;
     }
 
-    Net.state = saved;
+    const away = saved.savedAt ? (Date.now() - saved.savedAt) : 0;
+
+    Net.state   = saved;
     Net.botMode = true;
-    Net.host = true;
+    Net.host    = true;
 
     Net.emit('start', {
       side: 'a',
@@ -869,9 +954,19 @@ Net.tryResume = async function (){
       state: saved
     });
 
+    if (away > 2500) Net._catchUp(saved, away, Net.mySide);
+
     Net.saveMark = 0;
+    Net.lastSeen = Date.now();
+
+    if (saved.over){
+      Net._hostFinish();
+      return true;
+    }
+
     Net._startLoop();
     Net._startBotBrain();
+    Net._push();
     return true;
   }
 
@@ -883,7 +978,10 @@ Net.tryResume = async function (){
       return false;
     }
 
+    const away = saved.savedAt ? (Date.now() - saved.savedAt) : 0;
+
     Net.state = saved;
+
     Net.emit('start', {
       side: 'a',
       arena: Net.arena,
@@ -891,8 +989,17 @@ Net.tryResume = async function (){
       state: saved
     });
 
-    Net._startLoop();
+    if (away > 2500) Net._catchUp(saved, away, Net.mySide);
+
     Net.saveMark = 0;
+    Net.lastSeen = Date.now();
+
+    if (saved.over){
+      Net._hostFinish();
+      return true;
+    }
+
+    Net._startLoop();
     Net._push();
     return true;
   }
