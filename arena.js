@@ -1,10 +1,11 @@
 /* ============================================================
-   arena.js — правила и движок шахматных арен  (VER 10)
+   arena.js — правила и движок шахматных арен  (VER 11)
+   Короля нельзя съесть. Шах — обязан уйти. Мат — урон.
    ============================================================ */
 (function (global) {
 'use strict';
 
-const VER = '10';
+const VER = '11';
 const STEP = 1000;
 const MAX_ARENA = 10;
 
@@ -12,6 +13,8 @@ const MAIN_TIME = 300;
 const OT_TIME   = 60;
 const FAST_FROM = 60;
 const KING_HP   = 1;
+const MATE_DAMAGE = 1;
+const STATUS_STEP = 0.35;
 
 const ARMY_MAX = { p:8, r:2, n:2, b:2, q:1, k:1 };
 
@@ -63,6 +66,7 @@ const KNIGHT = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
 
 const inside = (x, y) => x >= 0 && x < 8 && y >= 0 && y < 8;
 const coord  = (x, y) => 'abcdefgh'[x] + (8 - y);
+const foeOf  = (side) => side === 'a' ? 'b' : 'a';
 
 function shuffle(a){
   for (let i = a.length - 1; i > 0; i--){
@@ -75,11 +79,7 @@ function shuffle(a){
 function arenaOf(c){ return Math.min(MAX_ARENA, Math.floor(Math.max(0, c) / STEP) + 1); }
 function floorOf(c){ return (arenaOf(c) - 1) * STEP; }
 
-function deltaFor(winnerCups, loserCups){
-  if (winnerCups === loserCups) return 30;
-  return winnerCups < loserCups ? 31 : 29;
-}
-
+function deltaFor(w, l){ return w === l ? 30 : (w < l ? 31 : 29); }
 function lossFor(loserCups, delta){
   return Math.min(delta, Math.max(0, loserCups - floorOf(loserCups)));
 }
@@ -105,18 +105,10 @@ function energyRate(s){
 }
 
 function kingHp(s, side){
-  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
-    const pc = s.board[y][x];
-    if (pc && pc.type === 'king' && pc.side === side){
-      return (typeof pc.hp === 'number') ? pc.hp : KING_HP;
-    }
-  }
-  return 0;
-}
-
-function kingDamage(type){
-  const p = PIECES[type];
-  return p ? p.val : 1;
+  const kp = kingPos(s, side);
+  if (!kp) return 0;
+  const pc = s.board[kp.y][kp.x];
+  return (typeof pc.hp === 'number') ? pc.hp : KING_HP;
 }
 
 function countPieces(s){
@@ -169,19 +161,13 @@ function armyHasKing(army){
 }
 
 function sideHasKing(s, side){
-  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
-    const pc = s.board[y][x];
-    if (pc && pc.type === 'king' && pc.side === side) return true;
-  }
-  return false;
+  return !!kingPos(s, side);
 }
 
 function clearHalf(s, side){
   const from = (side === 'a') ? 4 : 0;
   const to   = (side === 'a') ? 7 : 3;
-  for (let y = from; y <= to; y++){
-    for (let x = 0; x < 8; x++) s.board[y][x] = null;
-  }
+  for (let y = from; y <= to; y++) for (let x = 0; x < 8; x++) s.board[y][x] = null;
 }
 
 function placeList(s, side, army){
@@ -217,7 +203,6 @@ function deployArmy(s, side, setup){
 
 function placeSaws(s){
   const rows = [ { row:4, side:'a' }, { row:3, side:'b' } ];
-
   for (let i = 0; i < rows.length; i++){
     for (let c = 0; c < 8; c++){
       if (!s.board[rows[i].row][c]){
@@ -244,70 +229,22 @@ function placeTraps(s){
   }
 }
 
-/* ================= СОЗДАНИЕ БОЯ ================= */
-
-function create(opts){
-  opts = opts || {};
-  const players = opts.players || {};
-  const setups  = opts.setups || {};
-
-  const s = {
-    id: opts.id || 'local',
-    arena: opts.arena || 1,
-
-    players: {
-      a: { key:  (players.a && players.a.key)  || 'a',
-           name: (players.a && players.a.name) || 'Ты',
-           cups: (players.a && players.a.cups) || 0 },
-      b: { key:  (players.b && players.b.key)  || 'b',
-           name: (players.b && players.b.name) || 'Враг',
-           cups: (players.b && players.b.cups) || 0 }
-    },
-
-    board: Array.from({ length:8 }, () => Array(8).fill(null)),
-    energy: { a:5, b:5 },
-    hand:   { a:[], b:[] },
-    deck:   { a:[], b:[] },
-    placed: { a:0, b:0 },
-
-    traps: [], returns: [],
-
-    elapsed: 0,
-    phase: 'main',
-    timeLeft: MAIN_TIME,
-    nightMode: 0,
-    nightUsed: { a:false, b:false },
-    spawnTimer: 15,
-    idle: 0,
-
-    over: false,
-    winner: null,
-    log: []
-  };
-
-  deployArmy(s, 'a', setups.a);
-  deployArmy(s, 'b', setups.b);
-
-  /* страховка: если доска всё равно пустая — ставим стандарт обеим сторонам */
-  if (countPieces(s) === 0){
-    fillStandard(s, 'a');
-    fillStandard(s, 'b');
-  }
-
-  if (s.arena === 10) s.energy = { a:10, b:10 };
-  if (s.arena === 5)  placeSaws(s);
-  if (s.arena === 1)  placeTraps(s);
-
-  log(s, 'Арена «' + ARENAS[s.arena - 1].name + '». Доска собрана. В бой.');
-  return s;
-}
-
 /* ================= ХОДЫ ================= */
 
-function legalMoves(s, x, y){
+function kingPos(s, side){
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
+    const pc = s.board[y][x];
+    if (pc && pc.type === 'king' && pc.side === side) return { x:x, y:y };
+  }
+  return null;
+}
+
+/* ходы без учёта шаха — для проверки «бьёт ли фигура клетку» */
+function pseudoMoves(s, x, y){
   const row = s.board[y];
   const pc = row && row[x];
-  if (!pc || pc.asleep || pc.chained) return [];
+  if (!pc) return [];
+  if (pc.asleep || pc.chained) return [];
 
   const side = pc.side;
   const out = [];
@@ -327,8 +264,8 @@ function legalMoves(s, x, y){
 
   if (pc.type === 'pawn'){
     const dir = side === 'a' ? -1 : 1;
-    const aheadRow = s.board[y + dir];
-    if (inside(x, y + dir) && aheadRow && !aheadRow[x]) out.push([x, y + dir]);
+    const ahead = s.board[y + dir];
+    if (inside(x, y + dir) && ahead && !ahead[x]) out.push([x, y + dir]);
 
     for (let i = 0; i < 2; i++){
       const dx = i === 0 ? -1 : 1;
@@ -369,6 +306,193 @@ function legalMoves(s, x, y){
   return out;
 }
 
+function isSquareAttacked(s, x, y, bySide){
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++){
+    const pc = s.board[r][c];
+    if (!pc || pc.side !== bySide) continue;
+
+    const mv = pseudoMoves(s, c, r);
+    for (let i = 0; i < mv.length; i++){
+      if (mv[i][0] === x && mv[i][1] === y) return true;
+    }
+  }
+  return false;
+}
+
+/* останется ли свой король под боем после такого хода */
+function selfCheckAfter(s, fx, fy, tx, ty){
+  const pc = s.board[fy][fx];
+  if (!pc) return false;
+
+  const victim = s.board[ty][tx];
+  const foe = foeOf(pc.side);
+
+  s.board[ty][tx] = pc;
+  s.board[fy][fx] = null;
+
+  let bad;
+  if (pc.type === 'king'){
+    bad = isSquareAttacked(s, tx, ty, foe);
+  } else {
+    const kp = kingPos(s, pc.side);
+    bad = kp ? isSquareAttacked(s, kp.x, kp.y, foe) : false;
+  }
+
+  s.board[fy][fx] = pc;
+  s.board[ty][tx] = victim;
+
+  return bad;
+}
+
+function legalMoves(s, x, y){
+  const pc = s.board[y] && s.board[y][x];
+  if (!pc) return [];
+  if (pc.asleep || pc.chained) return [];
+
+  const raw = pseudoMoves(s, x, y);
+  const out = [];
+
+  for (let i = 0; i < raw.length; i++){
+    const tx = raw[i][0], ty = raw[i][1];
+    const tgt = s.board[ty][tx];
+
+    if (tgt && tgt.type === 'king') continue;
+    if (selfCheckAfter(s, x, y, tx, ty)) continue;
+
+    out.push(raw[i]);
+  }
+
+  return out;
+}
+
+function sideHasAnyLegal(s, side){
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
+    const pc = s.board[y][x];
+    if (!pc || pc.side !== side) continue;
+    if (legalMoves(s, x, y).length) return true;
+  }
+  return false;
+}
+
+function kingAttacked(s, side){
+  const kp = kingPos(s, side);
+  if (!kp) return false;
+  return isSquareAttacked(s, kp.x, kp.y, foeOf(side));
+}
+
+/* ================= ШАХ, МАТ, УРОН ================= */
+
+function updateStatus(s){
+  if (s.over) return;
+
+  const sides = ['a', 'b'];
+
+  for (let i = 0; i < 2; i++){
+    const side = sides[i];
+    const foe  = foeOf(side);
+
+    if (!s.check) s.check = { a:false, b:false };
+    if (!s.mate)  s.mate  = { a:false, b:false };
+    if (!s.mateHit) s.mateHit = { a:false, b:false };
+
+    const kp = kingPos(s, side);
+    if (!kp){
+      finish(s, foe);
+      return;
+    }
+
+    const attacked = isSquareAttacked(s, kp.x, kp.y, foe);
+    s.check[side] = attacked;
+
+    const mateNow = attacked ? !sideHasAnyLegal(s, side) : false;
+    s.mate[side] = mateNow;
+
+    if (mateNow && !s.mateHit[side]){
+      s.mateHit[side] = true;
+
+      const king = s.board[kp.y][kp.x];
+      if (typeof king.hp !== 'number') king.hp = KING_HP;
+
+      king.hp = Math.max(0, king.hp - MATE_DAMAGE);
+
+      log(s, 'МАТ! Король ' + nameOf(s, side) + ' получает урон. HP ' +
+             king.hp + '/' + (king.maxHp || KING_HP));
+
+      if (king.hp <= 0){
+        s.board[kp.y][kp.x] = null;
+        finish(s, foe);
+        return;
+      }
+    }
+
+    if (!mateNow) s.mateHit[side] = false;
+  }
+}
+
+/* ================= СОЗДАНИЕ БОЯ ================= */
+
+function create(opts){
+  opts = opts || {};
+  const players = opts.players || {};
+  const setups  = opts.setups || {};
+
+  const s = {
+    id: opts.id || 'local',
+    arena: opts.arena || 1,
+
+    players: {
+      a: { key:  (players.a && players.a.key)  || 'a',
+           name: (players.a && players.a.name) || 'Ты',
+           cups: (players.a && players.a.cups) || 0 },
+      b: { key:  (players.b && players.b.key)  || 'b',
+           name: (players.b && players.b.name) || 'Враг',
+           cups: (players.b && players.b.cups) || 0 }
+    },
+
+    board: Array.from({ length:8 }, () => Array(8).fill(null)),
+    energy: { a:5, b:5 },
+    hand:   { a:[], b:[] },
+    deck:   { a:[], b:[] },
+    placed: { a:0, b:0 },
+
+    traps: [], returns: [],
+
+    elapsed: 0,
+    phase: 'main',
+    timeLeft: MAIN_TIME,
+    nightMode: 0,
+    nightUsed: { a:false, b:false },
+    spawnTimer: 15,
+    idle: 0,
+
+    check:   { a:false, b:false },
+    mate:    { a:false, b:false },
+    mateHit: { a:false, b:false },
+    statusAt: 0,
+
+    over: false,
+    winner: null,
+    log: []
+  };
+
+  deployArmy(s, 'a', setups.a);
+  deployArmy(s, 'b', setups.b);
+
+  if (countPieces(s) === 0){
+    fillStandard(s, 'a');
+    fillStandard(s, 'b');
+  }
+
+  if (s.arena === 10) s.energy = { a:10, b:10 };
+  if (s.arena === 5)  placeSaws(s);
+  if (s.arena === 1)  placeTraps(s);
+
+  log(s, 'Арена «' + ARENAS[s.arena - 1].name + '». Короля не съесть — ставь мат.');
+  return s;
+}
+
+/* ================= ДЕЙСТВИЯ ================= */
+
 function place(s, side, type, x, y){
   return { ok:false, error:'Доска уже собрана до боя' };
 }
@@ -383,23 +507,28 @@ function move(s, side, fx, fy, tx, ty){
   if (pc.chained) return { ok:false, error:'Фигура прикована' };
   if (pc.asleep) return { ok:false, error:'Фигура спит' };
 
+  const tgt = s.board[ty][tx];
+  if (tgt && tgt.type === 'king') return { ok:false, error:'Короля нельзя съесть — ставь мат' };
+
   const allowed = legalMoves(s, fx, fy);
   let ok = false;
   for (let i = 0; i < allowed.length; i++){
     if (allowed[i][0] === tx && allowed[i][1] === ty){ ok = true; break; }
   }
-  if (!ok) return { ok:false, error:'Так ходить нельзя' };
+  if (!ok){
+    if (kingAttacked(s, side)) return { ok:false, error:'Шах! Уходи из-под удара' };
+    return { ok:false, error:'Так ходить нельзя' };
+  }
 
   const cost = s.nightMode > 0 ? 0 : 1;
   if (s.energy[side] < cost) return { ok:false, error:'Мало эликсира' };
   s.energy[side] -= cost;
 
   const dx = tx - fx, dy = ty - fy;
-  const target = s.board[ty][tx];
 
-  if (target){
-    const res = capture(s, pc, fx, fy, tx, ty);
-    if (res === 'end') return { ok:true };
+  if (tgt){
+    capture(s, pc, fx, fy, tx, ty);
+    if (s.over) return { ok:true };
     if (s.board[ty][tx]) return { ok:true };
     relocate(s, fx, fy, tx, ty);
     if (pc.type === 'saw' && s.arena === 5) sawChain(s, tx, ty, dx, dy);
@@ -408,6 +537,7 @@ function move(s, side, fx, fy, tx, ty){
     triggerTrap(s, tx, ty);
   }
 
+  if (!s.over) updateStatus(s);
   return { ok:true };
 }
 
@@ -423,33 +553,12 @@ function relocate(s, fx, fy, tx, ty){
   }
 }
 
-function hitKing(s, king, attackerType){
-  if (typeof king.hp !== 'number') king.hp = KING_HP;
-
-  const dmg = kingDamage(attackerType);
-  king.hp = Math.max(0, king.hp - dmg);
-
-  log(s, PIECES[attackerType].name + ' бьёт короля: −' + dmg +
-         ', осталось ' + king.hp + '/' + (king.maxHp || KING_HP));
-
-  return king.hp;
-}
-
 function capture(s, attacker, fx, fy, tx, ty){
   const victim = s.board[ty][tx];
   if (!victim) return 'none';
+  if (victim.type === 'king') return 'king';
+
   const night = s.nightMode > 0;
-
-  if (victim.type === 'king'){
-    const left = hitKing(s, victim, attacker.type);
-
-    if (left <= 0){
-      s.board[ty][tx] = null;
-      finish(s, attacker.side);
-      return 'end';
-    }
-    return 'kinghit';
-  }
 
   if (!night && s.arena === 6){
     victim.side = attacker.side;
@@ -504,16 +613,7 @@ function sawChain(s, sx, sy, dx, dy){
     const saw = s.board[cy][cx];
     const t = s.board[ny][nx];
     if (!t || t.side === saw.side) return;
-
-    if (t.type === 'king'){
-      const left = hitKing(s, t, 'saw');
-      if (left <= 0){
-        s.board[ny][nx] = null;
-        s.board[cy][cx] = null;
-        finish(s, saw.side);
-      }
-      return;
-    }
+    if (t.type === 'king') return;
 
     s.board[ny][nx] = saw;
     s.board[cy][cx] = null;
@@ -580,7 +680,7 @@ function unlock(s, side, x, y){
 
 function resign(s, side){
   if (s.over) return { ok:false };
-  finish(s, side === 'a' ? 'b' : 'a');
+  finish(s, foeOf(side));
   return { ok:true };
 }
 
@@ -641,6 +741,12 @@ function tick(s, dt){
   }
 
   if (s.nightMode > 0) s.nightMode = Math.max(0, s.nightMode - dt);
+
+  s.statusAt = (s.statusAt || 0) + dt;
+  if (s.statusAt >= STATUS_STEP){
+    s.statusAt = 0;
+    updateStatus(s);
+  }
 }
 
 function timeUp(s){
@@ -683,6 +789,7 @@ global.Arena = {
   create: create,
   tick: tick,
   legalMoves: legalMoves,
+  pseudoMoves: pseudoMoves,
   place: place,
   move: move,
   castNight: castNight,
@@ -691,7 +798,11 @@ global.Arena = {
   finish: finish,
   energyRate: energyRate,
   kingHp: kingHp,
-  kingDamage: kingDamage,
+  kingPos: kingPos,
+  kingAttacked: kingAttacked,
+  isSquareAttacked: isSquareAttacked,
+  sideHasAnyLegal: sideHasAnyLegal,
+  updateStatus: updateStatus,
   countPieces: countPieces,
   defaultSetup: defaultSetup
 };
