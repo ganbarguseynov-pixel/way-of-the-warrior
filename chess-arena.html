@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Шахматные арены</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -71,7 +72,6 @@ body{
   border:1px solid #b91c1c;background:linear-gradient(145deg,#ef4444,#991b1b);
   color:#fff;font-size:13px;font-weight:800;cursor:pointer;
 }
-#retryBtn:active{transform:scale(.98)}
 
 /* ---------- БОЙ ---------- */
 #battle{display:flex;flex-direction:column;align-items:center;width:100%}
@@ -81,6 +81,7 @@ body{
   align-items:center;font-size:12px;margin-bottom:6px;color:#94a3b8;
 }
 #topBar b{color:#ffcc00}
+#timeLabel{font-weight:900;font-variant-numeric:tabular-nums}
 
 #enemyElix{
   width:95vw;max-width:400px;height:14px;background:#020617;
@@ -118,12 +119,18 @@ body{
 .piece.theirs{color:#9ec9ef}
 
 #myElix{
+  position:relative;
   width:95vw;max-width:400px;height:16px;background:#020617;
   border-radius:8px;overflow:hidden;margin:6px 0;
   box-shadow:inset 0 3px 6px rgba(0,0,0,.8);
 }
 #myElixFill{height:100%;width:50%;
   background:linear-gradient(180deg,#ff6b7a,#7f1d1d);transition:width .15s}
+#speedTag{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  font-size:10px;font-weight:900;color:#fff;letter-spacing:.3px;
+  text-shadow:0 1px 3px #000,0 0 6px #000;z-index:4;
+}
 
 #hand{width:95vw;max-width:400px;display:flex;gap:6px;margin-bottom:6px}
 .hcard{
@@ -252,12 +259,12 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
     <span id="oppLabel">Соперник</span>
     <span>Ставка <b id="stakeWin">+30</b> /
       <b id="stakeLose" style="color:#ef4444">−30</b></span>
-    <span id="timeLabel">3:00</span>
+    <span id="timeLabel">5:00</span>
   </div>
 
   <div id="enemyElix"><div id="enemyElixFill"></div></div>
   <div id="board"></div>
-  <div id="myElix"><div id="myElixFill"></div></div>
+  <div id="myElix"><div id="myElixFill"></div><span id="speedTag"></span></div>
   <div id="hand"></div>
 
   <div id="tools">
@@ -671,14 +678,29 @@ function render(s){
   $('myElixFill').style.width    = (myE * 10) + '%';
   $('enemyElixFill').style.width = (opE * 10) + '%';
 
+  const rate = Arena.energyRate(s);
+  $('speedTag').textContent = rate > 1 ? ('⚡×' + rate) : '';
+
+  const tl = $('timeLabel');
+  tl.style.color = '';
+
   if (s.arena === 10){
-    $('timeLabel').textContent = '∞';
+    tl.textContent = '∞';
   } else if (s.nightMode > 0){
-    $('timeLabel').textContent = 'НОЧЬ ' + Math.ceil(s.nightMode);
+    tl.textContent = 'НОЧЬ ' + Math.ceil(s.nightMode);
   } else {
     const t = Math.max(0, Math.ceil(s.timeLeft));
-    $('timeLabel').textContent =
-      Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+    const txt = Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+
+    if (s.phase === 'overtime'){
+      tl.textContent = 'ДОП ' + txt;
+      tl.style.color = '#ef4444';
+    } else if (s.timeLeft <= Arena.FAST_FROM){
+      tl.textContent = txt;
+      tl.style.color = '#f59e0b';
+    } else {
+      tl.textContent = txt;
+    }
   }
 
   $('nightBtn').disabled = !(
@@ -796,7 +818,6 @@ async function boot(){
 
     renderLobby();
 
-    // одно нажатие на главной — сразу в бой
     if (auto) startSearch();
 
   } catch (e){
