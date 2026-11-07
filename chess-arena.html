@@ -118,7 +118,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 </style>
 </head>
 <body data-arena="1">
-<div id="verTag">v22</div>
+<div id="verTag">v23</div>
 
 <div id="lobby">
   <div class="card">
@@ -153,7 +153,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
     <span id="speedTag"></span>
   </div>
   <div id="tools">
-    <button id="drawBtn">🤝 Ничья</button>
+    <button id="drawBtn">🤝 Ничья (2)</button>
     <button id="resignBtn">Сдаться</button>
   </div>
 </div>
@@ -199,7 +199,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 </div>
 
 <script src="arena.js?v=18"></script>
-<script src="net.js?v=15"></script>
+<script src="net.js?v=17"></script>
 <script>
 const sb = supabase.createClient(
   'https://qnpriwfxzuoymoumdtrl.supabase.co',
@@ -210,6 +210,8 @@ const tg = window.Telegram.WebApp;
 try { tg.ready(); tg.expand(); } catch (e){}
 
 const $ = function (id){ return document.getElementById(id); };
+
+const DRAW_MAX = 2;
 
 let sel = null;
 let cells = [];
@@ -500,18 +502,36 @@ $('promoCancel').onclick = function (){
   if (Net.state) render(Net.state);
 };
 
+/* сколько предложений ничьей осталось у меня */
+function drawsLeftOf(s, my){
+  const used = (s && s.drawUsed && s.drawUsed[my]) || 0;
+  return Math.max(0, DRAW_MAX - used);
+}
+
 function updateDrawUI(s, my, opp){
   const offer = s.drawOffer || { a:false, b:false };
   const mine   = !!offer[my];
   const theirs = !!offer[opp];
+  const left   = drawsLeftOf(s, my);
 
-  const key = (mine ? '1' : '0') + (theirs ? '1' : '0') + (s.over ? 'X' : '');
+  const key = (mine ? '1' : '0') + (theirs ? '1' : '0') + (s.over ? 'X' : '') + 'L' + left;
   if (key === drawState) return;
   drawState = key;
 
   const btn = $('drawBtn');
-  if (mine){ btn.textContent = '⏳ Ждём'; btn.disabled = true; }
-  else { btn.textContent = '🤝 Ничья'; btn.disabled = !!s.over; }
+  if (mine){
+    btn.textContent = '⏳ Ждём ответа';
+    btn.disabled = true;
+  } else if (left <= 0){
+    btn.textContent = '🤝 Ничья (0)';
+    btn.disabled = true;
+  } else {
+    btn.textContent = '🤝 Ничья (' + left + ')';
+    btn.disabled = !!s.over;
+  }
+
+  const title = $('drawPanelText');
+  if (title) title.textContent = 'Соперник предлагает ничью';
 
   if (theirs && !s.over) $('drawPanel').classList.remove('hidden');
   else $('drawPanel').classList.add('hidden');
@@ -678,7 +698,20 @@ function render(s){
   if (tl.style.color !== timeColor) tl.style.color = timeColor;
 }
 
-$('drawBtn').onclick = function (){ Net.intent({ t:'draw' }); };
+$('drawBtn').onclick = function (){
+  const s = Net.state;
+  if (s && !s.over){
+    const my = Net.mySide;
+    const offer = s.drawOffer || {};
+    if (offer[my]) return;
+    if (drawsLeftOf(s, my) <= 0){
+      toast('Ничью можно предлагать только ' + DRAW_MAX + ' раза за партию');
+      return;
+    }
+  }
+  Net.intent({ t:'draw' });
+};
+
 $('drawAccept').onclick = function (){ Net.intent({ t:'draw' }); };
 $('drawDecline').onclick = function (){ Net.intent({ t:'undraw' }); };
 
