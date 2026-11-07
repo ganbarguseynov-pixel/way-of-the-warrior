@@ -1,6 +1,6 @@
 /* ============================================================
-   net.js — сеть: очередь, матч, бот, ничья (VER 11)
-   3 секунды поиска → если никого, бой с «живым» ботом.
+   net.js — сеть: очередь, матч, бот, ничья (VER 12)
+   Бой переживает выход из приложения и продолжается.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -13,6 +13,7 @@ const PUSH_MS = 200;
 const TICK_MS = 100;
 
 const SEARCH_LIMIT_MS = 3000;
+const RESUME_LIMIT_MS = 60 * 60 * 1000;
 
 const BOT_NAMES = [
   'Дмитрий','Алексей','Максим','Артём','Сергей','Кирилл','Иван',
@@ -85,13 +86,18 @@ function slimState(s){
     board:     s.board,
     energy:    s.energy,
     traps:     s.traps,
+    returns:   s.returns,
     elapsed:   s.elapsed,
     phase:     s.phase,
     timeLeft:  s.timeLeft,
     nightMode: s.nightMode,
     nightUsed: s.nightUsed,
+    spawnTimer: s.spawnTimer,
+    idle:      s.idle,
     drawOffer: s.drawOffer,
     check:     s.check,
+    mate:      s.mate,
+    mateHit:   s.mateHit,
     over:      s.over,
     winner:    s.winner
   };
@@ -174,6 +180,7 @@ Net._writeRecord = function (){
       side:    Net.mySide,
       arena:   Net.arena,
       players: Net.players,
+      bot:     !!Net.botMode,
       at:      Date.now()
     }));
   } catch (e){}
@@ -188,7 +195,7 @@ Net._saveState = function (force){
   if (!Net.host || !Net.state) return;
 
   const now = Date.now();
-  if (!force && now - Net.saveMark < 1500) return;
+  if (!force && now - Net.saveMark < 1000) return;
   Net.saveMark = now;
 
   try { localStorage.setItem(STATE_KEY, JSON.stringify(Net.state)); }
@@ -530,6 +537,8 @@ Net._startBotMatch = async function (){
 
   Net.setups = { a: Net.mySetup(), b: null };
 
+  Net._writeRecord();
+
   Net._hostStart();
   Net._startBotBrain();
 };
@@ -576,6 +585,9 @@ Net._botMove = function (){
       if (!pc || pc.side !== 'b') continue;
       if (pc.asleep) continue;
       if (pc.chained) continue;
+
+      const cost = Arena.moveCost(s, pc);
+      if (s.energy.b < cost) continue;
 
       const list = Arena.legalMoves(s, x, y);
       for (let i = 0; i < list.length; i++){
@@ -763,31 +775,31 @@ Net._hostFinish = async function (){
   if (Net.finished) return;
 
   const s = Net.state;
-  const winnerKey =
-    s.winner === 'a' ? Net.players.a.key :
-    s.winner === 'b' ? Net.players.b.key : null;
-
   const payload = { winner: s.winner, matchId: Net.matchId, cups: null };
 
-  if (winnerKey){
-    const res = await Net.sb.rpc('arena_report_match', {
-      p_match:  Net.matchId,
-      p_a:      Net.players.a.key,
-      p_b:      Net.players.b.key,
-      p_winner: winnerKey,
-      p_arena:  Net.arena
-    });
+  if (Net.botMode){
+    payload.cups = await Net._localCups(s.winner);
+  } else {
+    const winnerKey =
+      s.winner === 'a' ? Net.players.a.key :
+      s.winner === 'b' ? Net.players.b.key : null;
 
-    if (!res.error){
-      payload.cups = res.data;
-    } else {
-      console.error('[net] report failed', res.error);
-      if (Net.botMode) payload.cups = await Net._localCups(s.winner);
+    if (winnerKey){
+      const res = await Net.sb.rpc('arena_report_match', {
+        p_match:  Net.matchId,
+        p_a:      Net.players.a.key,
+        p_b:      Net.players.b.key,
+        p_winner: winnerKey,
+        p_arena:  Net.arena
+      });
+
+      if (!res.error) payload.cups = res.data;
+      else console.error('[net] report failed', res.error);
     }
-  }
 
-  if (Net.matchCh && !Net.botMode){
-    Net.matchCh.send({ type: 'broadcast', event: 'result', payload: payload });
+    if (Net.matchCh){
+      Net.matchCh.send({ type: 'broadcast', event: 'result', payload: payload });
+    }
   }
 
   Net._finish(payload);
@@ -817,10 +829,12 @@ Net.tryResume = async function (){
   const rec = Net._readRecord();
   if (!rec || !rec.matchId || !rec.side) return false;
 
-  if (Date.now() - (rec.at || 0) > 20 * 60 * 1000){
+  if (Date.now() - (rec.at || 0) > RESUME_LIMIT_MS){
     Net._clearMatch();
     return false;
   }
+
+  const isBot = !!rec.bot;
 
   Net.matchId  = rec.matchId;
   Net.mySide   = rec.side;
@@ -828,16 +842,43 @@ Net.tryResume = async function (){
   Net.arena    = rec.arena || 1;
   Net.players  = rec.players;
   Net.finished = false;
-  Net.botMode  = false;
+  Net.botMode  = isBot;
   Net.state    = null;
+
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); } catch (e){}
+  if (saved && !saved.board) saved = null;
+
+  /* бой с подставным соперником: восстанавливаем у себя */
+  if (isBot){
+    if (!saved){
+      Net._clearMatch();
+      Net.botMode = false;
+      Net.matchId = null;
+      return false;
+    }
+
+    Net.state = saved;
+    Net.botMode = true;
+    Net.host = true;
+
+    Net.emit('start', {
+      side: 'a',
+      arena: Net.arena,
+      opponent: Net.players.b,
+      state: saved
+    });
+
+    Net.saveMark = 0;
+    Net._startLoop();
+    Net._startBotBrain();
+    return true;
+  }
 
   await Net._attach();
 
   if (Net.host){
-    let saved = null;
-    try { saved = JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); } catch (e){}
-
-    if (!saved || !saved.board){
+    if (!saved){
       Net._clearMatch();
       return false;
     }
