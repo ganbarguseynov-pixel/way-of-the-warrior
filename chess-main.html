@@ -103,7 +103,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </head>
 <body>
 
-<div id="verTag">v15</div>
+<div id="verTag">v16</div>
 
 <div class="top-bar">
   <div class="profile-badge" id="profileBadge">
@@ -117,7 +117,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
     <div class="currency trophy">🏆 <span id="trophies-count">0</span></div>
     <div class="currency coin">🪙 <span id="coins-count">1250</span></div>
     <div class="currency gem">💎 <span id="gems-count">50</span></div>
-    <div class="currency hist" onclick="window.location.href='chess-history.html'">📜 История</div>
+    <div class="currency hist" onclick="location.href='chess-history.html'">📜</div>
   </div>
 </div>
 
@@ -151,7 +151,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
   <div id="arenaModalHead">
     <div id="arenaHeadLeft">
       <h3>Все арены</h3>
-      <span class="verChip">v15</span>
+      <span class="verChip">v16</span>
     </div>
     <button id="arenaClose">✕</button>
   </div>
@@ -168,7 +168,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
     <input id="nickInput" maxlength="16" placeholder="Ник" autocomplete="off" spellcheck="false">
     <div id="nickErr"></div>
     <button id="nickOk">Сохранить</button>
-    <div id="nickVer">окно v15</div>
+    <div id="nickVer">окно v16</div>
   </div>
 </div>
 
@@ -202,6 +202,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </div>
 
 <script src="arena.js?v=18"></script>
+<script src="friends.js"></script>
 <script>
 const sb = supabase.createClient(
   'https://qnpriwfxzuoymoumdtrl.supabase.co',
@@ -305,6 +306,8 @@ function setGems(v){
   $('gems-count').textContent = n;
 }
 
+/* ---------------- КЭШ ПЕРВЫХ КАДРОВ ---------------- */
+
 const POSTER_KEY = 'cr_arena_poster_';
 
 function getPoster(n){
@@ -320,17 +323,19 @@ function grabPoster(v, n){
   if (!v.videoWidth || !v.videoHeight) return;
 
   try {
-    const w = 320;
+    const w = 360;
     const h = Math.round(w * (v.videoHeight / v.videoWidth));
     const c = document.createElement('canvas');
     c.width = w;
     c.height = h;
     c.getContext('2d').drawImage(v, 0, 0, w, h);
-    const url = c.toDataURL('image/jpeg', 0.6);
+    const url = c.toDataURL('image/jpeg', 0.62);
     setPoster(n, url);
     v.poster = url;
   } catch (e){}
 }
+
+/* ---------------- видео арены ---------------- */
 
 function videoPath(n){
   const name = ARENA_VIDEO[n - 1];
@@ -388,6 +393,8 @@ function playArenaVideo(n){
   });
 })();
 
+/* ---------------- отрисовка ---------------- */
+
 function render(cups){
   lastCups = cups;
 
@@ -434,6 +441,8 @@ function render(cups){
 
   markMine(arena);
 }
+
+/* ---------------- ник ---------------- */
 
 function openNick(mode){
   nickMode = mode;
@@ -529,6 +538,8 @@ $('nickOk').onclick = async function (){
       'Ник сохранён на устройстве, но в базу не записан: ' + dbMsg;
   }
 };
+
+/* ---------------- список арен ---------------- */
 
 function buildArenaBrowser(){
   if (slidesBuilt) return;
@@ -770,6 +781,8 @@ $('arenaClose').onclick = function (){
   }
 };
 
+/* ---------------- загрузка профиля ---------------- */
+
 async function boot(){
   try {
     const res = await sb.rpc('arena_ensure_player', {
@@ -824,6 +837,50 @@ document.addEventListener('visibilitychange', function (){
     if (v) { try { v.pause(); } catch (e){} }
   }
 });
+</script>
+
+<script>
+/* всплывающий вызов на дружескую партию */
+(function(){
+  if (!window.Friends) return;
+
+  function popup(c){
+    var o = document.createElement('div');
+    o.style.cssText = 'position:fixed;inset:0;background:rgba(2,6,23,.95);z-index:2000;' +
+      'display:flex;align-items:center;justify-content:center;padding:24px;text-align:center';
+    o.innerHTML =
+      '<div style="max-width:330px;width:100%;background:linear-gradient(145deg,#1e293b,#0f172a);' +
+        'border:2px solid #22c55e;border-radius:16px;padding:20px">' +
+        '<div style="font-size:40px;margin-bottom:8px">⚔️</div>' +
+        '<div id="fnm" style="font-size:15px;font-weight:900;margin-bottom:6px"></div>' +
+        '<div style="font-size:12px;color:#94a3b8;margin-bottom:14px">' +
+          'Вызывает тебя на дружескую партию</div>' +
+        '<div style="display:flex;gap:8px">' +
+          '<button id="fNo" style="flex:1;padding:12px;border:0;border-radius:10px;' +
+            'background:linear-gradient(145deg,#ef4444,#991b1b);color:#fff;font-weight:900;' +
+            'font-size:13px">Отклонить</button>' +
+          '<button id="fYes" style="flex:1;padding:12px;border:0;border-radius:10px;' +
+            'background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-weight:900;' +
+            'font-size:13px">Играть</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(o);
+    o.querySelector('#fnm').textContent = c.from_name || 'Игрок';
+
+    o.querySelector('#fNo').onclick = async function(){
+      o.remove();
+      await Friends.answer(c.id, 'declined');
+    };
+
+    o.querySelector('#fYes').onclick = async function(){
+      o.remove();
+      await Friends.answer(c.id, 'accepted');
+      Friends.play(c.id, 'guest', c.from_key, c.from_name, c.from_cups, c.arena);
+    };
+  }
+
+  setTimeout(function(){ Friends.watch(popup); }, 1500);
+})();
 </script>
 </body>
 </html>
