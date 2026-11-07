@@ -1,9 +1,16 @@
 /* ============================================================
    net.js — сеть: очередь, матч, запись кубков
-   Правки: матчмейкинг в две фазы, хост перерисовывает поле.
+   Выход игрока отдельно не обрабатывается.
+   Возврат в незавершённый бой — через запись в localStorage.
    ============================================================ */
 (function (global) {
 'use strict';
+
+const RECORD_KEY = 'arenaActiveMatch';
+const STATE_KEY  = 'arenaActiveState';
+
+const NARROW   = 30;
+const PATIENCE = 30;
 
 const Net = {
   sb: null,
@@ -24,9 +31,11 @@ const Net = {
 
   timer: null,
   retry: null,
+  resumeTimer: null,
+  saveMark: 0,
   queueSince: 0,
   pending: null,
-  oppPresent: false
+  finished: false
 };
 
 /* ---------------- события ---------------- */
@@ -92,16 +101,45 @@ Net.leaderboard = async function (limit){
   return res.data || [];
 };
 
+/* ---------------- запись текущего матча ---------------- */
+
+Net._writeRecord = function (){
+  try {
+    localStorage.setItem(RECORD_KEY, JSON.stringify({
+      matchId: Net.matchId,
+      side:    Net.mySide,
+      arena:   Net.arena,
+      players: Net.players,
+      at:      Date.now()
+    }));
+  } catch (e){}
+};
+
+Net._readRecord = function (){
+  try { return JSON.parse(localStorage.getItem(RECORD_KEY) || 'null'); }
+  catch (e){ return null; }
+};
+
+Net._saveState = function (force){
+  if (!Net.host || !Net.state) return;
+
+  const now = Date.now();
+  if (!force && now - Net.saveMark < 900) return;
+  Net.saveMark = now;
+
+  try { localStorage.setItem(STATE_KEY, JSON.stringify(Net.state)); }
+  catch (e){}
+};
+
+Net._clearMatch = function (){
+  if (Net.timer){ clearInterval(Net.timer); Net.timer = null; }
+  if (Net.resumeTimer){ clearTimeout(Net.resumeTimer); Net.resumeTimer = null; }
+
+  try { localStorage.removeItem(RECORD_KEY); } catch (e){}
+  try { localStorage.removeItem(STATE_KEY); } catch (e){}
+};
+
 /* ---------------- очередь ---------------- */
-
-/*
-  Две фазы:
-    0–30 секунд   — только соперник с разницей кубков до 30;
-    после 30 сек  — ближайший по кубкам без ограничения.
-*/
-
-const NARROW = 30;      // разница кубков в первой фазе
-const PATIENCE = 30;    // секунд до перехода во вторую фазу
 
 Net.findMatch = async function (){
   if (Net.queueCh) return;
@@ -138,7 +176,6 @@ Net.findMatch = async function (){
     }
   });
 
-  // presence меняется не всегда — перепроверяем сами
   if (Net.retry) clearInterval(Net.retry);
   Net.retry = setInterval(function (){ Net._tryPair(); }, 1500);
 };
@@ -198,7 +235,6 @@ Net._tryPair = function (){
     return;
   }
 
-  // ближайший по кубкам, при равенстве — по ключу (детерминированно у обоих)
   others.sort(function (x, y){
     const dx = Math.abs(x.cups - myCups);
     const dy = Math.abs(y.cups - myCups);
@@ -209,10 +245,8 @@ Net._tryPair = function (){
   let opp = null;
 
   if (waited < PATIENCE){
-    // фаза 1: только ±30
     if (Math.abs(others[0].cups - myCups) <= NARROW) opp = others[0];
   } else {
-    // фаза 2: ближайший, дистанция не важна
     opp = others[0];
   }
 
@@ -224,8 +258,7 @@ Net._tryPair = function (){
     return;
   }
 
-  // приглашает тот, у кого ключ меньше — двойного приглашения не будет
-  if (Net.key > opp.key || Net.key === opp.key) return;
+  if (Net.key >= opp.key) return;
 
   const matchId = uuid();
   const arena = Math.min(Arena.arenaOf(myCups), Arena.arenaOf(opp.cups));
@@ -247,7 +280,6 @@ Net._tryPair = function (){
     }
   });
 
-  // ответа нет — снимаем блокировку и пробуем снова
   setTimeout(function (){
     if (Net.pending && Net.pending.matchId === matchId && !Net.matchId){
       Net.pending = null;
@@ -295,25 +327,9 @@ Net._onAccept = function (p){
   });
 };
 
-/* ---------------- бой ---------------- */
+/* ---------------- канал матча ---------------- */
 
-Net._beginMatch = async function (m){
-  await Net.cancelQueue();
-
-  Net.matchId    = m.matchId;
-  Net.mySide     = m.side;
-  Net.host       = (m.side === 'a');
-  Net.arena      = m.arena || 1;
-  Net.oppPresent = false;
-
-  const myCups = Net.me ? Net.me.cups : 0;
-  const meP    = { key: Net.key,  name: Net.name,  cups: myCups };
-  const oppP   = { key: m.oppKey, name: m.oppName, cups: m.oppCups || 0 };
-
-  Net.players = Net.host
-    ? { a: meP, b: oppP }
-    : { a: oppP, b: meP };
-
+Net._attach = async function (){
   const ch = Net.sb.channel('arena_match_' + Net.matchId, {
     config: {
       broadcast: { self: false },
@@ -322,17 +338,20 @@ Net._beginMatch = async function (m){
   });
   Net.matchCh = ch;
 
-  // гость присылает нажатия — хост их применяет
   ch.on('broadcast', { event: 'intent' }, function (msg){
     if (Net.host) Net._applyIntent(payloadOf(msg), 'b');
   });
 
-  // хост рассылает состояние — гость его рисует
   ch.on('broadcast', { event: 'state' }, function (msg){
-    if (!Net.host){
-      Net.state = payloadOf(msg);
-      Net.emit('state', Net.state);
-    }
+    if (Net.host) return;
+    Net.state = payloadOf(msg);
+    if (Net.resumeTimer){ clearTimeout(Net.resumeTimer); Net.resumeTimer = null; }
+    Net.emit('state', Net.state);
+  });
+
+  // вернувшийся игрок просит прислать текущее состояние
+  ch.on('broadcast', { event: 'hello' }, function (){
+    if (Net.host && Net.state) Net._push();
   });
 
   ch.on('broadcast', { event: 'error' }, function (msg){
@@ -344,22 +363,41 @@ Net._beginMatch = async function (m){
     Net._finish(payloadOf(msg));
   });
 
+  // кто-то зашёл в канал — хост отправляет свежее состояние
   ch.on('presence', { event: 'sync' }, function (){
-    const list = Net._presenceList(ch);
-    let seen = false;
-    for (let i = 0; i < list.length; i++) if (list[i].key === m.oppKey) seen = true;
-
-    if (seen){
-      Net.oppPresent = true;
-    } else if (Net.oppPresent && !(Net.state && Net.state.over)){
-      if (Net.timer){ clearInterval(Net.timer); Net.timer = null; }
-      Net.emit('disconnect', {});
-    }
+    if (Net.host && Net.state) Net._push();
   });
 
   await ch.subscribe(function (status){
     if (status === 'SUBSCRIBED') ch.track({ key: Net.key });
   });
+
+  return ch;
+};
+
+/* ---------------- бой ---------------- */
+
+Net._beginMatch = async function (m){
+  await Net.cancelQueue();
+
+  Net.matchId  = m.matchId;
+  Net.mySide   = m.side;
+  Net.host     = (m.side === 'a');
+  Net.arena    = m.arena || 1;
+  Net.finished = false;
+  Net.state    = null;
+
+  const myCups = Net.me ? Net.me.cups : 0;
+  const meP    = { key: Net.key,  name: Net.name,  cups: myCups };
+  const oppP   = { key: m.oppKey, name: m.oppName, cups: m.oppCups || 0 };
+
+  Net.players = Net.host
+    ? { a: meP, b: oppP }
+    : { a: oppP, b: meP };
+
+  Net._writeRecord();
+
+  await Net._attach();
 
   if (Net.host){
     Net._hostStart();
@@ -367,7 +405,7 @@ Net._beginMatch = async function (m){
     Net.emit('start', {
       side: 'b',
       arena: Net.arena,
-      opponent: { name: m.oppName, cups: m.oppCups || 0 },
+      opponent: Net.players.a,
       state: null
     });
   }
@@ -383,16 +421,24 @@ Net._hostStart = function (){
   Net.emit('start', {
     side: 'a',
     arena: Net.arena,
-    opponent: { name: Net.players.b.name, cups: Net.players.b.cups },
+    opponent: Net.players.b,
     state: Net.state
   });
 
+  Net.saveMark = 0;
   Net._push();
+  Net._startLoop();
+};
+
+Net._startLoop = function (){
+  if (Net.timer){ clearInterval(Net.timer); Net.timer = null; }
 
   let last = performance.now();
   let acc  = 0;
 
   Net.timer = setInterval(function (){
+    if (!Net.state || Net.finished) return;
+
     const now = performance.now();
     const dt  = Math.min(0.2, (now - last) / 1000);
     last = now;
@@ -414,13 +460,13 @@ Net._broadcastState = function (){
   Net.matchCh.send({ type: 'broadcast', event: 'state', payload: Net.state });
 };
 
-/*
-  ИСПРАВЛЕНИЕ: раньше хост рассылал состояние, но себе его не отдавал —
-  его поле замирало до собственного хода. Теперь он рисует и у себя.
-*/
 Net._push = function (){
   if (!Net.state) return;
-  if (Net.host) Net.emit('state', Net.state);
+
+  if (Net.host){
+    Net.emit('state', Net.state);
+    Net._saveState(false);
+  }
   Net._broadcastState();
 };
 
@@ -450,11 +496,13 @@ Net._applyIntent = function (msg, side){
     return;
   }
 
+  Net._saveState(true);
   Net._push();
 };
 
 Net._hostFinish = async function (){
   if (Net.timer){ clearInterval(Net.timer); Net.timer = null; }
+  if (Net.finished) return;
 
   const s = Net.state;
   const winnerKey =
@@ -487,37 +535,107 @@ Net._hostFinish = async function (){
 
 Net.intent = function (msg){
   if (Net.host){
-    Net._applyIntent(msg, 'a');
+    Net._applyIntent(msg, Net.mySide);
   } else if (Net.matchCh){
     Net.matchCh.send({ type: 'broadcast', event: 'intent', payload: msg });
   }
 };
 
 Net.resign = function (){
-  if (Net.host) Net._applyIntent({ t: 'resign' }, 'a');
+  if (Net.host) Net._applyIntent({ t: 'resign' }, Net.mySide);
   else if (Net.matchCh){
     Net.matchCh.send({ type: 'broadcast', event: 'intent', payload: { t: 'resign' } });
   }
+};
+
+/* ---------------- возврат в незавершённый бой ---------------- */
+
+Net.tryResume = async function (){
+  const rec = Net._readRecord();
+  if (!rec || !rec.matchId || !rec.side) return false;
+
+  // брошенные матчи старше 20 минут не восстанавливаем
+  if (Date.now() - (rec.at || 0) > 20 * 60 * 1000){
+    Net._clearMatch();
+    return false;
+  }
+
+  Net.matchId  = rec.matchId;
+  Net.mySide   = rec.side;
+  Net.host     = (rec.side === 'a');
+  Net.arena    = rec.arena || 1;
+  Net.players  = rec.players;
+  Net.finished = false;
+  Net.state    = null;
+
+  await Net._attach();
+
+  if (Net.host){
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); } catch (e){}
+
+    if (!saved || !saved.board){
+      Net._clearMatch();
+      return false;
+    }
+
+    Net.state = saved;
+    Net.emit('start', {
+      side: 'a',
+      arena: Net.arena,
+      opponent: Net.players.b,
+      state: saved
+    });
+
+    Net._startLoop();
+    Net.saveMark = 0;
+    Net._push();
+    return true;
+  }
+
+  Net.emit('start', {
+    side: 'b',
+    arena: Net.arena,
+    opponent: Net.players.a,
+    state: null
+  });
+
+  if (Net.matchCh){
+    Net.matchCh.send({ type: 'broadcast', event: 'hello', payload: { from: Net.key } });
+  }
+
+  if (Net.resumeTimer) clearTimeout(Net.resumeTimer);
+  Net.resumeTimer = setTimeout(function (){
+    Net.resumeTimer = null;
+    if (!Net.state && !Net.finished) Net.emit('resumeFailed', {});
+  }, 8000);
+
+  return true;
 };
 
 /* ---------------- конец боя ---------------- */
 
 Net._finish = async function (payload){
   if (Net.timer){ clearInterval(Net.timer); Net.timer = null; }
-  if (!payload) return;
+  if (!payload || Net.finished) return;
+
+  Net.finished = true;
+  Net._clearMatch();
 
   let before = Net.me ? Net.me.cups : 0;
   let after  = before;
 
   if (payload.cups){
-    const k = Net.host ? 'a' : 'b';
+    const k = Net.mySide;
     before = payload.cups[k + '_before'];
     after  = payload.cups[k + '_after'];
   }
 
   await Net.refresh();
 
-  const opp = Net.players ? (Net.host ? Net.players.b : Net.players.a) : { name: 'Враг' };
+  const opp = Net.players
+    ? (Net.mySide === 'a' ? Net.players.b : Net.players.a)
+    : { name: 'Враг' };
 
   Net.emit('result', {
     winner:   payload.winner,
@@ -531,7 +649,8 @@ Net._finish = async function (payload){
 };
 
 Net.leaveMatch = async function (){
-  if (Net.timer){ clearInterval(Net.timer); Net.timer = null; }
+  Net._clearMatch();
+
   if (Net.retry){ clearInterval(Net.retry); Net.retry = null; }
 
   if (Net.matchCh){
@@ -545,7 +664,7 @@ Net.leaveMatch = async function (){
   Net.host    = false;
   Net.mySide  = null;
   Net.pending = null;
-  Net.oppPresent = false;
+  Net.finished = false;
 };
 
 global.Net = Net;
