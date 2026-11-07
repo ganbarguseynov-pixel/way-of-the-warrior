@@ -29,13 +29,6 @@ body{
   padding:3px 8px;border-radius:6px;pointer-events:none;
 }
 
-#diag{
-  position:fixed;top:0;left:0;right:0;z-index:1400;
-  background:#7f1d1d;color:#fff;font-size:11px;line-height:1.4;
-  padding:10px;font-family:ui-monospace,Menlo,Consolas,monospace;
-  word-break:break-word;
-}
-
 #lobby{width:95vw;max-width:400px;text-align:center;margin-top:20px}
 .card{
   background:linear-gradient(145deg,#1e293b,#0f172a);
@@ -70,13 +63,9 @@ body{
   background:rgba(239,68,68,.12);border:1px solid #7f1d1d;
   text-align:left;
 }
-#bootErrHead{
-  font-size:12px;font-weight:900;color:#fca5a5;margin-bottom:6px;
-  letter-spacing:.5px;
-}
+#bootErrHead{font-size:12px;font-weight:900;color:#fca5a5;margin-bottom:6px;letter-spacing:.5px}
 #bootErrText{
-  font-size:11px;color:#fecaca;line-height:1.45;
-  word-break:break-word;
+  font-size:11px;color:#fecaca;line-height:1.45;word-break:break-word;
   font-family:ui-monospace,Menlo,Consolas,monospace;
   max-height:150px;overflow-y:auto;
 }
@@ -94,6 +83,16 @@ body{
 }
 #topBar b{color:#ffcc00}
 #timeLabel{font-weight:900;font-variant-numeric:tabular-nums;font-size:15px}
+
+#checkBar{
+  width:95vw;max-width:400px;text-align:center;
+  font-size:12.5px;font-weight:900;letter-spacing:1.5px;
+  color:#fff;border-radius:8px;padding:6px;margin-bottom:6px;
+  background:linear-gradient(145deg,#ef4444,#991b1b);
+  box-shadow:0 0 18px rgba(239,68,68,.55);
+  animation:barPulse .8s infinite alternate;
+}
+@keyframes barPulse{from{opacity:.75}to{opacity:1}}
 
 #enemyElix{
   width:95vw;max-width:400px;height:14px;background:#020617;
@@ -125,6 +124,10 @@ body{
 .cell.chain::before{content:'⛓';position:absolute;color:#d4a017;
   font-size:55%;opacity:.95}
 .cell.sleep{filter:grayscale(.85) brightness(.55)}
+.cell.check{box-shadow:inset 0 0 0 3px #ef4444,inset 0 0 20px rgba(239,68,68,.8)}
+.cell.check .piece{color:#ff5a5a!important;animation:checkPulse .65s infinite alternate}
+@keyframes checkPulse{from{filter:brightness(1)}to{filter:brightness(1.9) drop-shadow(0 0 10px #ef4444)}}
+
 .piece{position:relative;z-index:3;line-height:1;
   text-shadow:0 2px 4px rgba(0,0,0,.9)}
 .piece.mine{color:#ffe9c4}
@@ -230,8 +233,7 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
 </head>
 <body data-arena="1">
 
-<div id="verTag">v10</div>
-<div id="diag" class="hidden"></div>
+<div id="verTag">v11</div>
 
 <div id="lobby">
   <div class="card">
@@ -259,6 +261,8 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
       <b id="stakeLose" style="color:#ef4444">−30</b></span>
     <span id="timeLabel">5:00</span>
   </div>
+
+  <div id="checkBar" class="hidden">ШАХ!</div>
 
   <div id="enemyElix"><div id="enemyElixFill"></div></div>
   <div id="board"></div>
@@ -296,7 +300,7 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
     <div class="icon-wrap"><span class="icon">🏆</span></div><span>Рейтинг</span></button>
 </div>
 
-<script src="arena.js?v=10"></script>
+<script src="arena.js?v=11"></script>
 <script src="net.js?v=10"></script>
 <script>
 const sb = supabase.createClient(
@@ -323,13 +327,6 @@ function toast(text){
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function (){ t.classList.remove('show'); }, 2200);
-}
-
-function diag(text){
-  const d = $('diag');
-  if (!text){ d.classList.add('hidden'); d.textContent = ''; return; }
-  d.textContent = text;
-  d.classList.remove('hidden');
 }
 
 function playerKey(){
@@ -459,6 +456,7 @@ Net.on('result', async function (r){
   stopSearch();
 
   $('battle').classList.add('hidden');
+  $('checkBar').classList.add('hidden');
   $('overlay').classList.remove('hidden');
 
   const won  = r.winner === r.mySide;
@@ -554,7 +552,7 @@ function onCell(dx, dy){
     if (!ok){
       sel = null;
       render(s);
-      toast('Так ходить нельзя');
+      toast(Arena.kingAttacked(s, my) ? 'Шах! Уходи из-под удара' : 'Так ходить нельзя');
       return;
     }
 
@@ -580,21 +578,26 @@ function onCell(dx, dy){
 function render(s){
   if (!s) return;
 
-  /* диагностика: если доска пришла пустая — пишем это на экран */
-  if (typeof Arena.countPieces === 'function'){
-    const n = Arena.countPieces(s);
-    if (n === 0){
-      diag('ПУСТАЯ ДОСКА. Arena.VER=' + (Arena.VER || 'нет') +
-           ' | countPieces=' + n +
-           ' | setups=' + (Net.setups ? 'есть' : 'нет') +
-           ' | состояние от ' + (Net.host ? 'хоста' : 'гостя'));
-    } else {
-      diag('');
-    }
+  const my  = Net.mySide;
+  const opp = (my === 'a') ? 'b' : 'a';
+  const rot = (my === 'b');
+
+  let myCheck = false, opCheck = false;
+  if (Arena && typeof Arena.kingAttacked === 'function'){
+    myCheck = Arena.kingAttacked(s, my);
+    opCheck = Arena.kingAttacked(s, opp);
   }
 
-  const my  = Net.mySide;
-  const rot = (my === 'b');
+  const bar = $('checkBar');
+  if (myCheck){
+    bar.textContent = 'ШАХ! УХОДИ ИЗ-ПОД УДАРА';
+    bar.classList.remove('hidden');
+  } else if (opCheck){
+    bar.textContent = 'ШАХ У СОПЕРНИКА';
+    bar.classList.remove('hidden');
+  } else {
+    bar.classList.add('hidden');
+  }
 
   if (sel){
     const p = s.board[sel.y] && s.board[sel.y][sel.x];
@@ -631,14 +634,18 @@ function render(s){
       }
     }
 
+    const kingChk = !!(pc && pc.type === 'king' &&
+                       ((pc.side === my) ? myCheck : opCheck));
+
     let sig = (isLight ? 'L' : 'D');
     if (pc){
       sig += pc.type + pc.side + (pc.asleep ? 'a' : '') + (pc.chained ? 'c' : '');
       if (pc.type === 'king' && pc.maxHp > 1) sig += 'h' + pc.hp;
     }
-    if (trapOn) sig += 'T';
-    if (isSel)  sig += 'S';
-    if (isMove) sig += (isCap ? 'C' : 'M');
+    if (kingChk) sig += 'K';
+    if (trapOn)  sig += 'T';
+    if (isSel)   sig += 'S';
+    if (isMove)  sig += (isCap ? 'C' : 'M');
 
     if (cellSig[idx] === sig) continue;
     cellSig[idx] = sig;
@@ -646,7 +653,8 @@ function render(s){
     el.className = 'cell ' + (isLight ? 'light' : 'dark');
     el.textContent = '';
 
-    if (trapOn) el.classList.add('trap');
+    if (trapOn)  el.classList.add('trap');
+    if (kingChk) el.classList.add('check');
 
     if (pc){
       if (pc.asleep)  el.classList.add('sleep');
@@ -660,12 +668,12 @@ function render(s){
       el.appendChild(sp);
 
       if (pc.type === 'king' && pc.maxHp > 1 && typeof pc.hp === 'number'){
-        const bar = document.createElement('div');
-        bar.className = 'king-hp' + (pc.hp / pc.maxHp <= 0.34 ? ' low' : '');
+        const hpBar = document.createElement('div');
+        hpBar.className = 'king-hp' + (pc.hp / pc.maxHp <= 0.34 ? ' low' : '');
         const fill = document.createElement('i');
         fill.style.width = Math.max(0, Math.min(100, (pc.hp / pc.maxHp) * 100)) + '%';
-        bar.appendChild(fill);
-        el.appendChild(bar);
+        hpBar.appendChild(fill);
+        el.appendChild(hpBar);
       }
     }
 
@@ -674,7 +682,7 @@ function render(s){
   }
 
   const myE = s.energy[my];
-  const opE = s.energy[my === 'a' ? 'b' : 'a'];
+  const opE = s.energy[opp];
   $('myElixFill').style.width    = Math.min(100, myE * 10) + '%';
   $('enemyElixFill').style.width = Math.min(100, opE * 10) + '%';
 
