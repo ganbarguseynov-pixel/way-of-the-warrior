@@ -1272,4 +1272,4 @@ Net.leaveMatch = async function (){
 
 global.Net = Net;
 
-})(window);л
+})(window);
