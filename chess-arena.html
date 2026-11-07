@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Шахматные арены</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -17,7 +19,6 @@ body{
   display:flex;flex-direction:column;align-items:center;
   min-height:100vh;min-height:100dvh;
   padding:8px 0 80px;user-select:none;overflow-x:hidden;
-  transition:background .3s;
 }
 .hidden{display:none!important}
 
@@ -26,6 +27,13 @@ body{
   font-size:10px;font-weight:900;color:#facc15;letter-spacing:.5px;
   background:#0f172a;border:1px solid #facc15;
   padding:3px 8px;border-radius:6px;pointer-events:none;
+}
+
+#diag{
+  position:fixed;top:0;left:0;right:0;z-index:1400;
+  background:#7f1d1d;color:#fff;font-size:11px;line-height:1.4;
+  padding:10px;font-family:ui-monospace,Menlo,Consolas,monospace;
+  word-break:break-word;
 }
 
 #lobby{width:95vw;max-width:400px;text-align:center;margin-top:20px}
@@ -222,7 +230,8 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
 </head>
 <body data-arena="1">
 
-<div id="verTag">v9</div>
+<div id="verTag">v10</div>
+<div id="diag" class="hidden"></div>
 
 <div id="lobby">
   <div class="card">
@@ -287,8 +296,8 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
     <div class="icon-wrap"><span class="icon">🏆</span></div><span>Рейтинг</span></button>
 </div>
 
-<script src="arena.js"></script>
-<script src="net.js"></script>
+<script src="arena.js?v=10"></script>
+<script src="net.js?v=10"></script>
 <script>
 const sb = supabase.createClient(
   'https://qnpriwfxzuoymoumdtrl.supabase.co',
@@ -314,6 +323,13 @@ function toast(text){
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function (){ t.classList.remove('show'); }, 2200);
+}
+
+function diag(text){
+  const d = $('diag');
+  if (!text){ d.classList.add('hidden'); d.textContent = ''; return; }
+  d.textContent = text;
+  d.classList.remove('hidden');
 }
 
 function playerKey(){
@@ -564,6 +580,19 @@ function onCell(dx, dy){
 function render(s){
   if (!s) return;
 
+  /* диагностика: если доска пришла пустая — пишем это на экран */
+  if (typeof Arena.countPieces === 'function'){
+    const n = Arena.countPieces(s);
+    if (n === 0){
+      diag('ПУСТАЯ ДОСКА. Arena.VER=' + (Arena.VER || 'нет') +
+           ' | countPieces=' + n +
+           ' | setups=' + (Net.setups ? 'есть' : 'нет') +
+           ' | состояние от ' + (Net.host ? 'хоста' : 'гостя'));
+    } else {
+      diag('');
+    }
+  }
+
   const my  = Net.mySide;
   const rot = (my === 'b');
 
@@ -626,7 +655,8 @@ function render(s){
       const sp = document.createElement('span');
       const mine = (pc.side === my);
       sp.className = 'piece ' + (mine ? 'mine' : 'theirs');
-      sp.textContent = mine ? Arena.PIECES[pc.type].w : Arena.PIECES[pc.type].b;
+      const def = Arena.PIECES[pc.type];
+      sp.textContent = def ? (mine ? def.w : def.b) : '?';
       el.appendChild(sp);
 
       if (pc.type === 'king' && pc.maxHp > 1 && typeof pc.hp === 'number'){
