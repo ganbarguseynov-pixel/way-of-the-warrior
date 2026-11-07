@@ -207,13 +207,11 @@ body.battle-mode #verTag{display:none!important}
   pointer-events:none;
 }
 
-/* мои фигуры — всегда синие */
 .piece.mine{
   color:#5aa9ec;
   text-shadow:0 0 6px rgba(90,169,236,.75),0 2px 4px rgba(0,0,0,.95);
 }
 
-/* фигуры соперника — всегда красные */
 .piece.theirs{
   color:#ef5350;
   text-shadow:0 0 6px rgba(239,83,80,.75),0 2px 4px rgba(0,0,0,.95);
@@ -284,6 +282,39 @@ body.battle-mode #verTag{display:none!important}
   background:linear-gradient(145deg,#475569,#1e293b);color:#fff;cursor:pointer;
 }
 #tools button:disabled{opacity:.35;cursor:not-allowed}
+
+/* выбор фигуры при превращении пешки */
+#promoPanel{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(92vw,340px);
+  background:linear-gradient(145deg,#1e293b,#0f172a);
+  border:2px solid #5aa9ec;border-radius:16px;
+  padding:16px;z-index:980;
+  box-shadow:0 18px 46px rgba(0,0,0,.92);
+  text-align:center;
+}
+#promoTitle{
+  font-size:14px;font-weight:900;color:#e2e8f0;
+  letter-spacing:.5px;margin-bottom:12px;
+}
+#promoRow{display:flex;gap:8px}
+.promo-opt{
+  flex:1;border:2px solid #334155;border-radius:12px;
+  background:#0f172a;cursor:pointer;
+  padding:8px 0 6px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.promo-opt:active{border-color:#5aa9ec;background:#132033}
+.promo-glyph{
+  font-size:30px;line-height:1;color:#5aa9ec;
+  text-shadow:0 0 8px rgba(90,169,236,.7),0 2px 4px rgba(0,0,0,.9);
+}
+.promo-name{font-size:9.5px;font-weight:800;color:#94a3b8}
+#promoCancel{
+  width:100%;margin-top:10px;padding:9px;border-radius:9px;
+  border:1px solid #475569;background:transparent;
+  color:#94a3b8;font-size:12px;font-weight:800;cursor:pointer;
+}
 
 #drawPanel{
   position:fixed;left:50%;transform:translateX(-50%);
@@ -368,7 +399,6 @@ body[data-arena="8"] {--dark:#1b1b22;--light:#2b2b38;--accent:#3b6fd4;--bg:#0808
 body[data-arena="9"] {--dark:#262a1a;--light:#3a4028;--accent:#6a8f3a;--bg:#0a0c07}
 body[data-arena="10"]{--dark:#a89880;--light:#ded4c2;--accent:#c9a227;--bg:#0d0b08}
 
-/* на светлом мраморе синий и красный затемняются ради контраста */
 body[data-arena="10"] .piece.mine{
   color:#15529c;
   text-shadow:0 0 4px rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.35);
@@ -381,7 +411,7 @@ body[data-arena="10"] .piece.theirs{
 </head>
 <body data-arena="1">
 
-<div id="verTag">v20</div>
+<div id="verTag">v21</div>
 
 <div id="lobby">
   <div class="card">
@@ -427,6 +457,21 @@ body[data-arena="10"] .piece.theirs{
   </div>
 </div>
 
+<div id="promoPanel" class="hidden">
+  <div id="promoTitle">ПЕШКА ДОШЛА — ВЫБЕРИ ФИГУРУ</div>
+  <div id="promoRow">
+    <div class="promo-opt" data-promo="q">
+      <span class="promo-glyph">♕</span><span class="promo-name">Ферзь</span></div>
+    <div class="promo-opt" data-promo="r">
+      <span class="promo-glyph">♖</span><span class="promo-name">Ладья</span></div>
+    <div class="promo-opt" data-promo="b">
+      <span class="promo-glyph">♗</span><span class="promo-name">Слон</span></div>
+    <div class="promo-opt" data-promo="n">
+      <span class="promo-glyph">♘</span><span class="promo-name">Конь</span></div>
+  </div>
+  <button id="promoCancel">Отмена</button>
+</div>
+
 <div id="drawPanel" class="hidden">
   <div id="drawPanelText">Соперник предлагает ничью</div>
   <div id="drawPanelBtns">
@@ -461,8 +506,8 @@ body[data-arena="10"] .piece.theirs{
     <div class="icon-wrap"><span class="icon">🏆</span></div><span>Рейтинг</span></button>
 </div>
 
-<script src="arena.js?v=17"></script>
-<script src="net.js?v=13"></script>
+<script src="arena.js?v=18"></script>
+<script src="net.js?v=14"></script>
 <script>
 const sb = supabase.createClient(
   'https://qnpriwfxzuoymoumdtrl.supabase.co',
@@ -483,6 +528,7 @@ let searching = false;
 
 let checkState = -1;
 let drawState  = '';
+let promoPending = null;
 
 let toastTimer = null;
 function toast(text){
@@ -579,7 +625,9 @@ Net.on('start', function (info){
   $('overlay').classList.add('hidden');
   $('bootErr').classList.add('hidden');
   $('drawPanel').classList.add('hidden');
+  $('promoPanel').classList.add('hidden');
 
+  promoPending = null;
   sel = null;
   checkState = -1;
   drawState = '';
@@ -630,7 +678,10 @@ Net.on('result', async function (r){
   $('battle').classList.add('hidden');
   $('checkBar').classList.remove('on');
   $('drawPanel').classList.add('hidden');
+  $('promoPanel').classList.add('hidden');
   $('overlay').classList.remove('hidden');
+
+  promoPending = null;
 
   const won  = r.winner === r.mySide;
   const draw = r.winner === 'draw';
@@ -693,9 +744,20 @@ function toCanon(dx, dy){
   return Net.mySide === 'a' ? [dx, dy] : [7 - dx, 7 - dy];
 }
 
+function closePromo(){
+  promoPending = null;
+  $('promoPanel').classList.add('hidden');
+}
+
+function openPromo(from, to){
+  promoPending = { fx:from.x, fy:from.y, tx:to.x, ty:to.y };
+  $('promoPanel').classList.remove('hidden');
+}
+
 function onCell(dx, dy){
   const s = Net.state;
   if (!s || s.over) return;
+  if (promoPending) return;
 
   const my = Net.mySide;
   const xy = toCanon(dx, dy);
@@ -728,11 +790,19 @@ function onCell(dx, dy){
       return;
     }
 
-    const need = Arena.moveCost(s, pc);
+    const mover = s.board[sel.y][sel.x];
+    const need = Arena.moveCost(s, mover);
     if (Math.floor(s.energy[my]) < need){
       sel = null;
       render(s);
       toast('Нужно ' + need + ' эликсира');
+      return;
+    }
+
+    if (Arena.isPromotion(s, sel.x, sel.y, x, y)){
+      openPromo({ x:sel.x, y:sel.y }, { x:x, y:y });
+      sel = null;
+      render(s);
       return;
     }
 
@@ -746,6 +816,25 @@ function onCell(dx, dy){
     render(s);
   }
 }
+
+document.addEventListener('click', function (ev){
+  const opt = ev.target.closest && ev.target.closest('.promo-opt');
+  if (!opt) return;
+
+  const type = opt.getAttribute('data-promo');
+  if (!type || !promoPending) return;
+
+  const p = promoPending;
+  promoPending = null;
+  $('promoPanel').classList.add('hidden');
+
+  Net.intent({ t:'move', fx:p.fx, fy:p.fy, tx:p.tx, ty:p.ty, promo:type });
+});
+
+$('promoCancel').onclick = function (){
+  closePromo();
+  render(Net.state);
+};
 
 function updateDrawUI(s, my, opp){
   const offer = s.drawOffer || { a:false, b:false };
@@ -868,7 +957,6 @@ function render(s){
       const mine = (pc.side === my);
       const def  = Arena.PIECES[pc.type];
 
-      /* моя фигура — синяя, чужая — красная */
       const sp = document.createElement('span');
       sp.className = 'piece ' + (mine ? 'mine' : 'theirs');
       sp.textContent = def ? (mine ? def.w : def.b) : '?';
