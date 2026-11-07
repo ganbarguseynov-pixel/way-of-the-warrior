@@ -106,7 +106,7 @@ body.battle-mode #verTag{display:none!important}
   width:min(95vw,420px);
   display:flex;justify-content:space-between;
   align-items:center;
-  font-size:12px;height:22px;margin-bottom:6px;color:#94a3b8;
+  font-size:12px;height:22px;margin-bottom:8px;color:#94a3b8;
 }
 #topBar b{color:#ffcc00}
 #timeLabel{
@@ -147,7 +147,6 @@ body.battle-mode #verTag{display:none!important}
   width:50%;
   transition:width .2s linear;
 }
-#enemyElixFill{background:linear-gradient(180deg,#a855f7,#4c1d95)}
 #myElixFill{background:linear-gradient(180deg,#ff6b7a,#7f1d1d)}
 .elix-num{
   position:absolute;inset:0;
@@ -168,7 +167,7 @@ body.battle-mode #verTag{display:none!important}
 }
 
 #board{
-  --side:min(95vw, 420px, calc(100dvh - 200px));
+  --side:min(95vw, 420px, calc(100dvh - 175px));
   width:var(--side);
   height:var(--side);
   display:grid;
@@ -368,7 +367,7 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
 </head>
 <body data-arena="1">
 
-<div id="verTag">v16</div>
+<div id="verTag">v17</div>
 
 <div id="lobby">
   <div class="card">
@@ -398,12 +397,6 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
   </div>
 
   <div id="checkBar"></div>
-
-  <div class="elix-wrap" id="enemyElix">
-    <div class="elix-fill" id="enemyElixFill"></div>
-    <div class="elix-label">СОПЕРНИК</div>
-    <div class="elix-num" id="enemyElixNum">5 / 10</div>
-  </div>
 
   <div id="board"></div>
 
@@ -456,7 +449,7 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
 </div>
 
 <script src="arena.js?v=15"></script>
-<script src="net.js?v=12"></script>
+<script src="net.js?v=13"></script>
 <script>
 const sb = supabase.createClient(
   'https://qnpriwfxzuoymoumdtrl.supabase.co',
@@ -607,7 +600,7 @@ Net.on('start', function (info){
 Net.on('state', function (s){ render(s); });
 
 Net.on('resumeFailed', async function (){
-  toast('Бой уже не восстановить.');
+  toast('Соперник не вернулся. Засчитано поражение.');
   document.body.classList.remove('battle-mode');
   await Net.leaveMatch();
   $('battle').classList.add('hidden');
@@ -779,18 +772,12 @@ function pieceHp(pc){
   return { hp: hp, max: max };
 }
 
-function renderElix(s, my, opp){
-  let myE = (typeof s.energy[my]  === 'number' && isFinite(s.energy[my]))  ? s.energy[my]  : 0;
-  let opE = (typeof s.energy[opp] === 'number' && isFinite(s.energy[opp])) ? s.energy[opp] : 0;
-
+function renderElix(s, my){
+  let myE = (typeof s.energy[my] === 'number' && isFinite(s.energy[my])) ? s.energy[my] : 0;
   myE = Math.max(0, Math.min(10, Math.floor(myE)));
-  opE = Math.max(0, Math.min(10, Math.floor(opE)));
 
-  $('myElixFill').style.width    = (myE * 10) + '%';
-  $('enemyElixFill').style.width = (opE * 10) + '%';
-
-  $('myElixNum').textContent    = myE + ' / 10';
-  $('enemyElixNum').textContent = opE + ' / 10';
+  $('myElixFill').style.width = (myE * 10) + '%';
+  $('myElixNum').textContent  = myE + ' / 10';
 }
 
 function render(s){
@@ -936,7 +923,7 @@ function render(s){
     if (isMove) el.classList.add(isCap ? 'cap' : 'move');
   }
 
-  renderElix(s, my, opp);
+  renderElix(s, my);
 
   const rate = Arena.energyRate(s);
   const speedTxt = rate > 1 ? ('⚡×' + rate) : '';
@@ -1077,6 +1064,12 @@ async function boot(){
 $('retryBtn').onclick = function (){
   boot();
 };
+
+document.addEventListener('visibilitychange', function (){
+  if (!document.hidden && typeof Net.checkAway === 'function'){
+    Net.checkAway();
+  }
+});
 
 boot();
 </script>
