@@ -158,7 +158,7 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
   <button class="nav-btn" onclick="window.location.href='leaderboard.html'"><div class="icon-wrap"><span class="icon">🏆</span></div><span>Рейтинг</span></button>
 </div>
 
-<script src="friends.js"></script>
+<script src="friends.js?v=2"></script>
 <script>
 const sb = supabase.createClient(
   'https://qnpriwfxzuoymoumdtrl.supabase.co',
@@ -968,14 +968,32 @@ function watchChallenges(){
     document.body.appendChild(o);
     o.querySelector('#cnm').textContent = c.from_name || 'Игрок';
 
-    o.querySelector('#cNo').onclick = async function (){
+    let closed = false;
+    const chk = setInterval(async function(){
+      if (closed) return;
+      const st = await Friends.status(c.id);
+      if (!st || st.status !== 'pending'){
+        closed = true;
+        clearInterval(chk);
+        o.remove();
+      }
+    }, 3000);
+
+    function close(){
+      closed = true;
+      clearInterval(chk);
       o.remove();
+    }
+
+    o.querySelector('#cNo').onclick = async function (){
+      close();
       await Friends.answer(c.id, 'declined');
     };
 
     o.querySelector('#cYes').onclick = async function (){
-      o.remove();
-      await Friends.answer(c.id, 'accepted');
+      close();
+      const r = await Friends.answer(c.id, 'accepted');
+      if (!r || !r.accepted) return;
       Friends.play(c.id, 'guest', c.from_key, c.from_name, c.from_cups, c.arena);
     };
   });
