@@ -1,6 +1,6 @@
 /* ============================================================
-   net.js — сеть: очередь, матч, бот, ничья (VER 14)
-   Бой идёт по реальному времени. Вышел — соперник продолжает.
+   net.js — сеть: очередь, матч, бот, ничья (VER 15)
+   Результат показывается сразу, отчёт в базу уходит в фоне.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -8,6 +8,7 @@
 const RECORD_KEY = 'arenaActiveMatch';
 const STATE_KEY  = 'arenaActiveState';
 const SETUP_KEY  = 'chessSetup';
+const NAME_KEY   = 'userName';
 
 const PUSH_MS = 200;
 const TICK_MS = 100;
@@ -21,9 +22,36 @@ const CATCHUP_STEP = 1.2;
 const CATCHUP_MAX  = 600;
 
 const BOT_NAMES = [
-  'Дмитрий','Алексей','Максим','Артём','Сергей','Кирилл','Иван',
-  'Никита','Роман','Егор','Даниил','Михаил','Андрей','Павел',
-  'Владислав','Глеб','Тимур','Матвей','Саша','Лёша'
+  /* русские */
+  'Дмитрий','Алексей','Максим','Артём','Сергей','Кирилл','Иван','Никита',
+  'Роман','Егор','Даниил','Михаил','Андрей','Павел','Владислав','Глеб',
+  'Тимур','Матвей','Саша','Лёша','Светлана','Ольга','Анна','Мария',
+  'Дарья','Полина','Вера','Настя',
+
+  /* английские */
+  'James','Oliver','Lucas','Ethan','Noah','Liam','Mason','Logan',
+  'Ryan','Tyler','Dylan','Owen','Emily','Sophie','Chloe','Mia',
+  'Grace','Hannah','Olivia','Ruby','Alice','Ella',
+
+  /* ники-прозвища */
+  'Shadow','Blade','Raven','Hunter','Ghost','Falcon','Viper','Storm',
+  'Nova','Echo','Frost','Ember','Wolf','Crow','Ace','Rook','Bishop','Pawnstar',
+
+  /* испанские и португальские */
+  'Diego','Mateo','Santiago','Javier','Alejandro','Rodrigo','Thiago',
+  'João','Pedro','Rafael','Sofía','Valentina','Camila','Isabella','Lucía',
+
+  /* немецкие, французские, итальянские */
+  'Lukas','Felix','Jonas','Maximilian','Sebastian','Antoine','Julien',
+  'Mathis','Hugo','Léa','Marco','Lorenzo','Matteo','Giulia','Alessandro','Chiara',
+
+  /* японские, китайские, корейские */
+  'Yuki','Haruto','Sora','Ren','Kenji','Aiko','Yuna','Sakura',
+  'Chen','Wei','Jun','Mei','Lin','Hiroshi','Minjun','Jihoon','Seoyeon','Hyunwoo',
+
+  /* турецкие, арабские, скандинавские, балканские */
+  'Emre','Kerem','Yusuf','Elif','Zeynep','Omar','Karim','Youssef','Fatima','Zara',
+  'Lars','Erik','Nils','Anders','Marko','Nikola','Petra','Ivan'
 ];
 
 const Net = {
@@ -51,6 +79,7 @@ const Net = {
   queueSince: 0,
   pending: null,
   finished: false,
+  finishing: false,
 
   botMode: false,
   botTimer: null,
@@ -171,6 +200,26 @@ Net.refresh = async function (){
 
   if (res.data) Net.me = res.data;
   return Net.me;
+};
+
+/* смена ника: одинаковые ники у разных игроков разрешены */
+Net.rename = async function (raw){
+  const name = String(raw || '').trim().slice(0, 16);
+  if (name.length < 2) return { ok:false, error:'Слишком короткий ник' };
+
+  const res = await Net.sb
+    .from('arena_players')
+    .update({ display_name: name })
+    .eq('player_key', Net.key);
+
+  if (res.error) return { ok:false, error: res.error.message };
+
+  Net.name = name;
+  if (Net.me) Net.me.display_name = name;
+
+  try { localStorage.setItem(NAME_KEY, name); } catch (e){}
+
+  return { ok:true, name: name };
 };
 
 Net.leaderboard = async function (limit){
@@ -478,6 +527,7 @@ Net._beginMatch = async function (m){
   Net.host     = (m.side === 'a');
   Net.arena    = m.arena || 1;
   Net.finished = false;
+  Net.finishing = false;
   Net.state    = null;
   Net.lastSeen = Date.now();
 
@@ -516,10 +566,11 @@ Net._beginMatch = async function (m){
 
 function botNickname(){
   const base = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
-  const tail = Math.random() < 0.5
-    ? ''
-    : ' ' + Math.floor(Math.random() * 89 + 10);
-  return base + tail;
+  const r = Math.random();
+
+  if (r < 0.40) return base;
+  if (r < 0.75) return base + ' ' + (Math.floor(Math.random() * 90) + 10);
+  return base + '_' + (Math.floor(Math.random() * 900) + 100);
 }
 
 function botCupsFor(myCups){
@@ -548,6 +599,7 @@ Net._startBotMatch = async function (){
   Net.botMode  = true;
   Net.arena    = Math.min(Arena.arenaOf(myCups), Arena.arenaOf(rivalCups));
   Net.finished = false;
+  Net.finishing = false;
   Net.state    = null;
   Net.lastSeen = Date.now();
 
@@ -736,7 +788,10 @@ Net._startLoop = function (){
       Net._push();
     }
 
-    if (Net.state.over) Net._hostFinish();
+    if (Net.state.over){
+      Net._hostFinish();
+      return;
+    }
   }, TICK_MS);
 };
 
@@ -820,69 +875,95 @@ Net._applyIntent = function (msg, side){
     return;
   }
 
+  if (s.over){
+    Net._hostFinish();
+    return;
+  }
+
   Net._push();
 };
 
 /* ---------------- конец боя ---------------- */
 
-Net._localCups = async function (winner){
+/* локальная оценка кубков — чтобы результат показать мгновенно */
+Net._estimateCups = function (winner){
   const myCups = Net.me ? Net.me.cups : 0;
-  const oppCups = Net.players && Net.players.b ? Net.players.b.cups : myCups;
+  const oppCups = Net.players
+    ? (Net.mySide === 'a' ? (Net.players.b.cups || 0) : (Net.players.a.cups || 0))
+    : myCups;
 
   let delta = 0;
 
-  if (winner === 'a'){
+  if (winner === Net.mySide){
     delta = Arena.deltaFor(myCups, oppCups);
-  } else if (winner === 'b'){
+  } else if (winner === 'draw'){
+    delta = 0;
+  } else {
     delta = -Arena.lossFor(myCups, Arena.deltaFor(oppCups, myCups));
   }
 
-  const before = myCups;
   const after = Math.max(Arena.floorOf(myCups), myCups + delta);
+
+  if (Net.mySide === 'a'){
+    return { a_before: myCups, a_after: after, b_before: oppCups, b_after: oppCups };
+  }
+  return { a_before: oppCups, a_after: oppCups, b_before: myCups, b_after: after };
+};
+
+Net._localCups = async function (winner){
+  const cups = Net._estimateCups(winner);
+  const k = Net.mySide;
+  const after = cups[k + '_after'];
 
   try {
     await Net.sb.from('arena_players').update({ cups: after }).eq('player_key', Net.key);
   } catch (e){}
 
-  return {
-    a_before: before, a_after: after,
-    b_before: oppCups, b_after: oppCups
-  };
+  return cups;
 };
 
-Net._hostFinish = async function (){
+Net._hostFinish = function (){
   if (Net.timer){ clearInterval(Net.timer); Net.timer = null; }
-  if (Net.finished) return;
+  if (Net.finished || Net.finishing) return;
 
   const s = Net.state;
-  const payload = { winner: s.winner, matchId: Net.matchId, cups: null };
+  if (!s) return;
 
-  if (Net.botMode){
-    payload.cups = await Net._localCups(s.winner);
-  } else {
-    const winnerKey =
-      s.winner === 'a' ? Net.players.a.key :
-      s.winner === 'b' ? Net.players.b.key : null;
+  Net.finishing = true;
 
-    if (winnerKey){
-      const res = await Net.sb.rpc('arena_report_match', {
-        p_match:  Net.matchId,
-        p_a:      Net.players.a.key,
-        p_b:      Net.players.b.key,
-        p_winner: winnerKey,
-        p_arena:  Net.arena
-      });
+  const isBot = Net.botMode;
+  const winnerKey =
+    s.winner === 'a' ? Net.players.a.key :
+    s.winner === 'b' ? Net.players.b.key : null;
 
-      if (!res.error) payload.cups = res.data;
-      else console.error('[net] report failed', res.error);
-    }
+  const payload = {
+    winner:  s.winner,
+    matchId: Net.matchId,
+    cups:    Net._estimateCups(s.winner)
+  };
 
-    if (Net.matchCh){
-      Net.matchCh.send({ type: 'broadcast', event: 'result', payload: payload });
-    }
+  /* сопернику сообщаем сразу */
+  if (Net.matchCh && !isBot){
+    Net.matchCh.send({ type: 'broadcast', event: 'result', payload: payload });
   }
 
+  /* экран результата — без ожидания сети */
   Net._finish(payload);
+
+  /* отчёт в базу уже в фоне */
+  if (isBot){
+    Net._localCups(s.winner).catch(function(){});
+  } else if (winnerKey){
+    Net.sb.rpc('arena_report_match', {
+      p_match:  payload.matchId,
+      p_a:      Net.players.a.key,
+      p_b:      Net.players.b.key,
+      p_winner: winnerKey,
+      p_arena:  Net.arena
+    }).then(function (res){
+      if (res.error) console.error('[net] report failed', res.error);
+    });
+  }
 };
 
 /* ---------------- действия игрока ---------------- */
@@ -922,6 +1003,7 @@ Net.tryResume = async function (){
   Net.arena    = rec.arena || 1;
   Net.players  = rec.players;
   Net.finished = false;
+  Net.finishing = false;
   Net.botMode  = isBot;
   Net.state    = null;
   Net.lastSeen = Date.now();
@@ -1023,26 +1105,26 @@ Net.tryResume = async function (){
 
 /* ---------------- конец боя ---------------- */
 
-Net._finish = async function (payload){
+Net._finish = function (payload){
   if (Net.timer){ clearInterval(Net.timer); Net.timer = null; }
   if (!payload || Net.finished) return;
 
-  Net.finished = true;
+  Net.finished  = true;
+  Net.finishing = false;
 
   if (Net.botTimer){ clearTimeout(Net.botTimer); Net.botTimer = null; }
 
   Net._clearMatch();
 
-  let before = Net.me ? Net.me.cups : 0;
-  let after  = before;
+  if (!payload.cups) payload.cups = Net._estimateCups(payload.winner);
 
-  if (payload.cups){
-    const k = Net.mySide;
-    before = payload.cups[k + '_before'];
-    after  = payload.cups[k + '_after'];
-  }
+  const k = Net.mySide;
 
-  await Net.refresh();
+  let before = payload.cups[k + '_before'];
+  let after  = payload.cups[k + '_after'];
+
+  if (typeof before !== 'number') before = Net.me ? Net.me.cups : 0;
+  if (typeof after  !== 'number') after  = before;
 
   const opp = Net.players
     ? (Net.mySide === 'a' ? Net.players.b : Net.players.a)
@@ -1050,6 +1132,7 @@ Net._finish = async function (payload){
 
   Net.botMode = false;
 
+  /* показываем результат немедленно */
   Net.emit('result', {
     winner:   payload.winner,
     mySide:   Net.mySide,
@@ -1059,6 +1142,9 @@ Net._finish = async function (payload){
     floor:    Arena.floorOf(after),
     opponent: opp
   });
+
+  /* профиль обновляем уже после отрисовки экрана */
+  Net.refresh().catch(function(){});
 };
 
 Net.leaveMatch = async function (){
@@ -1079,6 +1165,7 @@ Net.leaveMatch = async function (){
   Net.mySide  = null;
   Net.pending = null;
   Net.finished = false;
+  Net.finishing = false;
   Net.botMode  = false;
 };
 
