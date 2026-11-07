@@ -28,7 +28,6 @@ body{
 }
 .hidden{display:none!important}
 
-/* в бою вкладки полностью убираются */
 body.battle-mode .bottom-nav{display:none!important}
 body.battle-mode #verTag{display:none!important}
 
@@ -90,7 +89,6 @@ body.battle-mode #verTag{display:none!important}
   color:#fff;font-size:13px;font-weight:800;cursor:pointer;
 }
 
-/* ================= БОЙ: на весь экран ================= */
 #battle{
   position:fixed;
   inset:0;
@@ -98,7 +96,7 @@ body.battle-mode #verTag{display:none!important}
   flex-direction:column;
   align-items:center;
   justify-content:flex-start;
-  padding:6px 0 calc(6px + env(safe-area-inset-bottom));
+  padding:6px 0 calc(8px + env(safe-area-inset-bottom));
   overflow:hidden;
   z-index:5;
 }
@@ -113,7 +111,7 @@ body.battle-mode #verTag{display:none!important}
 #topBar b{color:#ffcc00}
 #timeLabel{
   font-weight:900;font-variant-numeric:tabular-nums;font-size:15px;
-  min-width:46px;text-align:right;
+  min-width:52px;text-align:right;
 }
 
 #checkBar{
@@ -133,11 +131,10 @@ body.battle-mode #verTag{display:none!important}
 #checkBar.on{visibility:visible;opacity:1;animation:barPulse .8s infinite alternate}
 @keyframes barPulse{from{opacity:.72}to{opacity:1}}
 
-/* полосы эликсира с числом */
 .elix-wrap{
   position:relative;
   width:min(95vw,420px);
-  height:20px;
+  height:22px;
   background:#020617;
   border-radius:8px;
   overflow:hidden;
@@ -155,7 +152,7 @@ body.battle-mode #verTag{display:none!important}
 .elix-num{
   position:absolute;inset:0;
   display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:900;
+  font-size:13px;font-weight:900;
   color:#fff;
   letter-spacing:.5px;
   z-index:3;
@@ -164,8 +161,8 @@ body.battle-mode #verTag{display:none!important}
 }
 .elix-label{
   position:absolute;left:8px;top:50%;transform:translateY(-50%);
-  font-size:9px;font-weight:900;letter-spacing:.5px;
-  color:rgba(255,255,255,.75);
+  font-size:9px;font-weight:900;letter-spacing:.6px;
+  color:rgba(255,255,255,.8);
   z-index:3;pointer-events:none;
   text-shadow:0 1px 3px #000;
 }
@@ -268,14 +265,16 @@ body.battle-mode #verTag{display:none!important}
   pointer-events:none;
 }
 
-#myElix{
-  margin-top:6px;
-  margin-bottom:0;
+#myElix{margin-top:6px;margin-bottom:0}
+#speedTag{
+  position:absolute;right:7px;top:50%;transform:translateY(-50%);
+  font-size:10px;font-weight:900;color:#ffe08a;letter-spacing:.3px;
+  text-shadow:0 1px 3px #000,0 0 6px #000;z-index:4;pointer-events:none;
 }
 
-#tools{width:min(95vw,420px);display:flex;gap:6px;margin-top:8px}
+#tools{width:min(95vw,420px);display:flex;gap:6px;margin-top:10px}
 #tools button{
-  flex:1;padding:10px 4px;border-radius:10px;font-size:12px;font-weight:700;
+  flex:1;padding:11px 4px;border-radius:10px;font-size:12px;font-weight:800;
   border:1px solid #475569;
   background:linear-gradient(145deg,#475569,#1e293b);color:#fff;cursor:pointer;
 }
@@ -283,7 +282,7 @@ body.battle-mode #verTag{display:none!important}
 
 #drawPanel{
   position:fixed;left:50%;transform:translateX(-50%);
-  bottom:120px;width:min(92vw,380px);
+  bottom:140px;width:min(92vw,380px);
   background:linear-gradient(145deg,#1e293b,#0f172a);
   border:2px solid #22c55e;border-radius:14px;
   padding:14px;text-align:center;z-index:960;
@@ -322,7 +321,7 @@ body.battle-mode #verTag{display:none!important}
 }
 
 #toast{
-  position:fixed;bottom:120px;left:50%;
+  position:fixed;bottom:140px;left:50%;
   transform:translateX(-50%) translateY(10px);
   background:#1e293b;border:1px solid #475569;color:#ffcc00;
   padding:9px 16px;border-radius:8px;font-size:12.5px;
@@ -369,7 +368,7 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
 </head>
 <body data-arena="1">
 
-<div id="verTag">v16</div>
+<div id="verTag">v15</div>
 
 <div id="lobby">
   <div class="card">
@@ -400,18 +399,19 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
 
   <div id="checkBar"></div>
 
-  <div id="enemyElix" class="elix-wrap">
-    <div id="enemyElixFill" class="elix-fill"></div>
-    <span class="elix-label">ВРАГ</span>
-    <span class="elix-num" id="enemyElixNum">5</span>
+  <div class="elix-wrap" id="enemyElix">
+    <div class="elix-fill" id="enemyElixFill"></div>
+    <div class="elix-label">СОПЕРНИК</div>
+    <div class="elix-num" id="enemyElixNum">5</div>
   </div>
 
   <div id="board"></div>
 
-  <div id="myElix" class="elix-wrap">
-    <div id="myElixFill" class="elix-fill"></div>
-    <span class="elix-label">ТЫ</span>
-    <span class="elix-num" id="myElixNum">5</span>
+  <div class="elix-wrap" id="myElix">
+    <div class="elix-fill" id="myElixFill"></div>
+    <div class="elix-label">ЭЛИКСИР</div>
+    <div class="elix-num" id="myElixNum">5</div>
+    <span id="speedTag"></span>
   </div>
 
   <div id="tools">
@@ -472,10 +472,11 @@ let sel     = null;
 let cells   = [];
 let cellSig = [];
 let lastTimeTxt = '';
+let lastSpeedTxt = '';
 let searching = false;
 
-let checkState  = -1;
-let drawState   = '';
+let checkState = -1;
+let drawState  = '';
 
 let toastTimer = null;
 function toast(text){
@@ -484,11 +485,6 @@ function toast(text){
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function (){ t.classList.remove('show'); }, 2000);
-}
-
-function fmtEnergy(v){
-  const n = Math.floor((v || 0) * 10) / 10;
-  return (n % 1 === 0) ? String(n) : n.toFixed(1);
 }
 
 function playerKey(){
@@ -582,6 +578,7 @@ Net.on('start', function (info){
   checkState = -1;
   drawState = '';
   lastTimeTxt = '';
+  lastSpeedTxt = '';
   document.body.dataset.arena = info.arena;
 
   buildBoard();
@@ -663,10 +660,10 @@ Net.on('result', async function (r){
 });
 
 $('ovBtn').onclick = async function (){
+  document.body.classList.remove('battle-mode');
   $('overlay').classList.add('hidden');
   $('battle').classList.add('hidden');
   $('lobby').classList.remove('hidden');
-  document.body.classList.remove('battle-mode');
   await Net.refresh();
   renderLobby();
 };
@@ -727,11 +724,11 @@ function onCell(dx, dy){
       return;
     }
 
-    const cost = Arena.moveCost(s, s.board[sel.y][sel.x]);
-    if (s.energy[my] < cost){
+    const need = Arena.moveCost(s, pc);
+    if (s.energy[my] < need){
       sel = null;
       render(s);
-      toast('Нужно ' + cost + ' эликсира');
+      toast('Нужно ' + need + ' эликсира');
       return;
     }
 
@@ -765,7 +762,7 @@ function updateDrawUI(s, my, opp){
 
   const btn = $('drawBtn');
   if (mine){
-    btn.textContent = '⏳ Ждём ответа';
+    btn.textContent = '⏳ Ждём';
     btn.disabled = true;
   } else {
     btn.textContent = '🤝 Ничья';
@@ -780,6 +777,17 @@ function pieceHp(pc){
   const hp  = (typeof pc.hp === 'number' && isFinite(pc.hp)) ? pc.hp : 1;
   const max = (typeof pc.maxHp === 'number' && isFinite(pc.maxHp) && pc.maxHp > 0) ? pc.maxHp : 1;
   return { hp: hp, max: max };
+}
+
+function renderElix(s, my, opp){
+  const myE  = (typeof s.energy[my]  === 'number' && isFinite(s.energy[my]))  ? s.energy[my]  : 0;
+  const opE  = (typeof s.energy[opp] === 'number' && isFinite(s.energy[opp])) ? s.energy[opp] : 0;
+
+  $('myElixFill').style.width    = Math.max(0, Math.min(100, myE * 10)) + '%';
+  $('enemyElixFill').style.width = Math.max(0, Math.min(100, opE * 10)) + '%';
+
+  $('myElixNum').textContent    = Math.floor(myE) + ' / 10';
+  $('enemyElixNum').textContent = Math.floor(opE) + ' / 10';
 }
 
 function render(s){
@@ -925,16 +933,14 @@ function render(s){
     if (isMove) el.classList.add(isCap ? 'cap' : 'move');
   }
 
-  const myE = s.energy[my];
-  const opE = s.energy[opp];
-
-  $('myElixFill').style.width    = Math.min(100, myE * 10) + '%';
-  $('enemyElixFill').style.width = Math.min(100, opE * 10) + '%';
-  $('myElixNum').textContent     = fmtEnergy(myE);
-  $('enemyElixNum').textContent  = fmtEnergy(opE);
+  renderElix(s, my, opp);
 
   const rate = Arena.energyRate(s);
-  if (rate > 1) $('myElixNum').textContent += '  ⚡×' + rate;
+  const speedTxt = rate > 1 ? ('⚡×' + rate) : '';
+  if (speedTxt !== lastSpeedTxt){
+    lastSpeedTxt = speedTxt;
+    $('speedTag').textContent = speedTxt;
+  }
 
   const tl = $('timeLabel');
   let timeTxt = '';
