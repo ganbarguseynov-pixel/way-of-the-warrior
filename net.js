@@ -1,6 +1,6 @@
 /* ============================================================
-   net.js — сеть: очередь, матч, бот, ничья (VER 16)
-   Пишет журнал ходов и отправляет повтор в базу.
+   net.js — сеть: очередь, матч, бот, ничья (VER 17)
+   Бот принимает ничью в 15% случаев. Лимит предложений — 2.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -23,6 +23,12 @@ const CATCHUP_STEP = 1.2;
 const CATCHUP_MAX  = 600;
 
 const LOG_MAX = 700;
+
+/* сколько раз за партию можно предложить ничью */
+const DRAW_OFFER_MAX = 2;
+
+/* шанс, что бот примет предложенную ничью */
+const BOT_DRAW_ACCEPT = 0.15;
 
 const BOT_NAMES = [
   'Дмитрий','Алексей','Максим','Артём','Сергей','Кирилл','Иван','Никита',
@@ -131,6 +137,7 @@ function slimState(s){
     spawnTimer: s.spawnTimer,
     idle:      s.idle,
     drawOffer: s.drawOffer,
+    drawUsed:  s.drawUsed,
     check:     s.check,
     mate:      s.mate,
     mateHit:   s.mateHit,
@@ -679,9 +686,10 @@ Net._botTick = function (){
     const st = Net.state;
     if (!st || st.over){ Net._botTick(); return; }
 
+    /* бот отвечает на предложенную ничью: принимает редко */
     if (st.drawOffer && st.drawOffer.a){
-      if (Math.random() < 0.55) Net._applyIntent({ t:'draw' }, 'b');
-      else Net._applyIntent({ t:'undraw' }, 'b');
+      const accept = Math.random() < BOT_DRAW_ACCEPT;
+      Net._applyIntent({ t: accept ? 'draw' : 'undraw' }, 'b');
     } else {
       Net._botMove();
     }
@@ -802,6 +810,9 @@ Net._hostStart = function (){
     setups: Net.setups
   });
 
+  /* счётчик предложений ничьей: по 2 на каждого */
+  if (!Net.state.drawUsed) Net.state.drawUsed = { a:0, b:0 };
+
   Net.emit('start', {
     side: 'a',
     arena: Net.arena,
@@ -866,21 +877,39 @@ Net._push = function (){
 
 /* ---------------- ничья ---------------- */
 
+/* сколько предложений осталось у стороны */
+Net.drawsLeft = function (side){
+  const s = Net.state;
+  if (!s) return DRAW_OFFER_MAX;
+  const used = (s.drawUsed && s.drawUsed[side]) || 0;
+  return Math.max(0, DRAW_OFFER_MAX - used);
+};
+
 Net._drawIntent = function (side, kind){
   const s = Net.state;
   if (!s || s.over) return { ok:false, error:'Бой окончен' };
 
   if (!s.drawOffer) s.drawOffer = { a:false, b:false };
+  if (!s.drawUsed)  s.drawUsed  = { a:0, b:0 };
 
   const foe = (side === 'a') ? 'b' : 'a';
 
   if (kind === 'draw'){
+    /* согласие на чужое предложение — свой лимит не тратит */
     if (s.drawOffer[foe]){
       s.drawOffer.a = false;
       s.drawOffer.b = false;
       Arena.finish(s, 'draw');
       return { ok:true };
     }
+
+    /* своё предложение — только если лимит не исчерпан */
+    const used = s.drawUsed[side] || 0;
+    if (used >= DRAW_OFFER_MAX){
+      return { ok:false, error:'Ничью можно предлагать только ' + DRAW_OFFER_MAX + ' раза за партию' };
+    }
+
+    s.drawUsed[side] = used + 1;
     s.drawOffer[side] = true;
     return { ok:true };
   }
@@ -921,6 +950,8 @@ Net._applyIntent = function (msg, side){
         event: 'error',
         payload: { message: res.error }
       });
+    } else if (Net.botMode && side === Net.mySide){
+      Net.emit('error', { message: res.error });
     }
     return;
   }
@@ -1114,6 +1145,7 @@ Net.tryResume = async function (){
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); } catch (e){}
   if (saved && !saved.board) saved = null;
+  if (saved && !saved.drawUsed) saved.drawUsed = { a:0, b:0 };
 
   if (isBot){
     if (!saved){
@@ -1269,6 +1301,9 @@ Net.leaveMatch = async function (){
   Net.finishing = false;
   Net.botMode  = false;
 };
+
+Net.DRAW_OFFER_MAX = DRAW_OFFER_MAX;
+Net.BOT_DRAW_ACCEPT = BOT_DRAW_ACCEPT;
 
 global.Net = Net;
 
