@@ -18,7 +18,7 @@ body{
 
 .top-bar{
   display:flex;justify-content:space-between;align-items:center;
-  padding:14px 16px 8px;
+  padding:14px 16px 10px;
 }
 .page-title{font-size:20px;font-weight:900;letter-spacing:.5px}
 .currency{
@@ -202,9 +202,8 @@ body{
   position:fixed;bottom:0;left:0;width:100%;height:68px;
   background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);
   border-top:1px solid rgba(255,255,255,.08);
-  display:flex;justify-content:space-around;align-items:center;z-index:999;
-  padding-bottom:env(safe-area-inset-bottom);
-  box-shadow:0 -4px 15px rgba(0,0,0,.7);
+  display:flex;justify-content:space-around;align-items:center;
+  z-index:999;padding-bottom:env(safe-area-inset-bottom);
 }
 .nav-btn{
   background:transparent;border:none;color:#94a3b8;
@@ -219,35 +218,43 @@ body{
 .nav-btn .icon{font-size:20px}
 .nav-btn.active{color:#ffcc00}
 .nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500)}
+
+.deck-stack{position:relative;width:24px;height:28px}
+.deck-stack .deck-card{
+  position:absolute;width:16px;height:22px;border-radius:3px;
+  border:1px solid rgba(255,255,255,.5);box-shadow:0 1px 3px rgba(0,0,0,.6);
+}
+.deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c)}
+.deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe)}
+.deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
   <div class="page-title">Клан</div>
-  <div class="currency">🏆 <span id="myCups">0</span></div>
+  <div class="currency">🏆 <span id="cupsTop">0</span></div>
 </div>
 
-<div class="banner" id="banner">
+<div class="banner">
   <div class="banner-text">Вступи в клан или создай новый!</div>
-  <button class="banner-btn" id="bannerBtn">Показать</button>
+  <button class="banner-btn" id="bannerBtn">Создать</button>
 </div>
 
 <div id="errBox" class="errbox hidden"></div>
 
-<div id="app">
-  <div class="empty">Загрузка…</div>
-</div>
+<div id="app"></div>
 
-<div class="toast" id="toast"></div>
-
-<div class="modal hidden" id="createModal">
+<div id="createModal" class="modal hidden">
   <div class="modal-box">
     <div class="modal-title">Новый клан</div>
+
     <div class="emblem-row" id="emblemRow"></div>
-    <input id="clanName" maxlength="20" placeholder="Название клана">
-    <input id="clanTag" maxlength="5" placeholder="Тег (до 5 символов)">
-    <textarea id="clanDesc" maxlength="90" placeholder="Описание (необязательно)"></textarea>
+
+    <input id="inName" type="text" maxlength="20" placeholder="Название клана">
+    <input id="inTag" type="text" maxlength="5" placeholder="Тег (до 5 символов)">
+    <textarea id="inDesc" maxlength="90" placeholder="Описание (необязательно)"></textarea>
+
     <div class="modal-btns">
       <button id="createCancel">Отмена</button>
       <button id="createOk">Создать</button>
@@ -255,17 +262,35 @@ body{
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <div class="bottom-nav">
-  <button class="nav-btn" onclick="location.href='chess-shop.html'">
-    <div class="icon-wrap"><span class="icon">🎁</span></div><span>Магазин</span></button>
-  <button class="nav-btn" onclick="location.href='chess-deck.html'">
-    <div class="icon-wrap"><span class="icon">🃏</span></div><span>Колода</span></button>
-  <button class="nav-btn" onclick="location.href='chess-arena.html'">
-    <div class="icon-wrap"><span class="icon">⚔️</span></div><span>Бой</span></button>
-  <button class="nav-btn active" onclick="location.href='chess-social.html'">
-    <div class="icon-wrap"><span class="icon">🛡️</span></div><span>Клан</span></button>
-  <button class="nav-btn" onclick="location.href='leaderboard.html'">
-    <div class="icon-wrap"><span class="icon">🏆</span></div><span>Рейтинг</span></button>
+  <button class="nav-btn" onclick="window.location.href='chess-shop.html'">
+    <div class="icon-wrap"><span class="icon">🎁</span></div>
+    <span>Магазин</span>
+  </button>
+  <button class="nav-btn" onclick="window.location.href='chess-deck.html'">
+    <div class="icon-wrap">
+      <div class="deck-stack">
+        <div class="deck-card"></div>
+        <div class="deck-card"></div>
+        <div class="deck-card">♠</div>
+      </div>
+    </div>
+    <span>Колода</span>
+  </button>
+  <button class="nav-btn" onclick="window.location.href='chess-main.html'">
+    <div class="icon-wrap"><span class="icon">⚔️</span></div>
+    <span>Бой</span>
+  </button>
+  <button class="nav-btn active" onclick="window.location.href='chess-social.html'">
+    <div class="icon-wrap"><span class="icon">🛡️</span></div>
+    <span>Клан</span>
+  </button>
+  <button class="nav-btn" onclick="window.location.href='leaderboard.html'">
+    <div class="icon-wrap"><span class="icon">🏆</span></div>
+    <span>Рейтинг</span>
+  </button>
 </div>
 
 <script>
@@ -276,22 +301,22 @@ const sb = supabase.createClient(
 
 const $ = function (id){ return document.getElementById(id); };
 
-const CAP = 30;
-const EMBLEMS = ['🛡️','👑','🔥','🐺','💀','⚔️','🏆','🐉','🦅','⚡','🌟','🎯'];
+const MAX_MEMBERS = 30;
 
-let KEY  = '';
-let NAME = '';
-let CUPS = 0;
+const EMBLEMS = ['🛡️','👑','⚔️','🐺','🦅','🔥','💀','🐉','⭐','🦁','⚡','♟️'];
 
-let myMember = null;
-let myClan   = null;
-let members  = [];
-let clanList = [];
+let meKey      = '';
+let meName     = 'Игрок';
+let meCups     = 0;
+let myMember   = null;
+let myClan     = null;
+let allClans   = [];
+let allMembers = [];
 
 let pickedEmblem = '🛡️';
-let toastTimer = null;
 
-function toast(text){
+let toastTimer = null;
+function showToast(text){
   const t = $('toast');
   t.textContent = text;
   t.classList.add('show');
@@ -299,10 +324,11 @@ function toast(text){
   toastTimer = setTimeout(function (){ t.classList.remove('show'); }, 2200);
 }
 
-function esc(s){
-  return String(s === null || s === undefined ? '' : s)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+function showErr(text){
+  const box = $('errBox');
+  if (!text){ box.classList.add('hidden'); box.textContent = ''; return; }
+  box.textContent = text;
+  box.classList.remove('hidden');
 }
 
 function playerKey(){
@@ -324,337 +350,334 @@ function playerName(){
   return localStorage.getItem('userName') || 'Игрок';
 }
 
-function showError(e){
-  let msg = 'неизвестная ошибка';
-  if (e){
-    if (typeof e === 'string') msg = e;
-    else msg = e.message || e.details || e.hint || msg;
-    if (e.code) msg += ' [' + e.code + ']';
-  }
-  if (msg.indexOf('does not exist') >= 0 || msg.indexOf('42P01') >= 0){
-    msg = 'Таблицы кланов не созданы. Выполни SQL-запрос из инструкции в Supabase.';
-  }
-  const box = $('errBox');
-  box.textContent = msg;
-  box.classList.remove('hidden');
-}
-
-function clearError(){
-  $('errBox').classList.add('hidden');
-}
-
 /* ================= ЗАГРУЗКА ================= */
 
-async function loadCups(){
-  try {
-    const res = await sb.from('arena_players').select('cups').eq('player_key', KEY).maybeSingle();
-    if (res.data) CUPS = res.data.cups || 0;
-  } catch (e){}
-  $('myCups').textContent = CUPS;
-}
-
 async function boot(){
-  clearError();
-  KEY  = playerKey();
-  NAME = playerName();
+  meKey  = playerKey();
+  meName = playerName();
 
-  await loadCups();
+  $('cupsTop').textContent = parseInt(localStorage.getItem('cr_trophies') || '0', 10) || 0;
 
-  const res = await sb.from('clan_members').select('*').eq('player_key', KEY).maybeSingle();
+  try {
+    const res = await sb.rpc('arena_ensure_player', {
+      p_key:  meKey,
+      p_name: meName,
+      p_seed: 0
+    });
 
-  if (res.error){ showError(res.error); $('app').innerHTML = ''; return; }
+    if (!res.error && res.data){
+      meCups = res.data.cups || 0;
+      if (res.data.display_name) meName = res.data.display_name;
+    }
+  } catch (e){}
 
-  myMember = res.data || null;
+  $('cupsTop').textContent = meCups;
+  localStorage.setItem('cr_trophies', String(meCups));
 
-  if (myMember){
-    await openMyClan();
-  } else {
-    await loadList();
-  }
+  await loadAll();
 }
 
-/* ================= СПИСОК КЛАНОВ ================= */
+async function loadAll(){
+  showErr('');
 
-async function loadList(){
-  $('app').innerHTML = '<div class="empty">Загрузка…</div>';
-
-  const res = await sb.from('clans')
-    .select('*, clan_members(count)')
-    .order('created_at', { ascending: true })
-    .limit(60);
-
-  if (res.error){ showError(res.error); $('app').innerHTML = ''; return; }
-
-  clanList = res.data || [];
-
-  let html = '<div class="section-title">Список кланов</div>';
-
-  if (!clanList.length){
-    html += '<div class="empty">Кланов пока нет.<br>Создай первый — стань лидером!</div>';
+  const membersRes = await sb.from('clan_members').select('*');
+  if (membersRes.error){
+    showErr('Таблицы кланов не созданы. Выполни SQL из инструкции.\n' +
+            membersRes.error.message);
+    allMembers = [];
   } else {
-    for (let i = 0; i < clanList.length; i++){
-      const c = clanList[i];
-      const cnt = (c.clan_members && c.clan_members[0]) ? c.clan_members[0].count : 0;
-      const full = cnt >= CAP;
+    allMembers = membersRes.data || [];
+  }
 
-      html += '<div class="clan-card">' +
-        '<div class="clan-emblem">' + esc(c.emblem || '🛡️') + '</div>' +
-        '<div class="clan-info">' +
-          '<div class="clan-name">' + esc(c.name) +
-            (c.tag ? ' <span class="clan-tag">[' + esc(c.tag) + ']</span>' : '') +
-          '</div>' +
-          '<div class="clan-sub">' + cnt + '/' + CAP + ' участников</div>' +
-        '</div>' +
-        '<button class="clan-join" data-id="' + c.id + '"' +
-          (full ? ' disabled' : '') + '>' + (full ? 'Полон' : 'Вступить') + '</button>' +
-      '</div>';
+  const clansRes = await sb.from('clans').select('*').order('created_at', { ascending: false });
+  if (clansRes.error){
+    allClans = [];
+  } else {
+    allClans = clansRes.data || [];
+  }
+
+  myMember = null;
+  for (let i = 0; i < allMembers.length; i++){
+    if (allMembers[i].player_key === meKey){ myMember = allMembers[i]; break; }
+  }
+
+  myClan = null;
+  if (myMember){
+    for (let i = 0; i < allClans.length; i++){
+      if (allClans[i].id === myMember.clan_id){ myClan = allClans[i]; break; }
     }
   }
 
-  html += '<button class="btn-wide" id="createBtn">+ Создать клан</button>';
-
-  $('app').innerHTML = html;
-
-  const btns = $('app').querySelectorAll('.clan-join');
-  for (let i = 0; i < btns.length; i++){
-    (function (b){
-      b.onclick = function (){ joinClan(b.getAttribute('data-id')); };
-    })(btns[i]);
-  }
-
-  const cb = $('createBtn');
-  if (cb) cb.onclick = openCreate;
+  render();
 }
 
-/* ================= МОЙ КЛАН ================= */
+function membersOf(clanId){
+  const out = [];
+  for (let i = 0; i < allMembers.length; i++){
+    if (allMembers[i].clan_id === clanId) out.push(allMembers[i]);
+  }
+  out.sort(function (a, b){
+    if (a.role === 'owner' && b.role !== 'owner') return -1;
+    if (b.role === 'owner' && a.role !== 'owner') return 1;
+    return (b.cups || 0) - (a.cups || 0);
+  });
+  return out;
+}
 
-async function openMyClan(){
-  const clanRes = await sb.from('clans').select('*').eq('id', myMember.clan_id).maybeSingle();
+/* ================= ОТРИСОВКА ================= */
 
-  if (clanRes.error){ showError(clanRes.error); return; }
+function render(){
+  const app = $('app');
 
-  myClan = clanRes.data;
-
-  if (!myClan){
-    await sb.from('clan_members').delete().eq('player_key', KEY);
-    myMember = null;
-    await loadList();
+  if (myMember && myClan){
+    renderMyClan(app);
+    $('bannerBtn').classList.add('hidden');
     return;
   }
 
-  const memRes = await sb.from('clan_members')
-    .select('*')
-    .eq('clan_id', myClan.id)
-    .order('joined_at', { ascending: true });
-
-  if (memRes.error){ showError(memRes.error); return; }
-
-  members = memRes.data || [];
-  renderMyClan();
+  $('bannerBtn').classList.remove('hidden');
+  renderClanList(app);
 }
 
-function renderMyClan(){
-  const isOwner = myMember.role === 'owner';
-  const cnt = members.length;
-  const pct = Math.min(100, (cnt / CAP) * 100);
+function renderMyClan(app){
+  const mem = membersOf(myClan.id);
+  const full = mem.length >= MAX_MEMBERS;
+  const isOwner = (myClan.owner_key === meKey);
 
   let html = '';
 
-  html += '<div class="my-head">' +
-    '<div class="my-emblem">' + esc(myClan.emblem || '🛡️') + '</div>' +
-    '<div style="flex:1;min-width:0">' +
-      '<div class="my-name">' + esc(myClan.name) +
-        (myClan.tag ? ' <span style="font-size:13px;opacity:.9">[' + esc(myClan.tag) + ']</span>' : '') +
-      '</div>' +
-      (myClan.description ? '<div class="my-desc">' + esc(myClan.description) + '</div>' : '') +
-      '<div class="my-cap">' + cnt + ' / ' + CAP + ' участников</div>' +
-      '<div class="cap-bar"><div class="cap-fill" style="width:' + pct + '%"></div></div>' +
-    '</div>' +
-  '</div>';
+  html += '<div class="my-head">';
+  html += '<div class="my-emblem">' + (myClan.emblem || '🛡️') + '</div>';
+  html += '<div style="flex:1;min-width:0">';
+  html += '<div class="my-name">' + esc(myClan.name) +
+          ' <span style="font-size:13px">' + esc(myClan.tag || '') + '</span></div>';
+  html += '<div class="my-desc">' + esc(myClan.description || 'Без описания') + '</div>';
+  html += '<div class="my-cap">Участники: ' + mem.length + ' / ' + MAX_MEMBERS + '</div>';
+  html += '<div class="cap-bar"><div class="cap-fill" style="width:' +
+          Math.min(100, mem.length / MAX_MEMBERS * 100) + '%"></div></div>';
+  html += '</div></div>';
 
-  html += '<div class="section-title">Участники</div>';
+  html += '<div class="section-title">Состав</div>';
 
-  for (let i = 0; i < members.length; i++){
-    const m = members[i];
-    const me = (m.player_key === KEY);
-    const roleTxt = m.role === 'owner' ? 'ЛИДЕР' : 'Участник';
+  for (let i = 0; i < mem.length; i++){
+    const m = mem[i];
+    const isMe = (m.player_key === meKey);
+    const isChief = (m.role === 'owner');
 
-    html += '<div class="member' + (me ? ' me' : '') + '">' +
-      '<div class="m-avatar">' + (m.role === 'owner' ? '👑' : '🙂') + '</div>' +
-      '<div class="m-info">' +
-        '<div class="m-name">' + esc(m.name || 'Игрок') + (me ? ' (ты)' : '') + '</div>' +
-        '<div class="m-role">' + roleTxt + '</div>' +
-      '</div>' +
-      '<div class="m-cups">🏆 ' + (m.cups || 0) + '</div>' +
-      (isOwner && !me
-        ? '<button class="m-kick" data-key="' + esc(m.player_key) + '">✕</button>'
-        : '') +
-    '</div>';
+    html += '<div class="member' + (isMe ? ' me' : '') + '">';
+    html += '<div class="m-avatar">' + (isChief ? '👑' : '🎮') + '</div>';
+    html += '<div class="m-info">';
+    html += '<div class="m-name">' + esc(m.name || 'Игрок') +
+            (isMe ? ' (ты)' : '') + '</div>';
+    html += '<div class="m-role">' + (isChief ? 'Глава клана' : 'Участник') + '</div>';
+    html += '</div>';
+    html += '<div class="m-cups">🏆 ' + (m.cups || 0) + '</div>';
+
+    if (isOwner && !isMe){
+      html += '<button class="m-kick" data-kick="' + m.player_key + '">✕</button>';
+    }
+
+    html += '</div>';
   }
 
-  html += '<button class="btn-wide grey" id="leaveBtn">' +
-    (isOwner ? 'Покинуть и передать лидерство' : 'Покинуть клан') + '</button>';
-
-  $('app').innerHTML = html;
-
-  const kicks = $('app').querySelectorAll('.m-kick');
-  for (let i = 0; i < kicks.length; i++){
-    (function (b){
-      b.onclick = function (){ kickMember(b.getAttribute('data-key')); };
-    })(kicks[i]);
+  if (full){
+    html += '<div class="empty">Клан заполнен — 30 из 30</div>';
   }
 
-  $('leaveBtn').onclick = leaveClan;
+  html += '<button class="btn-wide red" id="leaveBtn">Выйти из клана</button>';
+
+  app.innerHTML = html;
+
+  const kickBtns = app.querySelectorAll('[data-kick]');
+  for (let i = 0; i < kickBtns.length; i++){
+    kickBtns[i].onclick = function (){
+      kickMember(this.getAttribute('data-kick'));
+    };
+  }
+
+  const lb = $('leaveBtn');
+  if (lb) lb.onclick = leaveClan;
+}
+
+function renderClanList(app){
+  if (!allClans.length){
+    app.innerHTML = '<div class="empty">Кланов пока нет.<br>Стань первым — нажми «Создать».</div>';
+    return;
+  }
+
+  let html = '<div class="section-title">Список кланов</div>';
+
+  for (let i = 0; i < allClans.length; i++){
+    const c = allClans[i];
+    const mem = membersOf(c.id);
+    const full = mem.length >= MAX_MEMBERS;
+
+    html += '<div class="clan-card">';
+    html += '<div class="clan-emblem">' + (c.emblem || '🛡️') + '</div>';
+    html += '<div class="clan-info">';
+    html += '<div class="clan-name">' + esc(c.name) +
+            ' <span class="clan-tag">' + esc(c.tag || '') + '</span></div>';
+    html += '<div class="clan-sub">' + mem.length + ' / ' + MAX_MEMBERS +
+            ' участников</div>';
+    html += '</div>';
+    html += '<button class="clan-join" data-join="' + c.id + '"' +
+            (full ? ' disabled' : '') + '>' +
+            (full ? 'Полон' : 'Вступить') + '</button>';
+    html += '</div>';
+  }
+
+  app.innerHTML = html;
+
+  const joinBtns = app.querySelectorAll('[data-join]');
+  for (let i = 0; i < joinBtns.length; i++){
+    joinBtns[i].onclick = function (){
+      joinClan(this.getAttribute('data-join'));
+    };
+  }
+}
+
+function esc(s){
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 /* ================= ДЕЙСТВИЯ ================= */
 
 async function joinClan(clanId){
-  clearError();
-
-  const cntRes = await sb.from('clan_members')
-    .select('*', { count: 'exact', head: true })
-    .eq('clan_id', clanId);
-
-  if (cntRes.error){ showError(cntRes.error); return; }
-
-  if ((cntRes.count || 0) >= CAP){
-    toast('Клан заполнен: ' + CAP + '/' + CAP);
+  const mem = membersOf(clanId);
+  if (mem.length >= MAX_MEMBERS){
+    showToast('Клан заполнен');
     return;
   }
 
   const res = await sb.from('clan_members').insert({
-    clan_id: clanId,
-    player_key: KEY,
-    name: NAME,
-    cups: CUPS,
-    role: 'member'
+    clan_id:    clanId,
+    player_key: meKey,
+    name:       meName,
+    cups:       meCups,
+    role:       'member'
   });
 
-  if (res.error){ showError(res.error); toast('Не удалось вступить'); return; }
-
-  toast('Ты в клане!');
-  await boot();
-}
-
-function openCreate(){
-  pickedEmblem = '🛡️';
-  renderEmblems();
-  $('clanName').value = '';
-  $('clanTag').value = '';
-  $('clanDesc').value = '';
-  $('createModal').classList.remove('hidden');
-}
-
-function renderEmblems(){
-  const row = $('emblemRow');
-  row.innerHTML = '';
-  for (let i = 0; i < EMBLEMS.length; i++){
-    const e = EMBLEMS[i];
-    const b = document.createElement('button');
-    b.className = 'emblem-opt' + (e === pickedEmblem ? ' on' : '');
-    b.textContent = e;
-    (function (val){
-      b.onclick = function (){ pickedEmblem = val; renderEmblems(); };
-    })(e);
-    row.appendChild(b);
+  if (res.error){
+    showToast('Не удалось вступить');
+    console.error(res.error);
+    return;
   }
-}
 
-async function createClan(){
-  clearError();
-
-  const nm  = $('clanName').value.trim();
-  const tag = $('clanTag').value.trim().toUpperCase();
-  const ds  = $('clanDesc').value.trim();
-
-  if (nm.length < 3){ toast('Название минимум 3 символа'); return; }
-
-  const dup = await sb.from('clan_members').select('*').eq('player_key', KEY).maybeSingle();
-  if (dup.data){ toast('Ты уже в клане'); return; }
-
-  const res = await sb.from('clans').insert({
-    name: nm,
-    tag: tag || null,
-    emblem: pickedEmblem,
-    description: ds || null,
-    owner_key: KEY
-  }).select().single();
-
-  if (res.error){ showError(res.error); toast('Не удалось создать'); return; }
-
-  const ins = await sb.from('clan_members').insert({
-    clan_id: res.data.id,
-    player_key: KEY,
-    name: NAME,
-    cups: CUPS,
-    role: 'owner'
-  });
-
-  if (ins.error){ showError(ins.error); toast('Клан создан, но вход не удался'); return; }
-
-  $('createModal').classList.add('hidden');
-  toast('Клан создан!');
-  await boot();
-}
-
-async function kickMember(pkey){
-  if (!myMember || myMember.role !== 'owner') return;
-  if (!confirm('Исключить участника?')) return;
-
-  const res = await sb.from('clan_members')
-    .delete()
-    .eq('player_key', pkey)
-    .eq('clan_id', myMember.clan_id);
-
-  if (res.error){ showError(res.error); return; }
-
-  toast('Участник исключён');
-  await openMyClan();
+  showToast('Ты в клане!');
+  await loadAll();
 }
 
 async function leaveClan(){
   if (!myMember) return;
-  if (!confirm('Покинуть клан?')) return;
 
-  const isOwner = myMember.role === 'owner';
+  const isOwner = (myClan && myClan.owner_key === meKey);
+  const mem = myClan ? membersOf(myClan.id) : [];
 
-  if (isOwner){
-    const others = await sb.from('clan_members')
-      .select('*')
-      .eq('clan_id', myMember.clan_id)
-      .neq('player_key', KEY)
-      .order('joined_at', { ascending: true })
-      .limit(1);
-
-    if (others.data && others.data.length){
-      await sb.from('clan_members')
-        .update({ role: 'owner' })
-        .eq('id', others.data[0].id);
-    } else {
-      await sb.from('clans').delete().eq('id', myMember.clan_id);
-    }
+  if (isOwner && mem.length > 1){
+    showToast('Сначала передай главу или выгони всех');
+    return;
   }
 
-  await sb.from('clan_members').delete().eq('player_key', KEY);
+  if (!confirm('Выйти из клана?')) return;
 
-  myMember = null;
-  myClan = null;
-  members = [];
+  await sb.from('clan_members').delete().eq('player_key', meKey);
 
-  toast('Ты покинул клан');
-  await boot();
+  if (isOwner && myClan){
+    await sb.from('clans').delete().eq('id', myClan.id);
+  }
+
+  showToast('Ты вышел из клана');
+  await loadAll();
 }
 
-/* ================= КНОПКИ ================= */
+async function kickMember(key){
+  if (!myClan || myClan.owner_key !== meKey) return;
+  if (!confirm('Выгнать участника?')) return;
+
+  await sb.from('clan_members').delete().eq('player_key', key);
+  showToast('Участник выгнан');
+  await loadAll();
+}
+
+async function createClan(){
+  const name = $('inName').value.trim();
+  const tag  = $('inTag').value.trim();
+  const desc = $('inDesc').value.trim();
+
+  if (name.length < 3){
+    showToast('Название минимум 3 символа');
+    return;
+  }
+
+  const res = await sb.from('clans').insert({
+    name:        name,
+    tag:         tag,
+    emblem:      pickedEmblem,
+    description: desc,
+    owner_key:   meKey
+  }).select().single();
+
+  if (res.error){
+    showToast('Не удалось создать клан');
+    console.error(res.error);
+    return;
+  }
+
+  const memRes = await sb.from('clan_members').insert({
+    clan_id:    res.data.id,
+    player_key: meKey,
+    name:       meName,
+    cups:       meCups,
+    role:       'owner'
+  });
+
+  if (memRes.error){
+    showToast('Клан создан, но вступление не удалось');
+    console.error(memRes.error);
+  } else {
+    showToast('Клан создан!');
+  }
+
+  $('createModal').classList.add('hidden');
+  $('inName').value = '';
+  $('inTag').value = '';
+  $('inDesc').value = '';
+
+  await loadAll();
+}
+
+/* ================= МОДАЛКА ================= */
+
+function buildEmblems(){
+  const row = $('emblemRow');
+  row.innerHTML = '';
+
+  for (let i = 0; i < EMBLEMS.length; i++){
+    const b = document.createElement('button');
+    b.className = 'emblem-opt' + (EMBLEMS[i] === pickedEmblem ? ' on' : '');
+    b.textContent = EMBLEMS[i];
+    (function (em){
+      b.onclick = function (){
+        pickedEmblem = em;
+        buildEmblems();
+      };
+    })(EMBLEMS[i]);
+    row.appendChild(b);
+  }
+}
 
 $('bannerBtn').onclick = function (){
   if (myMember){
-    openMyClan();
-  } else {
-    loadList();
+    showToast('Ты уже в клане');
+    return;
   }
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  pickedEmblem = '🛡️';
+  buildEmblems();
+  $('createModal').classList.remove('hidden');
 };
 
 $('createCancel').onclick = function (){
@@ -663,7 +686,12 @@ $('createCancel').onclick = function (){
 
 $('createOk').onclick = createClan;
 
+buildEmblems();
 boot();
+
+document.addEventListener('visibilitychange', function (){
+  if (!document.hidden) loadAll();
+});
 </script>
 </body>
 </html>
