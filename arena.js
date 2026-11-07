@@ -1,11 +1,11 @@
 /* ============================================================
-   arena.js — правила и движок шахматных арен  (VER 13)
-   Король ходит на одну клетку. Шах — обязан уйти. Мат — урон.
+   arena.js — правила и движок шахматных арен  (VER 14)
+   Стоимость хода = цена фигуры. Короля не съесть. Мат — урон.
    ============================================================ */
 (function (global) {
 'use strict';
 
-const VER = '13';
+const VER = '14';
 const STEP = 1000;
 const MAX_ARENA = 10;
 
@@ -105,6 +105,14 @@ function energyRate(s){
   return 1;
 }
 
+function moveCost(s, pc){
+  if (!pc) return 1;
+  if (s.nightMode > 0) return 0;
+  const def = PIECES[pc.type];
+  if (def && typeof def.cost === 'number') return def.cost;
+  return 1;
+}
+
 function kingPos(s, side){
   for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
     const pc = s.board[y][x];
@@ -128,7 +136,6 @@ function countPieces(s){
   return n;
 }
 
-/* быстрый отпечаток позиции: нужен, чтобы не пересчитывать шах/мат зря */
 function boardSig(s){
   let sig = '';
   for (let y = 0; y < 8; y++){
@@ -493,6 +500,7 @@ function create(opts){
     check:   { a:false, b:false },
     mate:    { a:false, b:false },
     mateHit: { a:false, b:false },
+    drawOffer: { a:false, b:false },
     statusAt: 0,
     statusSig: '',
 
@@ -548,7 +556,8 @@ function move(s, side, fx, fy, tx, ty){
     return { ok:false, error:'Так ходить нельзя' };
   }
 
-  const cost = s.nightMode > 0 ? 0 : 1;
+  /* цена хода = цена этой фигуры, а не единица */
+  const cost = moveCost(s, pc);
   if (s.energy[side] < cost) return { ok:false, error:'Мало эликсира' };
   s.energy[side] -= cost;
 
@@ -566,7 +575,7 @@ function move(s, side, fx, fy, tx, ty){
   }
 
   if (!s.over) updateStatus(s);
-  return { ok:true };
+  return { ok:true, cost: cost };
 }
 
 function relocate(s, fx, fy, tx, ty){
@@ -820,6 +829,7 @@ global.Arena = {
   pseudoMoves: pseudoMoves,
   place: place,
   move: move,
+  moveCost: moveCost,
   castNight: castNight,
   unlock: unlock,
   resign: resign,
