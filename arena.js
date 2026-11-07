@@ -1,11 +1,11 @@
 /* ============================================================
-   arena.js — правила и движок шахматных арен  (VER 12)
+   arena.js — правила и движок шахматных арен  (VER 13)
    Король ходит на одну клетку. Шах — обязан уйти. Мат — урон.
    ============================================================ */
 (function (global) {
 'use strict';
 
-const VER = '12';
+const VER = '13';
 const STEP = 1000;
 const MAX_ARENA = 10;
 
@@ -57,7 +57,6 @@ const ARENAS = [
 
 const DIR8 = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
 
-/* только скользящие фигуры: король сюда НЕ входит */
 const DIRS = {
   rook:   [[1,0],[-1,0],[0,1],[0,-1]],
   bishop: [[1,1],[1,-1],[-1,1],[-1,-1]],
@@ -127,6 +126,23 @@ function countPieces(s){
     if (s.board[y][x]) n++;
   }
   return n;
+}
+
+/* быстрый отпечаток позиции: нужен, чтобы не пересчитывать шах/мат зря */
+function boardSig(s){
+  let sig = '';
+  for (let y = 0; y < 8; y++){
+    for (let x = 0; x < 8; x++){
+      const pc = s.board[y][x];
+      if (!pc){ sig += '.'; continue; }
+      sig += pc.type + pc.side;
+      if (pc.asleep) sig += 'a';
+      if (pc.chained) sig += 'c';
+      if (pc.type === 'king') sig += 'h' + (pc.hp || 0);
+      sig += ',';
+    }
+  }
+  return sig + '#' + s.arena + '#' + (s.nightMode > 0 ? 1 : 0);
 }
 
 /* ================= РАССТАНОВКА ================= */
@@ -280,7 +296,6 @@ function pseudoMoves(s, x, y){
       push(x + KNIGHT[i][0], y + KNIGHT[i][1]);
 
   } else if (pc.type === 'king'){
-    /* король — ровно на одну клетку, без скольжения */
     for (let i = 0; i < DIR8.length; i++)
       push(x + DIR8[i][0], y + DIR8[i][1]);
 
@@ -374,6 +389,7 @@ function sideHasAnyLegal(s, side){
   for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
     const pc = s.board[y][x];
     if (!pc || pc.side !== side) continue;
+    if (pc.asleep || pc.chained) continue;
     if (legalMoves(s, x, y).length) return true;
   }
   return false;
@@ -387,18 +403,22 @@ function kingAttacked(s, side){
 
 /* ================= ШАХ, МАТ, УРОН ================= */
 
-function updateStatus(s){
+function updateStatus(s, force){
   if (s.over) return;
+
+  const sig = boardSig(s);
+  if (!force && sig === s.statusSig) return;
+  s.statusSig = sig;
+
+  if (!s.check) s.check = { a:false, b:false };
+  if (!s.mate)  s.mate  = { a:false, b:false };
+  if (!s.mateHit) s.mateHit = { a:false, b:false };
 
   const sides = ['a', 'b'];
 
   for (let i = 0; i < 2; i++){
     const side = sides[i];
     const foe  = foeOf(side);
-
-    if (!s.check) s.check = { a:false, b:false };
-    if (!s.mate)  s.mate  = { a:false, b:false };
-    if (!s.mateHit) s.mateHit = { a:false, b:false };
 
     const kp = kingPos(s, side);
     if (!kp){
@@ -474,6 +494,7 @@ function create(opts){
     mate:    { a:false, b:false },
     mateHit: { a:false, b:false },
     statusAt: 0,
+    statusSig: '',
 
     over: false,
     winner: null,
@@ -493,6 +514,8 @@ function create(opts){
   if (s.arena === 1)  placeTraps(s);
 
   log(s, 'Арена «' + ARENAS[s.arena - 1].name + '». Короля не съесть — ставь мат.');
+
+  updateStatus(s, true);
   return s;
 }
 
@@ -809,6 +832,7 @@ global.Arena = {
   sideHasAnyLegal: sideHasAnyLegal,
   updateStatus: updateStatus,
   countPieces: countPieces,
+  boardSig: boardSig,
   defaultSetup: defaultSetup
 };
 
