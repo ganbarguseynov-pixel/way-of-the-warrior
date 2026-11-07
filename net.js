@@ -1,6 +1,6 @@
 /* ============================================================
-   net.js — сеть: очередь, матч, подбор соперника (VER 11)
-   5 секунд поиска → если никого, бой с «живым» ботом.
+   net.js — сеть: очередь, матч, бот, ничья (VER 11)
+   3 секунды поиска → если никого, бой с «живым» ботом.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -12,7 +12,7 @@ const SETUP_KEY  = 'chessSetup';
 const PUSH_MS = 200;
 const TICK_MS = 100;
 
-const SEARCH_LIMIT_MS = 5000;
+const SEARCH_LIMIT_MS = 3000;
 
 const BOT_NAMES = [
   'Дмитрий','Алексей','Максим','Артём','Сергей','Кирилл','Иван',
@@ -50,8 +50,6 @@ const Net = {
   botTimer: null,
   fallbackTimer: null
 };
-
-/* ---------------- события ---------------- */
 
 Net.on = function (evt, fn){
   if (!Net.handlers[evt]) Net.handlers[evt] = [];
@@ -92,6 +90,8 @@ function slimState(s){
     timeLeft:  s.timeLeft,
     nightMode: s.nightMode,
     nightUsed: s.nightUsed,
+    drawOffer: s.drawOffer,
+    check:     s.check,
     over:      s.over,
     winner:    s.winner
   };
@@ -496,7 +496,7 @@ function botNickname(){
 }
 
 function botCupsFor(myCups){
-  let shift = Math.floor(Math.random() * 101) - 50;   /* -50..+50 */
+  let shift = Math.floor(Math.random() * 101) - 50;
   if (Math.abs(shift) < 8) shift = (shift < 0 ? -12 : 12);
 
   let cups = Math.max(0, myCups + shift);
@@ -548,7 +548,17 @@ Net._botTick = function (){
   Net.botTimer = setTimeout(function (){
     Net.botTimer = null;
     if (!Net.botMode || Net.finished) return;
-    if (Net.state && !Net.state.over) Net._botMove();
+
+    const st = Net.state;
+    if (!st || st.over){ Net._botTick(); return; }
+
+    if (st.drawOffer && st.drawOffer.a){
+      if (Math.random() < 0.55) Net._applyIntent({ t:'draw' }, 'b');
+      else Net._applyIntent({ t:'undraw' }, 'b');
+    } else {
+      Net._botMove();
+    }
+
     Net._botTick();
   }, wait);
 };
@@ -659,18 +669,52 @@ Net._push = function (){
   Net._broadcastState();
 };
 
+/* ---------------- ничья ---------------- */
+
+Net._drawIntent = function (side, kind){
+  const s = Net.state;
+  if (!s || s.over) return { ok:false, error:'Бой окончен' };
+
+  if (!s.drawOffer) s.drawOffer = { a:false, b:false };
+
+  const foe = (side === 'a') ? 'b' : 'a';
+
+  if (kind === 'draw'){
+    if (s.drawOffer[foe]){
+      s.drawOffer.a = false;
+      s.drawOffer.b = false;
+      Arena.finish(s, 'draw');
+      return { ok:true };
+    }
+    s.drawOffer[side] = true;
+    return { ok:true };
+  }
+
+  if (kind === 'undraw'){
+    s.drawOffer.a = false;
+    s.drawOffer.b = false;
+    return { ok:true };
+  }
+
+  return { ok:false, error:'Неизвестное действие' };
+};
+
 Net._applyIntent = function (msg, side){
   if (!Net.state || !msg) return;
 
   const s = Net.state;
   let res = null;
 
-  switch (msg.t){
-    case 'move':   res = Arena.move(s, side, msg.fx, msg.fy, msg.tx, msg.ty); break;
-    case 'night':  res = Arena.castNight(s, side); break;
-    case 'unlock': res = Arena.unlock(s, side, msg.x, msg.y); break;
-    case 'resign': res = Arena.resign(s, side); break;
-    default: return;
+  if (msg.t === 'draw' || msg.t === 'undraw'){
+    res = Net._drawIntent(side, msg.t);
+  } else {
+    switch (msg.t){
+      case 'move':   res = Arena.move(s, side, msg.fx, msg.fy, msg.tx, msg.ty); break;
+      case 'night':  res = Arena.castNight(s, side); break;
+      case 'unlock': res = Arena.unlock(s, side, msg.x, msg.y); break;
+      case 'resign': res = Arena.resign(s, side); break;
+      default: return;
+    }
   }
 
   if (res && !res.ok){
