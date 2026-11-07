@@ -133,49 +133,59 @@ body{
 }
 .btn-train:active{transform:translateY(3px);box-shadow:0 1px 0 #0f172a}
 
-/* ---------- ПРОСМОТР ВСЕХ АРЕН ---------- */
+/* ---------- ПРОСМОТР ВСЕХ АРЕН (ВЕРТИКАЛЬНО) ---------- */
 #arenaModal{
-  position:fixed;inset:0;background:rgba(2,6,23,.95);z-index:1200;
-  display:none;flex-direction:column;justify-content:center;padding:10px 0;
+  position:fixed;inset:0;background:rgba(2,6,23,.97);z-index:1200;
+  display:none;flex-direction:column;
 }
 #arenaModal.open{display:flex}
+
 #arenaModalHead{
   display:flex;justify-content:space-between;align-items:center;
-  width:100%;max-width:440px;margin:0 auto 8px;padding:0 18px;
+  width:100%;padding:14px 18px 10px;flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  background:linear-gradient(180deg,#0f172a,rgba(15,23,42,0));
 }
-#arenaModalHead h3{margin:0;font-size:16px;color:#e2e8f0}
+#arenaModalHead h3{margin:0;font-size:16px;color:#e2e8f0;letter-spacing:.5px}
 #arenaClose{
   background:#1e293b;border:1px solid #475569;color:#cbd5e1;
   width:34px;height:34px;border-radius:50%;font-size:15px;
   cursor:pointer;line-height:1;
 }
-#arenaTrack{
-  display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
-  padding:8px 20px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+#arenaClose:active{background:#334155}
+
+#arenaScroll{
+  flex:1;position:relative;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  scroll-snap-type:y mandatory;
+  scrollbar-width:none;
+  padding:16px 0 20px;
 }
-#arenaTrack::-webkit-scrollbar{display:none}
+#arenaScroll::-webkit-scrollbar{display:none}
 
 .arena-slide{
-  position:relative;flex:0 0 auto;width:74vw;max-width:290px;
   scroll-snap-align:center;
+  width:86vw;max-width:360px;margin:0 auto 16px;
   background:linear-gradient(180deg,#1e293b,#0f172a);
   border:2px solid #334155;border-radius:16px;padding:14px;
-  opacity:.5;transform:scale(.94);
-  transition:opacity .25s,transform .25s,border-color .25s,box-shadow .25s;
+  opacity:.45;transform:scale(.94);
+  transition:opacity .22s,transform .22s,border-color .22s,box-shadow .22s;
+  position:relative;
 }
 .arena-slide.now{
   opacity:1;transform:scale(1);border-color:#ffcc00;
-  box-shadow:0 0 26px rgba(255,204,0,.28);
+  box-shadow:0 0 26px rgba(255,204,0,.3);
 }
 .arena-slide-img{
-  height:104px;border-radius:12px;display:flex;align-items:center;
+  height:96px;border-radius:12px;display:flex;align-items:center;
   justify-content:center;margin-bottom:10px;
   border:1px solid rgba(255,255,255,.08);
 }
-.arena-slide-img span{font-size:50px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.7))}
+.arena-slide-img span{font-size:46px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.7))}
 .arena-slide-title{font-size:15px;font-weight:900;color:#ffcc00;margin-bottom:3px}
-.arena-slide-range{font-size:11px;color:#94a3b8;margin-bottom:8px}
-.arena-slide-rule{font-size:11.5px;color:#cbd5e1;line-height:1.4;min-height:58px}
+.arena-slide-range{font-size:11px;color:#94a3b8;margin-bottom:8px;font-weight:700}
+.arena-slide-rule{font-size:11.5px;color:#cbd5e1;line-height:1.42}
 .arena-slide-badge{
   display:none;position:absolute;top:10px;right:10px;
   background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000;
@@ -185,8 +195,9 @@ body{
 .arena-slide.now .arena-slide-badge{display:block}
 
 #arenaDots{
-  display:flex;justify-content:center;gap:6px;margin-top:10px;
-  flex-wrap:wrap;padding:0 20px;
+  flex-shrink:0;display:flex;justify-content:center;gap:7px;
+  padding:8px 16px 18px;flex-wrap:wrap;
+  background:linear-gradient(0deg,#0f172a,rgba(15,23,42,0));
 }
 .arena-dot{
   width:8px;height:8px;border-radius:50%;background:#334155;
@@ -274,13 +285,13 @@ body{
   <button class="btn-train" id="trainBtn">🤖 Тренировка с ботом</button>
 </div>
 
-<!-- ================= ВСЕ АРЕНЫ ================= -->
+<!-- ================= ВСЕ АРЕНЫ, ЛИСТАЮТСЯ ВНИЗ ================= -->
 <div id="arenaModal">
   <div id="arenaModalHead">
     <h3>Все арены</h3>
     <button id="arenaClose">✕</button>
   </div>
-  <div id="arenaTrack"></div>
+  <div id="arenaScroll"></div>
   <div id="arenaDots"></div>
 </div>
 
@@ -433,17 +444,19 @@ function render(cups){
 function buildArenaBrowser(){
   if (slidesBuilt) return;
 
-  const track = $('arenaTrack');
+  const track = $('arenaScroll');
   const dots  = $('arenaDots');
   track.innerHTML = '';
   dots.innerHTML  = '';
 
   for (let n = 1; n <= MAX_ARENA; n++){
-    const look  = LOOK[n - 1];
-    const from  = (n - 1) * STEP;
+    const look = LOOK[n - 1];
+    const from = (n - 1) * STEP;
+
+    // ровные числа: 1000, 2000, 3000 …
     const range = (n === MAX_ARENA)
-      ? 'от ' + from + ' 🏆 и выше'
-      : from + ' – ' + (n * STEP - 1) + ' 🏆';
+      ? from + ' 🏆 и выше'
+      : from + ' – ' + (n * STEP) + ' 🏆';
 
     const slide = document.createElement('div');
     slide.className = 'arena-slide';
@@ -480,20 +493,20 @@ function buildArenaBrowser(){
 }
 
 function slideOf(n){
-  return $('arenaTrack').querySelector('.arena-slide[data-n="' + n + '"]');
+  return $('arenaScroll').querySelector('.arena-slide[data-n="' + n + '"]');
 }
 
 function scrollToArena(n, smooth){
-  const track = $('arenaTrack');
+  const track = $('arenaScroll');
   const el = slideOf(n);
   if (!track || !el) return;
 
-  const left = el.offsetLeft - (track.clientWidth - el.clientWidth) / 2;
+  const top = el.offsetTop - (track.clientHeight - el.offsetHeight) / 2;
 
   if (smooth && track.scrollTo){
-    track.scrollTo({ left: left, behavior: 'smooth' });
+    track.scrollTo({ top: top, behavior: 'smooth' });
   } else {
-    track.scrollLeft = left;
+    track.scrollTop = top;
   }
   markCurrent(n);
 }
@@ -501,7 +514,7 @@ function scrollToArena(n, smooth){
 function markCurrent(n){
   currentArena = n;
 
-  const slides = $('arenaTrack').querySelectorAll('.arena-slide');
+  const slides = $('arenaScroll').querySelectorAll('.arena-slide');
   for (let i = 0; i < slides.length; i++){
     slides[i].classList.toggle('now', +slides[i].dataset.n === n);
   }
@@ -513,16 +526,16 @@ function markCurrent(n){
 }
 
 function updateDotsFromScroll(){
-  const track = $('arenaTrack');
+  const track = $('arenaScroll');
   if (!track) return;
 
-  const center = track.scrollLeft + track.clientWidth / 2;
+  const center = track.scrollTop + track.clientHeight / 2;
   const slides = track.querySelectorAll('.arena-slide');
 
   let best = null, bestDist = Infinity;
   for (let i = 0; i < slides.length; i++){
     const s = slides[i];
-    const sc = s.offsetLeft + s.offsetWidth / 2;
+    const sc = s.offsetTop + s.offsetHeight / 2;
     const d = Math.abs(sc - center);
     if (d < bestDist){ bestDist = d; best = s; }
   }
@@ -534,9 +547,11 @@ function openArenaBrowser(){
   markCurrent(currentArena);
   $('arenaModal').classList.add('open');
 
-  // ждём кадр, чтобы размеры посчитались правильно
+  // два кадра — чтобы размеры точно посчитались
   requestAnimationFrame(function (){
-    scrollToArena(currentArena, false);
+    requestAnimationFrame(function (){
+      scrollToArena(currentArena, false);
+    });
   });
 }
 
@@ -544,10 +559,6 @@ $('arenaCard').onclick = openArenaBrowser;
 
 $('arenaClose').onclick = function (){
   $('arenaModal').classList.remove('open');
-};
-
-$('arenaModal').onclick = function (e){
-  if (e.target === $('arenaModal')) $('arenaModal').classList.remove('open');
 };
 
 /* ================= ЗАГРУЗКА ================= */
