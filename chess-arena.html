@@ -118,7 +118,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 </style>
 </head>
 <body data-arena="1">
-<div id="verTag">v23</div>
+<div id="verTag">v24</div>
 
 <div id="lobby">
   <div class="card">
@@ -199,7 +199,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 </div>
 
 <script src="arena.js?v=18"></script>
-<script src="net.js?v=17"></script>
+<script src="net.js?v=19"></script>
 <script>
 const sb = supabase.createClient(
   'https://qnpriwfxzuoymoumdtrl.supabase.co',
@@ -530,9 +530,6 @@ function updateDrawUI(s, my, opp){
     btn.disabled = !!s.over;
   }
 
-  const title = $('drawPanelText');
-  if (title) title.textContent = 'Соперник предлагает ничью';
-
   if (theirs && !s.over) $('drawPanel').classList.remove('hidden');
   else $('drawPanel').classList.add('hidden');
 }
@@ -698,20 +695,7 @@ function render(s){
   if (tl.style.color !== timeColor) tl.style.color = timeColor;
 }
 
-$('drawBtn').onclick = function (){
-  const s = Net.state;
-  if (s && !s.over){
-    const my = Net.mySide;
-    const offer = s.drawOffer || {};
-    if (offer[my]) return;
-    if (drawsLeftOf(s, my) <= 0){
-      toast('Ничью можно предлагать только ' + DRAW_MAX + ' раза за партию');
-      return;
-    }
-  }
-  Net.intent({ t:'draw' });
-};
-
+$('drawBtn').onclick = function (){ Net.intent({ t:'draw' }); };
 $('drawAccept').onclick = function (){ Net.intent({ t:'draw' }); };
 $('drawDecline').onclick = function (){ Net.intent({ t:'undraw' }); };
 
