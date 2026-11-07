@@ -11,6 +11,7 @@
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
 body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;min-height:100vh;min-height:100dvh;user-select:none;padding-bottom:80px;}
+.hidden{display:none!important}
 .top-bar{width:100%;padding:10px;display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:10;}
 .profile-badge{display:flex;align-items:center;gap:10px;background:linear-gradient(145deg,#1a1a2e,#0a0a14);padding:6px 12px;border-radius:12px;border:2px solid #3b82f6;box-shadow:0 4px 10px rgba(0,0,0,.6);cursor:pointer;transition:transform .1s;}
 .profile-badge:active{transform:scale(.97);background:linear-gradient(145deg,#22223a,#12121f);}
@@ -95,12 +96,11 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 #nickErr{font-size:11.5px;color:#f87171;min-height:16px;margin-bottom:8px;line-height:1.3}
 #nickOk{width:100%;padding:14px;border:0;border-radius:10px;font-size:15px;font-weight:900;cursor:pointer;color:#fff;background:linear-gradient(145deg,#22c55e,#15803d);box-shadow:0 6px 16px rgba(34,197,94,.3);}
 #nickOk:disabled{opacity:.5}
-#nickCancel{width:100%;margin-top:8px;padding:12px;border-radius:10px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:13px;font-weight:800;cursor:pointer;}
 </style>
 </head>
 <body>
 
-<div id="verTag">v9</div>
+<div id="verTag">v10</div>
 
 <div class="top-bar">
   <div class="profile-badge" id="profileBadge">
@@ -144,7 +144,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
   <div id="arenaModalHead">
     <div id="arenaHeadLeft">
       <h3>Все арены</h3>
-      <span class="verChip">v9</span>
+      <span class="verChip">v10</span>
     </div>
     <button id="arenaClose">✕</button>
   </div>
@@ -161,7 +161,6 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
     <input id="nickInput" maxlength="16" placeholder="Ник" autocomplete="off" spellcheck="false">
     <div id="nickErr"></div>
     <button id="nickOk">Сохранить</button>
-    <button id="nickCancel">Позже</button>
   </div>
 </div>
 
@@ -209,7 +208,6 @@ const MAX_ARENA = 10;
 const NICK_PRICE = 250;
 const NICK_KEY   = 'userName';
 const GEMS_KEY   = 'cr_gems';
-const ASKED_KEY  = 'nickAsked';
 
 const NAMES = (window.Arena && Arena.ARENAS)
   ? Arena.ARENAS.map(function (a){ return a.name; })
@@ -222,7 +220,7 @@ const RULES = (window.Arena && Arena.ARENAS)
     'Чистая доска. Обычные правила, ничего лишнего.',
     'Вытоптанный двор, земляные тона, простор.',
     'Ржавый цех. Металл, гарь, тяжёлый воздух.',
-    'Ба��ровый сумрак. Доска как из сна.',
+    'Багровый сумрак. Доска как из сна.',
     'Выжженное дерево и пыль. Глушь.',
     'Серый кафель. Пусто, холодно, тихо.',
     'Кровавый мрак. Камень и ржавые цепи.',
@@ -354,8 +352,6 @@ function openNick(mode){
     ? 'Сохранить'
     : 'Сменить за ' + NICK_PRICE + ' 💎';
 
-  $('nickCancel').textContent = (mode === 'create') ? 'Позже' : 'Отмена';
-
   $('nickPanel').classList.remove('hidden');
 
   setTimeout(function (){
@@ -365,15 +361,10 @@ function openNick(mode){
 
 function closeNick(){
   $('nickPanel').classList.add('hidden');
-  try { localStorage.setItem(ASKED_KEY, '1'); } catch (e){}
 }
 
 $('profileBadge').onclick = function (){
   openNick(hasOwnNick() ? 'change' : 'create');
-};
-
-$('nickCancel').onclick = function (){
-  closeNick();
 };
 
 $('nickOk').onclick = async function (){
@@ -404,10 +395,18 @@ $('nickOk').onclick = async function (){
   $('nickOk').disabled = true;
   $('nickErr').textContent = '';
 
+  /* на устройстве сохраняем сразу — экран закроется в любом случае */
+  try { localStorage.setItem(NICK_KEY, v); } catch (e){}
+
+  if (isChange) setGems(gems - NICK_PRICE);
+
+  closeNick();
+  render(lastCups);
+
+  /* в базу пишем через функцию — обычный update база запрещает */
   let dbOk  = true;
   let dbMsg = '';
 
-  /* пишем в базу через функцию — обычный update база запрещает */
   try {
     const res = await sb.rpc('arena_set_name', {
       p_key:  playerKey(),
@@ -423,18 +422,10 @@ $('nickOk').onclick = async function (){
     dbMsg = 'сеть недоступна';
   }
 
-  /* ник в любом случае сохраняем на устройстве — бои берут его отсюда */
-  try { localStorage.setItem(NICK_KEY, v); } catch (e){}
-
-  if (isChange) setGems(gems - NICK_PRICE);
-
   $('nickOk').disabled = false;
-  closeNick();
-  render(lastCups);
 
   if (dbOk){
     $('dbWarn').textContent = '';
-    boot();
   } else {
     $('dbWarn').textContent =
       'Ник сохранён на устройстве, но в базу не записан: ' + dbMsg;
@@ -611,9 +602,7 @@ async function boot(){
     render(cups);
 
     if (!hasOwnNick()){
-      let asked = false;
-      try { asked = localStorage.getItem(ASKED_KEY) === '1'; } catch (e){}
-      if (!asked) setTimeout(function (){ openNick('create'); }, 350);
+      setTimeout(function (){ openNick('create'); }, 350);
     }
 
     return true;
@@ -626,6 +615,11 @@ async function boot(){
 
     $('dbWarn').textContent = 'База недоступна' + code + ': ' + msg;
     render(parseInt(localStorage.getItem('cr_trophies') || '0', 10) || 0);
+
+    if (!hasOwnNick()){
+      setTimeout(function (){ openNick('create'); }, 350);
+    }
+
     return false;
   }
 }
