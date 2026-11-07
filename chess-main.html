@@ -48,10 +48,10 @@ body{
 
 /* ---------- МЕТКА ВЕРСИИ ---------- */
 #verTag{
-  position:fixed;left:6px;bottom:72px;z-index:1300;
-  font-size:9px;color:#475569;letter-spacing:.5px;
-  background:rgba(2,6,23,.75);border:1px solid #1e293b;
-  padding:2px 6px;border-radius:5px;pointer-events:none;
+  position:fixed;left:8px;bottom:74px;z-index:1300;
+  font-size:10px;font-weight:900;color:#facc15;letter-spacing:.5px;
+  background:#0f172a;border:1px solid #facc15;
+  padding:3px 8px;border-radius:6px;pointer-events:none;
 }
 
 /* ---------- КАРТОЧКА АРЕНЫ ---------- */
@@ -144,7 +144,7 @@ body{
 }
 .btn-train:active{transform:translateY(3px);box-shadow:0 1px 0 #0f172a}
 
-/* ---------- ВСЕ АРЕНЫ: 1 ВНИЗУ, 10 НАВЕРХУ ---------- */
+/* ---------- ВСЕ АРЕНЫ ---------- */
 #arenaModal{
   position:fixed;inset:0;background:rgba(2,6,23,.97);z-index:1200;
   display:none;flex-direction:column;
@@ -156,7 +156,16 @@ body{
   width:100%;padding:14px 18px 8px;flex-shrink:0;
   background:linear-gradient(180deg,#0f172a,rgba(15,23,42,0));
 }
+#arenaHeadLeft{display:flex;align-items:center;gap:9px}
 #arenaModalHead h3{margin:0;font-size:16px;color:#e2e8f0;letter-spacing:.5px}
+
+/* крупная метка версии прямо в шапке */
+.verChip{
+  font-size:11px;font-weight:900;color:#000;
+  background:linear-gradient(145deg,#ffcc00,#ff9500);
+  padding:2px 8px;border-radius:6px;letter-spacing:.5px;
+}
+
 #arenaClose{
   background:#1e293b;border:1px solid #475569;color:#cbd5e1;
   width:34px;height:34px;border-radius:50%;font-size:15px;
@@ -164,11 +173,19 @@ body{
 }
 #arenaClose:active{background:#334155}
 
-#arenaTopHint{
-  flex-shrink:0;text-align:center;font-size:10.5px;color:#64748b;
-  padding:0 16px 8px;letter-spacing:.3px;line-height:1.45;
+/* фиксированная строка «ты на арене N» — не прокручивается */
+#arenaMineBar{
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 16px;margin:0 12px 10px;border-radius:10px;
+  background:rgba(34,197,94,.12);border:1px solid #15803d;
+  font-size:12.5px;font-weight:900;color:#4ade80;letter-spacing:.3px;
 }
-#arenaTopHint b{color:#22c55e;font-weight:900}
+#arenaMineBar span{color:#86efac;font-weight:700;font-size:11px}
+
+#arenaTopHint{
+  flex-shrink:0;text-align:center;font-size:10.5px;color:#475569;
+  padding:0 16px 8px;letter-spacing:.3px;line-height:1.4;
+}
 
 #arenaScroll{
   flex:1;position:relative;
@@ -190,14 +207,14 @@ body{
   position:relative;
 }
 
-/* ТВОЯ АРЕНА — зелёная рамка и плашка, всегда */
+/* ТВОЯ АРЕНА — зелёная, с плашкой, всегда */
 .arena-slide.mine{
-  opacity:.9;transform:scale(.97);
+  opacity:.92;transform:scale(.97);
   border-color:#22c55e;
   box-shadow:0 0 22px rgba(34,197,94,.35);
 }
 
-/* АРЕНА, КОТОРУЮ СМОТРИШЬ — только размер и серая рамка */
+/* просматриваемая — только размер и серая рамка, без надписей */
 .arena-slide.now{
   opacity:1;transform:scale(1);
   border-color:#94a3b8;
@@ -205,7 +222,7 @@ body{
 }
 .arena-slide.mine.now{
   border-color:#22c55e;
-  box-shadow:0 0 30px rgba(34,197,94,.5);
+  box-shadow:0 0 30px rgba(34,197,94,.55);
 }
 
 .arena-slide-img{
@@ -218,7 +235,7 @@ body{
 .arena-slide-range{font-size:11px;color:#94a3b8;margin-bottom:8px;font-weight:700}
 .arena-slide-rule{font-size:11.5px;color:#cbd5e1;line-height:1.42}
 
-/* плашка живёт ТОЛЬКО на твоей арене */
+/* плашка ТОЛЬКО на твоей арене */
 .arena-slide-badge{
   display:none;position:absolute;top:10px;right:10px;
   background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;
@@ -282,7 +299,7 @@ body{
 </head>
 <body>
 
-<div id="verTag">арены v4</div>
+<div id="verTag">v5</div>
 
 <div class="top-bar">
   <div class="profile-badge">
@@ -323,13 +340,17 @@ body{
   <button class="btn-train" id="trainBtn">🤖 Тренировка с ботом</button>
 </div>
 
-<!-- ================= ВСЕ АРЕНЫ: 1 ВНИЗУ, 10 НАВЕРХУ ================= -->
+<!-- ================= ВСЕ АРЕНЫ ================= -->
 <div id="arenaModal">
   <div id="arenaModalHead">
-    <h3>Все арены</h3>
+    <div id="arenaHeadLeft">
+      <h3>Все арены</h3>
+      <span class="verChip">v5</span>
+    </div>
     <button id="arenaClose">✕</button>
   </div>
-  <div id="arenaTopHint">Загрузка…</div>
+  <div id="arenaMineBar">Ты на арене <span id="mineBarText">…</span></div>
+  <div id="arenaTopHint">Листай вверх — арены выше и сильнее</div>
   <div id="arenaScroll"></div>
   <div id="arenaDots"></div>
 </div>
@@ -410,8 +431,8 @@ const LOOK = [
   { icon:'♟️',  grad:'linear-gradient(135deg,#ded4c2,#9a8a70)', glow:'#c9a227' }
 ];
 
-let myArena     = 1;   // твоя настоящая арена
-let viewArena   = 1;   // какую сейчас смотришь
+let myArena     = 1;
+let viewArena   = 1;
 let slidesBuilt = false;
 
 /* ================= КЛЮЧ ИГРОКА ================= */
@@ -487,7 +508,7 @@ function buildArenaBrowser(){
   track.innerHTML = '';
   dots.innerHTML  = '';
 
-  // от 10 к 1: арена 10 сверху, арена 1 снизу
+  // арена 10 сверху, арена 1 снизу
   for (let n = MAX_ARENA; n >= 1; n--){
     const look = LOOK[n - 1];
     const from = (n - 1) * STEP;
@@ -536,7 +557,7 @@ function slideOf(n){
   return $('arenaScroll').querySelector('.arena-slide[data-n="' + n + '"]');
 }
 
-/* твоя арена — зелёная метка, не зависит от прокрутки */
+/* твоя арена — зелёная рамка и плашка, навсегда */
 function markMine(n){
   myArena = n;
 
@@ -556,15 +577,11 @@ function markMine(n){
     }
   }
 
-  const hint = $('arenaTopHint');
-  if (hint){
-    hint.innerHTML =
-      'Твоя арена: <b>' + n + ' · ' + NAMES[n - 1] + '</b>' +
-      '<br>Листай вверх — арены выше и сильнее';
-  }
+  const bar = $('mineBarText');
+  if (bar) bar.textContent = n + ' · ' + NAMES[n - 1];
 }
 
-/* просматриваемая арена — только размер, без надписей */
+/* просматриваемая — только размер, без плашки */
 function markViewed(n){
   viewArena = n;
 
