@@ -1,6 +1,7 @@
 /* ============================================================
-   friends.js — друзья и вызовы на дружескую партию (VER 2)
-   Отмена вызова: Friends.cancel / Friends.cancelBeacon
+   friends.js — друзья и вызовы на дружескую партию (VER 3)
+   Вызов живёт, пока отправитель на связи.
+   Нет пульса 12 секунд — вызов исчезает у всех.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -8,12 +9,18 @@
 const SB_URL = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
 const SB_KEY = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
 
-const FRESH_MS = 3 * 60 * 1000;
+/* сколько секунд вызов считается живым без пульса */
+const ALIVE_MS = 12000;
+
+/* как часто отправитель отмечается */
+const BEAT_MS = 3000;
 
 const Friends = {
   sb: null,
   _seen: {},
-  _timer: null
+  _timer: null,
+  _beatTimer: null,
+  _beatId: null
 };
 
 Friends.client = function (){
@@ -54,6 +61,11 @@ function uuid(){
     const r = Math.random() * 16 | 0;
     return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
   });
+}
+
+function heartAge(row){
+  if (!row || !row.heartbeat) return Infinity;
+  return Date.now() - new Date(row.heartbeat).getTime();
 }
 
 /* ---------------- друзья ---------------- */
@@ -105,8 +117,36 @@ Friends.remove = async function (friendKey){
   return !res.error;
 };
 
+/* ---------------- пульс отправителя ---------------- */
+
+Friends.startBeat = function (id){
+  Friends.stopBeat();
+  Friends._beatId = id;
+
+  function beat(){
+    if (!Friends._beatId) return;
+    const sb = Friends.client();
+    sb.rpc('challenge_heartbeat', {
+      p_id:   Friends._beatId,
+      p_from: Friends.key()
+    }).then(function(){}).catch(function(){});
+  }
+
+  beat();
+  Friends._beatTimer = setInterval(beat, BEAT_MS);
+};
+
+Friends.stopBeat = function (){
+  if (Friends._beatTimer){
+    clearInterval(Friends._beatTimer);
+    Friends._beatTimer = null;
+  }
+  Friends._beatId = null;
+};
+
 /* ---------------- вызовы ---------------- */
 
+/* входящие: только живые, с пульсом не старше 12 секунд */
 Friends.incoming = async function (){
   const sb = Friends.client();
   const res = await sb
@@ -119,26 +159,32 @@ Friends.incoming = async function (){
 
   if (res.error) return [];
 
-  const now = Date.now();
   return (res.data || []).filter(function (c){
-    return (now - new Date(c.created_at).getTime()) < FRESH_MS;
+    return heartAge(c) < ALIVE_MS;
   });
 };
 
-/* состояние вызова. null — вызова больше нет (отменён) */
+/* состояние вызова.
+   null — вызова нет: отменён, принят, или отправитель ушёл */
 Friends.status = async function (id){
   const sb = Friends.client();
   const res = await sb
     .from('arena_challenges')
-    .select('id,status,from_key,from_name,from_cups,arena')
+    .select('id,status,from_key,from_name,from_cups,arena,heartbeat')
     .eq('id', id)
     .maybeSingle();
 
   if (res.error || !res.data) return null;
-  return res.data;
+
+  const row = res.data;
+
+  if (row.status !== 'pending') return row;
+
+  if (heartAge(row) >= ALIVE_MS) return null;
+
+  return row;
 };
 
-/* ответ на вызов. {ok, accepted} — accepted=false значит уже отменён */
 Friends.answer = async function (id, status){
   const sb = Friends.client();
   const res = await sb.rpc('challenge_answer', {
@@ -155,7 +201,6 @@ Friends.answer = async function (id, status){
   };
 };
 
-/* отменить свой вызов — обычный путь */
 Friends.cancel = async function (id){
   const sb = Friends.client();
   const res = await sb.rpc('challenge_cancel', {
@@ -165,8 +210,7 @@ Friends.cancel = async function (id){
   return !res.error;
 };
 
-/* отменить свой вызов при закрытии/уходе со страницы.
-   keepalive — запрос уходит даже когда страница уже умирает */
+/* отмена при уходе со страницы — вдогонку к пульсу */
 Friends.cancelBeacon = function (id){
   try {
     fetch(SB_URL + '/rest/v1/rpc/challenge_cancel', {
@@ -226,7 +270,7 @@ Friends.watch = function (cb){
   }
 
   tick();
-  Friends._timer = setInterval(tick, 3000);
+  Friends._timer = setInterval(tick, 2000);
 
   return function stop(){
     if (Friends._timer){ clearInterval(Friends._timer); Friends._timer = null; }
