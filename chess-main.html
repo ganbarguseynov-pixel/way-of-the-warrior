@@ -101,7 +101,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </head>
 <body>
 
-<div id="verTag">v12</div>
+<div id="verTag">v13</div>
 
 <div class="top-bar">
   <div class="profile-badge" id="profileBadge">
@@ -148,7 +148,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
   <div id="arenaModalHead">
     <div id="arenaHeadLeft">
       <h3>Все арены</h3>
-      <span class="verChip">v12</span>
+      <span class="verChip">v13</span>
     </div>
     <button id="arenaClose">✕</button>
   </div>
@@ -165,7 +165,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
     <input id="nickInput" maxlength="16" placeholder="Ник" autocomplete="off" spellcheck="false">
     <div id="nickErr"></div>
     <button id="nickOk">Сохранить</button>
-    <div id="nickVer">окно v12</div>
+    <div id="nickVer">окно v13</div>
   </div>
 </div>
 
@@ -213,6 +213,20 @@ const MAX_ARENA = 10;
 const NICK_PRICE = 250;
 const NICK_KEY   = 'userName';
 const GEMS_KEY   = 'cr_gems';
+
+/* путь к видео каждой арены: индекс 0 — арена 1, индекс 9 — арена 10 */
+const ARENA_VIDEO = [
+  '43c863bc61a4a659f002988a035cd2f0_00f0af0d-b727-48e6-a8a6-8cdaf6d648dc.mp4',
+  'a9040df56be7cbb3dd6945a45b0ba959_6146206a-3a61-459a-bb05-afd6dc7f2c6d.mp4',
+  '9c9f2d10d5d150671d73cd0cb2cef434_e4b8faf5-65fd-4b3d-b2b0-1534563bedcc (1).mp4',
+  '18bffb419ee6e6bf71d95784c5825ae1_384cb2c8-44ac-4372-81a1-772cdf11f410.mp4',
+  '48d4bb6a4fc3c033217de759823efbfb_a74dccb9-def6-4b8e-b8fe-aeaa928f32ec.mp4',
+  'bac2d89b23da3a58087405f2990f5b8e_ef19b052-8125-4ed6-9e3b-3732e96bd348.mp4',
+  '2ff43fcaf81d7f07ae961365a79b8d43_92bdd0cb-6e5b-497b-b779-2c530dbd4a14.mp4',
+  '0d41724bb69d2f37cbbe9b3f3d4a5d3b_97ad499e-337d-4e44-b1ff-6ef21906fd97.mp4',
+  'e3fd8ad9a8855474e7a7aa3bb3933337_1ff3ed69-2683-49a1-a097-6b884a826102.mp4',
+  '6a44b08750db1c3e11ab6a8d2095205e_1599389f-1d8e-4ef3-9d64-88f636db6218.mp4'
+];
 
 const NAMES = (window.Arena && Arena.ARENAS)
   ? Arena.ARENAS.map(function (a){ return a.name; })
@@ -294,7 +308,9 @@ function setGems(v){
 /* ---------------- видео арены ---------------- */
 
 function videoPath(n){
-  return 'arena-' + n + '.mp4';
+  const name = ARENA_VIDEO[n - 1];
+  if (!name) return '';
+  return encodeURI(name);
 }
 
 function showIconOnly(){
@@ -308,6 +324,9 @@ function playArenaVideo(n){
   const v = $('arenaVideo');
   if (!v) return;
 
+  const src = videoPath(n);
+  if (!src){ showIconOnly(); return; }
+
   if (v.dataset.arena === String(n)){
     try { v.play().catch(function(){}); } catch (e){}
     return;
@@ -316,7 +335,7 @@ function playArenaVideo(n){
   v.dataset.arena = String(n);
   showIconOnly();
 
-  v.src = videoPath(n);
+  v.src = src;
   try { v.load(); } catch (e){}
   try { v.play().catch(function(){}); } catch (e){}
 }
@@ -550,9 +569,12 @@ function loadSlideVideo(n){
   const ic = slide.querySelector('span');
   if (!v) return;
 
+  const src = videoPath(n);
+  if (!src) return;
+
   if (v.dataset.arena !== String(n)){
     v.dataset.arena = String(n);
-    v.src = videoPath(n);
+    v.src = src;
 
     v.addEventListener('playing', function (){
       v.style.display = 'block';
