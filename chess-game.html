@@ -9,7 +9,6 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;height:100vh;height:100dvh;overflow:hidden;user-select:none;}
 
-/* === ВЕРХНИЙ БАР === */
 .game-top-bar{width:95vw;max-width:400px;flex-shrink:0;display:flex;flex-direction:column;gap:5px;margin-top:8px;}
 .timer-row{display:flex;align-items:center;justify-content:space-between;padding:0 4px;}
 #timeLabel{font-size:15px;font-weight:900;color:#e2e8f0;font-variant-numeric:tabular-nums;letter-spacing:.5px;}
@@ -26,7 +25,6 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 .elixir-black .elixir-fill{background:linear-gradient(180deg,#a855f7 0%,#7c3aed 45%,#4c1d95 100%);box-shadow:0 0 12px rgba(168,85,247,0.7),inset 0 2px 4px rgba(255,255,255,0.4),inset 0 -3px 6px rgba(0,0,0,0.5);}
 .elixir-black .elixir-text{color:#c4b5fd;text-shadow:0 0 8px rgba(196,181,253,0.9),0 2px 3px rgba(0,0,0,0.9);}
 
-/* === ДОСКА === */
 .board-wrapper{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;width:100%;margin:6px 0;perspective:1200px;overflow:hidden;position:relative;padding: 4px 0;}
 .board-container{position:relative;height:100%;max-height:100%;aspect-ratio:1/1;max-width:95vw;border:3px solid #334155;border-radius:14px;overflow:hidden;box-shadow:0 15px 40px rgba(0,0,0,0.9),0 5px 15px rgba(0,0,0,0.6),inset 0 0 30px rgba(0,0,0,0.8);background:linear-gradient(145deg,#0f172a,#020617);padding: 3px;}
 .board{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:100%;height:100%;position:relative;border-radius: 10px;overflow: hidden;}
@@ -63,7 +61,6 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 
 .hp-text-below{position:absolute;bottom:-2px;left:0;width:100%;text-align:center;font-size:6px;font-weight:bold;color:#fff;z-index:10;pointer-events:none;white-space:nowrap;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 1px 2px rgba(0,0,0,0.9);}
 
-/* === НИЖНЯЯ ПАНЕЛЬ === */
 .bottom-ui{width:95vw;max-width:400px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;margin-bottom:75px;}
 .elixir-white{margin-bottom:0;}
 .elixir-white .elixir-fill{background:linear-gradient(180deg,#ff6b7a 0%,#e11d48 45%,#7f1d1d 100%);box-shadow:0 0 12px rgba(255,107,122,0.7),inset 0 2px 4px rgba(255,255,255,0.4),inset 0 -3px 6px rgba(0,0,0,0.5);}
@@ -105,7 +102,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </head>
 <body>
 
-<div id="verTag">v8</div>
+<div id="verTag">v9</div>
 
 <div class="game-top-bar">
 <div class="timer-row">
@@ -233,8 +230,6 @@ function spawnGhost(r, c, icon, color) {
 const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
 const DEFAULT_BOARD=[['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
 
-/* ================= КОЛОДА И РАССТАНОВКА ИЗ ВКЛАДКИ «КОЛОДА» ================= */
-
 function loadHand(){
     let hand = null;
     try {
@@ -276,8 +271,6 @@ let enPassantTarget=null,promotionTarget=null,gameActive=true;
 let vsBot = localStorage.getItem('vsBot') === 'true';
 let botTimer = null;
 let lastBotMove = 0;
-
-/* ================= ВРЕМЯ И ЭЛИКСИР ================= */
 
 function elixirRate(){
     if (phase === 'overtime') return 2;
@@ -440,7 +433,17 @@ function updateElixirUI(){
 }
 function isKingInCheck(color,board){let kPos=null;for(let r=0;r<8;r++){for(let c=0;c<8;c++){if(board[r][c]&&board[r][c].type==='k'&&board[r][c].color===color)kPos={r,c};}}if(!kPos)return false;let enemyColor=color==='white'?'black':'white';for(let r=0;r<8;r++){for(let c=0;c<8;c++){let p=board[r][c];if(p&&p.color===enemyColor){let moves=getValidMoves(r,c,board,true);if(moves.some(m=>m.r===kPos.r&&m.c===kPos.c))return true;}}}return false;}
 function hasAnyValidMoves(color){for(let r=0;r<8;r++){for(let c=0;c<8;c++){let p=boardState[r][c];if(p&&p.color===color){if(getValidMoves(r,c).length>0)return true;}}}return false;}
-function checkGameEnd(){if(!gameActive)return;let whiteInCheck=isKingInCheck('white',boardState);let blackInCheck=isKingInCheck('black',boardState);let whiteMoves=hasAnyValidMoves('white');let blackMoves=hasAnyValidMoves('black');if(!whiteMoves&&whiteInCheck){endGame('Черные','МАТ!');return;}if(!blackMoves&&blackInCheck){endGame('Белые','МАТ!');return;}if(!whiteMoves&&!whiteInCheck){endGame('Ничья','ПАТ!');return;}if(!blackMoves&&!blackInCheck){endGame('Ничья','ПАТ!');return;}}
+function checkGameEnd(){
+    if(!gameActive)return;
+    let whiteInCheck=isKingInCheck('white',boardState);
+    let blackInCheck=isKingInCheck('black',boardState);
+    let whiteMoves=hasAnyValidMoves('white');
+    let blackMoves=hasAnyValidMoves('black');
+    if(!whiteMoves&&whiteInCheck){endGame('Черные','МАТ!');return;}
+    if(!blackMoves&&blackInCheck){endGame('Белые','МАТ!');return;}
+    if(!whiteMoves&&!whiteInCheck){endGame('Ничья','ПАТ!');return;}
+    if(!blackMoves&&!blackInCheck){endGame('Ничья','ПАТ!');return;}
+}
 function endGame(winner,reason){
     gameActive=false;
     stopClock();
@@ -542,7 +545,6 @@ function makeMove(fromR, fromC, toR, toC, opts) {
         if(attacker.type==='p'&&toR===promoRow){ promotionTarget={r:toR,c:toC,color:attacker.color}; document.getElementById('promotion-modal').classList.add('active'); }
     }
 
-    /* === ход бота больше не сбрасывает выбор игрока === */
     if (byBot) {
         if (selectedCell) {
             const keep = selectedCell;
@@ -582,7 +584,7 @@ function makeMove(fromR, fromC, toR, toC, opts) {
         }
     }
 
-    setTimeout(()=>checkKingAndEnd(), 150);
+    setTimeout(()=>checkAfterMove(), 150);
 }
 
 function startBotLogic() {
@@ -614,18 +616,10 @@ function startBotLogic() {
     }, 1000);
 }
 
-function checkKingAndEnd() {
-    ['white','black'].forEach(color=>{
-        if(isKingInCheck(color,boardState)){
-            for(let rr=0;rr<8;rr++) for(let cc=0;cc<8;cc++){
-                if(boardState[rr][cc]&&boardState[rr][cc].type==='k'&&boardState[rr][cc].color===color){
-                    boardState[rr][cc].hp-=1;
-                    if(boardState[rr][cc].hp<=0){ endGame(color==='white'?'Черные':'Белые','Король пал!'); }
-                }
-            }
-            renderBoard();
-        }
-    });
+/* ШАХ больше ничего не делает.
+   Игру заканчивает только МАТ и ПАТ. */
+function checkAfterMove(){
+    if (!gameActive) return;
     checkGameEnd();
 }
 
