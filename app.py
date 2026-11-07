@@ -13,14 +13,18 @@ from google.genai import types
 app = Flask(__name__)
 CORS(app) 
 
-OFOX_API_KEY = os.environ.get("OFOX_API_KEY", "sk-of-QZJLAGlHceOaKnlXuLZlbWqJkufzujxgNbAJqxOvGguKzTHeyQdZXaAcPmKOuTmo")
+OFOX_API_KEY = os.environ.get("OFOX_API_KEY")
 USDA_API_KEY = os.environ.get("USDA_API_KEY")
 api = openfoodfacts.API(user_agent="SportApp/1.0 (contact@example.com)") 
 
-client = genai.Client(
-    api_key=OFOX_API_KEY,
-    http_options={"base_url": "https://api.ofox.ai/gemini", "api_version": "v1beta"}
-) 
+try:
+    client = genai.Client(
+        api_key=OFOX_API_KEY,
+        http_options={"base_url": "https://api.ofox.ai/gemini", "api_version": "v1beta"}
+    )
+except Exception as e:
+    print(f"Ofox client init error: {e}")
+    client = None 
 
 SEARCH_CACHE = {}
 BARCODE_CACHE = {}
@@ -97,6 +101,10 @@ def translate_to_english(query):
         return dictionary[query.lower()]
     translated = [dictionary.get(w, w) for w in words]
     return ' '.join(translated) 
+
+@app.route('/warmup', methods=['GET'])
+def warmup():
+    return jsonify({"status": "ok", "ai": bool(OFOX_API_KEY), "client": client is not None}) 
 
 @app.route('/search', methods=['GET'])
 def search_food():
