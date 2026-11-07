@@ -1,7 +1,8 @@
 /* ============================================================
    arena.js — правила и движок шахматных арен
+   Доска заполняется ДО боя из расстановки в колоде.
+   Во время боя расстановки нет — только ходы.
    Время: 5 минут основного + 1 минута дополнительного.
-   HP короля — число. Сейчас 1, с прокачкой будет расти.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -10,12 +11,15 @@ const STEP = 1000;
 const MAX_ARENA = 10;
 
 /* ---------- ВРЕМЯ ---------- */
-const MAIN_TIME = 300;   // 5 минут основного
-const OT_TIME   = 60;    // 1 минута дополнительного
-const FAST_FROM = 60;    // последняя минута основного — эликсир ×1.5
+const MAIN_TIME = 300;
+const OT_TIME   = 60;
+const FAST_FROM = 60;
 
 /* ---------- ЗДОРОВЬЕ КОРОЛЯ ---------- */
 const KING_HP = 1;
+
+/* ---------- СОСТАВ АРМИИ (как в шахматах) ---------- */
+const ARMY_MAX = { p:8, r:2, n:2, b:2, q:1, k:1 };
 
 const PIECES = {
   pawn:   { cost:1, name:'Пешка',  w:'♙', b:'♟', val:2 },
@@ -49,8 +53,6 @@ const ARENAS = [
   { n:10, name:'Бессмертная партия',
     rule:'Эликсир только за взятия. Времени нет. Ничьей нет.' }
 ];
-
-const DECK = ['pawn','pawn','pawn','knight','knight','bishop','rook','queen'];
 
 const DIR8 = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
 const DIRS = {
@@ -119,11 +121,101 @@ function kingDamage(type){
   return p ? p.val : 1;
 }
 
+/* ================= РАССТАНОВКА ИЗ КОЛОДЫ ================= */
+
+/* стандартная доска: свои фигуры на рядах 6 и 7 */
+function defaultSetup(){
+  const empty = [null,null,null,null,null,null,null,null];
+  return [
+    ['r','n','b','q','k','b','n','r'],
+    ['p','p','p','p','p','p','p','p'],
+    empty.slice(), empty.slice(), empty.slice(), empty.slice(),
+    ['P','P','P','P','P','P','P','P'],
+    ['R','N','B','Q','K','B','N','R']
+  ];
+}
+
+/* из расстановки берём только свои два ряда: 7 — тыл, 6 — пешки */
+function armyOf(setup){
+  const out = [];
+  if (!Array.isArray(setup) || setup.length !== 8) return out;
+
+  for (let r = 6; r <= 7; r++){
+    const row = setup[r];
+    if (!Array.isArray(row) || row.length !== 8) continue;
+
+    for (let c = 0; c < 8; c++){
+      const v = row[c];
+      if (!v) continue;
+      const t = String(v).toLowerCase();
+      if (!PIECES[t] || t === 'saw') continue;
+      out.push({ rank: 7 - r, c: c, type: t });
+    }
+  }
+  return out;
+}
+
+function armyHasKing(army){
+  let k = 0;
+  for (let i = 0; i < army.length; i++) if (army[i].type === 'king') k++;
+  return k === 1;
+}
+
+function deployArmy(s, side, setup){
+  let army = armyOf(setup);
+  if (!armyHasKing(army)) army = armyOf(defaultSetup());
+
+  for (let i = 0; i < army.length; i++){
+    const a = army[i];
+
+    const row = (side === 'a') ? (7 - a.rank) : a.rank;
+    const col = (side === 'a') ? a.c : (7 - a.c);
+
+    if (!inside(col, row)) continue;
+    if (s.board[row][col]) continue;
+
+    const pc = { type: a.type, side: side };
+    if (a.type === 'king'){ pc.hp = KING_HP; pc.maxHp = KING_HP; }
+
+    s.board[row][col] = pc;
+  }
+}
+
+function placeSaws(s){
+  const rows = [ { row:4, side:'a' }, { row:3, side:'b' } ];
+
+  for (let i = 0; i < rows.length; i++){
+    for (let c = 0; c < 8; c++){
+      if (!s.board[rows[i].row][c]){
+        s.board[rows[i].row][c] = { type:'saw', side:rows[i].side };
+        break;
+      }
+    }
+  }
+}
+
+function placeTraps(s){
+  const cells = [];
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
+    if (!s.board[y][x]) cells.push([x, y]);
+  }
+  shuffle(cells);
+
+  let low = 0, high = 0;
+  for (let i = 0; i < cells.length; i++){
+    if (s.traps.length >= 8) break;
+    const x = cells[i][0], y = cells[i][1];
+    if (y >= 4 && low < 4){ s.traps.push({ x:x, y:y, revealed:false }); low++; }
+    else if (y < 4 && high < 4){ s.traps.push({ x:x, y:y, revealed:false }); high++; }
+  }
+}
+
 /* ================= СОЗДАНИЕ БОЯ ================= */
 
 function create(opts){
   opts = opts || {};
   const players = opts.players || {};
+  const setups  = opts.setups || {};
 
   const s = {
     id: opts.id || 'local',
@@ -140,8 +232,8 @@ function create(opts){
 
     board: Array.from({ length:8 }, () => Array(8).fill(null)),
     energy: { a:5, b:5 },
-    hand:   { a:['king'], b:['king'] },
-    deck:   { a:shuffle(DECK.slice()), b:shuffle(DECK.slice()) },
+    hand:   { a:[], b:[] },
+    deck:   { a:[], b:[] },
     placed: { a:0, b:0 },
 
     traps: [], returns: [],
@@ -159,34 +251,14 @@ function create(opts){
     log: []
   };
 
-  if (s.arena === 10){
-    s.energy = { a:10, b:10 };
-    [1,3,4,6].forEach(x => { s.board[1][x] = { type:'pawn', side:'b' }; });
-    [1,3,4,6].forEach(x => { s.board[6][x] = { type:'pawn', side:'a' }; });
-  }
+  deployArmy(s, 'a', setups.a);
+  deployArmy(s, 'b', setups.b);
 
-  if (s.arena === 5){
-    s.board[1][2] = { type:'saw', side:'b' };
-    s.board[6][5] = { type:'saw', side:'a' };
-  }
+  if (s.arena === 10) s.energy = { a:10, b:10 };
+  if (s.arena === 5)  placeSaws(s);
+  if (s.arena === 1)  placeTraps(s);
 
-  if (s.arena === 1){
-    const cells = [];
-    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
-      if (!s.board[y][x]) cells.push([x, y]);
-    }
-    shuffle(cells);
-
-    let low = 0, high = 0;
-    for (let i = 0; i < cells.length; i++){
-      if (s.traps.length >= 8) break;
-      const x = cells[i][0], y = cells[i][1];
-      if (y >= 4 && low < 4){ s.traps.push({ x:x, y:y, revealed:false }); low++; }
-      else if (y < 4 && high < 4){ s.traps.push({ x:x, y:y, revealed:false }); high++; }
-    }
-  }
-
-  log(s, 'Арена «' + ARENAS[s.arena - 1].name + '». Поставь короля — это 5 эликсира.');
+  log(s, 'Арена «' + ARENAS[s.arena - 1].name + '». Доска собрана из колоды. В бой.');
   return s;
 }
 
@@ -257,51 +329,13 @@ function legalMoves(s, x, y){
   return out;
 }
 
-function refillHand(s, side){
-  while (s.hand[side].length < 4){
-    if (!s.deck[side].length) s.deck[side] = shuffle(DECK.slice());
-    s.hand[side].push(s.deck[side].shift());
-  }
+/* расстановки во время боя нет */
+function place(s, side, type, x, y){
+  return { ok:false, error:'Доска уже собрана до боя' };
 }
 
-function place(s, side, type, x, y){
-  if (s.over) return { ok:false, error:'Бой окончен' };
-
-  const p = PIECES[type];
-  if (!p) return { ok:false, error:'Нет такой фигуры' };
-  if (s.nightMode > 0) return { ok:false, error:'Судная ночь: выставлять нельзя' };
-  if (!inside(x, y)) return { ok:false, error:'Мимо доски' };
-  if (s.board[y][x]) return { ok:false, error:'Клетка занята' };
-  if (s.energy[side] < p.cost) return { ok:false, error:'Мало эликсира' };
-
-  const mustKing = s.hand[side].indexOf('king') >= 0;
-  if (mustKing && type !== 'king') return { ok:false, error:'Сначала поставь короля' };
-  if (!mustKing && type === 'king') return { ok:false, error:'Король уже стоит' };
-
-  const home = side === 'a' ? y >= 4 : y <= 3;
-  if (!home) return { ok:false, error:'Только своя половина' };
-
-  s.energy[side] -= p.cost;
-
-  const pc = { type:type, side:side };
-
-  if (type === 'king'){
-    pc.hp = KING_HP;
-    pc.maxHp = KING_HP;
-  } else {
-    if (s.arena === 4 && s.placed[side] < 3) pc.asleep = true;
-    if (s.arena === 7 && s.placed[side] < 2) pc.chained = true;
-  }
-
-  s.board[y][x] = pc;
-  s.placed[side]++;
-
-  const i = s.hand[side].indexOf(type);
-  if (i >= 0) s.hand[side].splice(i, 1);
-  refillHand(s, side);
-
-  log(s, nameOf(s, side) + ' ставит ' + p.name + ' на ' + coord(x, y));
-  return { ok:true };
+function refillHand(s, side){
+  s.hand[side] = [];
 }
 
 function move(s, side, fx, fy, tx, ty){
@@ -489,7 +523,6 @@ function castNight(s, side){
   if (s.arena !== 8) return { ok:false, error:'Не на этой арене' };
   if (s.over) return { ok:false, error:'Бой окончен' };
   if (s.nightUsed[side]) return { ok:false, error:'Уже использовано' };
-  if (s.hand[side].indexOf('king') >= 0) return { ok:false, error:'Сначала поставь короля' };
 
   s.nightUsed[side] = true;
   s.nightMode = 10;
@@ -521,7 +554,6 @@ function resign(s, side){
 function tick(s, dt){
   if (s.over) return;
 
-  /* страховка: старое состояние без времени не должно ломать таймер */
   if (typeof s.timeLeft !== 'number' || !isFinite(s.timeLeft)) s.timeLeft = MAIN_TIME;
   if (!s.phase) s.phase = 'main';
   if (typeof s.elapsed !== 'number' || !isFinite(s.elapsed)) s.elapsed = 0;
@@ -604,9 +636,9 @@ global.Arena = {
   OT_TIME: OT_TIME,
   FAST_FROM: FAST_FROM,
   KING_HP: KING_HP,
+  ARMY_MAX: ARMY_MAX,
   PIECES: PIECES,
   ARENAS: ARENAS,
-  DECK: DECK,
   arenaOf: arenaOf,
   floorOf: floorOf,
   deltaFor: deltaFor,
@@ -623,7 +655,8 @@ global.Arena = {
   finish: finish,
   energyRate: energyRate,
   kingHp: kingHp,
-  kingDamage: kingDamage
+  kingDamage: kingDamage,
+  defaultSetup: defaultSetup
 };
 
 })(window);
