@@ -145,7 +145,7 @@ body.battle-mode #verTag{display:none!important}
 .elix-fill{
   position:absolute;left:0;top:0;height:100%;
   width:50%;
-  transition:width .15s linear;
+  transition:width .2s linear;
 }
 #enemyElixFill{background:linear-gradient(180deg,#a855f7,#4c1d95)}
 #myElixFill{background:linear-gradient(180deg,#ff6b7a,#7f1d1d)}
@@ -368,7 +368,7 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
 </head>
 <body data-arena="1">
 
-<div id="verTag">v15</div>
+<div id="verTag">v16</div>
 
 <div id="lobby">
   <div class="card">
@@ -402,7 +402,7 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
   <div class="elix-wrap" id="enemyElix">
     <div class="elix-fill" id="enemyElixFill"></div>
     <div class="elix-label">СОПЕРНИК</div>
-    <div class="elix-num" id="enemyElixNum">5</div>
+    <div class="elix-num" id="enemyElixNum">5 / 10</div>
   </div>
 
   <div id="board"></div>
@@ -410,7 +410,7 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
   <div class="elix-wrap" id="myElix">
     <div class="elix-fill" id="myElixFill"></div>
     <div class="elix-label">ЭЛИКСИР</div>
-    <div class="elix-num" id="myElixNum">5</div>
+    <div class="elix-num" id="myElixNum">5 / 10</div>
     <span id="speedTag"></span>
   </div>
 
@@ -455,7 +455,7 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
     <div class="icon-wrap"><span class="icon">🏆</span></div><span>Рейтинг</span></button>
 </div>
 
-<script src="arena.js?v=14"></script>
+<script src="arena.js?v=15"></script>
 <script src="net.js?v=12"></script>
 <script>
 const sb = supabase.createClient(
@@ -725,7 +725,7 @@ function onCell(dx, dy){
     }
 
     const need = Arena.moveCost(s, pc);
-    if (s.energy[my] < need){
+    if (Math.floor(s.energy[my]) < need){
       sel = null;
       render(s);
       toast('Нужно ' + need + ' эликсира');
@@ -780,14 +780,17 @@ function pieceHp(pc){
 }
 
 function renderElix(s, my, opp){
-  const myE  = (typeof s.energy[my]  === 'number' && isFinite(s.energy[my]))  ? s.energy[my]  : 0;
-  const opE  = (typeof s.energy[opp] === 'number' && isFinite(s.energy[opp])) ? s.energy[opp] : 0;
+  let myE = (typeof s.energy[my]  === 'number' && isFinite(s.energy[my]))  ? s.energy[my]  : 0;
+  let opE = (typeof s.energy[opp] === 'number' && isFinite(s.energy[opp])) ? s.energy[opp] : 0;
 
-  $('myElixFill').style.width    = Math.max(0, Math.min(100, myE * 10)) + '%';
-  $('enemyElixFill').style.width = Math.max(0, Math.min(100, opE * 10)) + '%';
+  myE = Math.max(0, Math.min(10, Math.floor(myE)));
+  opE = Math.max(0, Math.min(10, Math.floor(opE)));
 
-  $('myElixNum').textContent    = Math.floor(myE) + ' / 10';
-  $('enemyElixNum').textContent = Math.floor(opE) + ' / 10';
+  $('myElixFill').style.width    = (myE * 10) + '%';
+  $('enemyElixFill').style.width = (opE * 10) + '%';
+
+  $('myElixNum').textContent    = myE + ' / 10';
+  $('enemyElixNum').textContent = opE + ' / 10';
 }
 
 function render(s){
