@@ -28,7 +28,6 @@ body{
   padding:3px 8px;border-radius:6px;pointer-events:none;
 }
 
-/* ---------- ЛОББИ ---------- */
 #lobby{width:95vw;max-width:400px;text-align:center;margin-top:20px}
 .card{
   background:linear-gradient(145deg,#1e293b,#0f172a);
@@ -79,7 +78,6 @@ body{
   color:#fff;font-size:13px;font-weight:800;cursor:pointer;
 }
 
-/* ---------- БОЙ ---------- */
 #battle{display:flex;flex-direction:column;align-items:center;width:100%}
 
 #topBar{
@@ -136,7 +134,7 @@ body{
 #myElix{
   position:relative;
   width:95vw;max-width:400px;height:16px;background:#020617;
-  border-radius:8px;overflow:hidden;margin:6px 0;
+  border-radius:8px;overflow:hidden;margin:8px 0;
   box-shadow:inset 0 3px 6px rgba(0,0,0,.8);
 }
 #myElixFill{height:100%;width:50%;
@@ -147,27 +145,7 @@ body{
   text-shadow:0 1px 3px #000,0 0 6px #000;z-index:4;
 }
 
-#hand{width:95vw;max-width:400px;display:flex;gap:6px;margin-bottom:6px}
-.hcard{
-  flex:1;background:linear-gradient(145deg,#1e293b,#0f172a);
-  border:2px solid #3a3a3c;border-radius:10px;aspect-ratio:3/4;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:2px;cursor:pointer;position:relative;padding:4px;
-  transition:transform .12s,border-color .2s;
-}
-.hcard.on{border-color:#4ade80;box-shadow:0 0 14px rgba(74,222,128,.5);
-  transform:translateY(-3px)}
-.hcard.off{opacity:.35;cursor:not-allowed}
-.hcard .s{font-size:22px}
-.hcard .n{font-size:9px;color:#94a3b8}
-.hcard .c{
-  position:absolute;top:-6px;left:-6px;
-  background:linear-gradient(145deg,#c084fc,#7c3aed);
-  width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:900;
-  display:flex;align-items:center;justify-content:center;border:2px solid #fff;
-}
-
-#tools{width:95vw;max-width:400px;display:flex;gap:6px}
+#tools{width:95vw;max-width:400px;display:flex;gap:6px;margin-top:8px}
 #tools button{
   flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:700;
   border:1px solid #475569;
@@ -175,7 +153,6 @@ body{
 }
 #tools button:disabled{opacity:.3;cursor:not-allowed}
 
-/* ---------- РЕЗУЛЬТАТ ---------- */
 #overlay{
   position:fixed;inset:0;background:rgba(2,6,23,.92);
   display:flex;align-items:center;justify-content:center;
@@ -198,7 +175,6 @@ body{
   background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;cursor:pointer;
 }
 
-/* ---------- УВЕДОМЛЕНИЕ ---------- */
 #toast{
   position:fixed;bottom:84px;left:50%;
   transform:translateX(-50%) translateY(10px);
@@ -209,7 +185,6 @@ body{
 }
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ---------- НАВИГАЦИЯ ---------- */
 .bottom-nav{
   position:fixed;bottom:0;left:0;width:100%;height:68px;
   background:linear-gradient(180deg,#1a1a2e,#0f0f1e);
@@ -231,7 +206,6 @@ body{
 .nav-btn.active{color:#ffcc00}
 .nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500)}
 
-/* ---------- ТЕМЫ АРЕН ---------- */
 body[data-arena="1"] {--dark:#33241c;--light:#4a3428;--accent:#b5541f;--bg:#0f0b09}
 body[data-arena="2"] {--dark:#2a2b1f;--light:#3f4230;--accent:#8a8f4a;--bg:#0d0e0a}
 body[data-arena="3"] {--dark:#6b5236;--light:#8d6d49;--accent:#c0c8cf;--bg:#181210}
@@ -248,9 +222,8 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
 </head>
 <body data-arena="1">
 
-<div id="verTag">v6</div>
+<div id="verTag">v9</div>
 
-<!-- ================= ЛОББИ ================= -->
 <div id="lobby">
   <div class="card">
     <div id="pName">Загрузка…</div>
@@ -270,7 +243,6 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
   </div>
 </div>
 
-<!-- ================= БОЙ ================= -->
 <div id="battle" class="hidden">
   <div id="topBar">
     <span id="oppLabel">Соперник</span>
@@ -282,7 +254,6 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
   <div id="enemyElix"><div id="enemyElixFill"></div></div>
   <div id="board"></div>
   <div id="myElix"><div id="myElixFill"></div><span id="speedTag"></span></div>
-  <div id="hand"></div>
 
   <div id="tools">
     <button id="nightBtn" disabled>Судная ночь</button>
@@ -290,7 +261,6 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
   </div>
 </div>
 
-<!-- ================= РЕЗУЛЬТАТ ================= -->
 <div id="overlay" class="hidden">
   <div class="ov">
     <h2 id="ovTitle"></h2>
@@ -304,13 +274,12 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
 
 <div id="toast"></div>
 
-<!-- ================= НАВИГАЦИЯ ================= -->
 <div class="bottom-nav">
   <button class="nav-btn" onclick="location.href='chess-shop.html'">
     <div class="icon-wrap"><span class="icon">🎁</span></div><span>Магазин</span></button>
   <button class="nav-btn" onclick="location.href='chess-deck.html'">
     <div class="icon-wrap"><span class="icon">🃏</span></div><span>Колода</span></button>
-  <button class="nav-btn" onclick="location.href='chess-arena.html'">
+  <button class="nav-btn active" onclick="location.href='chess-arena.html'">
     <div class="icon-wrap"><span class="icon">⚔️</span></div><span>Бой</span></button>
   <button class="nav-btn" onclick="location.href='chess-social.html'">
     <div class="icon-wrap"><span class="icon">🛡️</span></div><span>Общение</span></button>
@@ -321,8 +290,6 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
 <script src="arena.js"></script>
 <script src="net.js"></script>
 <script>
-/* ================= ПОДКЛЮЧЕНИЕ ================= */
-
 const sb = supabase.createClient(
   'https://qnpriwfxzuoymoumdtrl.supabase.co',
   'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF'
@@ -333,16 +300,12 @@ try { tg.ready(); tg.expand(); } catch (e){}
 
 const $ = function (id){ return document.getElementById(id); };
 
-let pending = null;
 let sel     = null;
 let cells   = [];
-let cellSig = [];        // подпись каждой клетки — неизменное не перерисовываем
-let handSig = '';        // подпись руки
+let cellSig = [];
 let lastTimeTxt = '';
 let lastSpeedTxt = '';
 let searching = false;
-
-/* ================= УВЕДОМЛЕНИЕ ================= */
 
 let toastTimer = null;
 function toast(text){
@@ -352,8 +315,6 @@ function toast(text){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function (){ t.classList.remove('show'); }, 2200);
 }
-
-/* ================= КЛЮЧ ИГРОКА ================= */
 
 function playerKey(){
   const tgId = localStorage.getItem('tgId');
@@ -373,8 +334,6 @@ function playerKey(){
 function playerName(){
   return localStorage.getItem('userName') || 'Игрок';
 }
-
-/* ================= ЛОББИ ================= */
 
 function renderLobby(){
   const me = Net.me;
@@ -397,8 +356,6 @@ function renderLobby(){
   $('ruleBox').textContent = Arena.ARENAS[arena - 1].rule;
   document.body.dataset.arena = arena;
 }
-
-/* ================= ПОИСК ================= */
 
 async function startSearch(){
   if (searching) return;
@@ -426,8 +383,6 @@ $('playBtn').onclick = async function (){
   startSearch();
 };
 
-/* ================= СОБЫТИЯ СЕТИ ================= */
-
 Net.on('status', function (d){
   $('statusMsg').textContent = d.text || '';
 });
@@ -445,7 +400,6 @@ Net.on('start', function (info){
   $('overlay').classList.add('hidden');
   $('bootErr').classList.add('hidden');
 
-  pending = null;
   sel = null;
   lastTimeTxt = '';
   lastSpeedTxt = '';
@@ -454,7 +408,6 @@ Net.on('start', function (info){
   buildBoard();
 
   for (let i = 0; i < cellSig.length; i++) cellSig[i] = '';
-  handSig = '';
 
   const myCups  = Net.me ? Net.me.cups : 0;
   const oppCups = (info.opponent && info.opponent.cups) || 0;
@@ -471,7 +424,7 @@ Net.on('start', function (info){
     render(info.state);
   } else {
     $('timeLabel').textContent = '…';
-    toast('Восстанавливаем бой…');
+    toast('Собираем доску…');
   }
 });
 
@@ -533,8 +486,6 @@ $('ovBtn').onclick = async function (){
   renderLobby();
 };
 
-/* ================= ДОСКА ================= */
-
 function buildBoard(){
   if (cells.length) return;
   const b = $('board');
@@ -563,38 +514,8 @@ function onCell(dx, dy){
   const x = xy[0], y = xy[1];
   const pc = s.board[y][x];
 
-  if (pending){
-    const p = Arena.PIECES[pending];
-
-    if (s.hand[my].indexOf(pending) < 0){
-      pending = null;
-      toast('Этой карты больше нет в руке');
-      return;
-    }
-    if (s.nightMode > 0){
-      toast('Судная ночь: выставлять нельзя');
-      return;
-    }
-    if (s.energy[my] < p.cost){
-      toast('Мало эликсира: нужно ' + p.cost);
-      return;
-    }
-
-    const home = my === 'a' ? y >= 4 : y <= 3;
-    if (!home || pc){
-      toast('Только своя половина и только пустая клетка');
-      return;
-    }
-
-    Net.intent({ t:'place', type:pending, x:x, y:y });
-    pending = null;
-    return;
-  }
-
   if (sel){
-    const same = (pc && pc.side === my && sel.x === x && sel.y === y);
-
-    if (same){
+    if (pc && pc.side === my && sel.x === x && sel.y === y){
       sel = null;
       render(s);
       return;
@@ -640,8 +561,6 @@ function onCell(dx, dy){
   }
 }
 
-/* ================= ОТРИСОВКА ================= */
-
 function render(s){
   if (!s) return;
 
@@ -652,7 +571,6 @@ function render(s){
     const p = s.board[sel.y] && s.board[sel.y][sel.x];
     if (!p || p.side !== my) sel = null;
   }
-  if (pending && s.hand[my].indexOf(pending) < 0) pending = null;
 
   const moveSet = {};
   if (sel){
@@ -684,19 +602,14 @@ function render(s){
       }
     }
 
-    const homeHint = pending
-      ? ((my === 'a' ? y >= 4 : y <= 3) && !pc)
-      : false;
-
     let sig = (isLight ? 'L' : 'D');
     if (pc){
       sig += pc.type + pc.side + (pc.asleep ? 'a' : '') + (pc.chained ? 'c' : '');
       if (pc.type === 'king' && pc.maxHp > 1) sig += 'h' + pc.hp;
     }
-    if (trapOn)   sig += 'T';
-    if (isSel)    sig += 'S';
-    if (isMove)   sig += (isCap ? 'C' : 'M');
-    if (homeHint) sig += 'H';
+    if (trapOn) sig += 'T';
+    if (isSel)  sig += 'S';
+    if (isMove) sig += (isCap ? 'C' : 'M');
 
     if (cellSig[idx] === sig) continue;
     cellSig[idx] = sig;
@@ -726,16 +639,14 @@ function render(s){
       }
     }
 
-    if (isSel)    el.classList.add('sel');
-    if (isMove)   el.classList.add(isCap ? 'cap' : 'move');
-    if (homeHint) el.classList.add('move');
+    if (isSel)  el.classList.add('sel');
+    if (isMove) el.classList.add(isCap ? 'cap' : 'move');
   }
 
-  /* эликсир */
   const myE = s.energy[my];
   const opE = s.energy[my === 'a' ? 'b' : 'a'];
-  $('myElixFill').style.width    = (myE * 10) + '%';
-  $('enemyElixFill').style.width = (opE * 10) + '%';
+  $('myElixFill').style.width    = Math.min(100, myE * 10) + '%';
+  $('enemyElixFill').style.width = Math.min(100, opE * 10) + '%';
 
   const rate = Arena.energyRate(s);
   const speedTxt = rate > 1 ? ('⚡×' + rate) : '';
@@ -744,7 +655,6 @@ function render(s){
     $('speedTag').textContent = speedTxt;
   }
 
-  /* таймер */
   const tl = $('timeLabel');
   let timeTxt = '';
   let timeColor = '';
@@ -777,53 +687,12 @@ function render(s){
   }
   if (tl.style.color !== timeColor) tl.style.color = timeColor;
 
-  /* судная ночь */
   $('nightBtn').disabled = !(
     s.arena === 8 &&
     !s.nightUsed[my] &&
-    s.hand[my].indexOf('king') < 0 &&
     !s.over
   );
-
-  /* рука — перерисовываем только когда реально поменялась */
-  const cards = s.hand[my];
-  let hs = cards.join(',') + '|' + pending + '|' + myE.toFixed(1);
-  if (hs !== handSig){
-    handSig = hs;
-
-    const hand = $('hand');
-    hand.innerHTML = '';
-
-    for (let i = 0; i < cards.length; i++){
-      const type = cards[i];
-      const p = Arena.PIECES[type];
-      const can = myE >= p.cost;
-
-      const d = document.createElement('div');
-      d.className = 'hcard' +
-        (pending === type ? ' on' : '') +
-        (can ? '' : ' off');
-
-      d.innerHTML =
-        '<div class="c">' + p.cost + '</div>' +
-        '<div class="s">' + p.w + '</div>' +
-        '<div class="n">' + p.name + '</div>';
-
-      (function (t, enabled){
-        d.onclick = function (){
-          if (!enabled){ toast('Мало эликсира'); return; }
-          pending = (pending === t) ? null : t;
-          sel = null;
-          render(Net.state);
-        };
-      })(type, can);
-
-      hand.appendChild(d);
-    }
-  }
 }
-
-/* ================= КНОПКИ ================= */
 
 $('nightBtn').onclick = function (){
   Net.intent({ t:'night' });
@@ -832,8 +701,6 @@ $('nightBtn').onclick = function (){
 $('resignBtn').onclick = function (){
   if (confirm('Сдаться? Это поражение и минус кубки.')) Net.resign();
 };
-
-/* ================= ОШИБКА ПОДКЛЮЧЕНИЯ ================= */
 
 function showBootError(e){
   let msg = 'неизвестная ошибка';
@@ -856,8 +723,6 @@ function showBootError(e){
   $('pCups').textContent = '—';
   $('pArena').textContent = '';
 }
-
-/* ================= СТАРТ ================= */
 
 function autoQueueRequested(){
   try {
