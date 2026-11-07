@@ -4,133 +4,377 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Chess Royale - Главная</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;height:100vh;height:100dvh;overflow:hidden;user-select:none;}
-.top-bar{width:100%;padding:10px;display:flex;justify-content:space-between;align-items:flex-start;background:linear-gradient(180deg,rgba(0,0,0,0.8),transparent);position:absolute;top:0;z-index:10;}
-.profile-badge{display:flex;align-items:center;gap:10px;background:linear-gradient(145deg,#1a1a2e,#0a0a14);padding:6px 12px;border-radius:12px;border:2px solid #3b82f6;box-shadow:0 4px 10px rgba(0,0,0,0.6);}
-.avatar{width:40px;height:40px;background:linear-gradient(145deg,#ffcc00,#ff9500);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:inset 0 2px 4px rgba(255,255,255,0.5);}
-.profile-info{display:flex;flex-direction:column;}
-.profile-name{font-size:14px;font-weight:900;}
-.profile-level{font-size:10px;color:#94a3b8;}
-.currencies{display:flex;gap:5px;flex-direction:column;}
-.currency{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.7);padding:4px 8px;border-radius:8px;font-size:12px;font-weight:bold;border:1px solid rgba(255,255,255,0.1);}
-.currency.trophy{color:#ffcc00;border-color:#ffcc00;}
-.currency.coin{color:#ffd700;}
-.currency.gem{color:#34c759;}
-.arena-container{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding:20px;margin-top:60px;}
-.arena-card{width:90vw;max-width:400px;background:linear-gradient(180deg,#1e293b,#0f172a);border-radius:20px;border:3px solid #475569;box-shadow:0 20px 50px rgba(0,0,0,0.9),inset 0 0 40px rgba(0,0,0,0.6);padding:20px;text-align:center;position:relative;overflow:hidden;}
-.arena-glow{position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at top,#3b82f6 0%,transparent 70%);opacity:0.2;pointer-events:none;}
-.arena-title{font-size:20px;font-weight:900;color:#ffcc00;text-shadow:0 2px 4px rgba(0,0,0,0.8);margin-bottom:5px;z-index:2;position:relative;}
-.arena-subtitle{font-size:12px;color:#94a3b8;margin-bottom:15px;z-index:2;position:relative;}
-.arena-image{width:100%;height:150px;background:url('https://images.unsplash.com/photo-1614036417651-efe5912149d8?q=80&w=600&auto=format&fit=crop') center/cover;border-radius:12px;border:2px solid #64748b;margin-bottom:15px;position:relative;z-index:2;}
-.arena-progress-bg{width:100%;height:16px;background:#000;border-radius:10px;overflow:hidden;box-shadow:inset 0 4px 8px rgba(0,0,0,0.9);position:relative;z-index:2;}
-.arena-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#3b82f6,#00f2fe);border-radius:10px;transition:width 0.5s;}
-.arena-trophies{display:flex;justify-content:space-between;width:100%;font-size:11px;color:#ccc;margin-top:5px;font-weight:bold;position:relative;z-index:2;}
-.bottom-actions{width:100%;padding:20px;display:flex;flex-direction:column;align-items:center;gap:15px;margin-bottom:65px;}
-.btn-battle{width:90vw;max-width:400px;padding:18px;background:linear-gradient(180deg,#ffcc00,#ff9500);border:3px solid #fff;border-radius:16px;font-size:24px;font-weight:900;color:#000;text-transform:uppercase;letter-spacing:1px;box-shadow:0 8px 0 #b45309,0 15px 20px rgba(0,0,0,0.6),inset 0 2px 4px rgba(255,255,255,0.8);cursor:pointer;transition:transform 0.1s,box-shadow 0.1s;text-shadow:0 1px 0 rgba(255,255,255,0.5);position:relative;overflow:hidden;}
-.btn-battle:active{transform:translateY(4px);box-shadow:0 4px 0 #b45309,0 5px 10px rgba(0,0,0,0.6),inset 0 2px 4px rgba(255,255,255,0.8);}
-.btn-battle::after{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent);animation:shine 3s infinite;transform:skewX(-20deg);}
-@keyframes shine{0%{left:-100%;}20%{left:200%;}100%{left:200%;}}
-.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 15px rgba(0,0,0,0.7);}
-.nav-btn{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;transition:0.2s;}
-.nav-btn .icon-wrap{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);box-shadow:0 3px 6px rgba(0,0,0,0.5),inset 0 2px 3px rgba(255,255,255,0.08),inset 0 -3px 6px rgba(0,0,0,0.6);transition:all 0.3s;}
-.nav-btn .icon{font-size:20px;text-shadow:0 1px 2px rgba(0,0,0,0.6);transition:transform 0.3s;}
-.nav-btn.active{color:#ffcc00;}
-.nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500);box-shadow:0 3px 10px rgba(255,204,0,0.4),inset 0 2px 3px rgba(255,255,255,0.4);}
-.nav-btn.active .icon{transform:scale(1.12);}
-.deck-stack{position:relative;width:24px;height:28px;}
-.deck-stack .deck-card{position:absolute;width:16px;height:22px;border-radius:3px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 1px 3px rgba(0,0,0,0.6);}
-.deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c);}
-.deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe);}
-.deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900;}
+body{
+  background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);
+  color:#fff;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;
+  min-height:100vh;min-height:100dvh;user-select:none;padding-bottom:80px;
+}
+
+/* ---------- ВЕРХНИЙ БАР ---------- */
+.top-bar{
+  width:100%;padding:10px;display:flex;justify-content:space-between;align-items:flex-start;
+  position:relative;z-index:10;
+}
+.profile-badge{
+  display:flex;align-items:center;gap:10px;
+  background:linear-gradient(145deg,#1a1a2e,#0a0a14);
+  padding:6px 12px;border-radius:12px;border:2px solid #3b82f6;
+  box-shadow:0 4px 10px rgba(0,0,0,.6);
+}
+.avatar{
+  width:40px;height:40px;background:linear-gradient(145deg,#ffcc00,#ff9500);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:24px;box-shadow:inset 0 2px 4px rgba(255,255,255,.5);
+}
+.profile-info{display:flex;flex-direction:column;min-width:0}
+.profile-name{font-size:14px;font-weight:900;max-width:130px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.profile-level{font-size:10px;color:#94a3b8}
+.currencies{display:flex;gap:5px;flex-direction:column}
+.currency{
+  display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.7);
+  padding:4px 8px;border-radius:8px;font-size:12px;font-weight:bold;
+  border:1px solid rgba(255,255,255,.1);
+}
+.currency.trophy{color:#ffcc00;border-color:#ffcc00}
+.currency.coin{color:#ffd700}
+.currency.gem{color:#34c759}
+
+/* ---------- КАРТОЧКА АРЕНЫ ---------- */
+.arena-container{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:100%;padding:10px 20px;
+}
+.arena-card{
+  width:90vw;max-width:400px;
+  background:linear-gradient(180deg,#1e293b,#0f172a);
+  border-radius:20px;border:3px solid #475569;
+  box-shadow:0 20px 50px rgba(0,0,0,.9),inset 0 0 40px rgba(0,0,0,.6);
+  padding:18px;text-align:center;position:relative;overflow:hidden;
+}
+.arena-glow{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background:radial-gradient(circle at top,#3b82f6 0%,transparent 70%);
+  opacity:.2;pointer-events:none;transition:background .4s;
+}
+.arena-title{
+  font-size:19px;font-weight:900;color:#ffcc00;margin-bottom:4px;
+  text-shadow:0 2px 4px rgba(0,0,0,.8);position:relative;z-index:2;
+}
+.arena-subtitle{
+  font-size:11.5px;color:#94a3b8;margin-bottom:14px;line-height:1.4;
+  position:relative;z-index:2;min-height:32px;
+}
+.arena-image{
+  width:100%;height:150px;border-radius:12px;border:2px solid #64748b;
+  margin-bottom:14px;position:relative;z-index:2;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#334155,#0f172a);
+  transition:background .4s;
+  overflow:hidden;
+}
+.arena-image span{font-size:64px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.7))}
+.arena-progress-bg{
+  width:100%;height:16px;background:#000;border-radius:10px;overflow:hidden;
+  box-shadow:inset 0 4px 8px rgba(0,0,0,.9);position:relative;z-index:2;
+}
+.arena-progress-fill{
+  height:100%;width:0%;border-radius:10px;transition:width .5s;
+  background:linear-gradient(90deg,#3b82f6,#00f2fe);
+}
+.arena-trophies{
+  display:flex;justify-content:space-between;width:100%;font-size:11px;
+  color:#ccc;margin-top:5px;font-weight:bold;position:relative;z-index:2;
+}
+.arena-floor{
+  font-size:10.5px;color:#64748b;margin-top:8px;
+  position:relative;z-index:2;
+}
+#dbWarn{
+  font-size:11px;color:#ef4444;margin-top:10px;min-height:14px;
+  position:relative;z-index:2;
+}
+
+/* ---------- КНОПКИ ---------- */
+.bottom-actions{
+  width:100%;padding:12px 20px 20px;display:flex;flex-direction:column;
+  align-items:center;gap:10px;
+}
+.btn-battle{
+  width:90vw;max-width:400px;padding:18px;
+  background:linear-gradient(180deg,#ffcc00,#ff9500);
+  border:3px solid #fff;border-radius:16px;font-size:24px;font-weight:900;
+  color:#000;text-transform:uppercase;letter-spacing:1px;
+  box-shadow:0 8px 0 #b45309,0 15px 20px rgba(0,0,0,.6),inset 0 2px 4px rgba(255,255,255,.8);
+  cursor:pointer;transition:transform .1s,box-shadow .1s;
+  text-shadow:0 1px 0 rgba(255,255,255,.5);position:relative;overflow:hidden;
+}
+.btn-battle:active{transform:translateY(4px);
+  box-shadow:0 4px 0 #b45309,0 5px 10px rgba(0,0,0,.6),inset 0 2px 4px rgba(255,255,255,.8)}
+.btn-battle::after{
+  content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);
+  animation:shine 3s infinite;transform:skewX(-20deg);
+}
+@keyframes shine{0%{left:-100%}20%{left:200%}100%{left:200%}}
+
+.btn-train{
+  width:90vw;max-width:400px;padding:12px;border-radius:12px;
+  background:linear-gradient(145deg,#334155,#1e293b);
+  border:2px solid #475569;color:#cbd5e1;
+  font-size:14px;font-weight:800;cursor:pointer;
+  box-shadow:0 4px 0 #0f172a,0 6px 12px rgba(0,0,0,.4);
+}
+.btn-train:active{transform:translateY(3px);box-shadow:0 1px 0 #0f172a}
+
+/* ---------- НАВИГАЦИЯ ---------- */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;width:100%;height:68px;
+  background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);
+  border-top:1px solid rgba(255,255,255,.08);
+  display:flex;justify-content:space-around;align-items:center;z-index:999;
+  padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -4px 15px rgba(0,0,0,.7);
+}
+.nav-btn{
+  background:transparent;border:none;color:#94a3b8;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;
+  transition:.2s;
+}
+.nav-btn .icon-wrap{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,#2a2a3e,#15151f);
+  box-shadow:0 3px 6px rgba(0,0,0,.5),inset 0 2px 3px rgba(255,255,255,.08),inset 0 -3px 6px rgba(0,0,0,.6);
+  transition:all .3s;
+}
+.nav-btn .icon{font-size:20px;text-shadow:0 1px 2px rgba(0,0,0,.6);transition:transform .3s}
+.nav-btn.active{color:#ffcc00}
+.nav-btn.active .icon-wrap{
+  background:linear-gradient(145deg,#ffcc00,#ff9500);
+  box-shadow:0 3px 10px rgba(255,204,0,.4),inset 0 2px 3px rgba(255,255,255,.4);
+}
+.nav-btn.active .icon{transform:scale(1.12)}
+.deck-stack{position:relative;width:24px;height:28px}
+.deck-stack .deck-card{
+  position:absolute;width:16px;height:22px;border-radius:3px;
+  border:1px solid rgba(255,255,255,.5);box-shadow:0 1px 3px rgba(0,0,0,.6);
+}
+.deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c)}
+.deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe)}
+.deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <div class="profile-badge">
-        <div class="avatar">👑</div>
-        <div class="profile-info">
-            <span class="profile-name" id="player-name">Атлет</span>
-            <span class="profile-level">Уровень 1</span>
-        </div>
+  <div class="profile-badge">
+    <div class="avatar">👑</div>
+    <div class="profile-info">
+      <span class="profile-name" id="player-name">Игрок</span>
+      <span class="profile-level" id="player-arena-label">Арена 1</span>
     </div>
-    <div class="currencies">
-        <div class="currency trophy">🏆 <span id="trophies-count">0</span></div>
-        <div class="currency coin">🪙 <span id="coins-count">1250</span></div>
-        <div class="currency gem">💎 <span id="gems-count">50</span></div>
-    </div>
+  </div>
+  <div class="currencies">
+    <div class="currency trophy">🏆 <span id="trophies-count">0</span></div>
+    <div class="currency coin">🪙 <span id="coins-count">1250</span></div>
+    <div class="currency gem">💎 <span id="gems-count">50</span></div>
+  </div>
 </div>
 
 <div class="arena-container">
-    <div class="arena-card">
-        <div class="arena-glow"></div>
-        <div class="arena-title">Арена 1: Лесная поляна</div>
-        <div class="arena-subtitle">Добро пожаловать в Шахматный Рояль!</div>
-        <div class="arena-image"></div>
-        <div class="arena-progress-bg"><div class="arena-progress-fill" id="arena-progress"></div></div>
-        <div class="arena-trophies">
-            <span>🏆 <span id="current-trophies">0</span></span>
-            <span>До следующей: <span id="next-arena-req">300</span></span>
-        </div>
+  <div class="arena-card">
+    <div class="arena-glow" id="arena-glow"></div>
+    <div class="arena-title" id="arena-title">Арена 1: Капкан</div>
+    <div class="arena-subtitle" id="arena-subtitle">Загрузка…</div>
+    <div class="arena-image" id="arena-image"><span id="arena-icon">🪤</span></div>
+    <div class="arena-progress-bg">
+      <div class="arena-progress-fill" id="arena-progress"></div>
     </div>
+    <div class="arena-trophies">
+      <span>🏆 <span id="current-trophies">0</span></span>
+      <span id="next-label">До арены 2: 1000</span>
+    </div>
+    <div class="arena-floor" id="arena-floor">Пол арены: 0 🏆 — ниже не упадёшь</div>
+    <div id="dbWarn"></div>
+  </div>
 </div>
 
 <div class="bottom-actions">
-    <button class="btn-battle" onclick="startBattle()">⚔️ В БОЙ</button>
+  <button class="btn-battle" id="battleBtn">⚔️ В БОЙ</button>
+  <button class="btn-train" id="trainBtn">🤖 Тренировка с ботом</button>
 </div>
 
 <div class="bottom-nav">
-    <button class="nav-btn" onclick="window.location.href='chess-shop.html'">
-        <div class="icon-wrap"><span class="icon">🎁</span></div>
-        <span>Магазин</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='chess-deck.html'">
-        <div class="icon-wrap">
-            <div class="deck-stack">
-                <div class="deck-card"></div>
-                <div class="deck-card"></div>
-                <div class="deck-card">♠</div>
-            </div>
-        </div>
-        <span>Колода</span>
-    </button>
-    <button class="nav-btn active" onclick="window.location.href='chess-main.html'">
-        <div class="icon-wrap"><span class="icon">⚔️</span></div>
-        <span>Бой</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='chess-social.html'">
-        <div class="icon-wrap"><span class="icon">🛡️</span></div>
-        <span>Общение</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='leaderboard.html'">
-        <div class="icon-wrap"><span class="icon">🏆</span></div>
-        <span>Рейтинг</span>
-    </button>
+  <button class="nav-btn" onclick="window.location.href='chess-shop.html'">
+    <div class="icon-wrap"><span class="icon">🎁</span></div>
+    <span>Магазин</span>
+  </button>
+  <button class="nav-btn" onclick="window.location.href='chess-deck.html'">
+    <div class="icon-wrap">
+      <div class="deck-stack">
+        <div class="deck-card"></div>
+        <div class="deck-card"></div>
+        <div class="deck-card">♠</div>
+      </div>
+    </div>
+    <span>Колода</span>
+  </button>
+  <button class="nav-btn active" onclick="window.location.href='chess-main.html'">
+    <div class="icon-wrap"><span class="icon">⚔️</span></div>
+    <span>Бой</span>
+  </button>
+  <button class="nav-btn" onclick="window.location.href='chess-social.html'">
+    <div class="icon-wrap"><span class="icon">🛡️</span></div>
+    <span>Общение</span>
+  </button>
+  <button class="nav-btn" onclick="window.location.href='leaderboard.html'">
+    <div class="icon-wrap"><span class="icon">🏆</span></div>
+    <span>Рейтинг</span>
+  </button>
 </div>
 
+<script src="arena.js"></script>
 <script>
-let trophies = parseInt(localStorage.getItem('cr_trophies') || '0');
-let coins = parseInt(localStorage.getItem('cr_coins') || '1250');
-let gems = parseInt(localStorage.getItem('cr_gems') || '50');
-let playerName = localStorage.getItem('userName') || "Атлет";
+/* ================= ПОДКЛЮЧЕНИЕ ================= */
 
-document.getElementById('player-name').innerText = playerName;
-document.getElementById('trophies-count').innerText = trophies;
-document.getElementById('coins-count').innerText = coins;
-document.getElementById('gems-count').innerText = gems;
-document.getElementById('current-trophies').innerText = trophies;
+const sb = supabase.createClient(
+  'https://qnpriwfxzuoymoumdtrl.supabase.co',
+  'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF'
+);
 
-const nextReq = 300;
-document.getElementById('next-arena-req').innerText = nextReq;
-let progress = Math.min((trophies / nextReq) * 100, 100);
-document.getElementById('arena-progress').style.width = progress + '%';
+const $ = function (id){ return document.getElementById(id); };
 
-function startBattle() {
-    localStorage.setItem('vsBot', 'true');
-    window.location.href = 'chess-game.html';
+const STEP = 1000;
+const MAX_ARENA = 10;
+
+/* Названия берём из arena.js, если он загрузился; иначе — свой список */
+const NAMES = (window.Arena && Arena.ARENAS)
+  ? Arena.ARENAS.map(function (a){ return a.name; })
+  : ['Капкан','Псарня','Мясорубка','Кошмар на улице Вязов','Техасская резня',
+     'Хостел','Восставший из ада','Судная ночь','Зловещие мертвецы','Бессмертная партия'];
+
+const RULES = (window.Arena && Arena.ARENAS)
+  ? Arena.ARENAS.map(function (a){ return a.rule; })
+  : ['','','','','','','','','',''];
+
+/* Вид карточки для каждой арены: иконка, фон картинки, цвет свечения */
+const LOOK = [
+  { icon:'🪤',  grad:'linear-gradient(135deg,#5a3a24,#2a1a10)', glow:'#b5541f' },
+  { icon:'🐺',  grad:'linear-gradient(135deg,#4a5230,#1a1d12)', glow:'#8a8f4a' },
+  { icon:'⚙️',  grad:'linear-gradient(135deg,#8d6d49,#3a2a1a)', glow:'#c0c8cf' },
+  { icon:'😱',  grad:'linear-gradient(135deg,#5a2020,#1a0808)', glow:'#c0392b' },
+  { icon:'🪚',  grad:'linear-gradient(135deg,#6b4225,#241408)', glow:'#e0a458' },
+  { icon:'🚪',  grad:'linear-gradient(135deg,#4a5459,#1e2224)', glow:'#9fb6c4' },
+  { icon:'⛓️',  grad:'linear-gradient(135deg,#3a1e1e,#0d0000)', glow:'#8b1a1a' },
+  { icon:'🌙',  grad:'linear-gradient(135deg,#2b2b48,#0a0a12)', glow:'#3b6fd4' },
+  { icon:'💀',  grad:'linear-gradient(135deg,#3f4a28,#12160a)', glow:'#6a8f3a' },
+  { icon:'♟️',  grad:'linear-gradient(135deg,#ded4c2,#9a8a70)', glow:'#c9a227' }
+];
+
+/* ================= КЛЮЧ ИГРОКА ================= */
+
+function playerKey(){
+  const tgId = localStorage.getItem('tgId');
+  if (tgId) return 'tg:' + tgId;
+
+  const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
+  if (email) return 'email:' + email.toLowerCase();
+
+  let anon = localStorage.getItem('arenaAnonId');
+  if (!anon){
+    anon = 'anon:' + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('arenaAnonId', anon);
+  }
+  return anon;
 }
+
+function playerName(){
+  return localStorage.getItem('userName') || 'Игрок';
+}
+
+/* ================= ОТРИСОВКА ================= */
+
+function render(cups){
+  const arena = Math.min(MAX_ARENA, Math.floor(Math.max(0, cups) / STEP) + 1);
+  const floor = (arena - 1) * STEP;
+  const look  = LOOK[arena - 1] || LOOK[0];
+
+  $('player-name').textContent = playerName();
+  $('player-arena-label').textContent = 'Арена ' + arena;
+
+  $('trophies-count').textContent = cups;
+  $('current-trophies').textContent = cups;
+
+  $('arena-title').textContent = 'Арена ' + arena + ': ' + NAMES[arena - 1];
+  $('arena-subtitle').textContent = RULES[arena - 1] || '';
+
+  $('arena-icon').textContent = look.icon;
+  $('arena-image').style.background = look.grad;
+  $('arena-glow').style.background =
+    'radial-gradient(circle at top,' + look.glow + ' 0%,transparent 70%)';
+  $('arena-progress').style.background =
+    'linear-gradient(90deg,' + look.glow + ',#ffcc00)';
+
+  let pct, label;
+  if (arena >= MAX_ARENA){
+    pct = 100;
+    label = 'Высшая арена';
+  } else {
+    pct = ((cups - floor) / STEP) * 100;
+    label = 'До арены ' + (arena + 1) + ': ' + ((arena * STEP) - cups) + ' 🏆';
+  }
+  $('arena-progress').style.width = Math.max(0, Math.min(100, pct)) + '%';
+  $('next-label').textContent = label;
+
+  $('arena-floor').textContent =
+    'Пол арены: ' + floor + ' 🏆 — ниже не упадёшь';
+
+  document.title = 'Арена ' + arena + ' — Chess Royale';
+}
+
+/* ================= ЗАГРУЗКА ================= */
+
+async function boot(){
+  try {
+    const res = await sb.rpc('arena_ensure_player', {
+      p_key:  playerKey(),
+      p_name: playerName(),
+      p_seed: 0
+    });
+    if (res.error) throw res.error;
+    render(res.data.cups || 0);
+  } catch (e){
+    console.error(e);
+    $('dbWarn').textContent = 'База недоступна. Показаны локальные кубки.';
+    render(parseInt(localStorage.getItem('cr_trophies') || '0', 10) || 0);
+  }
+}
+
+/* ================= КНОПКИ ================= */
+
+$('battleBtn').onclick = function (){
+  window.location.href = 'chess-arena.html';
+};
+
+$('trainBtn').onclick = function (){
+  localStorage.setItem('vsBot', 'true');
+  window.location.href = 'chess-game.html';
+};
+
+/* ================= СТАРТ ================= */
+
+render(0);
+boot();
+
+/* возврат на страницу — обновить кубки */
+document.addEventListener('visibilitychange', function (){
+  if (!document.hidden) boot();
+});
 </script>
 </body>
 </html>
