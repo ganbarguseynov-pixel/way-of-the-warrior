@@ -1,8 +1,7 @@
 /* ============================================================
    arena.js — правила и движок шахматных арен
-   Один файл работает и у хоста, и у гостя.
    Время: 5 минут основного + 1 минута дополнительного.
-   HP короля — обычное число. Сейчас 1, с прокачкой будет расти.
+   HP короля — число. Сейчас 1, с прокачкой будет расти.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -11,12 +10,12 @@ const STEP = 1000;
 const MAX_ARENA = 10;
 
 /* ---------- ВРЕМЯ ---------- */
-const MAIN_TIME = 300;   // 5 минут основного времени
+const MAIN_TIME = 300;   // 5 минут основного
 const OT_TIME   = 60;    // 1 минута дополнительного
 const FAST_FROM = 60;    // последняя минута основного — эликсир ×1.5
 
 /* ---------- ЗДОРОВЬЕ КОРОЛЯ ---------- */
-const KING_HP = 1;       // базовое HP короля; прокачка будет его поднимать
+const KING_HP = 1;
 
 const PIECES = {
   pawn:   { cost:1, name:'Пешка',  w:'♙', b:'♟', val:2 },
@@ -91,13 +90,13 @@ function nameOf(s, side){
 }
 
 function log(s, text){
+  if (!s.log) s.log = [];
   s.log.unshift(text);
-  if (s.log.length > 60) s.log.length = 60;
+  if (s.log.length > 40) s.log.length = 40;
 }
 
 /* ================= ВРЕМЯ И ЭЛИКСИР ================= */
 
-/* 1 — обычная, 1.5 — последняя минута основного, 2 — доп. время */
 function energyRate(s){
   if (!s || s.arena === 10) return 1;
   if (s.phase === 'overtime') return 2;
@@ -105,7 +104,6 @@ function energyRate(s){
   return 1;
 }
 
-/* текущее HP короля; 0 — короля нет на доске */
 function kingHp(s, side){
   for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
     const pc = s.board[y][x];
@@ -116,7 +114,6 @@ function kingHp(s, side){
   return 0;
 }
 
-/* урон по королю = сила атакующей фигуры */
 function kingDamage(type){
   const p = PIECES[type];
   return p ? p.val : 1;
@@ -357,7 +354,6 @@ function relocate(s, fx, fy, tx, ty){
   }
 }
 
-/* удар по королю: снимаем HP, а не убиваем сразу */
 function hitKing(s, king, attackerType){
   if (typeof king.hp !== 'number') king.hp = KING_HP;
 
@@ -383,8 +379,6 @@ function capture(s, attacker, fx, fy, tx, ty){
       finish(s, attacker.side);
       return 'end';
     }
-
-    /* король выжил — атакующий остаётся на месте */
     return 'kinghit';
   }
 
@@ -527,7 +521,11 @@ function resign(s, side){
 function tick(s, dt){
   if (s.over) return;
 
+  /* страховка: старое состояние без времени не должно ломать таймер */
+  if (typeof s.timeLeft !== 'number' || !isFinite(s.timeLeft)) s.timeLeft = MAIN_TIME;
   if (!s.phase) s.phase = 'main';
+  if (typeof s.elapsed !== 'number' || !isFinite(s.elapsed)) s.elapsed = 0;
+
   s.elapsed += dt;
 
   if (s.arena !== 10){
@@ -578,7 +576,6 @@ function tick(s, dt){
   if (s.nightMode > 0) s.nightMode = Math.max(0, s.nightMode - dt);
 }
 
-/* время вышло: у кого HP короля больше — тот победил */
 function timeUp(s){
   const a = kingHp(s, 'a');
   const b = kingHp(s, 'b');
