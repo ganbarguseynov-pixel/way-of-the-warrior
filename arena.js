@@ -1,12 +1,18 @@
 /* ============================================================
    arena.js — правила и движок шахматных арен
    Один файл работает и у хоста, и у гостя.
+   Время: 5 минут основного + 1 минута дополнительного.
    ============================================================ */
 (function (global) {
 'use strict';
 
 const STEP = 1000;
 const MAX_ARENA = 10;
+
+/* ---------- ВРЕМЯ ---------- */
+const MAIN_TIME = 300;   // 5 минут основного времени
+const OT_TIME   = 60;    // 1 минута дополнительного
+const FAST_FROM = 60;    // последняя минута основного — эликсир ×1.5
 
 const PIECES = {
   pawn:   { cost:1, name:'Пешка',  w:'♙', b:'♟', val:2 },
@@ -71,7 +77,6 @@ function deltaFor(winnerCups, loserCups){
   return winnerCups < loserCups ? 31 : 29;
 }
 
-// сколько реально снимется с проигравшего: не ниже пола его арены
 function lossFor(loserCups, delta){
   return Math.min(delta, Math.max(0, loserCups - floorOf(loserCups)));
 }
@@ -84,6 +89,25 @@ function nameOf(s, side){
 function log(s, text){
   s.log.unshift(text);
   if (s.log.length > 60) s.log.length = 60;
+}
+
+/* ================= ВРЕМЯ И ЭЛИКСИР ================= */
+
+/* 1 — обычная, 1.5 — последняя минута основного, 2 — доп. время */
+function energyRate(s){
+  if (!s || s.arena === 10) return 1;
+  if (s.phase === 'overtime') return 2;
+  if (s.timeLeft <= FAST_FROM) return 1.5;
+  return 1;
+}
+
+/* король на доске — 1, нет короля — 0 */
+function kingHp(s, side){
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
+    const pc = s.board[y][x];
+    if (pc && pc.type === 'king' && pc.side === side) return 1;
+  }
+  return 0;
 }
 
 /* ================= СОЗДАНИЕ БОЯ ================= */
@@ -114,7 +138,8 @@ function create(opts){
     traps: [], returns: [],
 
     elapsed: 0,
-    timeLeft: 180,
+    phase: 'main',
+    timeLeft: MAIN_TIME,
     nightMode: 0,
     nightUsed: { a:false, b:false },
     spawnTimer: 15,
@@ -125,20 +150,17 @@ function create(opts){
     log: []
   };
 
-  // арена 10 — сразу по 4 пешки и полный эликсир
   if (s.arena === 10){
     s.energy = { a:10, b:10 };
     [1,3,4,6].forEach(x => { s.board[1][x] = { type:'pawn', side:'b' }; });
     [1,3,4,6].forEach(x => { s.board[6][x] = { type:'pawn', side:'a' }; });
   }
 
-  // арена 5 — у каждого своя Пила
   if (s.arena === 5){
     s.board[1][2] = { type:'saw', side:'b' };
     s.board[6][5] = { type:'saw', side:'a' };
   }
 
-  // арена 1 — по 4 ловушки на каждой половине
   if (s.arena === 1){
     const cells = [];
     for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
@@ -177,7 +199,6 @@ function legalMoves(s, x, y){
     return !t;
   }
 
-  // судная ночь: любая фигура ходит на 1 клетку в любую сторону
   if (s.nightMode > 0){
     for (let i = 0; i < DIR8.length; i++) push(x + DIR8[i][0], y + DIR8[i][1]);
     return out;
@@ -219,7 +240,6 @@ function legalMoves(s, x, y){
     }
   }
 
-  // арена 2: назад ходить нельзя
   if (s.arena === 2 && s.nightMode === 0){
     const back = side === 'a' ? 1 : -1;
     return out.filter(m => (m[1] - y) * back <= 0);
@@ -282,7 +302,10 @@ function move(s, side, fx, fy, tx, ty){
   if (pc.asleep) return { ok:false, error:'Фигура спит' };
 
   const allowed = legalMoves(s, fx, fy);
-  const ok = allowed.some(m => m[0] === tx && m[1] === ty);
+  let ok = false;
+  for (let i = 0; i < allowed.length; i++){
+    if (allowed[i][0] === tx && allowed[i][1] === ty){ ok = true; break; }
+  }
   if (!ok) return { ok:false, error:'Так ходить нельзя' };
 
   const cost = s.nightMode > 0 ? 0 : 1;
@@ -295,7 +318,7 @@ function move(s, side, fx, fy, tx, ty){
   if (target){
     const res = capture(s, pc, fx, fy, tx, ty);
     if (res === 'end') return { ok:true };
-    if (s.board[ty][tx]) return { ok:true };   // хостел: фигура осталась на клетке
+    if (s.board[ty][tx]) return { ok:true };
     relocate(s, fx, fy, tx, ty);
     if (pc.type === 'saw' && s.arena === 5) sawChain(s, tx, ty, dx, dy);
   } else {
@@ -323,21 +346,18 @@ function capture(s, attacker, fx, fy, tx, ty){
   if (!victim) return 'none';
   const night = s.nightMode > 0;
 
-  // король — конец боя
   if (victim.type === 'king'){
     s.board[ty][tx] = null;
     finish(s, attacker.side);
     return 'end';
   }
 
-  // арена 6: фигура переходит врагу
   if (!night && s.arena === 6){
     victim.side = attacker.side;
     log(s, 'Хостел: ' + PIECES[victim.type].name + ' переходит к ' + nameOf(s, attacker.side));
     return 'hostel';
   }
 
-  // арена 9: запоминаем, кого вернуть
   if (!night && s.arena === 9){
     s.returns.push({
       x:tx, y:ty,
@@ -349,17 +369,14 @@ function capture(s, attacker, fx, fy, tx, ty){
 
   s.board[ty][tx] = null;
 
-  // арена 10: эликсир за взятие
   if (s.arena === 10){
     s.energy[attacker.side] = Math.min(10,
       s.energy[attacker.side] + (PIECES[victim.type].val || 0));
     s.idle = 0;
   }
 
-  // арена 4: взятие будит одну фигуру
   if (!night && s.arena === 4) wakeOne(s, attacker.side);
 
-  // арена 3: мясорубка — гибнет всё вокруг
   if (!night && s.arena === 3){
     for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++){
       if (!a && !b) continue;
@@ -471,20 +488,31 @@ function resign(s, side){
 function tick(s, dt){
   if (s.over) return;
 
+  if (!s.phase) s.phase = 'main';
   s.elapsed += dt;
 
   if (s.arena !== 10){
-    s.energy.a = Math.min(10, s.energy.a + dt * 0.5);
-    s.energy.b = Math.min(10, s.energy.b + dt * 0.5);
+    const rate = energyRate(s);
+    s.energy.a = Math.min(10, s.energy.a + dt * 0.5 * rate);
+    s.energy.b = Math.min(10, s.energy.b + dt * 0.5 * rate);
+
     s.timeLeft -= dt;
-    if (s.timeLeft <= 0){ timeUp(s); return; }
+
+    if (s.timeLeft <= 0){
+      if (s.phase === 'main'){
+        s.phase = 'overtime';
+        s.timeLeft = OT_TIME;
+        log(s, 'Основное время вышло. Дополнительная минута, эликсир ×2.');
+      } else {
+        timeUp(s);
+        return;
+      }
+    }
   } else {
     s.idle += dt;
-    // тупик: у обоих нет эликсира и он не капает
     if (s.idle > 45 && s.energy.a < 1 && s.energy.b < 1){ timeUp(s); return; }
   }
 
-  // арена 2: пешки каждые 15 секунд
   if (s.arena === 2){
     s.spawnTimer -= dt;
     if (s.spawnTimer <= 0){
@@ -496,7 +524,6 @@ function tick(s, dt){
     }
   }
 
-  // арена 9: мертвецы встают
   if (s.arena === 9 && s.returns.length){
     for (let i = s.returns.length - 1; i >= 0; i--){
       const r = s.returns[i];
@@ -512,15 +539,13 @@ function tick(s, dt){
   if (s.nightMode > 0) s.nightMode = Math.max(0, s.nightMode - dt);
 }
 
+/* время вышло: у кого короля нет на доске — тот проиграл */
 function timeUp(s){
-  let a = 0, b = 0;
+  const a = kingHp(s, 'a');
+  const b = kingHp(s, 'b');
 
-  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
-    const pc = s.board[y][x];
-    if (!pc) continue;
-    if (pc.side === 'a') a++;
-    else b++;
-  }
+  log(s, 'Время вышло. Король на доске: ' + nameOf(s,'a') + ' ' + a +
+         ' / ' + nameOf(s,'b') + ' ' + b);
 
   if (a > b) finish(s, 'a');
   else if (b > a) finish(s, 'b');
@@ -539,6 +564,9 @@ function finish(s, winner){
 global.Arena = {
   STEP: STEP,
   MAX_ARENA: MAX_ARENA,
+  MAIN_TIME: MAIN_TIME,
+  OT_TIME: OT_TIME,
+  FAST_FROM: FAST_FROM,
   PIECES: PIECES,
   ARENAS: ARENAS,
   DECK: DECK,
@@ -555,7 +583,9 @@ global.Arena = {
   castNight: castNight,
   unlock: unlock,
   resign: resign,
-  finish: finish
+  finish: finish,
+  energyRate: energyRate,
+  kingHp: kingHp
 };
 
 })(window);
