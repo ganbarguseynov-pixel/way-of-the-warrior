@@ -54,7 +54,9 @@ body{
   border-radius:20px;border:3px solid #475569;
   box-shadow:0 20px 50px rgba(0,0,0,.9),inset 0 0 40px rgba(0,0,0,.6);
   padding:18px;text-align:center;position:relative;overflow:hidden;
+  cursor:pointer;transition:transform .12s;
 }
+.arena-card:active{transform:scale(.985)}
 .arena-glow{
   position:absolute;top:0;left:0;width:100%;height:100%;
   background:radial-gradient(circle at top,#3b82f6 0%,transparent 70%);
@@ -73,8 +75,7 @@ body{
   margin-bottom:14px;position:relative;z-index:2;
   display:flex;align-items:center;justify-content:center;
   background:linear-gradient(135deg,#334155,#0f172a);
-  transition:background .4s;
-  overflow:hidden;
+  transition:background .4s;overflow:hidden;
 }
 .arena-image span{font-size:64px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.7))}
 .arena-progress-bg{
@@ -90,8 +91,10 @@ body{
   color:#ccc;margin-top:5px;font-weight:bold;position:relative;z-index:2;
 }
 .arena-floor{
-  font-size:10.5px;color:#64748b;margin-top:8px;
-  position:relative;z-index:2;
+  font-size:10.5px;color:#64748b;margin-top:8px;position:relative;z-index:2;
+}
+.arena-hint{
+  font-size:10px;color:#475569;margin-top:10px;position:relative;z-index:2;
 }
 #dbWarn{
   font-size:11px;color:#ef4444;margin-top:10px;min-height:14px;
@@ -129,6 +132,67 @@ body{
   box-shadow:0 4px 0 #0f172a,0 6px 12px rgba(0,0,0,.4);
 }
 .btn-train:active{transform:translateY(3px);box-shadow:0 1px 0 #0f172a}
+
+/* ---------- ПРОСМОТР ВСЕХ АРЕН ---------- */
+#arenaModal{
+  position:fixed;inset:0;background:rgba(2,6,23,.95);z-index:1200;
+  display:none;flex-direction:column;justify-content:center;padding:10px 0;
+}
+#arenaModal.open{display:flex}
+#arenaModalHead{
+  display:flex;justify-content:space-between;align-items:center;
+  width:100%;max-width:440px;margin:0 auto 8px;padding:0 18px;
+}
+#arenaModalHead h3{margin:0;font-size:16px;color:#e2e8f0}
+#arenaClose{
+  background:#1e293b;border:1px solid #475569;color:#cbd5e1;
+  width:34px;height:34px;border-radius:50%;font-size:15px;
+  cursor:pointer;line-height:1;
+}
+#arenaTrack{
+  display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
+  padding:8px 20px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+#arenaTrack::-webkit-scrollbar{display:none}
+
+.arena-slide{
+  position:relative;flex:0 0 auto;width:74vw;max-width:290px;
+  scroll-snap-align:center;
+  background:linear-gradient(180deg,#1e293b,#0f172a);
+  border:2px solid #334155;border-radius:16px;padding:14px;
+  opacity:.5;transform:scale(.94);
+  transition:opacity .25s,transform .25s,border-color .25s,box-shadow .25s;
+}
+.arena-slide.now{
+  opacity:1;transform:scale(1);border-color:#ffcc00;
+  box-shadow:0 0 26px rgba(255,204,0,.28);
+}
+.arena-slide-img{
+  height:104px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;margin-bottom:10px;
+  border:1px solid rgba(255,255,255,.08);
+}
+.arena-slide-img span{font-size:50px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.7))}
+.arena-slide-title{font-size:15px;font-weight:900;color:#ffcc00;margin-bottom:3px}
+.arena-slide-range{font-size:11px;color:#94a3b8;margin-bottom:8px}
+.arena-slide-rule{font-size:11.5px;color:#cbd5e1;line-height:1.4;min-height:58px}
+.arena-slide-badge{
+  display:none;position:absolute;top:10px;right:10px;
+  background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000;
+  font-size:9.5px;font-weight:900;padding:4px 9px;border-radius:8px;
+  letter-spacing:.5px;
+}
+.arena-slide.now .arena-slide-badge{display:block}
+
+#arenaDots{
+  display:flex;justify-content:center;gap:6px;margin-top:10px;
+  flex-wrap:wrap;padding:0 20px;
+}
+.arena-dot{
+  width:8px;height:8px;border-radius:50%;background:#334155;
+  border:0;padding:0;cursor:pointer;transition:.2s;
+}
+.arena-dot.on{background:#ffcc00;transform:scale(1.5)}
 
 /* ---------- НАВИГАЦИЯ ---------- */
 .bottom-nav{
@@ -187,7 +251,7 @@ body{
 </div>
 
 <div class="arena-container">
-  <div class="arena-card">
+  <div class="arena-card" id="arenaCard">
     <div class="arena-glow" id="arena-glow"></div>
     <div class="arena-title" id="arena-title">Арена 1: Капкан</div>
     <div class="arena-subtitle" id="arena-subtitle">Загрузка…</div>
@@ -200,6 +264,7 @@ body{
       <span id="next-label">До арены 2: 1000</span>
     </div>
     <div class="arena-floor" id="arena-floor">Пол арены: 0 🏆 — ниже не упадёшь</div>
+    <div class="arena-hint">Нажми, чтобы посмотреть все арены →</div>
     <div id="dbWarn"></div>
   </div>
 </div>
@@ -207,6 +272,16 @@ body{
 <div class="bottom-actions">
   <button class="btn-battle" id="battleBtn">⚔️ В БОЙ</button>
   <button class="btn-train" id="trainBtn">🤖 Тренировка с ботом</button>
+</div>
+
+<!-- ================= ВСЕ АРЕНЫ ================= -->
+<div id="arenaModal">
+  <div id="arenaModalHead">
+    <h3>Все арены</h3>
+    <button id="arenaClose">✕</button>
+  </div>
+  <div id="arenaTrack"></div>
+  <div id="arenaDots"></div>
 </div>
 
 <div class="bottom-nav">
@@ -252,7 +327,6 @@ const $ = function (id){ return document.getElementById(id); };
 const STEP = 1000;
 const MAX_ARENA = 10;
 
-/* Названия берём из arena.js, если он загрузился; иначе — свой список */
 const NAMES = (window.Arena && Arena.ARENAS)
   ? Arena.ARENAS.map(function (a){ return a.name; })
   : ['Капкан','Псарня','Мясорубка','Кошмар на улице Вязов','Техасская резня',
@@ -260,9 +334,19 @@ const NAMES = (window.Arena && Arena.ARENAS)
 
 const RULES = (window.Arena && Arena.ARENAS)
   ? Arena.ARENAS.map(function (a){ return a.rule; })
-  : ['','','','','','','','','',''];
+  : [
+    '8 скрытых ловушек на доске. Наступил — фигура погибает. Король невредим.',
+    'Каждые 15 секунд с краёв выбегают пешки. Назад ходить нельзя.',
+    'Взятие уничтожает все фигуры вокруг клетки — и чужие, и свои.',
+    'Первые 3 фигуры каждого засыпают. Каждое взятие будит одну.',
+    'Пила, взяв фигуру, продолжает рубить дальше по той же линии.',
+    'Взятая фигура не гибнет, а переходит врагу. Король не переходит.',
+    'Первые 2 фигуры прикованы. Освобождение стоит 4 эликсира.',
+    'Раз за бой: 10 секунд без правил. Все ходят на 1 клетку, эликсир не тратится.',
+    'Убитая фигура встаёт обратно через 20 секунд, если клетка свободна.',
+    'Эликсир только за взятия. Времени нет. Ничьей нет.'
+  ];
 
-/* Вид карточки для каждой арены: иконка, фон картинки, цвет свечения */
 const LOOK = [
   { icon:'🪤',  grad:'linear-gradient(135deg,#5a3a24,#2a1a10)', glow:'#b5541f' },
   { icon:'🐺',  grad:'linear-gradient(135deg,#4a5230,#1a1d12)', glow:'#8a8f4a' },
@@ -275,6 +359,9 @@ const LOOK = [
   { icon:'💀',  grad:'linear-gradient(135deg,#3f4a28,#12160a)', glow:'#6a8f3a' },
   { icon:'♟️',  grad:'linear-gradient(135deg,#ded4c2,#9a8a70)', glow:'#c9a227' }
 ];
+
+let currentArena = 1;
+let slidesBuilt  = false;
 
 /* ================= КЛЮЧ ИГРОКА ================= */
 
@@ -297,12 +384,14 @@ function playerName(){
   return localStorage.getItem('userName') || 'Игрок';
 }
 
-/* ================= ОТРИСОВКА ================= */
+/* ================= ГЛАВНАЯ КАРТОЧКА ================= */
 
 function render(cups){
   const arena = Math.min(MAX_ARENA, Math.floor(Math.max(0, cups) / STEP) + 1);
   const floor = (arena - 1) * STEP;
   const look  = LOOK[arena - 1] || LOOK[0];
+
+  currentArena = arena;
 
   $('player-name').textContent = playerName();
   $('player-arena-label').textContent = 'Арена ' + arena;
@@ -335,7 +424,131 @@ function render(cups){
     'Пол арены: ' + floor + ' 🏆 — ниже не упадёшь';
 
   document.title = 'Арена ' + arena + ' — Chess Royale';
+
+  if (slidesBuilt) markCurrent(arena);
 }
+
+/* ================= ПРОСМОТР ВСЕХ АРЕН ================= */
+
+function buildArenaBrowser(){
+  if (slidesBuilt) return;
+
+  const track = $('arenaTrack');
+  const dots  = $('arenaDots');
+  track.innerHTML = '';
+  dots.innerHTML  = '';
+
+  for (let n = 1; n <= MAX_ARENA; n++){
+    const look  = LOOK[n - 1];
+    const from  = (n - 1) * STEP;
+    const range = (n === MAX_ARENA)
+      ? 'от ' + from + ' 🏆 и выше'
+      : from + ' – ' + (n * STEP - 1) + ' 🏆';
+
+    const slide = document.createElement('div');
+    slide.className = 'arena-slide';
+    slide.dataset.n = n;
+    slide.innerHTML =
+      '<div class="arena-slide-badge">ТЫ ЗДЕСЬ</div>' +
+      '<div class="arena-slide-img" style="background:' + look.grad + '">' +
+        '<span>' + look.icon + '</span>' +
+      '</div>' +
+      '<div class="arena-slide-title">Арена ' + n + ': ' + NAMES[n - 1] + '</div>' +
+      '<div class="arena-slide-range">' + range + '</div>' +
+      '<div class="arena-slide-rule">' + RULES[n - 1] + '</div>';
+
+    (function (num){
+      slide.onclick = function (){ scrollToArena(num, true); };
+    })(n);
+
+    track.appendChild(slide);
+
+    const dot = document.createElement('button');
+    dot.className = 'arena-dot';
+    dot.dataset.n = n;
+    (function (num){
+      dot.onclick = function (){ scrollToArena(num, true); };
+    })(n);
+    dots.appendChild(dot);
+  }
+
+  track.addEventListener('scroll', function (){
+    window.requestAnimationFrame(updateDotsFromScroll);
+  });
+
+  slidesBuilt = true;
+}
+
+function slideOf(n){
+  return $('arenaTrack').querySelector('.arena-slide[data-n="' + n + '"]');
+}
+
+function scrollToArena(n, smooth){
+  const track = $('arenaTrack');
+  const el = slideOf(n);
+  if (!track || !el) return;
+
+  const left = el.offsetLeft - (track.clientWidth - el.clientWidth) / 2;
+
+  if (smooth && track.scrollTo){
+    track.scrollTo({ left: left, behavior: 'smooth' });
+  } else {
+    track.scrollLeft = left;
+  }
+  markCurrent(n);
+}
+
+function markCurrent(n){
+  currentArena = n;
+
+  const slides = $('arenaTrack').querySelectorAll('.arena-slide');
+  for (let i = 0; i < slides.length; i++){
+    slides[i].classList.toggle('now', +slides[i].dataset.n === n);
+  }
+
+  const dots = $('arenaDots').querySelectorAll('.arena-dot');
+  for (let i = 0; i < dots.length; i++){
+    dots[i].classList.toggle('on', +dots[i].dataset.n === n);
+  }
+}
+
+function updateDotsFromScroll(){
+  const track = $('arenaTrack');
+  if (!track) return;
+
+  const center = track.scrollLeft + track.clientWidth / 2;
+  const slides = track.querySelectorAll('.arena-slide');
+
+  let best = null, bestDist = Infinity;
+  for (let i = 0; i < slides.length; i++){
+    const s = slides[i];
+    const sc = s.offsetLeft + s.offsetWidth / 2;
+    const d = Math.abs(sc - center);
+    if (d < bestDist){ bestDist = d; best = s; }
+  }
+  if (best) markCurrent(+best.dataset.n);
+}
+
+function openArenaBrowser(){
+  buildArenaBrowser();
+  markCurrent(currentArena);
+  $('arenaModal').classList.add('open');
+
+  // ждём кадр, чтобы размеры посчитались правильно
+  requestAnimationFrame(function (){
+    scrollToArena(currentArena, false);
+  });
+}
+
+$('arenaCard').onclick = openArenaBrowser;
+
+$('arenaClose').onclick = function (){
+  $('arenaModal').classList.remove('open');
+};
+
+$('arenaModal').onclick = function (e){
+  if (e.target === $('arenaModal')) $('arenaModal').classList.remove('open');
+};
 
 /* ================= ЗАГРУЗКА ================= */
 
@@ -371,7 +584,6 @@ $('trainBtn').onclick = function (){
 render(0);
 boot();
 
-/* возврат на страницу — обновить кубки */
 document.addEventListener('visibilitychange', function (){
   if (!document.hidden) boot();
 });
