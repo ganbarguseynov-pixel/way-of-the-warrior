@@ -155,8 +155,9 @@ body{
 
 #arenaTopHint{
   flex-shrink:0;text-align:center;font-size:10.5px;color:#64748b;
-  padding:0 16px 8px;letter-spacing:.3px;
+  padding:0 16px 8px;letter-spacing:.3px;line-height:1.4;
 }
+#arenaTopHint b{color:#22c55e}
 
 #arenaScroll{
   flex:1;position:relative;
@@ -177,10 +178,25 @@ body{
   transition:opacity .22s,transform .22s,border-color .22s,box-shadow .22s;
   position:relative;
 }
-.arena-slide.now{
-  opacity:1;transform:scale(1);border-color:#ffcc00;
-  box-shadow:0 0 26px rgba(255,204,0,.3);
+
+/* ТВОЯ АРЕНА — помечена всегда, независимо от прокрутки */
+.arena-slide.mine{
+  opacity:.9;transform:scale(.97);
+  border-color:#22c55e;
+  box-shadow:0 0 22px rgba(34,197,94,.35);
 }
+
+/* АРЕНА, КОТОРУЮ СМОТРИШЬ СЕЙЧАС — просто крупнее, без плашки */
+.arena-slide.now{
+  opacity:1;transform:scale(1);
+  border-color:#94a3b8;
+  box-shadow:0 0 22px rgba(148,163,184,.3);
+}
+.arena-slide.mine.now{
+  border-color:#22c55e;
+  box-shadow:0 0 30px rgba(34,197,94,.5);
+}
+
 .arena-slide-img{
   height:96px;border-radius:12px;display:flex;align-items:center;
   justify-content:center;margin-bottom:10px;
@@ -190,13 +206,16 @@ body{
 .arena-slide-title{font-size:15px;font-weight:900;color:#ffcc00;margin-bottom:3px}
 .arena-slide-range{font-size:11px;color:#94a3b8;margin-bottom:8px;font-weight:700}
 .arena-slide-rule{font-size:11.5px;color:#cbd5e1;line-height:1.42}
+
+/* плашка живёт только на твоей арене */
 .arena-slide-badge{
   display:none;position:absolute;top:10px;right:10px;
-  background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000;
+  background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;
   font-size:9.5px;font-weight:900;padding:4px 9px;border-radius:8px;
-  letter-spacing:.5px;
+  letter-spacing:.5px;border:1px solid rgba(255,255,255,.35);
+  box-shadow:0 2px 8px rgba(0,0,0,.6);
 }
-.arena-slide.now .arena-slide-badge{display:block}
+.arena-slide.mine .arena-slide-badge{display:block}
 
 #arenaDots{
   flex-shrink:0;display:flex;justify-content:center;gap:7px;
@@ -207,7 +226,11 @@ body{
   width:8px;height:8px;border-radius:50%;background:#334155;
   border:0;padding:0;cursor:pointer;transition:.2s;
 }
+/* твоя арена на шкале — зелёная всегда */
+.arena-dot.mine{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.9)}
+/* просматриваемая — жёлтая и крупнее */
 .arena-dot.on{background:#ffcc00;transform:scale(1.5)}
+.arena-dot.mine.on{background:#ffcc00;box-shadow:0 0 0 2px #22c55e}
 
 /* ---------- НАВИГАЦИЯ ---------- */
 .bottom-nav{
@@ -295,7 +318,7 @@ body{
     <h3>Все арены</h3>
     <button id="arenaClose">✕</button>
   </div>
-  <div id="arenaTopHint">▲ Листай вверх — арены выше и сильнее</div>
+  <div id="arenaTopHint">Листай вверх — арены выше и сильнее</div>
   <div id="arenaScroll"></div>
   <div id="arenaDots"></div>
 </div>
@@ -376,8 +399,11 @@ const LOOK = [
   { icon:'♟️',  grad:'linear-gradient(135deg,#ded4c2,#9a8a70)', glow:'#c9a227' }
 ];
 
-let currentArena = 1;
-let slidesBuilt  = false;
+/* myArena   — твоя настоящая арена, помечена навсегда
+   viewArena — арена, которую ты сейчас разглядываешь */
+let myArena     = 1;
+let viewArena   = 1;
+let slidesBuilt = false;
 
 /* ================= КЛЮЧ ИГРОКА ================= */
 
@@ -406,8 +432,6 @@ function render(cups){
   const arena = Math.min(MAX_ARENA, Math.floor(Math.max(0, cups) / STEP) + 1);
   const floor = (arena - 1) * STEP;
   const look  = LOOK[arena - 1] || LOOK[0];
-
-  currentArena = arena;
 
   $('player-name').textContent = playerName();
   $('player-arena-label').textContent = 'Арена ' + arena;
@@ -441,17 +465,11 @@ function render(cups){
 
   document.title = 'Арена ' + arena + ' — Chess Royale';
 
-  if (slidesBuilt) markCurrent(arena);
+  markMine(arena);
 }
 
 /* ================= ПРОСМОТР ВСЕХ АРЕН ================= */
 
-/*
-  Порядок снизу вверх.
-  Слайды кладём в разметку от 10 к 1: арена 10 — самый первый элемент,
-  значит она наверху списка; арена 1 — последний, значит внизу.
-  Листаешь вверх — попадаешь на арены выше.
-*/
 function buildArenaBrowser(){
   if (slidesBuilt) return;
 
@@ -460,6 +478,7 @@ function buildArenaBrowser(){
   track.innerHTML = '';
   dots.innerHTML  = '';
 
+  // слайды от 10 к 1: арена 10 наверху списка, арена 1 внизу
   for (let n = MAX_ARENA; n >= 1; n--){
     const look = LOOK[n - 1];
     const from = (n - 1) * STEP;
@@ -487,7 +506,7 @@ function buildArenaBrowser(){
     track.appendChild(slide);
   }
 
-  // точки в том же порядке, что и карточки: слева — верхняя арена
+  // точки в том же порядке, что и карточки
   for (let n = MAX_ARENA; n >= 1; n--){
     const dot = document.createElement('button');
     dot.className = 'arena-dot';
@@ -499,7 +518,7 @@ function buildArenaBrowser(){
   }
 
   track.addEventListener('scroll', function (){
-    window.requestAnimationFrame(updateDotsFromScroll);
+    window.requestAnimationFrame(updateFromScroll);
   });
 
   slidesBuilt = true;
@@ -507,6 +526,55 @@ function buildArenaBrowser(){
 
 function slideOf(n){
   return $('arenaScroll').querySelector('.arena-slide[data-n="' + n + '"]');
+}
+
+/* отметить ТВОЮ арену — не зависит от прокрутки */
+function markMine(n){
+  myArena = n;
+
+  const track = $('arenaScroll');
+  if (track){
+    const slides = track.querySelectorAll('.arena-slide');
+    for (let i = 0; i < slides.length; i++){
+      slides[i].classList.toggle('mine', +slides[i].dataset.n === n);
+    }
+  }
+
+  const dots = $('arenaDots');
+  if (dots){
+    const list = dots.querySelectorAll('.arena-dot');
+    for (let i = 0; i < list.length; i++){
+      list[i].classList.toggle('mine', +list[i].dataset.n === n);
+    }
+  }
+
+  const hint = $('arenaTopHint');
+  if (hint){
+    hint.innerHTML =
+      'Твоя арена: <b>' + n + ' · ' + NAMES[n - 1] + '</b>' +
+      '<br>Листай вверх — арены выше и сильнее';
+  }
+}
+
+/* отметить арену, которую сейчас смотришь */
+function markViewed(n){
+  viewArena = n;
+
+  const track = $('arenaScroll');
+  if (track){
+    const slides = track.querySelectorAll('.arena-slide');
+    for (let i = 0; i < slides.length; i++){
+      slides[i].classList.toggle('now', +slides[i].dataset.n === n);
+    }
+  }
+
+  const dots = $('arenaDots');
+  if (dots){
+    const list = dots.querySelectorAll('.arena-dot');
+    for (let i = 0; i < list.length; i++){
+      list[i].classList.toggle('on', +list[i].dataset.n === n);
+    }
+  }
 }
 
 function scrollToArena(n, smooth){
@@ -521,24 +589,10 @@ function scrollToArena(n, smooth){
   } else {
     track.scrollTop = top;
   }
-  markCurrent(n);
+  markViewed(n);
 }
 
-function markCurrent(n){
-  currentArena = n;
-
-  const slides = $('arenaScroll').querySelectorAll('.arena-slide');
-  for (let i = 0; i < slides.length; i++){
-    slides[i].classList.toggle('now', +slides[i].dataset.n === n);
-  }
-
-  const dots = $('arenaDots').querySelectorAll('.arena-dot');
-  for (let i = 0; i < dots.length; i++){
-    dots[i].classList.toggle('on', +dots[i].dataset.n === n);
-  }
-}
-
-function updateDotsFromScroll(){
+function updateFromScroll(){
   const track = $('arenaScroll');
   if (!track) return;
 
@@ -552,17 +606,18 @@ function updateDotsFromScroll(){
     const d = Math.abs(sc - center);
     if (d < bestDist){ bestDist = d; best = s; }
   }
-  if (best) markCurrent(+best.dataset.n);
+  if (best) markViewed(+best.dataset.n);
 }
 
 function openArenaBrowser(){
   buildArenaBrowser();
-  markCurrent(currentArena);
+  markMine(myArena);
+  markViewed(myArena);
   $('arenaModal').classList.add('open');
 
   requestAnimationFrame(function (){
     requestAnimationFrame(function (){
-      scrollToArena(currentArena, false);
+      scrollToArena(myArena, false);
     });
   });
 }
