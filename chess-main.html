@@ -97,8 +97,8 @@ body{
   font-size:10px;color:#475569;margin-top:10px;position:relative;z-index:2;
 }
 #dbWarn{
-  font-size:11px;color:#ef4444;margin-top:10px;min-height:14px;
-  position:relative;z-index:2;
+  font-size:10.5px;color:#ef4444;margin-top:10px;position:relative;z-index:2;
+  line-height:1.35;word-break:break-word;
 }
 
 /* ---------- КНОПКИ ---------- */
@@ -453,7 +453,6 @@ function buildArenaBrowser(){
     const look = LOOK[n - 1];
     const from = (n - 1) * STEP;
 
-    // ровные числа: 1000, 2000, 3000 …
     const range = (n === MAX_ARENA)
       ? from + ' 🏆 и выше'
       : from + ' – ' + (n * STEP) + ' 🏆';
@@ -547,7 +546,6 @@ function openArenaBrowser(){
   markCurrent(currentArena);
   $('arenaModal').classList.add('open');
 
-  // два кадра — чтобы размеры точно посчитались
   requestAnimationFrame(function (){
     requestAnimationFrame(function (){
       scrollToArena(currentArena, false);
@@ -570,18 +568,33 @@ async function boot(){
       p_name: playerName(),
       p_seed: 0
     });
+
     if (res.error) throw res.error;
+
+    $('dbWarn').textContent = '';
     render(res.data.cups || 0);
+    return true;
+
   } catch (e){
     console.error(e);
-    $('dbWarn').textContent = 'База недоступна. Показаны локальные кубки.';
+
+    const msg  = (e && (e.message || e.error_description)) || 'неизвестная ошибка';
+    const code = (e && e.code) ? ' [' + e.code + ']' : '';
+
+    $('dbWarn').textContent = 'База недоступна' + code + ': ' + msg;
     render(parseInt(localStorage.getItem('cr_trophies') || '0', 10) || 0);
+    return false;
   }
 }
 
 /* ================= КНОПКИ ================= */
 
+/*
+  Одно нажатие — сразу поиск.
+  Ставим флажок, арена его прочитает и начнёт искать без второго тапа.
+*/
 $('battleBtn').onclick = function (){
+  try { sessionStorage.setItem('arenaAutoQueue', '1'); } catch (e){}
   window.location.href = 'chess-arena.html';
 };
 
