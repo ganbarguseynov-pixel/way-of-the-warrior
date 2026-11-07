@@ -118,7 +118,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 </style>
 </head>
 <body data-arena="1">
-<div id="verTag">v25</div>
+<div id="verTag">v26</div>
 
 <div id="lobby">
   <div class="card">
@@ -199,7 +199,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 </div>
 
 <script src="arena.js?v=18"></script>
-<script src="friends.js?v=2"></script>
+<script src="friends.js?v=3"></script>
 <script src="net.js?v=20"></script>
 <script>
 const sb = supabase.createClient(
@@ -761,7 +761,7 @@ boot();
 </script>
 
 <script>
-/* ===== дружеский вызов: отмена и ожидание ===== */
+/* ===== дружеский вызов: пульс, отмена, ожидание ===== */
 (function(){
   var qs = new URLSearchParams(location.search);
   var chId = qs.get('ch');
@@ -792,17 +792,24 @@ boot();
   function goBack(){
     stopAll();
     killOverlay();
+    try { if (window.Friends) Friends.stopBeat(); } catch (e){}
     location.href = 'chess-social.html';
   }
 
-  /* вызов отменяется, если хост уходит со страницы, не дождавшись */
-  function cancelOnLeave(){
-    if (role !== 'host' || started || killed) return;
-    if (window.Friends) Friends.cancelBeacon(chId);
+  /* отправитель уходит — вызов немедленно снимается */
+  function drop(){
+    if (role !== 'host') return;
+    if (started || killed) return;
+    try { if (window.Friends) Friends.stopBeat(); } catch (e){}
+    try { if (window.Friends) Friends.cancelBeacon(chId); } catch (e){}
   }
 
-  window.addEventListener('pagehide', cancelOnLeave);
-  window.addEventListener('beforeunload', cancelOnLeave);
+  window.addEventListener('pagehide', drop);
+  window.addEventListener('beforeunload', drop);
+
+  document.addEventListener('visibilitychange', function (){
+    if (document.hidden) drop();
+  });
 
   function overlay(title, sub){
     var o = document.getElementById('frOv');
@@ -825,11 +832,14 @@ boot();
       document.getElementById('frC').onclick = async function(){
         stopAll();
         killOverlay();
+
         try {
-          if (role === 'host' && !started && window.Friends){
-            await Friends.cancel(chId);
+          if (window.Friends){
+            Friends.stopBeat();
+            if (role === 'host' && !started) await Friends.cancel(chId);
           }
         } catch (e){}
+
         try { await Net.leaveMatch(); } catch (e){}
         location.href = 'chess-social.html';
       };
@@ -860,6 +870,8 @@ boot();
         matchId: chId, oppKey: oppKey, oppName: oppName,
         oppCups: oppCups, arena: arena
       });
+
+      Friends.startBeat(chId);
 
       poll = setInterval(async function(){
         if (killed || started) return;
@@ -895,9 +907,18 @@ boot();
 
   if (window.Net){
     Net.on('state', function(s){
-      if (s && s.board){ started = true; stopAll(); killOverlay(); }
+      if (s && s.board){
+        started = true;
+        try { if (window.Friends) Friends.stopBeat(); } catch (e){}
+        stopAll();
+        killOverlay();
+      }
     });
-    Net.on('result', function(){ stopAll(); killOverlay(); });
+    Net.on('result', function(){
+      try { if (window.Friends) Friends.stopBeat(); } catch (e){}
+      stopAll();
+      killOverlay();
+    });
   }
 
   history.replaceState(null, '', location.pathname);
