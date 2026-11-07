@@ -1,12 +1,15 @@
 /* ============================================================
    net.js — сеть: очередь, матч, запись кубков
-   Поиск соперника мгновенный: берётся ближайший по кубкам.
+   v6: рассылка реже и легче, без записи в localStorage на каждый ход.
    ============================================================ */
 (function (global) {
 'use strict';
 
 const RECORD_KEY = 'arenaActiveMatch';
 const STATE_KEY  = 'arenaActiveState';
+
+const PUSH_MS = 200;   // как часто хост рассылает состояние
+const TICK_MS = 100;   // шаг игрового времени
 
 const Net = {
   sb: null,
@@ -60,6 +63,27 @@ function uuid(){
 function payloadOf(msg){
   if (!msg) return null;
   return msg.payload !== undefined ? msg.payload : msg;
+}
+
+/* лёгкая копия: без журнала, колоды и прочего, что гостю не нужно */
+function slimState(s){
+  return {
+    id:        s.id,
+    arena:     s.arena,
+    players:   s.players,
+    board:     s.board,
+    energy:    s.energy,
+    hand:      s.hand,
+    placed:    s.placed,
+    traps:     s.traps,
+    elapsed:   s.elapsed,
+    phase:     s.phase,
+    timeLeft:  s.timeLeft,
+    nightMode: s.nightMode,
+    nightUsed: s.nightUsed,
+    over:      s.over,
+    winner:    s.winner
+  };
 }
 
 /* ---------------- профиль ---------------- */
@@ -120,7 +144,7 @@ Net._saveState = function (force){
   if (!Net.host || !Net.state) return;
 
   const now = Date.now();
-  if (!force && now - Net.saveMark < 900) return;
+  if (!force && now - Net.saveMark < 1500) return;
   Net.saveMark = now;
 
   try { localStorage.setItem(STATE_KEY, JSON.stringify(Net.state)); }
@@ -213,10 +237,6 @@ Net._presenceList = function (ch){
   return list;
 };
 
-/*
-  Мгновенный подбор: никакого ожидания и никаких фаз.
-  Берём ближайшего по кубкам из тех, кто уже в очереди.
-*/
 Net._tryPair = function (){
   if (!Net.queueCh || Net.matchId || Net.pending) return;
 
@@ -230,7 +250,6 @@ Net._tryPair = function (){
 
   const myCups = Net.me ? Net.me.cups : 0;
 
-  // ближайший по кубкам; при равенстве — по ключу, чтобы оба выбрали друг друга
   others.sort(function (x, y){
     const dx = Math.abs(x.cups - myCups);
     const dy = Math.abs(y.cups - myCups);
@@ -241,7 +260,6 @@ Net._tryPair = function (){
   const opp = others[0];
   if (!opp) return;
 
-  // приглашает тот, у кого ключ меньше
   if (Net.key >= opp.key) return;
 
   const matchId = uuid();
@@ -428,18 +446,22 @@ Net._startLoop = function (){
     Arena.tick(Net.state, dt);
 
     acc += dt * 1000;
-    if (acc >= 100){
+    if (acc >= PUSH_MS){
       acc = 0;
       Net._push();
     }
 
     if (Net.state.over) Net._hostFinish();
-  }, 100);
+  }, TICK_MS);
 };
 
 Net._broadcastState = function (){
   if (!Net.matchCh || !Net.state) return;
-  Net.matchCh.send({ type: 'broadcast', event: 'state', payload: Net.state });
+  Net.matchCh.send({
+    type: 'broadcast',
+    event: 'state',
+    payload: slimState(Net.state)
+  });
 };
 
 Net._push = function (){
@@ -478,7 +500,6 @@ Net._applyIntent = function (msg, side){
     return;
   }
 
-  Net._saveState(true);
   Net._push();
 };
 
