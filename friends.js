@@ -1,6 +1,6 @@
 /* ============================================================
-   friends.js — друзья и вызовы на дружескую партию
-   Подключается на всех страницах, где нужны вызовы.
+   friends.js — друзья и вызовы на дружескую партию (VER 2)
+   Отмена вызова: Friends.cancel / Friends.cancelBeacon
    ============================================================ */
 (function (global) {
 'use strict';
@@ -125,13 +125,61 @@ Friends.incoming = async function (){
   });
 };
 
+/* состояние вызова. null — вызова больше нет (отменён) */
+Friends.status = async function (id){
+  const sb = Friends.client();
+  const res = await sb
+    .from('arena_challenges')
+    .select('id,status,from_key,from_name,from_cups,arena')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (res.error || !res.data) return null;
+  return res.data;
+};
+
+/* ответ на вызов. {ok, accepted} — accepted=false значит уже отменён */
 Friends.answer = async function (id, status){
   const sb = Friends.client();
-  await sb.rpc('challenge_answer', {
+  const res = await sb.rpc('challenge_answer', {
     p_id:     id,
     p_to:     Friends.key(),
     p_status: status
   });
+
+  if (res.error) return { ok:false, accepted:false };
+
+  return {
+    ok:       !!(res.data && res.data.ok),
+    accepted: !!(res.data && res.data.accepted)
+  };
+};
+
+/* отменить свой вызов — обычный путь */
+Friends.cancel = async function (id){
+  const sb = Friends.client();
+  const res = await sb.rpc('challenge_cancel', {
+    p_id:   id,
+    p_from: Friends.key()
+  });
+  return !res.error;
+};
+
+/* отменить свой вызов при закрытии/уходе со страницы.
+   keepalive — запрос уходит даже когда страница уже умирает */
+Friends.cancelBeacon = function (id){
+  try {
+    fetch(SB_URL + '/rest/v1/rpc/challenge_cancel', {
+      method: 'POST',
+      keepalive: true,
+      headers: {
+        'apikey':        SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type':  'application/json'
+      },
+      body: JSON.stringify({ p_id: id, p_from: Friends.key() })
+    });
+  } catch (e){}
 };
 
 Friends.invite = async function (toKey, toName, toCups){
@@ -179,9 +227,14 @@ Friends.watch = function (cb){
 
   tick();
   Friends._timer = setInterval(tick, 3000);
+
   return function stop(){
     if (Friends._timer){ clearInterval(Friends._timer); Friends._timer = null; }
   };
+};
+
+Friends.forget = function (id){
+  delete Friends._seen[id];
 };
 
 global.Friends = Friends;
