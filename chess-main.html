@@ -100,7 +100,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </head>
 <body>
 
-<div id="verTag">v8</div>
+<div id="verTag">v9</div>
 
 <div class="top-bar">
   <div class="profile-badge" id="profileBadge">
@@ -144,7 +144,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
   <div id="arenaModalHead">
     <div id="arenaHeadLeft">
       <h3>Все арены</h3>
-      <span class="verChip">v8</span>
+      <span class="verChip">v9</span>
     </div>
     <button id="arenaClose">✕</button>
   </div>
@@ -222,7 +222,7 @@ const RULES = (window.Arena && Arena.ARENAS)
     'Чистая доска. Обычные правила, ничего лишнего.',
     'Вытоптанный двор, земляные тона, простор.',
     'Ржавый цех. Металл, гарь, тяжёлый воздух.',
-    'Багровый сумрак. Доска как из сна.',
+    'Ба��ровый сумрак. Доска как из сна.',
     'Выжженное дерево и пыль. Глушь.',
     'Серый кафель. Пусто, холодно, тихо.',
     'Кровавый мрак. Камень и ржавые цепи.',
@@ -391,7 +391,7 @@ $('nickOk').onclick = async function (){
   const isChange = (nickMode === 'change');
   const gems = getGems();
 
-  if (isChange && v === playerName()) {
+  if (isChange && v === playerName()){
     $('nickErr').textContent = 'Это твой текущий ник';
     return;
   }
@@ -404,32 +404,41 @@ $('nickOk').onclick = async function (){
   $('nickOk').disabled = true;
   $('nickErr').textContent = '';
 
+  let dbOk  = true;
+  let dbMsg = '';
+
+  /* пишем в базу через функцию — обычный update база запрещает */
   try {
-    const res = await sb
-      .from('arena_players')
-      .update({ display_name: v })
-      .eq('player_key', playerKey());
+    const res = await sb.rpc('arena_set_name', {
+      p_key:  playerKey(),
+      p_name: v
+    });
 
     if (res.error){
-      $('nickErr').textContent = res.error.message || 'Не получилось сохранить';
-      $('nickOk').disabled = false;
-      return;
+      dbOk  = false;
+      dbMsg = res.error.message || '';
     }
   } catch (e){
-    $('nickErr').textContent = 'Сеть недоступна';
-    $('nickOk').disabled = false;
-    return;
+    dbOk  = false;
+    dbMsg = 'сеть недоступна';
   }
 
+  /* ник в любом случае сохраняем на устройстве — бои берут его отсюда */
   try { localStorage.setItem(NICK_KEY, v); } catch (e){}
 
   if (isChange) setGems(gems - NICK_PRICE);
 
   $('nickOk').disabled = false;
   closeNick();
-
   render(lastCups);
-  boot();
+
+  if (dbOk){
+    $('dbWarn').textContent = '';
+    boot();
+  } else {
+    $('dbWarn').textContent =
+      'Ник сохранён на устройстве, но в базу не записан: ' + dbMsg;
+  }
 };
 
 /* ---------------- список арен ---------------- */
