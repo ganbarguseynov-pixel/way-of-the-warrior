@@ -1,8 +1,6 @@
 /* ============================================================
    arena.js — правила и движок шахматных арен
-   Доска заполняется ДО боя из расстановки в колоде.
-   Во время боя расстановки нет — только ходы.
-   Время: 5 минут основного + 1 минута дополнительного.
+   Доска собирается ДО боя из расстановки в колоде (v10).
    ============================================================ */
 (function (global) {
 'use strict';
@@ -29,6 +27,11 @@ const PIECES = {
   king:   { cost:5, name:'Король', w:'♔', b:'♚', val:0 },
   queen:  { cost:6, name:'Ферзь',  w:'♕', b:'♛', val:8 },
   saw:    { cost:0, name:'Пила',   w:'⚙', b:'⚙', val:9 }
+};
+
+/* буква из расстановки -> имя фигуры в PIECES */
+const TYPE_BY_LETTER = {
+  p:'pawn', n:'knight', b:'bishop', r:'rook', q:'queen', k:'king'
 };
 
 const ARENAS = [
@@ -123,19 +126,19 @@ function kingDamage(type){
 
 /* ================= РАССТАНОВКА ИЗ КОЛОДЫ ================= */
 
-/* стандартная доска: свои фигуры на рядах 6 и 7 */
 function defaultSetup(){
-  const empty = [null,null,null,null,null,null,null,null];
+  const e = [null,null,null,null,null,null,null,null];
   return [
     ['r','n','b','q','k','b','n','r'],
     ['p','p','p','p','p','p','p','p'],
-    empty.slice(), empty.slice(), empty.slice(), empty.slice(),
+    e.slice(), e.slice(), e.slice(), e.slice(),
     ['P','P','P','P','P','P','P','P'],
     ['R','N','B','Q','K','B','N','R']
   ];
 }
 
-/* из расстановки берём только свои два ряда: 7 — тыл, 6 — пешки */
+/* берём только свои два ряда: 7 — тыл, 6 — пешки.
+   Буква переводится в полное имя фигуры. */
 function armyOf(setup){
   const out = [];
   if (!Array.isArray(setup) || setup.length !== 8) return out;
@@ -146,10 +149,13 @@ function armyOf(setup){
 
     for (let c = 0; c < 8; c++){
       const v = row[c];
-      if (!v) continue;
-      const t = String(v).toLowerCase();
-      if (!PIECES[t] || t === 'saw') continue;
-      out.push({ rank: 7 - r, c: c, type: t });
+      if (v === null || v === undefined || v === '') continue;
+
+      const letter = String(v).toLowerCase();
+      const type = TYPE_BY_LETTER[letter];
+      if (!type) continue;
+
+      out.push({ rank: 7 - r, c: c, type: type });
     }
   }
   return out;
@@ -161,10 +167,23 @@ function armyHasKing(army){
   return k === 1;
 }
 
-function deployArmy(s, side, setup){
-  let army = armyOf(setup);
-  if (!armyHasKing(army)) army = armyOf(defaultSetup());
+function sideHasKing(s, side){
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
+    const pc = s.board[y][x];
+    if (pc && pc.type === 'king' && pc.side === side) return true;
+  }
+  return false;
+}
 
+function clearHalf(s, side){
+  const from = (side === 'a') ? 4 : 0;
+  const to   = (side === 'a') ? 7 : 3;
+  for (let y = from; y <= to; y++){
+    for (let x = 0; x < 8; x++) s.board[y][x] = null;
+  }
+}
+
+function placeList(s, side, army){
   for (let i = 0; i < army.length; i++){
     const a = army[i];
 
@@ -179,6 +198,17 @@ function deployArmy(s, side, setup){
 
     s.board[row][col] = pc;
   }
+}
+
+function deployArmy(s, side, setup){
+  let army = armyOf(setup);
+  if (!armyHasKing(army)) army = armyOf(defaultSetup());
+
+  placeList(s, side, army);
+  if (sideHasKing(s, side)) return;
+
+  clearHalf(s, side);
+  placeList(s, side, armyOf(defaultSetup()));
 }
 
 function placeSaws(s){
@@ -329,7 +359,6 @@ function legalMoves(s, x, y){
   return out;
 }
 
-/* расстановки во время боя нет */
 function place(s, side, type, x, y){
   return { ok:false, error:'Доска уже собрана до боя' };
 }
