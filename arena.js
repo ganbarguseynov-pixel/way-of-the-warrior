@@ -1,11 +1,11 @@
 /* ============================================================
-   arena.js — правила и движок шахматных арен  (VER 11)
-   Короля нельзя съесть. Шах — обязан уйти. Мат — урон.
+   arena.js — правила и движок шахматных арен  (VER 12)
+   Король ходит на одну клетку. Шах — обязан уйти. Мат — урон.
    ============================================================ */
 (function (global) {
 'use strict';
 
-const VER = '11';
+const VER = '12';
 const STEP = 1000;
 const MAX_ARENA = 10;
 
@@ -56,12 +56,14 @@ const ARENAS = [
 ];
 
 const DIR8 = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+
+/* только скользящие фигуры: король сюда НЕ входит */
 const DIRS = {
   rook:   [[1,0],[-1,0],[0,1],[0,-1]],
   bishop: [[1,1],[1,-1],[-1,1],[-1,-1]],
-  queen:  DIR8,
-  king:   DIR8
+  queen:  DIR8
 };
+
 const KNIGHT = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
 
 const inside = (x, y) => x >= 0 && x < 8 && y >= 0 && y < 8;
@@ -102,6 +104,14 @@ function energyRate(s){
   if (s.phase === 'overtime') return 2;
   if (s.timeLeft <= FAST_FROM) return 1.5;
   return 1;
+}
+
+function kingPos(s, side){
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
+    const pc = s.board[y][x];
+    if (pc && pc.type === 'king' && pc.side === side) return { x:x, y:y };
+  }
+  return null;
 }
 
 function kingHp(s, side){
@@ -231,15 +241,6 @@ function placeTraps(s){
 
 /* ================= ХОДЫ ================= */
 
-function kingPos(s, side){
-  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
-    const pc = s.board[y][x];
-    if (pc && pc.type === 'king' && pc.side === side) return { x:x, y:y };
-  }
-  return null;
-}
-
-/* ходы без учёта шаха — для проверки «бьёт ли фигура клетку» */
 function pseudoMoves(s, x, y){
   const row = s.board[y];
   const pc = row && row[x];
@@ -277,6 +278,11 @@ function pseudoMoves(s, x, y){
   } else if (pc.type === 'knight'){
     for (let i = 0; i < KNIGHT.length; i++)
       push(x + KNIGHT[i][0], y + KNIGHT[i][1]);
+
+  } else if (pc.type === 'king'){
+    /* король — ровно на одну клетку, без скольжения */
+    for (let i = 0; i < DIR8.length; i++)
+      push(x + DIR8[i][0], y + DIR8[i][1]);
 
   } else if (pc.type === 'saw'){
     for (let i = 0; i < DIR8.length; i++)
@@ -319,7 +325,6 @@ function isSquareAttacked(s, x, y, bySide){
   return false;
 }
 
-/* останется ли свой король под боем после такого хода */
 function selfCheckAfter(s, fx, fy, tx, ty){
   const pc = s.board[fy][fx];
   if (!pc) return false;
