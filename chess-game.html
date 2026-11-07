@@ -1,346 +1,5 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Chess Royale - Игра</title>
-<style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;height:100vh;height:100dvh;overflow:hidden;user-select:none;}
-
-/* === ВЕРХНИЙ БАР === */
-.game-top-bar{width:95vw;max-width:400px;flex-shrink:0;display:flex;align-items:center;gap:10px;margin-top:8px;}
-.elixir-container{position:relative;display:flex;align-items:center;gap:10px;padding:5px 12px;background:linear-gradient(180deg,#1a1a2e 0%,#0a0a14 100%);border-radius:14px;border:1px solid rgba(255,255,255,0.15);box-shadow:0 4px 10px rgba(0,0,0,0.6),inset 0 2px 3px rgba(255,255,255,0.1),inset 0 -3px 8px rgba(0,0,0,0.8);width:100%;}
-.elixir-fill-bg{position:relative;flex:1;height:18px;background:linear-gradient(180deg,#050510 0%,#0a0a18 100%);border-radius:9px;overflow:hidden;box-shadow:inset 0 4px 8px rgba(0,0,0,0.9),inset 0 -2px 4px rgba(0,0,0,0.7);}
-.elixir-fill{height:100%;width:0%;border-radius:9px;transition:width 0.3s ease-out;position:relative;overflow:hidden;will-change:width;}
-.elixir-fill::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);animation:elixirShimmer 2.5s infinite;pointer-events:none;}
-.elixir-fill::after{content:'';position:absolute;top:1px;left:4px;right:4px;height:35%;background:linear-gradient(180deg,rgba(255,255,255,0.5),rgba(255,255,255,0));border-radius:5px;pointer-events:none;}
-@keyframes elixirShimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
-.elixir-text{font-weight:900;font-size:16px;min-width:24px;text-align:center;font-family:'Arial Black',sans-serif;letter-spacing:-0.5px;}
-.elixir-black .elixir-fill{background:linear-gradient(180deg,#a855f7 0%,#7c3aed 45%,#4c1d95 100%);box-shadow:0 0 12px rgba(168,85,247,0.7),inset 0 2px 4px rgba(255,255,255,0.4),inset 0 -3px 6px rgba(0,0,0,0.5);}
-.elixir-black .elixir-text{color:#c4b5fd;text-shadow:0 0 8px rgba(196,181,253,0.9),0 2px 3px rgba(0,0,0,0.9);}
-
-/* === ДОСКА === */
-.board-wrapper{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;width:100%;margin:6px 0;perspective:1200px;overflow:hidden;position:relative;padding: 4px 0;}
-.board-container{position:relative;height:100%;max-height:100%;aspect-ratio:1/1;max-width:95vw;border:3px solid #334155;border-radius:14px;overflow:hidden;box-shadow:0 15px 40px rgba(0,0,0,0.9),0 5px 15px rgba(0,0,0,0.6),inset 0 0 30px rgba(0,0,0,0.8);background:linear-gradient(145deg,#0f172a,#020617);padding: 3px;}
-.board{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:100%;height:100%;position:relative;border-radius: 10px;overflow: hidden;}
-
-/* КЛЕТКИ (Красивые 3D градиенты) */
-.cell{position:relative;display:flex;justify-content:center;align-items:center;cursor:pointer;overflow:hidden;transition:filter 0.1s;}
-.cell.white{background:linear-gradient(145deg,#e2e8f0 0%,#cbd5e1 50%,#94a3b8 100%);box-shadow:inset 1px 1px 3px rgba(255,255,255,0.6),inset -1px -1px 4px rgba(0,0,0,0.2);}
-.cell.black{background:linear-gradient(145deg,#475569 0%,#334155 50%,#1e293b 100%);box-shadow:inset 1px 1px 3px rgba(255,255,255,0.15),inset -1px -1px 4px rgba(0,0,0,0.5);}
-.cell:active{filter:brightness(1.15);}
-
-/* Подсветки */
-.cell.selected{background:linear-gradient(145deg,#4ade80,#22c55e 60%,#15803d)!important;box-shadow:inset 0 0 12px rgba(255,255,255,0.8)!important;}
-.cell.valid-move{box-shadow:inset 0 0 0 3px #ffcc00,inset 0 0 15px rgba(255,204,0,0.5);}
-.cell.valid-move::after{content:'';position:absolute;width:22%;height:22%;border-radius:50%;background:radial-gradient(circle,#ffcc00,#b8860b);box-shadow:0 0 8px rgba(255,204,0,0.9);}
-.cell.highlight-piece{box-shadow:inset 0 0 0 3px #34c759,inset 0 0 15px #34c759;cursor:pointer;}
-
-/* ФИГУРА (Идеальный центр) */
-.piece{position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);width:100%;height:100%;display:flex;justify-content:center;align-items:center;font-size:clamp(20px, 7vw, 34px);pointer-events:none;text-shadow:0 4px 5px rgba(0,0,0,0.8),0 1px 0 rgba(255,255,255,0.1);z-index:5;will-change:transform;}
-
-/* Анимации (БЕЗ ПРЫЖКОВ ПО Y) */
-.piece.attacking{animation:attackLunge 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important; z-index: 20;}
-@keyframes attackLunge{0%{transform:translate(-50%, -50%) scale(1);}50%{transform:translate(-50%, -50%) scale(1.3);filter:brightness(2) drop-shadow(0 0 12px #fff);}100%{transform:translate(-50%, -50%) scale(1);filter:brightness(1);}}
-
-.piece.pain{animation:painCry 0.5s ease-in-out !important; z-index: 20;}
-@keyframes painCry{0%, 100%{transform:translate(-50%, -50%) rotate(0);filter:none;}20%{transform:translate(-50%, -50%) rotate(-12deg);filter:brightness(2) sepia(1) hue-rotate(-50deg) saturate(10);}40%{transform:translate(-50%, -50%) rotate(12deg);filter:brightness(2) sepia(1) hue-rotate(-50deg) saturate(10);}60%{transform:translate(-50%, -50%) rotate(-6deg);filter:brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(8);}80%{transform:translate(-50%, -50%) rotate(6deg);filter:brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(8);}}
-
-.piece.celebrating{animation:celebrateGlow 1.2s ease-in-out !important; z-index: 15;}
-@keyframes celebrateGlow{0%, 100%{transform:translate(-50%, -50%) rotate(0); filter:none;}25%{transform:translate(-50%, -50%) rotate(-10deg); filter:drop-shadow(0 0 15px gold) brightness(1.5);}75%{transform:translate(-50%, -50%) rotate(10deg); filter:drop-shadow(0 0 20px gold) brightness(1.7);}}
-
-/* Частицы и Смерть */
-.particle{position:absolute;width:6px;height:6px;border-radius:50%;pointer-events:none;z-index:100;will-change:transform,opacity;}
-@keyframes flyOut{0%{transform:translate(0,0) scale(1);opacity:1;}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0;}}
-@keyframes deathScream{0%{transform:translate(-50%, -50%) scale(1); filter:none; opacity:1;}30%{transform:translate(-50%, -50%) scale(1.4) rotate(15deg); filter:brightness(3) contrast(2) drop-shadow(0 0 15px red); opacity:1;}100%{transform:translate(-50%, -50%) scale(0) rotate(180deg); filter:brightness(5) blur(4px); opacity:0;}}
-
-/* ЗНАЧОК ЭЛИКСИРА (Правый верхний угол) */
-.top-cost-badge{position:absolute;top:2px;right:2px;background:linear-gradient(145deg,#c084fc,#7c3aed);color:#fff;border-radius:50%;width:12px;height:12px;font-size:8px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1px solid #fff;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,0.8);}
-
-/* HP БАР (В самом низу) */
-.bottom-hp-bar{position:absolute;bottom:4px;left:10%;width:80%;height:7px;border-radius:4px;display:flex;justify-content:center;align-items:center;z-index:10;border:1px solid #000;box-sizing:border-box;transition:background 0.3s;box-shadow:inset 0 2px 3px rgba(0,0,0,0.6),inset 0 -1px 2px rgba(255,255,255,0.3),0 1px 2px rgba(0,0,0,0.8);}
-.lvl-num{font-size:7px;font-weight:900;color:#000;line-height:7px;pointer-events:none;}
-
-/* ТЕКСТ HP (Маленький, под баром) */
-.hp-text-below{position:absolute;bottom:-2px;left:0;width:100%;text-align:center;font-size:6px;font-weight:bold;color:#fff;z-index:10;pointer-events:none;white-space:nowrap;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 1px 2px rgba(0,0,0,0.9);}
-
-/* === НИЖНЯЯ ПАНЕЛЬ === */
-.bottom-ui{width:95vw;max-width:400px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;margin-bottom:75px;}
-.elixir-white{margin-bottom:0;}
-.elixir-white .elixir-fill{background:linear-gradient(180deg,#ff6b7a 0%,#e11d48 45%,#7f1d1d 100%);box-shadow:0 0 12px rgba(255,107,122,0.7),inset 0 2px 4px rgba(255,255,255,0.4),inset 0 -3px 6px rgba(0,0,0,0.5);}
-.elixir-white .elixir-text{color:#ff8a95;text-shadow:0 0 8px rgba(255,138,149,0.9),0 2px 3px rgba(0,0,0,0.9);}
-
-/* РУКА С КАРТАМИ */
-.hand-container{display:flex;justify-content:space-between;gap:5px;}
-.hand-card{flex:1;background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #3a3a3c;border-radius:10px;aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:5px;cursor:pointer;transition:transform 0.12s,border-color 0.2s;box-shadow:0 4px 8px rgba(0,0,0,0.5),inset 0 2px 2px rgba(255,255,255,0.08),inset 0 -3px 5px rgba(0,0,0,0.5);position:relative;}
-.hand-card:active{transform:scale(0.94) translateY(2px);}
-.hand-card.active{border-color:#34c759;box-shadow:0 0 15px #34c759,inset 0 0 10px rgba(52,199,89,0.3);background:linear-gradient(145deg,#064e3b,#022c22);transform:translateY(-3px);}
-.hand-cost{position:absolute;top:-6px;left:-6px;background:linear-gradient(145deg,#c084fc,#7c3aed);color:#fff;font-size:12px;font-weight:900;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.6);}
-.hand-icon{font-size:26px;margin-top:10px;text-shadow:0 2px 3px rgba(0,0,0,0.7);}
-.hand-name{font-size:9px;font-weight:bold;color:#fff;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,0.8);}
-
-.controls{display:flex;gap:5px;margin-top:2px;}
-.btn{background:linear-gradient(145deg,#475569,#2a3444);color:#fff;border:1px solid #64748b;padding:10px;border-radius:10px;font-size:13px;cursor:pointer;flex:1;font-weight:bold;box-shadow:0 3px 6px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.15);transition:transform 0.1s;}
-.btn:active{transform:scale(0.97);}
-.btn-red{background:linear-gradient(145deg,#ef4444,#b91c1c);border-color:#dc2626;box-shadow:0 3px 8px rgba(239,68,68,0.3),inset 0 1px 0 rgba(255,255,255,0.2);}
-
-/* НИЖНЯЯ НАВИГАЦИЯ */
-.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 15px rgba(0,0,0,0.7);}
-.nav-btn{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;transition:0.2s;}
-.nav-btn .icon-wrap{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);box-shadow:0 3px 6px rgba(0,0,0,0.5),inset 0 2px 3px rgba(255,255,255,0.08),inset 0 -3px 6px rgba(0,0,0,0.6);transition:all 0.3s;}
-.nav-btn .icon{font-size:20px;text-shadow:0 1px 2px rgba(0,0,0,0.6);transition:transform 0.3s;}
-.nav-btn.active{color:#ffcc00;}
-.nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500);box-shadow:0 3px 10px rgba(255,204,0,0.4),inset 0 2px 3px rgba(255,255,255,0.4);}
-.nav-btn.active .icon{transform:scale(1.12);}
-.deck-stack{position:relative;width:24px;height:28px;}
-.deck-stack .deck-card{position:absolute;width:16px;height:22px;border-radius:3px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 1px 3px rgba(0,0,0,0.6);}
-.deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c);}
-.deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe);}
-.deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900;}
-
-/* МОДАЛКА ПРЕВРАЩЕНИЯ */
-.promotion-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:1000;justify-content:center;align-items:center;}
-.promotion-modal.active{display:flex;}
-.promotion-content{background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #475569;border-radius:16px;padding:25px;text-align:center;box-shadow:0 15px 40px rgba(0,0,0,0.9),inset 0 1px 0 rgba(255,255,255,0.1);}
-.promotion-options{display:flex;gap:12px;margin-top:18px;}
-.promotion-btn{font-size:38px;background:linear-gradient(145deg,#475569,#2a3444);border:2px solid #64748b;border-radius:12px;padding:10px;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.15);transition:transform 0.1s;}
-.promotion-btn:active{transform:scale(0.92);background:linear-gradient(145deg,#64748b,#3a4758);}
-</style>
-</head>
-<body>
-
-<div class="game-top-bar">
-<div class="elixir-container elixir-black">
-<div class="elixir-text" id="black-elixir-text">5</div>
-<div class="elixir-fill-bg"><div class="elixir-fill" id="black-elixir-fill"></div></div>
-</div>
-</div>
-
-<div class="board-wrapper" id="board-wrapper">
-<div class="board-container">
-<div class="board" id="board"></div>
-</div>
-</div>
-
-<div class="bottom-ui">
-<div class="elixir-container elixir-white">
-<div class="elixir-text" id="white-elixir-text">5</div>
-<div class="elixir-fill-bg"><div class="elixir-fill" id="white-elixir-fill"></div></div>
-</div>
-<div class="hand-container" id="hand-container"></div>
-<div class="controls">
-<button class="btn btn-red" onclick="window.location.href='chess-main.html'">🏳️ Сдаться</button>
-</div>
-</div>
-
-<div class="bottom-nav">
-    <button class="nav-btn" onclick="window.location.href='chess-shop.html'">
-        <div class="icon-wrap"><span class="icon">🎁</span></div>
-        <span>Магазин</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='chess-deck.html'">
-        <div class="icon-wrap">
-            <div class="deck-stack">
-                <div class="deck-card"></div>
-                <div class="deck-card"></div>
-                <div class="deck-card">♠</div>
-            </div>
-        </div>
-        <span>Колода</span>
-    </button>
-    <button class="nav-btn active" onclick="window.location.href='chess-main.html'">
-        <div class="icon-wrap"><span class="icon">⚔️</span></div>
-        <span>Бой</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='chess-social.html'">
-        <div class="icon-wrap"><span class="icon">🛡️</span></div>
-        <span>Общение</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='leaderboard.html'">
-        <div class="icon-wrap"><span class="icon">🏆</span></div>
-        <span>Рейтинг</span>
-    </button>
-</div>
-
-<div id="promotion-modal" class="promotion-modal">
-<div class="promotion-content">
-<h3 style="margin-top:0;color:#ffcc00;">Выбери фигуру</h3>
-<div class="promotion-options">
-<div class="promotion-btn" onclick="selectPromotion('q')">♛</div>
-<div class="promotion-btn" onclick="selectPromotion('r')">♜</div>
-<div class="promotion-btn" onclick="selectPromotion('b')">♝</div>
-<div class="promotion-btn" onclick="selectPromotion('n')">♞</div>
-</div>
-</div>
-</div>
-
-<script>
-let audioCtx = null;
-function initAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-}
-function playSound(type) {
-    if (!audioCtx) return;
-    try {
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        if (type === 'move') { osc.type='sine'; osc.frequency.setValueAtTime(500,now); osc.frequency.exponentialRampToValueAtTime(800,now+0.1); gain.gain.setValueAtTime(0.05,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.1); osc.start(now); osc.stop(now+0.1); }
-        else if (type === 'attack_hit') { osc.type='square'; osc.frequency.setValueAtTime(200,now); osc.frequency.exponentialRampToValueAtTime(50,now+0.2); gain.gain.setValueAtTime(0.15,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.2); osc.start(now); osc.stop(now+0.2); }
-        else if (type === 'pain_cry') { osc.type='sawtooth'; osc.frequency.setValueAtTime(800,now); osc.frequency.linearRampToValueAtTime(1000,now+0.1); osc.frequency.linearRampToValueAtTime(400,now+0.3); const lfo=audioCtx.createOscillator(); const lfoGain=audioCtx.createGain(); lfo.type='sine'; lfo.frequency.value=20; lfoGain.gain.value=100; lfo.connect(lfoGain); lfoGain.connect(osc.frequency); lfo.start(now); lfo.stop(now+0.3); gain.gain.setValueAtTime(0.1,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.3); osc.start(now); osc.stop(now+0.3); }
-        else if (type === 'death_scream') { osc.type='sawtooth'; osc.frequency.setValueAtTime(600,now); osc.frequency.exponentialRampToValueAtTime(50,now+0.5); gain.gain.setValueAtTime(0.2,now); gain.gain.linearRampToValueAtTime(0.1,now+0.2); gain.gain.exponentialRampToValueAtTime(0.001,now+0.5); osc.start(now); osc.stop(now+0.5); const osc2=audioCtx.createOscillator(); const gain2=audioCtx.createGain(); osc2.connect(gain2); gain2.connect(audioCtx.destination); osc2.type='square'; osc2.frequency.setValueAtTime(100,now); osc2.frequency.exponentialRampToValueAtTime(10,now+0.3); gain2.gain.setValueAtTime(0.2,now); gain2.gain.exponentialRampToValueAtTime(0.001,now+0.3); osc2.start(now); osc2.stop(now+0.3); }
-        else if (type === 'celebrate_laugh') { osc.type='triangle'; osc.frequency.setValueAtTime(400,now); osc.frequency.setValueAtTime(600,now+0.1); osc.frequency.setValueAtTime(500,now+0.15); osc.frequency.setValueAtTime(700,now+0.25); osc.frequency.setValueAtTime(600,now+0.3); osc.frequency.setValueAtTime(800,now+0.4); gain.gain.setValueAtTime(0.15,now); gain.gain.exponentialRampToValueAtTime(0.001,now+0.5); osc.start(now); osc.stop(now+0.5); }
-    } catch(e) { console.log("Audio error", e); }
-}
-function spawnParticles(x, y, color) {
-    const boardWrapper = document.getElementById('board-wrapper');
-    const rect = boardWrapper.getBoundingClientRect();
-    const offsetX = rect.left + (rect.width / 2) + x;
-    const offsetY = rect.top + (rect.height / 2) + y;
-    for (let i = 0; i < 8; i++) {
-        const p = document.createElement('div'); p.className = 'particle'; p.style.backgroundColor = color; p.style.left = offsetX + 'px'; p.style.top = offsetY + 'px'; p.style.position = 'fixed';
-        const angle = Math.random() * Math.PI * 2; const distance = 30 + Math.random() * 50;
-        p.style.setProperty('--tx', Math.cos(angle) * distance + 'px'); p.style.setProperty('--ty', (Math.sin(angle) * distance - 20) + 'px');
-        p.style.animation = `flyOut 0.5s ease-out forwards`;
-        document.body.appendChild(p); setTimeout(() => p.remove(), 500);
-    }
-}
-function spawnGhost(r, c, icon, color) {
-    const cell = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
-    if(!cell) return;
-    const ghost = document.createElement('div');
-    ghost.className = 'piece';
-    ghost.innerText = icon;
-    ghost.style.color = color === 'white' ? '#fff' : '#0a0a0a';
-    ghost.style.textShadow = color === 'white' ? '0 1px 0 #666,0 2px 0 #444,0 3px 4px rgba(0,0,0,0.9)' : '0 1px 0 #555,0 2px 3px rgba(255,255,255,0.3),0 3px 4px rgba(0,0,0,0.9)';
-    ghost.style.zIndex = '99';
-    ghost.style.animation = 'deathScream 0.6s cubic-bezier(0.1, 0.9, 0.2, 1) forwards';
-    cell.appendChild(ghost);
-    setTimeout(() => ghost.remove(), 650);
-}
-
-const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
-const DEFAULT_BOARD=[['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
-let boardState=[],selectedCell=null,validMoves=[];
-let whiteElixir=5,blackElixir=5,elixirInterval=null;
-let currentHand=['p','n','b','r'],selectedCardType=null;
-let enPassantTarget=null,promotionTarget=null,gameActive=true;
-let vsBot = localStorage.getItem('vsBot') === 'true';
-let botTimer = null;
-let lastBotMove = 0;
-
-function triggerShake(id){const el=document.getElementById(id);if(!el)return;el.style.transform='translateX(-6px)';setTimeout(()=>el.style.transform='translateX(6px)',80);setTimeout(()=>el.style.transform='',160);}
-function formatNum(n){if(Number.isInteger(n))return n.toString();return Number(n.toFixed(2)).toString();}
-function createPiece(pc){
-    if(!pc)return null; let type, color;
-    if(typeof pc === 'string'){ type = pc.toLowerCase(); color = pc === pc.toUpperCase() ? 'white' : 'black'; } else if (typeof pc === 'object'){ type = pc.type; color = pc.color; } else { return null; }
-    if(!PIECES[type]) return null; let level = 1;
-    return{type:type,color:color,level:level,hp:level,maxHp:level,cost:PIECES[type].cost,icon:PIECES[type].icon,hasMoved:false};
-}
-function initGame(){
-    let initialData=DEFAULT_BOARD; const saved=localStorage.getItem('chessSetup');
-    if(saved){ try{ const parsed=JSON.parse(saved); if(parsed&&parsed.length===8)initialData=parsed; }catch(e){} }
-    boardState=initialData.map(row=>row.map(pc=>createPiece(pc)));
-    selectedCell=null;validMoves=[];selectedCardType=null;whiteElixir=5;blackElixir=5;enPassantTarget=null;promotionTarget=null;gameActive=true;
-    document.getElementById('promotion-modal').classList.remove('active');
-    clearInterval(elixirInterval);
-    if(botTimer) clearInterval(botTimer);
-    elixirInterval=setInterval(()=>{if(gameActive){if(whiteElixir<10)whiteElixir++;if(blackElixir<10)blackElixir++;updateElixirUI();}},1000);
-    renderBoard();renderHand();updateElixirUI();
-    startBotLogic();
-}
-function renderBoard(){
-    const boardEl=document.getElementById('board'); if(!boardEl) return; boardEl.innerHTML='';
-    for(let r=0;r<8;r++){for(let c=0;c<8;c++){
-        const cell=document.createElement('div'); cell.className=`cell ${(r+c)%2===0?'white':'black'}`; cell.dataset.r = r; cell.dataset.c = c;
-        cell.onclick=()=>handleCellClick(r,c);
-        if(selectedCell&&selectedCell.r===r&&selectedCell.c===c)cell.classList.add('selected');
-        if(validMoves.some(m=>m.r===r&&m.c===c))cell.classList.add('valid-move');
-        const piece=boardState[r][c];
-        if(piece){
-            if(selectedCardType===piece.type){if(piece.color==='white'&&whiteElixir>=piece.cost)cell.classList.add('highlight-piece');if(piece.color==='black'&&blackElixir>=piece.cost)cell.classList.add('highlight-piece');}
-            const pieceEl=document.createElement('div');pieceEl.className='piece';pieceEl.innerText=piece.icon;
-            pieceEl.style.color=piece.color==='white'?'#fff':'#0a0a0a';
-            pieceEl.style.textShadow=piece.color==='white'?'0 1px 0 #666,0 2px 0 #444,0 3px 4px rgba(0,0,0,0.9)':'0 1px 0 #555,0 2px 3px rgba(255,255,255,0.3),0 3px 4px rgba(0,0,0,0.9)';
-            const costBadge=document.createElement('div');costBadge.className='top-cost-badge';costBadge.innerText=piece.cost;
-            const hpBar=document.createElement('div');hpBar.className='bottom-hp-bar';
-            let hpPercent=(piece.hp/piece.maxHp)*100; let barColor='#34c759';if(hpPercent<=30)barColor='#ff3b30';else if(hpPercent<=60)barColor='#ffcc00';
-            hpBar.style.background=`linear-gradient(180deg,${barColor},${barColor}99)`;
-            hpBar.innerHTML=`<span class="lvl-num">${formatNum(piece.level)}</span>`;
-            const hpText=document.createElement('div');hpText.className='hp-text-below';hpText.innerText=`${formatNum(piece.hp)}/${formatNum(piece.maxHp)}`;
-            cell.appendChild(pieceEl);cell.appendChild(costBadge);cell.appendChild(hpBar);cell.appendChild(hpText);
-        }
-        boardEl.appendChild(cell);
-    }}
-}
-function renderHand(){
-    const handEl=document.getElementById('hand-container'); if(!handEl) return; handEl.innerHTML='';
-    currentHand.forEach(type=>{
-        const p=PIECES[type];const card=document.createElement('div');
-        card.className=`hand-card ${selectedCardType===type?'active':''}`;
-        card.innerHTML=`<div class="hand-cost">${p.cost}</div><div class="hand-icon">${p.icon}</div><div class="hand-name">${p.name}</div>`;
-        card.onclick=()=>{ initAudio(); if(selectedCardType===type){selectedCardType=null;}else{selectedCardType=type;selectedCell=null;validMoves=[];} renderHand();renderBoard(); };
-        handEl.appendChild(card);
-    });
-}
-function updateElixirUI(){
-    document.getElementById('white-elixir-fill').style.width=(whiteElixir/10*100)+'%'; document.getElementById('white-elixir-text').innerText=whiteElixir;
-    document.getElementById('black-elixir-fill').style.width=(blackElixir/10*100)+'%'; document.getElementById('black-elixir-text').innerText=blackElixir;
-}
-function isKingInCheck(color,board){let kPos=null;for(let r=0;r<8;r++){for(let c=0;c<8;c++){if(board[r][c]&&board[r][c].type==='k'&&board[r][c].color===color)kPos={r,c};}}if(!kPos)return false;let enemyColor=color==='white'?'black':'white';for(let r=0;r<8;r++){for(let c=0;c<8;c++){let p=board[r][c];if(p&&p.color===enemyColor){let moves=getValidMoves(r,c,board,true);if(moves.some(m=>m.r===kPos.r&&m.c===kPos.c))return true;}}}return false;}
-function hasAnyValidMoves(color){for(let r=0;r<8;r++){for(let c=0;c<8;c++){let p=boardState[r][c];if(p&&p.color===color){if(getValidMoves(r,c).length>0)return true;}}}return false;}
-function checkGameEnd(){if(!gameActive)return;let whiteInCheck=isKingInCheck('white',boardState);let blackInCheck=isKingInCheck('black',boardState);let whiteMoves=hasAnyValidMoves('white');let blackMoves=hasAnyValidMoves('black');if(!whiteMoves&&whiteInCheck){endGame('Черные','МАТ!');return;}if(!blackMoves&&blackInCheck){endGame('Белые','МАТ!');return;}if(!whiteMoves&&!whiteInCheck){endGame('Ничья','ПАТ!');return;}if(!blackMoves&&!blackInCheck){endGame('Ничья','ПАТ!');return;}}
-function endGame(winner,reason){
-    gameActive=false;clearInterval(elixirInterval);
-    if(botTimer) clearInterval(botTimer);
-    setTimeout(()=>{
-        if(winner==='Белые') {
-            let trophies = parseInt(localStorage.getItem('cr_trophies') || '0');
-            localStorage.setItem('cr_trophies', trophies + 30);
-            alert(`Победа! ${reason}\nВы получили +30 🏆`);
-            window.location.href='chess-main.html';
-        } else if (winner==='Черные') {
-            alert(`Поражение! ${reason}`);
-            window.location.href='chess-main.html';
-        } else {
-            alert(`Ничья! ${reason}`);
-            window.location.href='chess-main.html';
-        }
-    },300);
-}
-function getValidMoves(r,c,boardData=null,ignoreCost=false){
-    let b=boardData||boardState;const piece=b[r][c];if(!piece)return[];let moves=[];const isEnemy=t=>t&&t.color!==piece.color;const isEmpty=t=>t===null;const addMove=(nr,nc)=>{if(nr>=0&&nr<8&&nc>=0&&nc<8){if(isEmpty(b[nr][nc])||isEnemy(b[nr][nc])){moves.push({r:nr,c:nc});return true;}}return false;};
-    if(piece.type==='p'){let dir=piece.color==='white'?-1:1;if(isEmpty(b[r+dir]?.[c])){moves.push({r:r+dir,c:c});if(!piece.hasMoved&&isEmpty(b[r+dir*2]?.[c]))moves.push({r:r+dir*2,c:c});}if(isEnemy(b[r+dir]?.[c-1]))moves.push({r:r+dir,c:c-1});if(isEnemy(b[r+dir]?.[c+1]))moves.push({r:r+dir,c:c+1});if(enPassantTarget&&enPassantTarget.r===r+dir&&(enPassantTarget.c===c-1||enPassantTarget.c===c+1)){moves.push({r:enPassantTarget.r,c:enPassantTarget.c,enPassant:true});}
-    }else if(piece.type==='n'){[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr,dc])=>addMove(r+dr,c+dc));
-    }else if(piece.type==='k'){[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr,dc])=>addMove(r+dr,c+dc));if(!piece.hasMoved&&!ignoreCost){let enemyColor=piece.color==='white'?'black':'white';if(b[r][c+3]&&b[r][c+3].type==='r'&&!b[r][c+3].hasMoved){if(!b[r][c+1]&&!b[r][c+2]){if(!isKingInCheck(piece.color,b)&&!isSquareAttacked(r,c+1,enemyColor,b)&&!isSquareAttacked(r,c+2,enemyColor,b)){moves.push({r:r,c:c+2,castling:true});}}}if(b[r][c-4]&&b[r][c-4].type==='r'&&!b[r][c-4].hasMoved){if(!b[r][c-1]&&!b[r][c-2]&&!b[r][c-3]){if(!isKingInCheck(piece.color,b)&&!isSquareAttacked(r,c-1,enemyColor,b)&&!isSquareAttacked(r,c-2,enemyColor,b)){moves.push({r:r,c:c-2,castling:true});}}}}
-    }else{const dirs=[];if(piece.type==='b'||piece.type==='q')dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);if(piece.type==='r'||piece.type==='q')dirs.push([-1,0],[1,0],[0,-1],[0,1]);dirs.forEach(([dr,dc])=>{let nr=r+dr,nc=c+dc;while(addMove(nr,nc)){if(b[nr][nc]!==null)break;nr+=dr;nc+=dc;}});}
-    if(!ignoreCost){moves=moves.filter(move=>{let tempBoard=JSON.parse(JSON.stringify(b));if(move.castling){let rookFromC=move.c===6?7:0;let rookToC=move.c===6?5:3;tempBoard[r][rookToC]=tempBoard[r][rookFromC];tempBoard[r][rookFromC]=null;}if(move.enPassant){tempBoard[r][move.c]=null;}tempBoard[move.r][move.c]=tempBoard[r][c];tempBoard[r][c]=null;return!isKingInCheck(piece.color,tempBoard);});}
-    return moves;
-}
-function isSquareAttacked(r,c,byColor,boardData=null){let b=boardData||boardState;for(let i=0;i<8;i++){for(let j=0;j<8;j++){let p=b[i][j];if(p&&p.color===byColor){let moves=getValidMoves(i,j,b,true);if(moves.some(m=>m.r===r&&m.c===c))return true;}}}return false;}
-
-function handleCellClick(r,c){
-    if(!gameActive) return; 
-    const clickedPiece=boardState[r][c];
-    if(selectedCell){
-        const move=validMoves.find(m=>m.r===r&&m.c===c);
-        if(move){
-            initAudio();
-            makeMove(selectedCell.r, selectedCell.c, r, c);
-        } else { 
-            selectedCell=null; validMoves=[]; renderBoard(); 
-        }
-    } else {
-        if(clickedPiece){ 
-            if(selectedCardType&&clickedPiece.type!==selectedCardType)return; 
-            selectedCell={r,c}; validMoves=getValidMoves(r,c); selectedCardType=null; renderBoard(); renderHand(); 
-        }
-    }
-}
-
-function makeMove(fromR, fromC, toR, toC) {
+function makeMove(fromR, fromC, toR, toC, opts) {
+    const byBot = !!(opts && opts.byBot);
     const attacker = boardState[fromR][fromC];
     const clickedPiece = boardState[toR][toC];
     if (!attacker) return;
@@ -357,7 +16,7 @@ function makeMove(fromR, fromC, toR, toC) {
     if(clickedPiece&&clickedPiece.color!==attacker.color){
         isAttackingPiece = true;
         let damage = attacker.level; clickedPiece.hp -= damage; let isKilled = clickedPiece.hp <= 0;
-        
+
         const rect = document.querySelector(`.cell[data-r="${toR}"][data-c="${toC}"]`).getBoundingClientRect();
         const boardRect = document.getElementById('board-wrapper').getBoundingClientRect();
         const x = rect.left - boardRect.left + rect.width/2 - boardRect.width/2;
@@ -391,17 +50,34 @@ function makeMove(fromR, fromC, toR, toC) {
         if(attacker.type==='p'&&toR===promoRow){ promotionTarget={r:toR,c:toC,color:attacker.color}; document.getElementById('promotion-modal').classList.add('active'); }
     }
 
-    selectedCell=null; validMoves=[]; selectedCardType=null;
+    /* === ИЗМЕНЕНО: ход бота больше не сбрасывает твой выбор === */
+    if (byBot) {
+        if (selectedCell) {
+            const keep = selectedCell;
+            const p = boardState[keep.r] && boardState[keep.r][keep.c];
+            if (p && p.color === 'white') {
+                validMoves = getValidMoves(keep.r, keep.c);
+            } else {
+                // бот побил именно твою выбранную фигуру
+                selectedCell = null;
+                validMoves = [];
+            }
+        }
+    } else {
+        selectedCell = null; validMoves = []; selectedCardType = null;
+    }
+    /* === конец изменения === */
+
     renderBoard(); renderHand();
 
     const newAttackerEl = document.querySelector(`.cell[data-r="${toR}"][data-c="${toC}"] .piece`);
     if (isAttackingPiece) {
         if (newAttackerEl) {
             newAttackerEl.classList.add('attacking');
-            setTimeout(() => { 
-                newAttackerEl.classList.remove('attacking'); 
-                newAttackerEl.classList.add('celebrating'); 
-                playSound('celebrate_laugh'); 
+            setTimeout(() => {
+                newAttackerEl.classList.remove('attacking');
+                newAttackerEl.classList.add('celebrating');
+                playSound('celebrate_laugh');
             }, 300);
             setTimeout(() => { newAttackerEl.classList.remove('celebrating'); }, 1500);
         }
@@ -418,53 +94,3 @@ function makeMove(fromR, fromC, toR, toC) {
 
     setTimeout(()=>checkKingAndEnd(), 150);
 }
-
-function startBotLogic() {
-    if (!vsBot) return;
-    if (botTimer) clearInterval(botTimer);
-    botTimer = setInterval(() => {
-        if (!gameActive || !vsBot) return;
-        const now = Date.now();
-        if (now - lastBotMove < 1500) return;
-        
-        let possibleMoves = [];
-        for(let r=0; r<8; r++) {
-            for(let c=0; c<8; c++) {
-                let p = boardState[r][c];
-                if (p && p.color === 'black' && blackElixir >= p.cost) {
-                    let moves = getValidMoves(r, c);
-                    if (moves.length > 0) {
-                        moves.forEach(m => possibleMoves.push({fromR: r, fromC: c, toR: m.r, toC: m.c}));
-                    }
-                }
-            }
-        }
-        
-        if (possibleMoves.length > 0) {
-            let move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-            makeMove(move.fromR, move.fromC, move.toR, move.toC);
-            lastBotMove = Date.now();
-        }
-    }, 1000);
-}
-
-function checkKingAndEnd() {
-    ['white','black'].forEach(color=>{
-        if(isKingInCheck(color,boardState)){
-            for(let rr=0;rr<8;rr++) for(let cc=0;cc<8;cc++){
-                if(boardState[rr][cc]&&boardState[rr][cc].type==='k'&&boardState[rr][cc].color===color){
-                    boardState[rr][cc].hp-=1;
-                    if(boardState[rr][cc].hp<=0){ endGame(color==='white'?'Черные':'Белые','Король пал!'); }
-                }
-            }
-            renderBoard();
-        }
-    });
-    checkGameEnd();
-}
-
-function selectPromotion(newType){if(promotionTarget){let p=boardState[promotionTarget.r][promotionTarget.c];p.type=newType;p.icon=PIECES[newType].icon;p.cost=PIECES[newType].cost;}document.getElementById('promotion-modal').classList.remove('active');promotionTarget=null;renderBoard();setTimeout(checkGameEnd,100);}
-initGame();
-</script>
-</body>
-</html>
