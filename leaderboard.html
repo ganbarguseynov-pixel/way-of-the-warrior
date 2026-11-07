@@ -1,126 +1,275 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Рейтинг</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="style.css">
 <style>
-body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;padding-bottom:75px;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;}
-.inner-screen{padding:20px;max-width:400px;margin:0 auto;}
-.back-btn{background:rgba(255,255,255,0.1);border:none;color:#fff;padding:8px 15px;border-radius:8px;font-size:14px;cursor:pointer;margin-bottom:15px;display:inline-block;}
-.back-btn:active{background:rgba(255,255,255,0.2);}
-.leaderboard-item{display:flex;align-items:center;background:linear-gradient(145deg,#1e293b,#0f172a);padding:12px;border-radius:12px;margin-bottom:10px;border:2px solid #3a3a3c;box-shadow:0 4px 6px rgba(0,0,0,0.5);}
-.my-row{border-color:#ffcc00;background:linear-gradient(145deg,#2a1a00,#1a0f00);}
-.rank{font-size:20px;font-weight:bold;width:40px;color:#94a3b8;text-align:center;}
-.user-info{flex:1;margin-left:10px;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+body{
+  background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);
+  color:#fff;margin:0;padding-bottom:75px;min-height:100vh;
+}
+.inner-screen{padding:16px;max-width:400px;margin:0 auto;}
+.back-btn{
+  background:rgba(255,255,255,.1);border:none;color:#fff;
+  padding:8px 15px;border-radius:8px;font-size:14px;cursor:pointer;margin-bottom:12px;
+}
+.back-btn:active{background:rgba(255,255,255,.2)}
 
-/* Нижняя навигация (Шахматы) */
-.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 15px rgba(0,0,0,0.7);}
-.nav-btn{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;transition:0.2s;}
-.nav-btn .icon-wrap{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);box-shadow:0 3px 6px rgba(0,0,0,0.5),inset 0 2px 3px rgba(255,255,255,0.08),inset 0 -3px 6px rgba(0,0,0,0.6);transition:all 0.3s;}
-.nav-btn .icon{font-size:20px;text-shadow:0 1px 2px rgba(0,0,0,0.6);transition:transform 0.3s;}
-.nav-btn.active{color:#ffcc00;}
-.nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500);box-shadow:0 3px 10px rgba(255,204,0,0.4),inset 0 2px 3px rgba(255,255,255,0.4);}
-.nav-btn.active .icon{transform:scale(1.12);}
-.deck-stack{position:relative;width:24px;height:28px;}
-.deck-stack .deck-card{position:absolute;width:16px;height:22px;border-radius:3px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 1px 3px rgba(0,0,0,0.6);}
-.deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c);}
-.deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe);}
-.deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900;}
+h1{margin:0 0 4px;font-size:23px;text-align:center}
+.subtitle{text-align:center;color:#94a3b8;font-size:12px;margin:0 0 16px}
+
+.leaderboard-item{
+  display:flex;align-items:center;
+  background:linear-gradient(145deg,#1e293b,#0f172a);
+  padding:11px 12px;border-radius:12px;margin-bottom:9px;
+  border:2px solid #3a3a3c;box-shadow:0 4px 6px rgba(0,0,0,.5);
+}
+.my-row{
+  border-color:#ffcc00;
+  background:linear-gradient(145deg,#2a1a00,#1a0f00);
+}
+.rank{
+  font-size:17px;font-weight:bold;width:34px;text-align:center;
+  color:#94a3b8;flex-shrink:0;
+}
+.avatar-cell{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(145deg,#2a2a3e,#15151f);
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+  border:1px solid #475569;
+  margin-left:4px;
+}
+.user-info{flex:1;margin-left:10px;min-width:0}
+.user-name{
+  font-weight:bold;font-size:15px;margin:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.user-meta{margin:1px 0 0;font-size:10.5px;color:#94a3b8;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cups-cell{
+  display:flex;align-items:center;gap:4px;
+  font-weight:900;font-size:15px;color:#ffcc00;flex-shrink:0;
+}
+.state-msg{text-align:center;color:#94a3b8;font-size:13px;padding:30px 10px;line-height:1.5}
+.state-msg.err{color:#ef4444}
+.refresh-note{
+  text-align:center;font-size:10.5px;color:#475569;margin-top:14px;
+}
+
+/* ---------- НАВИГАЦИЯ ---------- */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;width:100%;height:68px;
+  background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);
+  border-top:1px solid rgba(255,255,255,.08);
+  display:flex;justify-content:space-around;align-items:center;z-index:999;
+  padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -4px 15px rgba(0,0,0,.7);
+}
+.nav-btn{
+  background:transparent;border:none;color:#94a3b8;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;
+  transition:.2s;
+}
+.nav-btn .icon-wrap{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,#2a2a3e,#15151f);
+  box-shadow:0 3px 6px rgba(0,0,0,.5),inset 0 2px 3px rgba(255,255,255,.08),inset 0 -3px 6px rgba(0,0,0,.6);
+  transition:all .3s;
+}
+.nav-btn .icon{font-size:20px;text-shadow:0 1px 2px rgba(0,0,0,.6);transition:transform .3s}
+.nav-btn.active{color:#ffcc00}
+.nav-btn.active .icon-wrap{
+  background:linear-gradient(145deg,#ffcc00,#ff9500);
+  box-shadow:0 3px 10px rgba(255,204,0,.4),inset 0 2px 3px rgba(255,255,255,.4);
+}
+.nav-btn.active .icon{transform:scale(1.12)}
+.deck-stack{position:relative;width:24px;height:28px}
+.deck-stack .deck-card{
+  position:absolute;width:16px;height:22px;border-radius:3px;
+  border:1px solid rgba(255,255,255,.5);box-shadow:0 1px 3px rgba(0,0,0,.6);
+}
+.deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c)}
+.deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe)}
+.deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900}
 </style>
 </head>
 <body>
-<div class="inner-screen">
-<button class="back-btn" onclick="history.back()">← Назад</button>
-<h1 style="text-align: center; font-size:24px; margin-bottom:5px;">🏆 Мировой рейтинг</h1>
-<p style="text-align: center; color: #94a3b8; margin-bottom: 20px; font-size:12px;">Топ атлетов в реальном времени</p>
 
-<div id="leaderboard-list">
-<p style="text-align: center;">Загрузка...</p>
-</div>
+<div class="inner-screen">
+  <button class="back-btn" onclick="window.location.href='chess-main.html'">← Назад</button>
+  <h1>🏆 Мировой рейтинг</h1>
+  <p class="subtitle">Топ игроков по кубкам</p>
+
+  <div id="leaderboard-list">
+    <p class="state-msg">Загрузка…</p>
+  </div>
+
+  <div class="refresh-note">Обновляется каждые 15 секунд</div>
 </div>
 
 <div class="bottom-nav">
-    <button class="nav-btn" onclick="window.location.href='chess-shop.html'">
-        <div class="icon-wrap"><span class="icon">🎁</span></div>
-        <span>Магазин</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='chess-deck.html'">
-        <div class="icon-wrap">
-            <div class="deck-stack">
-                <div class="deck-card"></div>
-                <div class="deck-card"></div>
-                <div class="deck-card">♠</div>
-            </div>
-        </div>
-        <span>Колода</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='chess-main.html'">
-        <div class="icon-wrap"><span class="icon">⚔️</span></div>
-        <span>Бой</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='chess-social.html'">
-        <div class="icon-wrap"><span class="icon">🛡️</span></div>
-        <span>Общение</span>
-    </button>
-    <button class="nav-btn active" onclick="window.location.href='leaderboard.html'">
-        <div class="icon-wrap"><span class="icon">🏆</span></div>
-        <span>Рейтинг</span>
-    </button>
+  <button class="nav-btn" onclick="window.location.href='chess-shop.html'">
+    <div class="icon-wrap"><span class="icon">🎁</span></div>
+    <span>Магазин</span>
+  </button>
+  <button class="nav-btn" onclick="window.location.href='chess-deck.html'">
+    <div class="icon-wrap">
+      <div class="deck-stack">
+        <div class="deck-card"></div>
+        <div class="deck-card"></div>
+        <div class="deck-card">♠</div>
+      </div>
+    </div>
+    <span>Колода</span>
+  </button>
+  <button class="nav-btn" onclick="window.location.href='chess-main.html'">
+    <div class="icon-wrap"><span class="icon">⚔️</span></div>
+    <span>Бой</span>
+  </button>
+  <button class="nav-btn" onclick="window.location.href='chess-social.html'">
+    <div class="icon-wrap"><span class="icon">🛡️</span></div>
+    <span>Общение</span>
+  </button>
+  <button class="nav-btn active" onclick="window.location.href='leaderboard.html'">
+    <div class="icon-wrap"><span class="icon">🏆</span></div>
+    <span>Рейтинг</span>
+  </button>
 </div>
 
+<script src="arena.js"></script>
 <script>
-const supabaseUrl = 'https://qnpriwfxzuoymoumdtrl.supabase.co';
-const supabaseKey = 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF';
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-const tg = window.Telegram.WebApp;
-tg.ready(); tg.expand();
+/* ================= ПОДКЛЮЧЕНИЕ ================= */
 
-const myName = localStorage.getItem('userName') || "Вы";
+const sb = supabase.createClient(
+  'https://qnpriwfxzuoymoumdtrl.supabase.co',
+  'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF'
+);
 
-function renderList(data) {
-const listDiv = document.getElementById('leaderboard-list');
+const $ = function (id){ return document.getElementById(id); };
 
-if (!data || data.length === 0) {
-listDiv.innerHTML = '<p style="text-align: center; color: #8e8e93;">Пока нет игроков. Стань первым!</p>';
-return;
+const STEP = 1000;
+const MAX_ARENA = 10;
+
+const NAMES = (window.Arena && Arena.ARENAS)
+  ? Arena.ARENAS.map(function (a){ return a.name; })
+  : ['Капкан','Псарня','Мясорубка','Кошмар на улице Вязов','Техасская резня',
+     'Хостел','Восставший из ада','Судная ночь','Зловещие мертвецы','Бессмертная партия'];
+
+const AVATARS = ['👑','😎','😈','🤠','🤖','🐺','🦊','🐻','🐯','🦁','👽','🎃','💀','🧙','🥷'];
+
+/* ================= КЛЮЧ ИГРОКА ================= */
+
+function playerKey(){
+  const tgId = localStorage.getItem('tgId');
+  if (tgId) return 'tg:' + tgId;
+
+  const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
+  if (email) return 'email:' + email.toLowerCase();
+
+  let anon = localStorage.getItem('arenaAnonId');
+  if (!anon){
+    anon = 'anon:' + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('arenaAnonId', anon);
+  }
+  return anon;
 }
 
-data.sort((a, b) => (b.xp || 0) - (a.xp || 0));
-
-let html = "";
-for (let i = 0; i < data.length; i++) {
-let u = data[i];
-let displayName = u.name || "Атлет";
-let isMe = (displayName === myName) ? 'my-row' : '';
-
-let medal = (i === 0) ? "🥇" : (i === 1) ? "🥈" : (i === 2) ? "🥉" : (i + 1);
-
-html += '<div class="leaderboard-item ' + isMe + '">';
-html += '<div class="rank">' + medal + '</div>';
-html += '<div class="user-info" style="margin-left: 15px;">';
-html += '<p style="margin:0; font-weight:bold; font-size:16px;">' + displayName + '</p>';
-html += '<p style="margin:0; font-size:13px; color:#8e8e93;">' + (u.xp || 0) + ' XP</p>';
-html += '</div></div>';
-}
-listDiv.innerHTML = html;
+/* Устойчивый выбор аватарки по имени — у одного игрока всегда одна и та же */
+function avatarFor(name){
+  let h = 0;
+  const s = String(name || '');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) & 0xffff;
+  return AVATARS[h % AVATARS.length];
 }
 
-async function loadLeaderboard() {
-const { data, error } = await supabaseClient.from('user_links').select('name, xp').order('xp', { ascending: false }).limit(50);
-if (!error) renderList(data);
+/* ================= ОТРИСОВКА ================= */
+
+function medalFor(i){
+  if (i === 0) return '🥇';
+  if (i === 1) return '🥈';
+  if (i === 2) return '🥉';
+  return String(i + 1);
 }
 
-loadLeaderboard();
+function render(rows){
+  const box = $('leaderboard-list');
 
-supabaseClient.channel('public:user_links')
-.on('postgres_changes', { event: '*', schema: 'public', table: 'user_links' }, payload => {
-loadLeaderboard();
-})
-.subscribe();
+  if (!rows || !rows.length){
+    box.innerHTML = '<p class="state-msg">Пока нет игроков. Стань первым!</p>';
+    return;
+  }
+
+  const myKey = playerKey();
+  let html = '';
+
+  for (let i = 0; i < rows.length; i++){
+    const r = rows[i];
+    const isMe = (r.player_key === myKey);
+    const arenaNum = Math.min(MAX_ARENA, Math.floor(Math.max(0, r.cups || 0) / STEP) + 1);
+    const arenaName = NAMES[arenaNum - 1] || '';
+
+    html += '<div class="leaderboard-item' + (isMe ? ' my-row' : '') + '">';
+    html +=   '<div class="rank">' + medalFor(i) + '</div>';
+    html +=   '<div class="avatar-cell">' + avatarFor(r.display_name) + '</div>';
+    html +=   '<div class="user-info">';
+    html +=     '<p class="user-name">' + escapeHtml(r.display_name || 'Игрок') +
+                (isMe ? ' · ты' : '') + '</p>';
+    html +=     '<p class="user-meta">Арена ' + arenaNum + ' · ' + escapeHtml(arenaName) +
+                ' · ' + (r.wins || 0) + 'П / ' + (r.losses || 0) + 'Пр</p>';
+    html +=   '</div>';
+    html +=   '<div class="cups-cell">🏆 ' + (r.cups || 0) + '</div>';
+    html += '</div>';
+  }
+
+  box.innerHTML = html;
+}
+
+function escapeHtml(s){
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* ================= ЗАГРУЗКА ================= */
+
+let loading = false;
+
+async function load(){
+  if (loading) return;
+  loading = true;
+
+  try {
+    const res = await sb.rpc('arena_top', { p_limit: 50 });
+
+    if (res.error){
+      throw res.error;
+    }
+    render(res.data || []);
+
+  } catch (e){
+    console.error(e);
+    $('leaderboard-list').innerHTML =
+      '<p class="state-msg err">Не удалось загрузить рейтинг.<br>' +
+      'Проверь, что SQL-схема выполнена в Supabase и функция arena_top существует.</p>';
+  } finally {
+    loading = false;
+  }
+}
+
+load();
+setInterval(load, 15000);
+
+document.addEventListener('visibilitychange', function (){
+  if (!document.hidden) load();
+});
 </script>
 </body>
 </html>
