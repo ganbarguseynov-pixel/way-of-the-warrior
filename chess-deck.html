@@ -37,29 +37,35 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 .card-icon{font-size:30px;margin-top:15px;color:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,0.7));}
 .card-name{font-size:10px;color:#fff;text-align:center;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.8);}
 .card-level{font-size:9px;color:#ffcc00;background:rgba(0,0,0,0.8);padding:2px 5px;border-radius:4px;width:90%;text-align:center;margin-top:5px;box-shadow:inset 0 1px 2px rgba(0,0,0,0.5);}
-.setup-area{width:95vw;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:15px;padding-top:10px;}
-.setup-hint{text-align:center;color:#94a3b8;font-size:12px;margin:0;min-height:18px;padding:0 10px;}
+.setup-area{width:95vw;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:10px;}
+.setup-hint{text-align:center;color:#94a3b8;font-size:12px;margin:0;min-height:18px;padding:0 10px;line-height:1.45;}
+.setup-hint b{color:#22c55e;}
 .board-container{position:relative;width:100%;aspect-ratio:1/1;border:4px solid #475569;border-radius:14px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.95),0 8px 20px rgba(0,0,0,0.7),0 0 0 2px rgba(255,255,255,0.06),inset 0 0 40px rgba(0,0,0,0.6);background:linear-gradient(145deg,#1a1f2e,#0f1420);}
 .board{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:100%;height:100%;}
-.cell{position:relative;display:flex;justify-content:center;align-items:center;font-size:32px;cursor:pointer;transition:filter 0.15s;}
+.cell{position:relative;display:flex;justify-content:center;align-items:center;font-size:32px;cursor:default;transition:filter 0.15s;}
 .cell.white{background:linear-gradient(145deg,#b8c4d4 0%,#94a3b8 50%,#7a8ba0 100%);box-shadow:inset 1px 1px 2px rgba(255,255,255,0.5),inset -1px -1px 3px rgba(0,0,0,0.25);}
 .cell.black{background:linear-gradient(145deg,#4a5a6e 0%,#3a4a5e 50%,#2a3a4e 100%);box-shadow:inset 1px 1px 2px rgba(255,255,255,0.15),inset -1px -1px 3px rgba(0,0,0,0.5);}
-.cell.selected{background:linear-gradient(145deg,#4ade80,#22c55e 60%,#15803d)!important;box-shadow:inset 0 0 12px rgba(255,255,255,0.7),0 0 15px rgba(74,222,128,0.8)!important;}
+.cell.locked{filter:brightness(0.45) saturate(0.3);}
 .cell.setup-zone{background-color:rgba(255,204,0,0.15);}
-.board.view-mode .cell{cursor:default;}
-.board.view-mode .cell.setup-zone{background-color:rgba(255,204,0,0.08);}
-.board.edit-mode .cell.setup-zone{background-color:rgba(255,204,0,0.28);animation:zonePulse 2s infinite alternate;}
+.board.edit-mode .cell.setup-zone{cursor:pointer;background-color:rgba(255,204,0,0.28);animation:zonePulse 2s infinite alternate;}
 @keyframes zonePulse{from{background-color:rgba(255,204,0,0.18);}to{background-color:rgba(255,204,0,0.35);}}
+.cell.selected{background:linear-gradient(145deg,#4ade80,#22c55e 60%,#15803d)!important;box-shadow:inset 0 0 12px rgba(255,255,255,0.7),0 0 15px rgba(74,222,128,0.8)!important;}
 .piece{position:relative;z-index:2;pointer-events:none;margin-bottom:8px;filter:drop-shadow(0 4px 5px rgba(0,0,0,0.8)) drop-shadow(0 1px 0 rgba(255,255,255,0.15));}
+.cell.locked .piece{opacity:0.25;}
 .top-cost-badge{position:absolute;top:-4px;left:50%;transform:translateX(-50%);background:linear-gradient(145deg,#c084fc,#7c3aed);color:#fff;border-radius:50%;width:15px;height:15px;font-size:9px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1.5px solid #fff;z-index:10;box-shadow:0 2px 5px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.5);}
 .bottom-hp-bar{position:absolute;bottom:12px;left:5%;width:90%;height:11px;border-radius:4px;display:flex;justify-content:center;align-items:center;z-index:10;border:1px solid #000;box-sizing:border-box;background:linear-gradient(180deg,#34c759,#34c75999);box-shadow:inset 0 2px 3px rgba(0,0,0,0.5),inset 0 -1px 2px rgba(255,255,255,0.3),0 1px 2px rgba(0,0,0,0.7);}
 .lvl-num{font-size:9px;font-weight:900;color:#000;line-height:11px;pointer-events:none;}
 .hp-text-below{position:absolute;bottom:1px;left:0;width:100%;text-align:center;font-size:8px;font-weight:bold;color:#fff;z-index:10;pointer-events:none;white-space:nowrap;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 1px 3px rgba(0,0,0,0.9);}
+.army-counts{width:100%;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;padding:0 8px;}
+.army-chip{background:rgba(2,6,23,.6);border:1px solid #334155;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700;color:#94a3b8;}
+.army-chip.ok{border-color:#15803d;color:#4ade80;}
+.army-chip.bad{border-color:#991b1b;color:#fca5a5;}
 .btn-action{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;box-shadow:0 6px 12px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.2);transition:transform 0.1s;border:none;}
 .btn-action:active{transform:scale(0.97);}
 .btn-edit{background:linear-gradient(145deg,#3b82f6,#1e40af);color:#fff;}
 .btn-save{background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;}
 .btn-cancel{background:linear-gradient(145deg,#475569,#1e293b);color:#fff;border:1px solid #64748b;}
+.btn-reset{background:linear-gradient(145deg,#b45309,#78350f);color:#fff;}
 .setup-buttons{width:100%;display:flex;flex-direction:column;gap:8px;padding:0 10px;}
 .setup-buttons-row{display:flex;gap:8px;width:100%;}
 .setup-buttons-row .btn-action{flex:1;}
@@ -95,7 +101,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 
 <div id="screen-cards" class="screen active">
 <div class="deck-area">
-<div class="deck-note" id="deck-note">Выбери 4 карты — они пойдут с тобой в бой</div>
+<div class="deck-note" id="deck-note">Выбери 4 карты — они пойдут с тобой в тренировку</div>
 <div class="deck-picked" id="deck-picked"></div>
 <div class="deck-grid" id="deck-grid"></div>
 </div>
@@ -103,13 +109,15 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 
 <div id="screen-setup" class="screen">
 <div class="setup-area">
-<p class="setup-hint" id="setup-hint">Ваша текущая расстановка</p>
+<p class="setup-hint" id="setup-hint">Твоя расстановка</p>
+<div class="army-counts" id="army-counts"></div>
 <div class="board-container">
 <div class="board view-mode" id="setup-board"></div>
 </div>
 <div class="setup-buttons">
 <button id="btn-edit" class="btn-action btn-edit" onclick="enterEditMode()">✏️ Редактировать расстановку</button>
 <div id="edit-controls" class="setup-buttons-row" style="display:none;">
+<button id="btn-reset" class="btn-action btn-reset" onclick="resetSetup()">↺ Сброс</button>
 <button id="btn-cancel" class="btn-action btn-cancel" onclick="cancelEdit()">✖ Отмена</button>
 <button id="btn-save" class="btn-action btn-save" onclick="saveSetup()">💾 Сохранить</button>
 </div>
@@ -158,11 +166,12 @@ document.getElementById('screen-setup').classList.remove('active');
 document.getElementById('sub-tab-cards-btn').classList.remove('active');
 document.getElementById('sub-tab-setup-btn').classList.remove('active');
 if(tab==='cards'){document.getElementById('screen-cards').classList.add('active');document.getElementById('sub-tab-cards-btn').classList.add('active');}
-else{document.getElementById('screen-setup').classList.add('active');document.getElementById('sub-tab-setup-btn').classList.add('active');}
+else{document.getElementById('screen-setup').classList.add('active');document.getElementById('sub-tab-setup-btn').classList.add('active');renderSetupBoard();}
 }
 
-/* ================= КАРТЫ КОЛОДЫ ================= */
+/* ================= КАРТЫ ================= */
 
+const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
 const PIECE_TYPES = ['p','n','b','r','k','q'];
 const HAND_SIZE   = 4;
 const HOARD_KEY   = 'chessHand';
@@ -242,7 +251,6 @@ function renderDeck(){
         grid.appendChild(cardDiv);
     });
 
-    /* слоты выбранных карт */
     const picked = document.getElementById('deck-picked');
     picked.innerHTML = '';
     for (let i = 0; i < HAND_SIZE; i++){
@@ -269,77 +277,309 @@ function renderDeck(){
     }
 }
 
-/* ================= РАССТАНОВКА ================= */
+/* ================= РАССТАНОВКА =================
+   Только два нижних ряда (6 и 7).
+   Состав строго шахматный: 8 пешек, 2 ладьи, 2 коня,
+   2 слона, 1 ферзь, 1 король. Всего 16 фигур.
+   ================================================ */
 
-const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
-const DEFAULT_BOARD=[['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
-let setupBoard=[];let selectedSetupCell=null;let editMode=false;let snapshotBeforeEdit=null;
+const SETUP_KEY = 'chessSetup';
+const SETUP_ROWS = [6, 7];
+const ARMY_MAX = { p:8, r:2, n:2, b:2, q:1, k:1 };
+const ARMY_ORDER = ['p','n','b','r','q','k'];
 
-function formatNum(n){if(Number.isInteger(n))return n.toString();return Number(n.toFixed(2)).toString();}
-function createPiece(pc){
-    if(!pc)return null; let type, color;
-    if(typeof pc === 'string'){ type = pc.toLowerCase(); color = pc === pc.toUpperCase() ? 'white' : 'black'; } else if (typeof pc === 'object'){ type = pc.type; color = pc.color; } else { return null; }
-    if(!PIECES[type]) return null; let level = 1;
-    return{type:type,color:color,level:level,hp:level,maxHp:level,cost:PIECES[type].cost,icon:PIECES[type].icon};
+function defaultArmed(){
+    const empty = [null,null,null,null,null,null,null,null];
+    return [
+        empty.slice(), empty.slice(), empty.slice(),
+        empty.slice(), empty.slice(), empty.slice(),
+        ['P','P','P','P','P','P','P','P'],
+        ['R','N','B','Q','K','B','N','R']
+    ];
 }
 
-function validSetup(data){
-    if(!Array.isArray(data)||data.length!==8)return false;
-    for(let r=0;r<8;r++){ if(!Array.isArray(data[r])||data[r].length!==8)return false; }
-    let wk=false,bk=false;
-    for(let r=0;r<8;r++)for(let c=0;c<8;c++){ if(data[r][c]==='K')wk=true; if(data[r][c]==='k')bk=true; }
-    return wk&&bk;
+let setupBoard = [];
+let selectedSetupCell = null;
+let editMode = false;
+let snapshotBeforeEdit = null;
+
+function formatNum(n){if(Number.isInteger(n))return n.toString();return Number(n.toFixed(2)).toString();}
+
+function blankBoard(){
+    return Array.from({length:8}, function(){ return Array(8).fill(null); });
+}
+
+function armyCounts(board){
+    const cnt = { p:0, r:0, n:0, b:0, q:0, k:0 };
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++){
+        const v = board[r][c];
+        if (!v) continue;
+        const s = String(v);
+        if (s !== s.toUpperCase()) continue;
+        const t = s.toLowerCase();
+        if (cnt[t] !== undefined) cnt[t]++;
+    }
+    return cnt;
+}
+
+function armyExact(board){
+    const cnt = armyCounts(board);
+    for (let i = 0; i < ARMY_ORDER.length; i++){
+        const t = ARMY_ORDER[i];
+        if (cnt[t] !== ARMY_MAX[t]) return false;
+    }
+    return true;
+}
+
+/* из сохранения берём только два нижних ряда и только белые фигуры */
+function normalize(raw){
+    if (!Array.isArray(raw) || raw.length !== 8) return null;
+
+    const out = blankBoard();
+
+    for (let k = 0; k < SETUP_ROWS.length; k++){
+        const r = SETUP_ROWS[k];
+        if (!Array.isArray(raw[r]) || raw[r].length !== 8) return null;
+
+        for (let c = 0; c < 8; c++){
+            const v = raw[r][c];
+            if (!v) continue;
+            const s = String(v);
+            if (!/^[prnbqk]$/i.test(s)) return null;
+            out[r][c] = s.toUpperCase();
+        }
+    }
+
+    return armyExact(out) ? out : null;
 }
 
 function initSetup(){
-    let initialData=DEFAULT_BOARD; const saved=localStorage.getItem('chessSetup');
-    if(saved){ try{ const parsed=JSON.parse(saved); if(validSetup(parsed))initialData=parsed; }catch(e){} }
-    setupBoard=initialData.map(row=>row.map(pc=>createPiece(pc)));
-    selectedSetupCell=null;editMode=false;updateSetupUI();renderSetupBoard();
+    let data = null;
+    try {
+        const raw = JSON.parse(localStorage.getItem(SETUP_KEY) || 'null');
+        data = normalize(raw);
+    } catch (e){}
+
+    setupBoard = data || defaultArmed();
+    selectedSetupCell = null;
+    editMode = false;
+    updateSetupUI();
+    renderSetupBoard();
+    renderArmyCounts();
 }
+
+function renderArmyCounts(){
+    const box = document.getElementById('army-counts');
+    if (!box) return;
+
+    const cnt = armyCounts(setupBoard);
+    box.innerHTML = '';
+
+    for (let i = 0; i < ARMY_ORDER.length; i++){
+        const t = ARMY_ORDER[i];
+        const chip = document.createElement('div');
+        const ok = (cnt[t] === ARMY_MAX[t]);
+        chip.className = 'army-chip ' + (ok ? 'ok' : 'bad');
+        chip.textContent = PIECES[t].icon + ' ' + cnt[t] + '/' + ARMY_MAX[t];
+        box.appendChild(chip);
+    }
+}
+
 function updateSetupUI(){
-const hint=document.getElementById('setup-hint'); const btnEdit=document.getElementById('btn-edit'); const editControls=document.getElementById('edit-controls'); const boardEl=document.getElementById('setup-board');
-if(editMode){ btnEdit.style.display='none'; editControls.style.display='flex'; boardEl.classList.remove('view-mode');boardEl.classList.add('edit-mode'); hint.innerHTML='✏️ Режим редактирования: выбери фигуру, затем пустую клетку или другую белую фигуру (для обмена)'; }
-else{ btnEdit.style.display='block'; editControls.style.display='none'; boardEl.classList.remove('edit-mode');boardEl.classList.add('view-mode'); hint.innerHTML='Эта расстановка пойдёт с тобой в бой <span class="lock-badge">🔒 Закреплено</span>'; }
+    const hint = document.getElementById('setup-hint');
+    const btnEdit = document.getElementById('btn-edit');
+    const editControls = document.getElementById('edit-controls');
+    const boardEl = document.getElementById('setup-board');
+
+    if (editMode){
+        btnEdit.style.display = 'none';
+        editControls.style.display = 'flex';
+        boardEl.classList.remove('view-mode');
+        boardEl.classList.add('edit-mode');
+        hint.innerHTML = '✏️ Тапни фигуру, потом другую — они поменяются местами. Только два нижних ряда.';
+    } else {
+        btnEdit.style.display = 'block';
+        editControls.style.display = 'none';
+        boardEl.classList.remove('edit-mode');
+        boardEl.classList.add('view-mode');
+        hint.innerHTML = 'Эта расстановка пойдёт с тобой в бой <span class="lock-badge">🔒 Закреплено</span>';
+    }
 }
-function renderSetupBoard(){const boardEl=document.getElementById('setup-board');boardEl.innerHTML='';
-for(let r=0;r<8;r++){for(let c=0;c<8;c++){
-const cell=document.createElement('div'); cell.className=`cell ${(r+c)%2===0?'white':'black'}`; if(r===6||r===7)cell.classList.add('setup-zone'); cell.onclick=()=>handleSetupClick(r,c);
-if(selectedSetupCell&&selectedSetupCell.r===r&&selectedSetupCell.c===c)cell.classList.add('selected');
-const piece=setupBoard[r][c];
-if(piece){
-const pieceEl=document.createElement('div');pieceEl.className='piece';pieceEl.innerText=piece.icon; pieceEl.style.color=piece.color==='white'?'#fff':'#0a0a0a'; pieceEl.style.textShadow=piece.color==='white'?'0 1px 0 #666,0 2px 0 #444,0 3px 4px rgba(0,0,0,0.9)':'0 1px 0 #555,0 2px 3px rgba(255,255,255,0.3),0 3px 4px rgba(0,0,0,0.9)';
-const costBadge=document.createElement('div');costBadge.className='top-cost-badge';costBadge.innerText=piece.cost;
-const hpBar=document.createElement('div');hpBar.className='bottom-hp-bar'; hpBar.innerHTML=`<span class="lvl-num">${formatNum(piece.level)}</span>`;
-const hpText=document.createElement('div');hpText.className='hp-text-below'; hpText.innerText=`${formatNum(piece.hp)}/${formatNum(piece.maxHp)}`;
-cell.appendChild(pieceEl);cell.appendChild(costBadge);cell.appendChild(hpBar);cell.appendChild(hpText);}
-boardEl.appendChild(cell);}}}
-function handleSetupClick(r,c){
-if(!editMode)return; const clickedPiece=setupBoard[r][c];
-if(selectedSetupCell){
-if(selectedSetupCell.r===r&&selectedSetupCell.c===c){selectedSetupCell=null;renderSetupBoard();return;}
-const selectedPiece=setupBoard[selectedSetupCell.r][selectedSetupCell.c];
-if(clickedPiece&&clickedPiece.color==='white'){ setupBoard[r][c]=selectedPiece; setupBoard[selectedSetupCell.r][selectedSetupCell.c]=clickedPiece; selectedSetupCell=null;renderSetupBoard();return; }
-if((r===6||r===7)&&!clickedPiece){ setupBoard[r][c]=selectedPiece; setupBoard[selectedSetupCell.r][selectedSetupCell.c]=null; selectedSetupCell=null;renderSetupBoard();return; }
-selectedSetupCell=null;renderSetupBoard();return;
+
+function renderSetupBoard(){
+    const boardEl = document.getElementById('setup-board');
+    if (!boardEl) return;
+    boardEl.innerHTML = '';
+
+    for (let r = 0; r < 8; r++){
+        for (let c = 0; c < 8; c++){
+            const cell = document.createElement('div');
+            cell.className = 'cell ' + ((r + c) % 2 === 0 ? 'white' : 'black');
+
+            const inZone = (r === 6 || r === 7);
+
+            if (inZone) cell.classList.add('setup-zone');
+            else cell.classList.add('locked');
+
+            if (selectedSetupCell && selectedSetupCell.r === r && selectedSetupCell.c === c){
+                cell.classList.add('selected');
+            }
+
+            cell.onclick = (function(rr, cc){ return function(){ handleSetupClick(rr, cc); }; })(r, c);
+
+            const v = setupBoard[r][c];
+            if (v){
+                const t = String(v).toLowerCase();
+                const p = PIECES[t];
+
+                const pieceEl = document.createElement('div');
+                pieceEl.className = 'piece';
+                pieceEl.innerText = p.icon;
+                pieceEl.style.color = '#fff';
+                pieceEl.style.textShadow = '0 1px 0 #666,0 2px 0 #444,0 3px 4px rgba(0,0,0,0.9)';
+
+                const costBadge = document.createElement('div');
+                costBadge.className = 'top-cost-badge';
+                costBadge.innerText = p.cost;
+
+                const hpBar = document.createElement('div');
+                hpBar.className = 'bottom-hp-bar';
+                hpBar.innerHTML = '<span class="lvl-num">1</span>';
+
+                const hpText = document.createElement('div');
+                hpText.className = 'hp-text-below';
+                hpText.innerText = '1/1';
+
+                cell.appendChild(pieceEl);
+                cell.appendChild(costBadge);
+                cell.appendChild(hpBar);
+                cell.appendChild(hpText);
+            }
+
+            boardEl.appendChild(cell);
+        }
+    }
 }
-if(clickedPiece&&clickedPiece.color==='white'){ selectedSetupCell={r,c};renderSetupBoard(); }
+
+function handleSetupClick(r, c){
+    if (!editMode) return;
+    if (r !== 6 && r !== 7){
+        showToast('Только два нижних ряда','#ff9500');
+        return;
+    }
+
+    if (!selectedSetupCell){
+        if (!setupBoard[r][c]){
+            showToast('Тут пусто — выбери фигуру','#ff9500');
+            return;
+        }
+        selectedSetupCell = { r:r, c:c };
+        renderSetupBoard();
+        return;
+    }
+
+    if (selectedSetupCell.r === r && selectedSetupCell.c === c){
+        selectedSetupCell = null;
+        renderSetupBoard();
+        return;
+    }
+
+    const a = setupBoard[selectedSetupCell.r][selectedSetupCell.c];
+    const b = setupBoard[r][c];
+
+    setupBoard[r][c] = a;
+    setupBoard[selectedSetupCell.r][selectedSetupCell.c] = b;
+
+    selectedSetupCell = null;
+    renderSetupBoard();
+    renderArmyCounts();
 }
-function enterEditMode(){ snapshotBeforeEdit=JSON.parse(JSON.stringify(setupBoard)); editMode=true;selectedSetupCell=null;updateSetupUI();renderSetupBoard(); }
-function cancelEdit(){ if(snapshotBeforeEdit){setupBoard=snapshotBeforeEdit;} editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null; updateSetupUI();renderSetupBoard(); showToast('Изменения отменены','#ff9500'); }
+
+function enterEditMode(){
+    snapshotBeforeEdit = setupBoard.map(function(row){ return row.slice(); });
+    editMode = true;
+    selectedSetupCell = null;
+    updateSetupUI();
+    renderSetupBoard();
+}
+
+function cancelEdit(){
+    if (snapshotBeforeEdit){
+        setupBoard = snapshotBeforeEdit.map(function(row){ return row.slice(); });
+    }
+    editMode = false;
+    selectedSetupCell = null;
+    snapshotBeforeEdit = null;
+    updateSetupUI();
+    renderSetupBoard();
+    renderArmyCounts();
+    showToast('Изменения отменены','#ff9500');
+}
+
+function resetSetup(){
+    if (!editMode) return;
+    setupBoard = defaultArmed();
+    selectedSetupCell = null;
+    renderSetupBoard();
+    renderArmyCounts();
+    showToast('Стандартная расстановка','#3b82f6');
+}
+
 function saveSetup(){
-const saveData = setupBoard.map(row => row.map(p => { if (!p) return null; return p.color === 'white' ? p.type.toUpperCase() : p.type; }));
-if(!validSetup(saveData)){ showToast('Нужен король у белых и у чёрных','#ff3b30'); return; }
-localStorage.setItem('chessSetup',JSON.stringify(saveData));
-editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null; updateSetupUI();renderSetupBoard(); showToast('✅ Расстановка сохранена!','#34c759');
+    if (!armyExact(setupBoard)){
+        showToast('Состав должен быть как в шахматах: 8 пешек, 2 ладьи, 2 коня, 2 слона, ферзь, король','#ff3b30');
+        return;
+    }
+
+    /* сохраняем 8x8: свои два ряда + зеркальная копия соперника сверху,
+       чтобы тренировка с ботом получила полную доску */
+    const save = blankBoard();
+
+    for (let c = 0; c < 8; c++){
+        save[7][c] = setupBoard[7][c];
+        save[6][c] = setupBoard[6][c];
+    }
+
+    for (let c = 0; c < 8; c++){
+        const top = save[7][c];
+        const bot = save[6][c];
+        save[0][c] = top ? String(top).toLowerCase() : null;
+        save[1][c] = bot ? String(bot).toLowerCase() : null;
+    }
+
+    try {
+        localStorage.setItem(SETUP_KEY, JSON.stringify(save));
+    } catch (e){
+        showToast('Не удалось сохранить','#ff3b30');
+        return;
+    }
+
+    setupBoard = save;
+    editMode = false;
+    selectedSetupCell = null;
+    snapshotBeforeEdit = null;
+    updateSetupUI();
+    renderSetupBoard();
+    renderArmyCounts();
+    showToast('✅ Расстановка сохранена!','#34c759');
 }
+
 function showToast(msg,color){
-const toast=document.createElement('div'); toast.className='toast'; toast.style.borderColor=color; toast.style.boxShadow=`0 10px 30px rgba(0,0,0,0.8),0 0 20px ${color}66`; toast.innerText=msg;
-document.body.appendChild(toast); setTimeout(()=>toast.classList.add('show'),50); setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),400);},2200);
+    const toast=document.createElement('div');
+    toast.className='toast';
+    toast.style.borderColor=color;
+    toast.style.boxShadow=`0 10px 30px rgba(0,0,0,0.8),0 0 20px ${color}66`;
+    toast.innerText=msg;
+    document.body.appendChild(toast);
+    setTimeout(()=>toast.classList.add('show'),50);
+    setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),400);},2400);
 }
 
 chosenDeck = loadDeck();
-renderDeck(); initSetup();
+renderDeck();
+initSetup();
+
+setTimeout(function(){ switchSubTab('cards'); }, 0);
 </script>
 </body>
 </html>
