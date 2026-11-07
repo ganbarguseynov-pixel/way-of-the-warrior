@@ -1,15 +1,16 @@
 /* ============================================================
-   net.js — сеть: очередь, матч, запись кубков
-   v6: рассылка реже и легче, без записи в localStorage на каждый ход.
+   net.js — сеть: очередь, матч, обмен расстановками
+   v9: при соединении игроки обмениваются расстановками из колоды.
    ============================================================ */
 (function (global) {
 'use strict';
 
 const RECORD_KEY = 'arenaActiveMatch';
 const STATE_KEY  = 'arenaActiveState';
+const SETUP_KEY  = 'chessSetup';
 
-const PUSH_MS = 200;   // как часто хост рассылает состояние
-const TICK_MS = 100;   // шаг игрового времени
+const PUSH_MS = 200;
+const TICK_MS = 100;
 
 const Net = {
   sb: null,
@@ -25,6 +26,7 @@ const Net = {
   mySide: null,
   arena: 1,
   players: null,
+  setups: null,
   host: false,
   state: null,
 
@@ -65,7 +67,6 @@ function payloadOf(msg){
   return msg.payload !== undefined ? msg.payload : msg;
 }
 
-/* лёгкая копия: без журнала, колоды и прочего, что гостю не нужно */
 function slimState(s){
   return {
     id:        s.id,
@@ -73,8 +74,6 @@ function slimState(s){
     players:   s.players,
     board:     s.board,
     energy:    s.energy,
-    hand:      s.hand,
-    placed:    s.placed,
     traps:     s.traps,
     elapsed:   s.elapsed,
     phase:     s.phase,
@@ -85,6 +84,39 @@ function slimState(s){
     winner:    s.winner
   };
 }
+
+/* ---------------- расстановка ---------------- */
+
+function sanitizeSetup(raw){
+  if (!Array.isArray(raw) || raw.length !== 8) return null;
+
+  for (let r = 0; r < 8; r++){
+    if (!Array.isArray(raw[r]) || raw[r].length !== 8) return null;
+  }
+
+  let wk = false, bk = false;
+
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++){
+    const v = raw[r][c];
+    if (v === null || v === undefined || v === '') continue;
+    const s = String(v);
+    if (!/^[prnbqkPRNBQK]$/.test(s)) return null;
+    if (s === 'K') wk = true;
+    if (s === 'k') bk = true;
+  }
+
+  if (!wk || !bk) return null;
+  return raw;
+}
+
+Net.mySetup = function (){
+  try {
+    const raw = JSON.parse(localStorage.getItem(SETUP_KEY) || 'null');
+    const clean = sanitizeSetup(raw);
+    if (clean) return clean;
+  } catch (e){}
+  return global.Arena ? Arena.defaultSetup() : null;
+};
 
 /* ---------------- профиль ---------------- */
 
@@ -265,7 +297,7 @@ Net._tryPair = function (){
   const matchId = uuid();
   const arena = Math.min(Arena.arenaOf(myCups), Arena.arenaOf(opp.cups));
 
-  Net.pending = { to: opp.key, matchId: matchId, arena: arena, opp: opp };
+  Net.pending = { to: opp.key, matchId: matchId, arena: arena, opp: opp, oppSetup: null };
 
   Net.emit('status', { text: 'Соперник найден: ' + opp.name + ' (' + opp.cups + ' 🏆)' });
 
@@ -278,7 +310,8 @@ Net._tryPair = function (){
       matchId: matchId,
       arena: arena,
       name: Net.name,
-      cups: myCups
+      cups: myCups,
+      setup: Net.mySetup()
     }
   });
 
@@ -301,7 +334,8 @@ Net._onInvite = function (p){
       to: p.from,
       matchId: p.matchId,
       name: Net.name,
-      cups: Net.me ? Net.me.cups : 0
+      cups: Net.me ? Net.me.cups : 0,
+      setup: Net.mySetup()
     }
   });
 
@@ -311,7 +345,8 @@ Net._onInvite = function (p){
     side: 'b',
     oppKey: p.from,
     oppName: p.name,
-    oppCups: p.cups
+    oppCups: p.cups,
+    oppSetup: p.setup
   });
 };
 
@@ -320,12 +355,13 @@ Net._onAccept = function (p){
   if (!Net.pending || Net.pending.matchId !== p.matchId) return;
 
   Net._beginMatch({
-    matchId: p.matchId,
+    matchId: Net.pending.matchId,
     arena: Net.pending.arena,
     side: 'a',
     oppKey: p.from,
     oppName: p.name,
-    oppCups: p.cups
+    oppCups: p.cups,
+    oppSetup: p.setup
   });
 };
 
@@ -395,6 +431,13 @@ Net._beginMatch = async function (m){
     ? { a: meP, b: oppP }
     : { a: oppP, b: meP };
 
+  const mySetup  = Net.mySetup();
+  const oppSetup = sanitizeSetup(m.oppSetup) || (Arena.defaultSetup ? Arena.defaultSetup() : null);
+
+  Net.setups = Net.host
+    ? { a: mySetup, b: oppSetup }
+    : { a: oppSetup, b: mySetup };
+
   Net._writeRecord();
 
   await Net._attach();
@@ -415,7 +458,8 @@ Net._hostStart = function (){
   Net.state = Arena.create({
     id: Net.matchId,
     arena: Net.arena,
-    players: Net.players
+    players: Net.players,
+    setups: Net.setups
   });
 
   Net.emit('start', {
@@ -481,7 +525,6 @@ Net._applyIntent = function (msg, side){
   let res = null;
 
   switch (msg.t){
-    case 'place':  res = Arena.place(s, side, msg.type, msg.x, msg.y); break;
     case 'move':   res = Arena.move(s, side, msg.fx, msg.fy, msg.tx, msg.ty); break;
     case 'night':  res = Arena.castNight(s, side); break;
     case 'unlock': res = Arena.unlock(s, side, msg.x, msg.y); break;
