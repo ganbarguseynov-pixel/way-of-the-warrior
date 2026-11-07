@@ -102,7 +102,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </head>
 <body>
 
-<div id="verTag">v9</div>
+<div id="verTag">v10</div>
 
 <div class="game-top-bar">
 <div class="timer-row">
@@ -602,28 +602,40 @@ function startBotLogic() {
                 if (p && p.color === 'black' && blackElixir >= p.cost) {
                     let moves = getValidMoves(r, c);
                     if (moves.length > 0) {
-                        moves.forEach(m => possibleMoves.push({fromR: r, fromC: c, toR: m.r, toC: m.c}));
+                        moves.forEach(m => possibleMoves.push({fromR: r, fromC: c, toR: m.r, toC: m.c, cap: boardState[m.r][m.c] ? 1 : 0}));
                     }
                 }
             }
         }
         
         if (possibleMoves.length > 0) {
-            let move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+            const caps = possibleMoves.filter(m => m.cap);
+            const pool = (caps.length && Math.random() < 0.6) ? caps : possibleMoves;
+            let move = pool[Math.floor(Math.random() * pool.length)];
             makeMove(move.fromR, move.fromC, move.toR, move.toC, { byBot: true });
             lastBotMove = Date.now();
         }
     }, 1000);
 }
 
-/* ШАХ больше ничего не делает.
-   Игру заканчивает только МАТ и ПАТ. */
-function checkAfterMove(){
-    if (!gameActive) return;
+/* шах больше не снимает HP — бой заканчивает только мат или пат */
+function checkAfterMove() {
     checkGameEnd();
 }
 
-function selectPromotion(newType){if(promotionTarget){let p=boardState[promotionTarget.r][promotionTarget.c];p.type=newType;p.icon=PIECES[newType].icon;p.cost=PIECES[newType].cost;}document.getElementById('promotion-modal').classList.remove('active');promotionTarget=null;renderBoard();setTimeout(checkGameEnd,100);}
+function selectPromotion(newType){
+    if(promotionTarget){
+        let p=boardState[promotionTarget.r][promotionTarget.c];
+        p.type=newType;
+        p.icon=PIECES[newType].icon;
+        p.cost=PIECES[newType].cost;
+    }
+    document.getElementById('promotion-modal').classList.remove('active');
+    promotionTarget=null;
+    renderBoard();
+    setTimeout(checkGameEnd,100);
+}
+
 initGame();
 </script>
 </body>
