@@ -118,7 +118,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 </style>
 </head>
 <body data-arena="1">
-<div id="verTag">v24</div>
+<div id="verTag">v25</div>
 
 <div id="lobby">
   <div class="card">
@@ -199,7 +199,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 </div>
 
 <script src="arena.js?v=18"></script>
-<script src="friends.js"></script>
+<script src="friends.js?v=2"></script>
 <script src="net.js?v=20"></script>
 <script>
 const sb = supabase.createClient(
@@ -761,7 +761,7 @@ boot();
 </script>
 
 <script>
-/* ===== дружеский вызов: приём и отправка ===== */
+/* ===== дружеский вызов: отмена и ожидание ===== */
 (function(){
   var qs = new URLSearchParams(location.search);
   var chId = qs.get('ch');
@@ -773,15 +773,36 @@ boot();
   var oppCups = parseInt(qs.get('cups') || '0', 10) || 0;
   var arena   = parseInt(qs.get('arena') || '1', 10) || 1;
 
-  var done = false, tick = null, poll = null;
+  var started = false;
+  var killed  = false;
+  var tick = null;
+  var poll = null;
 
-  function killOverlay(){
-    done = true;
+  function stopAll(){
+    killed = true;
     if (tick){ clearInterval(tick); tick = null; }
     if (poll){ clearInterval(poll); poll = null; }
+  }
+
+  function killOverlay(){
     var o = document.getElementById('frOv');
     if (o) o.remove();
   }
+
+  function goBack(){
+    stopAll();
+    killOverlay();
+    location.href = 'chess-social.html';
+  }
+
+  /* вызов отменяется, если хост уходит со страницы, не дождавшись */
+  function cancelOnLeave(){
+    if (role !== 'host' || started || killed) return;
+    if (window.Friends) Friends.cancelBeacon(chId);
+  }
+
+  window.addEventListener('pagehide', cancelOnLeave);
+  window.addEventListener('beforeunload', cancelOnLeave);
 
   function overlay(title, sub){
     var o = document.getElementById('frOv');
@@ -797,13 +818,19 @@ boot();
           '<div id="frS" style="font-size:12.5px;color:#94a3b8;line-height:1.5;margin-bottom:16px"></div>' +
           '<button id="frC" style="width:100%;padding:13px;border:0;border-radius:10px;' +
           'background:linear-gradient(145deg,#ef4444,#991b1b);color:#fff;font-weight:900;' +
-          'font-size:14px;cursor:pointer">Отменить</button>' +
+          'font-size:14px;cursor:pointer">Отменить вызов</button>' +
         '</div>';
       document.body.appendChild(o);
 
-      document.getElementById('frC').onclick = function(){
+      document.getElementById('frC').onclick = async function(){
+        stopAll();
         killOverlay();
-        try { Net.leaveMatch(); } catch (e){}
+        try {
+          if (role === 'host' && !started && window.Friends){
+            await Friends.cancel(chId);
+          }
+        } catch (e){}
+        try { await Net.leaveMatch(); } catch (e){}
         location.href = 'chess-social.html';
       };
     }
@@ -815,7 +842,7 @@ boot();
     var n = 0;
     tick = setInterval(function(){
       n++;
-      if (window.Net && Net.me && Net.sb){
+      if (window.Net && Net.me && Net.sb && window.Friends){
         clearInterval(tick); tick = null; cb();
       } else if (n > 100){
         clearInterval(tick); tick = null; killOverlay();
@@ -835,13 +862,13 @@ boot();
       });
 
       poll = setInterval(async function(){
-        if (done) return;
-        var r = await sb.from('arena_challenges').select('status').eq('id', chId).maybeSingle();
-        var st = (r && r.data) ? r.data.status : null;
-        if (st && st !== 'pending' && st !== 'accepted'){
-          killOverlay();
-          try { await Net.leaveMatch(); } catch (e){}
-          location.href = 'chess-social.html';
+        if (killed || started) return;
+
+        var st = await Friends.status(chId);
+
+        if (!st || st.status === 'declined'){
+          toast('Вызов отменён');
+          goBack();
         }
       }, 2500);
 
@@ -850,13 +877,27 @@ boot();
         matchId: chId, oppKey: oppKey, oppName: oppName,
         oppCups: oppCups, arena: arena
       });
+
       overlay('Загружаем партию', 'Соединяемся с ' + oppName + '…');
+
+      poll = setInterval(async function(){
+        if (killed || started) return;
+
+        var st = await Friends.status(chId);
+
+        if (!st){
+          toast('Соперник отменил вызов');
+          goBack();
+        }
+      }, 2500);
     }
   }
 
   if (window.Net){
-    Net.on('state', function(s){ if (s && s.board) killOverlay(); });
-    Net.on('result', function(){ killOverlay(); });
+    Net.on('state', function(s){
+      if (s && s.board){ started = true; stopAll(); killOverlay(); }
+    });
+    Net.on('result', function(){ stopAll(); killOverlay(); });
   }
 
   history.replaceState(null, '', location.pathname);
