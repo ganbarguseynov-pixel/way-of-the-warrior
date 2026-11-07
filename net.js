@@ -1,6 +1,7 @@
 /* ============================================================
-   net.js — сеть: очередь, матч, бот, ничья (VER 17)
-   Бот принимает ничью в 15% случаев. Лимит предложений — 2.
+   net.js — сеть: очередь, матч, бот, ничья (VER 19)
+   Бот принимает ничью только когда реально проигрывает.
+   Ничью можно предлагать 2 раза за партию.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -26,9 +27,6 @@ const LOG_MAX = 700;
 
 /* сколько раз за партию можно предложить ничью */
 const DRAW_OFFER_MAX = 2;
-
-/* шанс, что бот примет предложенную ничью */
-const BOT_DRAW_ACCEPT = 0.15;
 
 const BOT_NAMES = [
   'Дмитрий','Алексей','Максим','Артём','Сергей','Кирилл','Иван','Никита',
@@ -686,9 +684,9 @@ Net._botTick = function (){
     const st = Net.state;
     if (!st || st.over){ Net._botTick(); return; }
 
-    /* бот отвечает на предложенную ничью: принимает редко */
+    /* бот отвечает на предложенную ничью: только если реально проигрывает */
     if (st.drawOffer && st.drawOffer.a){
-      const accept = Math.random() < BOT_DRAW_ACCEPT;
+      const accept = Net._botLosing(st, 'b');
       Net._applyIntent({ t: accept ? 'draw' : 'undraw' }, 'b');
     } else {
       Net._botMove();
@@ -696,6 +694,60 @@ Net._botTick = function (){
 
     Net._botTick();
   }, wait);
+};
+
+/* ============================================================
+   ОЦЕНКА ПОЗИЦИИ БОТА
+   Возвращает true только если бот реально стоит на проигрыш
+   и ничья для него — спасение. Во всех остальных случаях false.
+   ============================================================ */
+Net._botLosing = function (s, side){
+  if (!s) return false;
+
+  let mine = 0, theirs = 0;   /* суммарная сила фигур */
+  let myCount = 0, hisCount = 0;
+  let myQ = 0, hisQ = 0;      /* ферзи */
+
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
+    const pc = s.board[y][x];
+    if (!pc) continue;
+
+    const def = Arena.PIECES[pc.type];
+    const v = (def && typeof def.val === 'number') ? def.val : 0;
+
+    if (pc.type === 'queen'){
+      if (pc.side === side) myQ++;
+      else hisQ++;
+    }
+
+    if (pc.side === side){ mine += v; myCount++; }
+    else { theirs += v; hisCount++; }
+  }
+
+  const gap = mine - theirs;
+
+  let inCheck = false;
+  try { inCheck = Arena.kingAttacked(s, side); } catch (e){}
+
+  let canMove = true;
+  try { canMove = Arena.sideHasAnyLegal(s, side); } catch (e){}
+
+  /* 1. ходов вообще нет — он заперт, дальше только мат */
+  if (!canMove) return true;
+
+  /* 2. отстаёт на ферзя и больше */
+  if (gap <= -8) return true;
+
+  /* 3. отстаёт на ладью и король под шахом */
+  if (gap <= -5 && inCheck) return true;
+
+  /* 4. потерял ферзя, а у соперника он есть, и при этом слабее */
+  if (myQ === 0 && hisQ > 0 && gap <= -4) return true;
+
+  /* 5. разгромлен по числу фигур */
+  if (myCount <= 4 && hisCount >= 9 && gap <= -6) return true;
+
+  return false;
 };
 
 /* ---------------- искусственный игрок ---------------- */
@@ -1303,7 +1355,6 @@ Net.leaveMatch = async function (){
 };
 
 Net.DRAW_OFFER_MAX = DRAW_OFFER_MAX;
-Net.BOT_DRAW_ACCEPT = BOT_DRAW_ACCEPT;
 
 global.Net = Net;
 
