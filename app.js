@@ -192,7 +192,7 @@ if(currentXP>=e[n].xp) t=n;
 }
 const n=e[t];
 currentLevelIndex=t;
-document.getElementById('char-level')&&(document.getElementById('char-level').innerText="Уровень "+(t+1));
+document.getElementById('char-level')&&(document.getElementById('char-level').innerText="Уровень "+(t+1)+" / "+e.length);
 document.getElementById('char-title')&&(document.getElementById('char-title').innerText=n.title);
 document.getElementById('xp-text')&&(document.getElementById('xp-text').innerText=currentXP+" XP");
 let s=100;
