@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Chess Royale - Колода</title>
 <style>
 body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;padding-bottom:80px;}
@@ -17,13 +18,22 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 .sub-tab-btn.active{background:linear-gradient(145deg,#64748b,#334155);color:#fff;border-color:#94a3b8;box-shadow:0 4px 10px rgba(100,116,139,0.5),inset 0 1px 0 rgba(255,255,255,0.25);}
 .screen{display:none;flex-direction:column;width:100%;align-items:center;flex:1;overflow-y:auto;padding-bottom:90px;}
 .screen.active{display:flex;}
-.deck-area{width:95vw;max-width:400px;padding:10px;display:flex;flex-direction:column;gap:15px;}
-.deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
+.deck-area{width:95vw;max-width:400px;padding:10px;display:flex;flex-direction:column;gap:10px;}
+.deck-note{width:100%;text-align:center;font-size:11.5px;color:#94a3b8;line-height:1.45;padding:0 6px;}
+.deck-note b{color:#22c55e;}
+.deck-note.warn{color:#f59e0b;}
+.deck-picked{display:flex;gap:6px;justify-content:center;margin-top:2px;}
+.deck-slot{flex:1;height:34px;border-radius:9px;border:2px dashed #334155;display:flex;align-items:center;justify-content:center;font-size:17px;color:#475569;background:rgba(2,6,23,.4);}
+.deck-slot.filled{border-style:solid;border-color:#22c55e;color:#fff;background:linear-gradient(145deg,#064e3b,#022c22);}
+.deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px;}
 .card{background:linear-gradient(145deg,#1e293b,#0f172a);border-radius:10px;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:space-between;align-items:center;position:relative;padding:5px;border:2px solid #3a3a3c;box-shadow:0 6px 10px rgba(0,0,0,0.5),inset 0 2px 2px rgba(255,255,255,0.08),inset 0 -3px 5px rgba(0,0,0,0.5);}
 .card.common{border-color:#8e8e93;}
 .card.rare{border-color:#ff9500;background:linear-gradient(145deg,#1e293b,#2a1a00);box-shadow:0 6px 12px rgba(255,149,0,0.3),inset 0 2px 2px rgba(255,255,255,0.08),inset 0 -3px 5px rgba(0,0,0,0.5);}
 .card.epic{border-color:#af52de;background:linear-gradient(145deg,#1e293b,#1a0f2e);box-shadow:0 6px 12px rgba(175,82,222,0.3),inset 0 2px 2px rgba(255,255,255,0.08),inset 0 -3px 5px rgba(0,0,0,0.5);}
+.card.picked{border-color:#22c55e!important;box-shadow:0 0 16px rgba(34,197,94,0.55),inset 0 2px 2px rgba(255,255,255,0.08),inset 0 -3px 5px rgba(0,0,0,0.5);transform:translateY(-2px);}
+.card.soon{opacity:0.4;}
 .card-elixir{position:absolute;top:-6px;left:-6px;background:linear-gradient(145deg,#ff6b7a,#c0392b);color:#fff;font-weight:900;font-size:12px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:2;box-shadow:0 2px 5px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.5);}
+.pick-order{position:absolute;top:-6px;right:-6px;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-weight:900;font-size:12px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:3;box-shadow:0 2px 5px rgba(0,0,0,0.7);}
 .card-icon{font-size:30px;margin-top:15px;color:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,0.7));}
 .card-name{font-size:10px;color:#fff;text-align:center;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.8);}
 .card-level{font-size:9px;color:#ffcc00;background:rgba(0,0,0,0.8);padding:2px 5px;border-radius:4px;width:90%;text-align:center;margin-top:5px;box-shadow:inset 0 1px 2px rgba(0,0,0,0.5);}
@@ -85,6 +95,8 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 
 <div id="screen-cards" class="screen active">
 <div class="deck-area">
+<div class="deck-note" id="deck-note">Выбери 4 карты — они пойдут с тобой в бой</div>
+<div class="deck-picked" id="deck-picked"></div>
 <div class="deck-grid" id="deck-grid"></div>
 </div>
 </div>
@@ -148,21 +160,116 @@ document.getElementById('sub-tab-setup-btn').classList.remove('active');
 if(tab==='cards'){document.getElementById('screen-cards').classList.add('active');document.getElementById('sub-tab-cards-btn').classList.add('active');}
 else{document.getElementById('screen-setup').classList.add('active');document.getElementById('sub-tab-setup-btn').classList.add('active');}
 }
+
+/* ================= КАРТЫ КОЛОДЫ ================= */
+
+const PIECE_TYPES = ['p','n','b','r','k','q'];
+const HAND_SIZE   = 4;
+const HOARD_KEY   = 'chessHand';
+
 const DECK_CARDS=[
-{name:'Пешка',icon:'♟',elixir:1,level:1,rarity:'common'},
-{name:'Конь',icon:'♞',elixir:2,level:1,rarity:'rare'},
-{name:'Слон',icon:'♝',elixir:3,level:1,rarity:'rare'},
-{name:'Ладья',icon:'♜',elixir:4,level:1,rarity:'epic'},
-{name:'Король',icon:'♚',elixir:5,level:1,rarity:'epic'},
-{name:'Ферзь',icon:'♛',elixir:6,level:1,rarity:'epic'},
-{name:'Ярость',icon:'⚡',elixir:2,level:1,rarity:'common'},
-{name:'Щит',icon:'🛡️',elixir:3,level:1,rarity:'common'}
+{name:'Пешка',icon:'♟',elixir:1,level:1,rarity:'common',type:'p'},
+{name:'Конь',icon:'♞',elixir:2,level:1,rarity:'rare',type:'n'},
+{name:'Слон',icon:'♝',elixir:3,level:1,rarity:'rare',type:'b'},
+{name:'Ладья',icon:'♜',elixir:4,level:1,rarity:'epic',type:'r'},
+{name:'Король',icon:'♚',elixir:5,level:1,rarity:'epic',type:'k'},
+{name:'Ферзь',icon:'♛',elixir:6,level:1,rarity:'epic',type:'q'},
+{name:'Ярость',icon:'⚡',elixir:2,level:1,rarity:'common',soon:true},
+{name:'Щит',icon:'🛡️',elixir:3,level:1,rarity:'common',soon:true}
 ];
-function renderDeck(){const grid=document.getElementById('deck-grid');grid.innerHTML='';
-DECK_CARDS.forEach(card=>{let cardDiv=document.createElement('div');
-cardDiv.className=`card ${card.rarity}`;
-cardDiv.innerHTML=`<div class="card-elixir">${card.elixir}</div><div class="card-icon">${card.icon}</div><div class="card-name">${card.name}</div><div class="card-level">${card.level}-й ур.</div>`;
-grid.appendChild(cardDiv);});}
+
+let chosenDeck = [];
+
+function loadDeck(){
+    let saved = null;
+    try {
+        const raw = JSON.parse(localStorage.getItem(HOARD_KEY) || 'null');
+        if (Array.isArray(raw)) saved = raw.filter(t => PIECE_TYPES.indexOf(t) >= 0);
+    } catch (e){}
+    if (!saved || !saved.length) saved = ['p','n','b','r'];
+    while (saved.length < HAND_SIZE) saved.push('p');
+    return saved.slice(0, HAND_SIZE);
+}
+
+function saveDeck(){
+    try { localStorage.setItem(HOARD_KEY, JSON.stringify(chosenDeck)); } catch (e){}
+}
+
+function toggleCard(type){
+    const i = chosenDeck.indexOf(type);
+    if (i >= 0){
+        chosenDeck.splice(i, 1);
+    } else {
+        if (chosenDeck.length >= HAND_SIZE){
+            showToast('В колоде уже 4 карты — убери одну','#ff9500');
+            return;
+        }
+        chosenDeck.push(type);
+    }
+    saveDeck();
+    renderDeck();
+}
+
+function renderDeck(){
+    const grid = document.getElementById('deck-grid');
+    grid.innerHTML = '';
+
+    DECK_CARDS.forEach(function(card){
+        const cardDiv = document.createElement('div');
+        const picked = card.type ? chosenDeck.indexOf(card.type) : -1;
+        const isSoon = !!card.soon;
+
+        cardDiv.className = 'card ' + card.rarity +
+            (picked >= 0 ? ' picked' : '') +
+            (isSoon ? ' soon' : '');
+
+        let order = '';
+        if (picked >= 0){
+            order = '<div class="pick-order">' + (picked + 1) + '</div>';
+        }
+
+        cardDiv.innerHTML =
+            '<div class="card-elixir">' + card.elixir + '</div>' +
+            order +
+            '<div class="card-icon">' + card.icon + '</div>' +
+            '<div class="card-name">' + card.name + '</div>' +
+            '<div class="card-level">' + (isSoon ? 'скоро' : card.level + '-й ур.') + '</div>';
+
+        if (!isSoon && card.type){
+            cardDiv.onclick = function(){ toggleCard(card.type); };
+        }
+
+        grid.appendChild(cardDiv);
+    });
+
+    /* слоты выбранных карт */
+    const picked = document.getElementById('deck-picked');
+    picked.innerHTML = '';
+    for (let i = 0; i < HAND_SIZE; i++){
+        const slot = document.createElement('div');
+        const t = chosenDeck[i];
+        if (t){
+            slot.className = 'deck-slot filled';
+            slot.textContent = PIECES[t] ? PIECES[t].icon : '';
+        } else {
+            slot.className = 'deck-slot';
+            slot.textContent = '—';
+        }
+        picked.appendChild(slot);
+    }
+
+    const note = document.getElementById('deck-note');
+    if (chosenDeck.length === HAND_SIZE){
+        const names = chosenDeck.map(function(t){ return PIECES[t].name; }).join(' · ');
+        note.className = 'deck-note';
+        note.innerHTML = 'Колода готова: <b>' + names + '</b>';
+    } else {
+        note.className = 'deck-note warn';
+        note.innerHTML = 'Выбрано ' + chosenDeck.length + ' из 4 — добери карты';
+    }
+}
+
+/* ================= РАССТАНОВКА ================= */
 
 const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
 const DEFAULT_BOARD=[['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
@@ -175,16 +282,25 @@ function createPiece(pc){
     if(!PIECES[type]) return null; let level = 1;
     return{type:type,color:color,level:level,hp:level,maxHp:level,cost:PIECES[type].cost,icon:PIECES[type].icon};
 }
+
+function validSetup(data){
+    if(!Array.isArray(data)||data.length!==8)return false;
+    for(let r=0;r<8;r++){ if(!Array.isArray(data[r])||data[r].length!==8)return false; }
+    let wk=false,bk=false;
+    for(let r=0;r<8;r++)for(let c=0;c<8;c++){ if(data[r][c]==='K')wk=true; if(data[r][c]==='k')bk=true; }
+    return wk&&bk;
+}
+
 function initSetup(){
     let initialData=DEFAULT_BOARD; const saved=localStorage.getItem('chessSetup');
-    if(saved){ try{ const parsed=JSON.parse(saved); if(parsed&&parsed.length===8)initialData=parsed; }catch(e){} }
+    if(saved){ try{ const parsed=JSON.parse(saved); if(validSetup(parsed))initialData=parsed; }catch(e){} }
     setupBoard=initialData.map(row=>row.map(pc=>createPiece(pc)));
     selectedSetupCell=null;editMode=false;updateSetupUI();renderSetupBoard();
 }
 function updateSetupUI(){
 const hint=document.getElementById('setup-hint'); const btnEdit=document.getElementById('btn-edit'); const editControls=document.getElementById('edit-controls'); const boardEl=document.getElementById('setup-board');
 if(editMode){ btnEdit.style.display='none'; editControls.style.display='flex'; boardEl.classList.remove('view-mode');boardEl.classList.add('edit-mode'); hint.innerHTML='✏️ Режим редактирования: выбери фигуру, затем пустую клетку или другую белую фигуру (для обмена)'; }
-else{ btnEdit.style.display='block'; editControls.style.display='none'; boardEl.classList.remove('edit-mode');boardEl.classList.add('view-mode'); hint.innerHTML='Текущая расстановка <span class="lock-badge">🔒 Закреплено</span>'; }
+else{ btnEdit.style.display='block'; editControls.style.display='none'; boardEl.classList.remove('edit-mode');boardEl.classList.add('view-mode'); hint.innerHTML='Эта расстановка пойдёт с тобой в бой <span class="lock-badge">🔒 Закреплено</span>'; }
 }
 function renderSetupBoard(){const boardEl=document.getElementById('setup-board');boardEl.innerHTML='';
 for(let r=0;r<8;r++){for(let c=0;c<8;c++){
@@ -213,6 +329,7 @@ function enterEditMode(){ snapshotBeforeEdit=JSON.parse(JSON.stringify(setupBoar
 function cancelEdit(){ if(snapshotBeforeEdit){setupBoard=snapshotBeforeEdit;} editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null; updateSetupUI();renderSetupBoard(); showToast('Изменения отменены','#ff9500'); }
 function saveSetup(){
 const saveData = setupBoard.map(row => row.map(p => { if (!p) return null; return p.color === 'white' ? p.type.toUpperCase() : p.type; }));
+if(!validSetup(saveData)){ showToast('Нужен король у белых и у чёрных','#ff3b30'); return; }
 localStorage.setItem('chessSetup',JSON.stringify(saveData));
 editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null; updateSetupUI();renderSetupBoard(); showToast('✅ Расстановка сохранена!','#34c759');
 }
@@ -220,6 +337,8 @@ function showToast(msg,color){
 const toast=document.createElement('div'); toast.className='toast'; toast.style.borderColor=color; toast.style.boxShadow=`0 10px 30px rgba(0,0,0,0.8),0 0 20px ${color}66`; toast.innerText=msg;
 document.body.appendChild(toast); setTimeout(()=>toast.classList.add('show'),50); setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),400);},2200);
 }
+
+chosenDeck = loadDeck();
 renderDeck(); initSetup();
 </script>
 </body>
