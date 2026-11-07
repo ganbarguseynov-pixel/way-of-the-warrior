@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>История партий</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+:root{--dark:#334155;--light:#64748b;--accent:#ffcc00}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;min-height:100vh;min-height:100dvh;padding-bottom:20px;user-select:none}
+.hist-head{display:flex;align-items:center;gap:10px;padding:14px 16px 10px}
+.hist-back{background:#1e293b;border:1px solid #475569;color:#cbd5e1;width:34px;height:34px;border-radius:50%;font-size:15px;cursor:pointer;line-height:1}
+.hist-head h2{margin:0;font-size:17px;letter-spacing:.5px}
+.hist-list{padding:4px 16px 30px}
+.hist-card{background:linear-gradient(145deg,#1e293b,#0f172a);border:1px solid #334155;border-radius:14px;padding:13px 14px;margin-bottom:10px;cursor:pointer;transition:transform .12s,border-color .2s}
+.hist-card:active{transform:scale(.985);border-color:#94a3b8}
+.hist-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.hist-opp{font-size:14px;font-weight:900;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:62%}
+.hist-res{font-size:12px;font-weight:900;letter-spacing:.5px;padding:3px 9px;border-radius:8px}
+.res-win{color:#4ade80;background:rgba(34,197,94,.14);border:1px solid #15803d}
+.res-lose{color:#f87171;background:rgba(239,68,68,.14);border:1px solid #991b1b}
+.res-draw{color:#9fb6c4;background:rgba(148,163,184,.14);border:1px solid #475569}
+.hist-meta{display:flex;justify-content:space-between;font-size:11px;color:#94a3b8}
+.hist-meta b{color:#ffcc00;font-weight:800}
+.hist-empty{text-align:center;color:#64748b;font-size:13px;padding:50px 20px;line-height:1.6}
+
+#replay{position:fixed;inset:0;background:#0b1120;z-index:900;display:none;flex-direction:column;align-items:center;padding:8px 0 14px;overflow:hidden}
+#replay.open{display:flex}
+.rp-head{width:min(94vw,420px);display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.rp-back{background:#1e293b;border:1px solid #475569;color:#cbd5e1;width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;line-height:1;flex-shrink:0}
+.rp-title{font-size:13px;font-weight:900;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-sub{font-size:10.5px;color:#94a3b8;margin-top:1px}
+
+#rpBoardWrap{position:relative}
+#rpBoard{--side:min(94vw,420px,calc(100dvh - 250px));width:var(--side);height:var(--side);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border:3px solid #334155;border-radius:12px;overflow:hidden;box-shadow:0 12px 34px rgba(0,0,0,.85)}
+.cell{position:relative;display:flex;align-items:center;justify-content:center;font-size:clamp(15px,5.4vw,28px);overflow:hidden}
+.cell.light{background:var(--light)}
+.cell.dark{background:var(--dark)}
+.cell.check{box-shadow:inset 0 0 0 3px #ef4444,inset 0 0 20px rgba(239,68,68,.8)}
+.pc{line-height:1;margin-bottom:6px;font-weight:400;pointer-events:none}
+.pc.mine{color:#5aa9ec;text-shadow:0 0 6px rgba(90,169,236,.75),0 2px 4px rgba(0,0,0,.95)}
+.pc.theirs{color:#ef5350;text-shadow:0 0 6px rgba(239,83,80,.75),0 2px 4px rgba(0,0,0,.95)}
+
+.rp-ctrl{width:min(94vw,420px);margin-top:12px}
+#rpSlider{width:100%;height:26px;-webkit-appearance:none;background:transparent;outline:none}
+#rpSlider::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:#1e293b}
+#rpSlider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#ffcc00;margin-top:-6px;box-shadow:0 0 8px rgba(255,204,0,.8)}
+#rpSlider::-moz-range-track{height:6px;border-radius:3px;background:#1e293b}
+#rpSlider::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;background:#ffcc00}
+.rp-time{display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;font-weight:700;font-variant-numeric:tabular-nums;margin-top:-2px}
+.rp-btns{display:flex;gap:6px;margin-top:10px}
+.rp-btns button{flex:1;padding:11px 4px;border-radius:10px;font-size:12px;font-weight:800;border:1px solid #475569;background:linear-gradient(145deg,#475569,#1e293b);color:#fff;cursor:pointer}
+.rp-btns button:active{background:#334155}
+#rpPlay{background:linear-gradient(145deg,#22c55e,#15803d);border-color:#15803d}
+.rp-note{width:min(94vw,420px);text-align:center;font-size:10.5px;color:#475569;margin-top:10px;line-height:1.4}
+</style>
+</head>
+<body>
+
+<div class="hist-head">
+  <button class="hist-back" onclick="location.href='chess-main.html'">←</button>
+  <h2>📜 История партий</h2>
+</div>
+
+<div class="hist-list" id="histList">
+  <div class="hist-empty">Загрузка…</div>
+</div>
+
+<div id="replay">
+  <div class="rp-head">
+    <button class="rp-back" onclick="closeReplay()">←</button>
+    <div style="min-width:0">
+      <div class="rp-title" id="rpTitle">Партия</div>
+      <div class="rp-sub" id="rpSub"></div>
+    </div>
+  </div>
+
+  <div id="rpBoardWrap">
+    <div id="rpBoard"></div>
+  </div>
+
+  <div class="rp-ctrl">
+    <input type="range" id="rpSlider" min="0" max="1000" value="0">
+    <div class="rp-time">
+      <span id="rpNow">0:00</span>
+      <span id="rpMove">ход 0 / 0</span>
+      <span id="rpEnd">0:00</span>
+    </div>
+    <div class="rp-btns">
+      <button id="rpReset">⟲ Сначала</button>
+      <button id="rpBack5">−5 с</button>
+      <button id="rpPlay">▶ Играть</button>
+      <button id="rpFwd5">+5 с</button>
+    </div>
+    <div class="rp-note" id="rpNote"></div>
+  </div>
+</div>
+
+<script src="arena.js?v=18"></script>
+<script>
+const sb = supabase.createClient(
+  'https://qnpriwfxzuoymoumdtrl.supabase.co',
+  'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF'
+);
+
+const $ = function (id){ return document.getElementById(id); };
+
+function playerKey(){
+  const tgId = localStorage.getItem('tgId');
+  if (tgId) return 'tg:' + tgId;
+
+  const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
+  if (email) return 'email:' + email.toLowerCase();
+
+  let anon = localStorage.getItem('arenaAnonId');
+  if (!anon){
+    anon = 'anon:' + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('arenaAnonId', anon);
+  }
+  return anon;
+}
+
+function fmt(sec){
+  const t = Math.max(0, Math.floor(sec || 0));
+  return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+}
+
+function dateRu(iso){
+  try {
+    const d = new Date(iso);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    return dd + '.' + mm + ' ' + hh + ':' + mi;
+  } catch (e){ return ''; }
+}
+
+let rows = [];
+
+/* ---------------- список ---------------- */
+
+async function loadList(){
+  const list = $('histList');
+
+  const res = await sb
+    .from('arena_replays')
+    .select('match_id,my_side,arena,winner,opponent_name,seconds,created_at')
+    .eq('player_key', playerKey())
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  if (res.error){
+    list.innerHTML = '<div class="hist-empty">Не удалось загрузить историю.<br>' +
+      (res.error.message || '') + '</div>';
+    return;
+  }
+
+  rows = res.data || [];
+
+  if (!rows.length){
+    list.innerHTML = '<div class="hist-empty">Пока нет записанных партий.<br>' +
+      'Сыграй бой — он появится здесь.</div>';
+    return;
+  }
+
+  let html = '';
+
+  rows.forEach(function (r){
+    let cls = 'res-draw', txt = 'НИЧЬЯ';
+
+    if (r.winner === 'a' || r.winner === 'b'){
+      if (r.winner === r.my_side){ cls = 'res-win'; txt = 'ПОБЕДА'; }
+      else { cls = 'res-lose'; txt = 'ПОРАЖЕНИЕ'; }
+    }
+
+    html +=
+      '<div class="hist-card" data-id="' + r.match_id + '">' +
+        '<div class="hist-top">' +
+          '<div class="hist-opp">' + (r.opponent_name || 'Соперник') + '</div>' +
+          '<div class="hist-res ' + cls + '">' + txt + '</div>' +
+        '</div>' +
+        '<div class="hist-meta">' +
+          '<span>Арена <b>' + (r.arena || 1) + '</b> · ' + dateRu(r.created_at) + '</span>' +
+          '<span>' + fmt(r.seconds) + '</span>' +
+        '</div>' +
+      '</div>';
+  });
+
+  list.innerHTML = html;
+
+  const cards = list.querySelectorAll('.hist-card');
+  for (let i = 0; i < cards.length; i++){
+    (function (el){
+      el.onclick = function (){ openReplay(el.dataset.id); };
+    })(cards[i]);
+  }
+}
+
+/* ---------------- доска ---------------- */
+
+let cells = [];
+let R = null;
+
+function buildCells(){
+  const b = $('rpBoard');
+  b.innerHTML = '';
+  cells = [];
+
+  for (let i = 0; i < 64; i++){
+    const d = document.createElement('div');
+    d.className = 'cell';
+    b.appendChild(d);
+    cells.push(d);
+  }
+}
+
+function freshState(row){
+  return Arena.create({
+    id: 'replay',
+    arena: row.arena || 1,
+    players: {
+      a: { key:'a', name:'Белые', cups:0 },
+      b: { key:'b', name:'Чёрные', cups:0 }
+    },
+    setups: { a: row.setup_a, b: row.setup_b }
+  });
+}
+
+function applyMove(st, m){
+  if (m.t === 'm'){
+    Arena.move(st, m.s, m.fx, m.fy, m.tx, m.ty, m.p || 'q');
+    return;
+  }
+
+  if (m.t === 'r'){
+    Arena.resign(st, m.s);
+    return;
+  }
+
+  if (!st.drawOffer) st.drawOffer = { a:false, b:false };
+
+  if (m.t === 'd'){
+    const foe = (m.s === 'a') ? 'b' : 'a';
+    if (st.drawOffer[foe]){
+      st.drawOffer.a = false;
+      st.drawOffer.b = false;
+      Arena.finish(st, 'draw');
+    } else {
+      st.drawOffer[m.s] = true;
+    }
+    return;
+  }
+
+  if (m.t === 'u'){
+    st.drawOffer.a = false;
+    st.drawOffer.b = false;
+  }
+}
+
+function draw(){
+  if (!R) return;
+
+  const st = R.st;
+  const my = (R.row.my_side === 'b') ? 'b' : 'a';
+  const rot = (my === 'b');
+  const foe = (my === 'a') ? 'b' : 'a';
+
+  const myCheck = Arena.kingAttacked(st, my);
+  const foeCheck = Arena.kingAttacked(st, foe);
+
+  for (let dy = 0; dy < 8; dy++) for (let dx = 0; dx < 8; dx++){
+    const x = rot ? 7 - dx : dx;
+    const y = rot ? 7 - dy : dy;
+
+    const el = cells[dy * 8 + dx];
+    const pc = st.board[y] && st.board[y][x];
+    const light = ((x + y) % 2 === 0);
+
+    el.className = 'cell ' + (light ? 'light' : 'dark');
+    el.textContent = '';
+
+    if (pc){
+      const mine = (pc.side === my);
+      const def = Arena.PIECES[pc.type];
+
+      const sp = document.createElement('span');
+      sp.className = 'pc ' + (mine ? 'mine' : 'theirs');
+      sp.textContent = def ? (mine ? def.w : def.b) : '?';
+      el.appendChild(sp);
+
+      if (pc.type === 'king' && ((pc.side === my) ? myCheck : foeCheck)){
+        el.classList.add('check');
+      }
+    }
+  }
+
+  const total = R.total || 1;
+
+  $('rpNow').textContent = fmt(R.curT);
+  $('rpEnd').textContent = fmt(total);
+  $('rpMove').textContent = 'ход ' + R.idx + ' / ' + R.log.length;
+  $('rpSlider').value = Math.min(1000, Math.round((R.curT / total) * 1000));
+}
+
+function advanceTo(target){
+  if (!R) return;
+
+  const st = R.st;
+  const log = R.log;
+
+  while (R.idx < log.length && log[R.idx].at <= target && !st.over){
+    const m = log[R.idx++];
+    const dt = Math.max(0, m.at - R.curT);
+    if (dt > 0) Arena.tick(st, dt);
+    R.curT = Math.max(R.curT, m.at);
+    applyMove(st, m);
+  }
+
+  if (!st.over && target > R.curT){
+    Arena.tick(st, target - R.curT);
+    R.curT = target;
+  }
+
+  draw();
+}
+
+function seek(t){
+  if (!R) return;
+
+  R.st  = freshState(R.row);
+  R.idx = 0;
+  R.curT = 0;
+
+  advanceTo(Math.max(0, Math.min(R.total, t)));
+}
+
+/* ---------------- воспроизведение ---------------- */
+
+let playTimer = null;
+
+function stopPlay(){
+  if (playTimer){ clearInterval(playTimer); playTimer = null; }
+  $('rpPlay').textContent = '▶ Играть';
+}
+
+function startPlay(){
+  if (!R) return;
+  stopPlay();
+
+  if (R.curT >= R.total - 0.05){
+    seek(0);
+  }
+
+  const speed = 1.6;
+
+  $('rpPlay').textContent = '⏸ Пауза';
+
+  playTimer = setInterval(function (){
+    if (!R){ stopPlay(); return; }
+
+    const next = R.curT + 0.1 * speed;
+    advanceTo(next);
+
+    if (R.curT >= R.total - 0.05 || R.st.over){
+      stopPlay();
+    }
+  }, 100);
+}
+
+/* ---------------- открытие партии ---------------- */
+
+async function openReplay(id){
+  stopPlay();
+
+  const res = await sb
+    .from('arena_replays')
+    .select('*')
+    .eq('match_id', id)
+    .eq('player_key', playerKey())
+    .maybeSingle();
+
+  if (res.error || !res.data){
+    return;
+  }
+
+  const row = res.data;
+  const log = Array.isArray(row.moves) ? row.moves : [];
+
+  if (!log.length){
+    return;
+  }
+
+  buildCells();
+
+  let total = 0;
+  for (let i = 0; i < log.length; i++){
+    if (log[i].at > total) total = log[i].at;
+  }
+  total = Math.max(total, row.seconds || 0) + 2;
+
+  R = {
+    row: row,
+    log: log,
+    st: null,
+    idx: 0,
+    curT: 0,
+    total: total
+  };
+
+  R.st = freshState(row);
+
+  let cls = 'res-draw', txt = 'НИЧЬЯ';
+  if (row.winner === 'a' || row.winner === 'b'){
+    if (row.winner === row.my_side){ cls = 'res-win'; txt = 'ПОБЕДА'; }
+    else { cls = 'res-lose'; txt = 'ПОРАЖЕНИЕ'; }
+  }
+
+  $('rpTitle').textContent = (row.opponent_name || 'Соперник') + ' · ' + txt;
+  $('rpSub').textContent = 'Арена ' + (row.arena || 1) + ' · ' + dateRu(row.created_at);
+
+  $('rpNote').textContent = (row.my_side === 'a')
+    ? 'Ты играл светлыми фигурами'
+    : 'Ты играл тёмными фигурами';
+
+  $('rpSlider').value = 0;
+  draw();
+  $('replay').classList.add('open');
+}
+
+function closeReplay(){
+  stopPlay();
+  R = null;
+  $('replay').classList.remove('open');
+}
+
+/* ---------------- кнопки ---------------- */
+
+$('rpPlay').onclick = function (){
+  if (playTimer) stopPlay();
+  else startPlay();
+};
+
+$('rpReset').onclick = function (){
+  stopPlay();
+  seek(0);
+};
+
+$('rpBack5').onclick = function (){
+  stopPlay();
+  seek(Math.max(0, (R ? R.curT : 0) - 5));
+};
+
+$('rpFwd5').onclick = function (){
+  stopPlay();
+  seek(Math.min(R ? R.total : 0, (R ? R.curT : 0) + 5));
+};
+
+$('rpSlider').oninput = function (){
+  if (!R) return;
+  stopPlay();
+  const t = (parseInt(this.value, 10) / 1000) * R.total;
+  seek(t);
+};
+
+loadList();
+</script>
+</body>
+</html>
