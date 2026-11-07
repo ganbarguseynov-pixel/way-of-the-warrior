@@ -202,7 +202,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </div>
 
 <script src="arena.js?v=18"></script>
-<script src="friends.js"></script>
+<script src="friends.js?v=2"></script>
 <script>
 const sb = supabase.createClient(
   'https://qnpriwfxzuoymoumdtrl.supabase.co',
@@ -867,14 +867,32 @@ document.addEventListener('visibilitychange', function (){
     document.body.appendChild(o);
     o.querySelector('#fnm').textContent = c.from_name || 'Игрок';
 
-    o.querySelector('#fNo').onclick = async function(){
+    var closed = false;
+    var chk = setInterval(async function(){
+      if (closed) return;
+      var st = await Friends.status(c.id);
+      if (!st || st.status !== 'pending'){
+        closed = true;
+        clearInterval(chk);
+        o.remove();
+      }
+    }, 3000);
+
+    function close(){
+      closed = true;
+      clearInterval(chk);
       o.remove();
+    }
+
+    o.querySelector('#fNo').onclick = async function(){
+      close();
       await Friends.answer(c.id, 'declined');
     };
 
     o.querySelector('#fYes').onclick = async function(){
-      o.remove();
-      await Friends.answer(c.id, 'accepted');
+      close();
+      var r = await Friends.answer(c.id, 'accepted');
+      if (!r || !r.accepted) return;
       Friends.play(c.id, 'guest', c.from_key, c.from_name, c.from_cups, c.arena);
     };
   }
