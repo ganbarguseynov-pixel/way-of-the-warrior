@@ -283,7 +283,6 @@ body.battle-mode #verTag{display:none!important}
 }
 #tools button:disabled{opacity:.35;cursor:not-allowed}
 
-/* выбор фигуры при превращении пешки */
 #promoPanel{
   position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
   width:min(92vw,340px);
@@ -294,8 +293,8 @@ body.battle-mode #verTag{display:none!important}
   text-align:center;
 }
 #promoTitle{
-  font-size:14px;font-weight:900;color:#e2e8f0;
-  letter-spacing:.5px;margin-bottom:12px;
+  font-size:13px;font-weight:900;color:#e2e8f0;
+  letter-spacing:.5px;margin-bottom:12px;line-height:1.35;
 }
 #promoRow{display:flex;gap:8px}
 .promo-opt{
@@ -461,13 +460,21 @@ body[data-arena="10"] .piece.theirs{
   <div id="promoTitle">ПЕШКА ДОШЛА — ВЫБЕРИ ФИГУРУ</div>
   <div id="promoRow">
     <div class="promo-opt" data-promo="q">
-      <span class="promo-glyph">♕</span><span class="promo-name">Ферзь</span></div>
+      <span class="promo-glyph">♕</span>
+      <span class="promo-name">Ферзь</span>
+    </div>
     <div class="promo-opt" data-promo="r">
-      <span class="promo-glyph">♖</span><span class="promo-name">Ладья</span></div>
+      <span class="promo-glyph">♖</span>
+      <span class="promo-name">Ладья</span>
+    </div>
     <div class="promo-opt" data-promo="b">
-      <span class="promo-glyph">♗</span><span class="promo-name">Слон</span></div>
+      <span class="promo-glyph">♗</span>
+      <span class="promo-name">Слон</span>
+    </div>
     <div class="promo-opt" data-promo="n">
-      <span class="promo-glyph">♘</span><span class="promo-name">Конь</span></div>
+      <span class="promo-glyph">♘</span>
+      <span class="promo-name">Конь</span>
+    </div>
   </div>
   <button id="promoCancel">Отмена</button>
 </div>
@@ -528,6 +535,7 @@ let searching = false;
 
 let checkState = -1;
 let drawState  = '';
+
 let promoPending = null;
 
 let toastTimer = null;
@@ -627,8 +635,8 @@ Net.on('start', function (info){
   $('drawPanel').classList.add('hidden');
   $('promoPanel').classList.add('hidden');
 
-  promoPending = null;
   sel = null;
+  promoPending = null;
   checkState = -1;
   drawState = '';
   lastTimeTxt = '';
@@ -665,6 +673,7 @@ Net.on('resumeFailed', async function (){
   document.body.classList.remove('battle-mode');
   await Net.leaveMatch();
   $('battle').classList.add('hidden');
+  $('promoPanel').classList.add('hidden');
   $('lobby').classList.remove('hidden');
   await Net.refresh();
   renderLobby();
@@ -720,6 +729,7 @@ $('ovBtn').onclick = async function (){
   document.body.classList.remove('battle-mode');
   $('overlay').classList.add('hidden');
   $('battle').classList.add('hidden');
+  $('promoPanel').classList.add('hidden');
   $('lobby').classList.remove('hidden');
   await Net.refresh();
   renderLobby();
@@ -742,16 +752,6 @@ function buildBoard(){
 
 function toCanon(dx, dy){
   return Net.mySide === 'a' ? [dx, dy] : [7 - dx, 7 - dy];
-}
-
-function closePromo(){
-  promoPending = null;
-  $('promoPanel').classList.add('hidden');
-}
-
-function openPromo(from, to){
-  promoPending = { fx:from.x, fy:from.y, tx:to.x, ty:to.y };
-  $('promoPanel').classList.remove('hidden');
 }
 
 function onCell(dx, dy){
@@ -791,7 +791,7 @@ function onCell(dx, dy){
     }
 
     const mover = s.board[sel.y][sel.x];
-    const need = Arena.moveCost(s, mover);
+    const need  = Arena.moveCost(s, mover);
     if (Math.floor(s.energy[my]) < need){
       sel = null;
       render(s);
@@ -800,9 +800,10 @@ function onCell(dx, dy){
     }
 
     if (Arena.isPromotion(s, sel.x, sel.y, x, y)){
-      openPromo({ x:sel.x, y:sel.y }, { x:x, y:y });
+      promoPending = { fx: sel.x, fy: sel.y, tx: x, ty: y };
       sel = null;
       render(s);
+      $('promoPanel').classList.remove('hidden');
       return;
     }
 
@@ -817,23 +818,32 @@ function onCell(dx, dy){
   }
 }
 
-document.addEventListener('click', function (ev){
-  const opt = ev.target.closest && ev.target.closest('.promo-opt');
-  if (!opt) return;
+function choosePromo(key){
+  if (!promoPending) return;
 
-  const type = opt.getAttribute('data-promo');
-  if (!type || !promoPending) return;
-
-  const p = promoPending;
+  const mv = promoPending;
   promoPending = null;
   $('promoPanel').classList.add('hidden');
 
-  Net.intent({ t:'move', fx:p.fx, fy:p.fy, tx:p.tx, ty:p.ty, promo:type });
-});
+  Net.intent({
+    t:'move',
+    fx: mv.fx, fy: mv.fy,
+    tx: mv.tx, ty: mv.ty,
+    promo: key
+  });
+}
+
+const promoOpts = document.querySelectorAll('.promo-opt');
+for (let i = 0; i < promoOpts.length; i++){
+  (function (el){
+    el.onclick = function (){ choosePromo(el.dataset.promo); };
+  })(promoOpts[i]);
+}
 
 $('promoCancel').onclick = function (){
-  closePromo();
-  render(Net.state);
+  promoPending = null;
+  $('promoPanel').classList.add('hidden');
+  if (Net.state) render(Net.state);
 };
 
 function updateDrawUI(s, my, opp){
