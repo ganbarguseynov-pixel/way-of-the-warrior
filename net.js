@@ -1,6 +1,6 @@
 /* ============================================================
    net.js — сеть: очередь, матч, запись кубков
-   Хост считает бой, гость присылает нажатия.
+   Правки: матчмейкинг в две фазы, хост перерисовывает поле.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -23,6 +23,7 @@ const Net = {
   state: null,
 
   timer: null,
+  retry: null,
   queueSince: 0,
   pending: null,
   oppPresent: false
@@ -49,6 +50,11 @@ function uuid(){
     const r = Math.random() * 16 | 0;
     return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
   });
+}
+
+function payloadOf(msg){
+  if (!msg) return null;
+  return msg.payload !== undefined ? msg.payload : msg;
 }
 
 /* ---------------- профиль ---------------- */
@@ -88,13 +94,22 @@ Net.leaderboard = async function (limit){
 
 /* ---------------- очередь ---------------- */
 
+/*
+  Две фазы:
+    0–30 секунд   — только соперник с разницей кубков до 30;
+    после 30 сек  — ближайший по кубкам без ограничения.
+*/
+
+const NARROW = 30;      // разница кубков в первой фазе
+const PATIENCE = 30;    // секунд до перехода во вторую фазу
+
 Net.findMatch = async function (){
   if (Net.queueCh) return;
 
   await Net.refresh();
 
   Net.queueSince = Date.now();
-  Net.emit('status', { text: 'Ищем соперника…' });
+  Net.emit('status', { text: 'Ищем соперника ±' + NARROW + ' 🏆…' });
 
   const ch = Net.sb.channel('arena_queue', {
     config: { presence: { key: Net.key } }
@@ -104,11 +119,11 @@ Net.findMatch = async function (){
   ch.on('presence', { event: 'sync' }, function (){ Net._tryPair(); });
 
   ch.on('broadcast', { event: 'invite' }, function (msg){
-    Net._onInvite(msg.payload);
+    Net._onInvite(payloadOf(msg));
   });
 
   ch.on('broadcast', { event: 'accept' }, function (msg){
-    Net._onAccept(msg.payload);
+    Net._onAccept(payloadOf(msg));
   });
 
   await ch.subscribe(async function (status){
@@ -119,14 +134,22 @@ Net.findMatch = async function (){
         cups:  Net.me ? Net.me.cups : 0,
         since: Date.now()
       });
-      Net.emit('status', { text: 'В очереди. Ждём соперника.' });
       Net._tryPair();
     }
   });
+
+  // presence меняется не всегда — перепроверяем сами
+  if (Net.retry) clearInterval(Net.retry);
+  Net.retry = setInterval(function (){ Net._tryPair(); }, 1500);
 };
 
 Net.cancelQueue = async function (){
-  if (!Net.queueCh) return;
+  if (Net.retry){ clearInterval(Net.retry); Net.retry = null; }
+
+  if (!Net.queueCh){
+    Net.pending = null;
+    return;
+  }
 
   try { await Net.queueCh.untrack(); } catch (e){}
   try { await Net.sb.removeChannel(Net.queueCh); } catch (e){}
@@ -144,7 +167,13 @@ Net._presenceList = function (ch){
     const arr = raw[k] || [];
     for (let i = 0; i < arr.length; i++){
       const p = arr[i];
-      if (p && p.key) list.push({ key: p.key, name: p.name || 'Игрок', cups: +p.cups || 0 });
+      if (p && p.key){
+        list.push({
+          key:  p.key,
+          name: p.name || 'Игрок',
+          cups: +p.cups || 0
+        });
+      }
     }
   });
 
@@ -156,29 +185,54 @@ Net._tryPair = function (){
 
   const all = Net._presenceList(Net.queueCh);
   const others = all.filter(function (p){ return p.key !== Net.key; });
-  if (!others.length) return;
 
   const myCups = Net.me ? Net.me.cups : 0;
   const waited = Math.floor((Date.now() - Net.queueSince) / 1000);
-  const window = 80 + waited * 30;
 
+  if (!others.length){
+    Net.emit('status', {
+      text: waited < PATIENCE
+        ? 'В очереди. Ждём соперника ±' + NARROW + ' 🏆.'
+        : 'В очереди. Ждём любого соперника.'
+    });
+    return;
+  }
+
+  // ближайший по кубкам, при равенстве — по ключу (детерминированно у обоих)
   others.sort(function (x, y){
-    return Math.abs(x.cups - myCups) - Math.abs(y.cups - myCups);
+    const dx = Math.abs(x.cups - myCups);
+    const dy = Math.abs(y.cups - myCups);
+    if (dx !== dy) return dx - dy;
+    return x.key < y.key ? -1 : (x.key > y.key ? 1 : 0);
   });
 
   let opp = null;
-  for (let i = 0; i < others.length; i++){
-    if (Math.abs(others[i].cups - myCups) <= window){ opp = others[i]; break; }
-  }
-  if (!opp) return;
 
-  // инициатор — тот, у кого ключ лексикографически меньше
-  if (Net.key > opp.key) return;
+  if (waited < PATIENCE){
+    // фаза 1: только ±30
+    if (Math.abs(others[0].cups - myCups) <= NARROW) opp = others[0];
+  } else {
+    // фаза 2: ближайший, дистанция не важна
+    opp = others[0];
+  }
+
+  if (!opp){
+    Net.emit('status', {
+      text: 'Ищем ±' + NARROW + ' 🏆. Через ' + Math.max(0, PATIENCE - waited) +
+            ' с начнём искать ближайшего по кубкам.'
+    });
+    return;
+  }
+
+  // приглашает тот, у кого ключ меньше — двойного приглашения не будет
+  if (Net.key > opp.key || Net.key === opp.key) return;
 
   const matchId = uuid();
   const arena = Math.min(Arena.arenaOf(myCups), Arena.arenaOf(opp.cups));
 
   Net.pending = { to: opp.key, matchId: matchId, arena: arena, opp: opp };
+
+  Net.emit('status', { text: 'Соперник найден: ' + opp.name + ' (' + opp.cups + ' 🏆)' });
 
   Net.queueCh.send({
     type: 'broadcast',
@@ -193,7 +247,7 @@ Net._tryPair = function (){
     }
   });
 
-  // не дождались ответа — снимаем блокировку
+  // ответа нет — снимаем блокировку и пробуем снова
   setTimeout(function (){
     if (Net.pending && Net.pending.matchId === matchId && !Net.matchId){
       Net.pending = null;
@@ -268,12 +322,12 @@ Net._beginMatch = async function (m){
   });
   Net.matchCh = ch;
 
-  // гость присылает нажатия, хост их применяет
+  // гость присылает нажатия — хост их применяет
   ch.on('broadcast', { event: 'intent' }, function (msg){
     if (Net.host) Net._applyIntent(payloadOf(msg), 'b');
   });
 
-  // хост рассылает состояние, гость его рисует
+  // хост рассылает состояние — гость его рисует
   ch.on('broadcast', { event: 'state' }, function (msg){
     if (!Net.host){
       Net.state = payloadOf(msg);
@@ -290,7 +344,6 @@ Net._beginMatch = async function (m){
     Net._finish(payloadOf(msg));
   });
 
-  // следим, на месте ли соперник
   ch.on('presence', { event: 'sync' }, function (){
     const list = Net._presenceList(ch);
     let seen = false;
@@ -320,11 +373,6 @@ Net._beginMatch = async function (m){
   }
 };
 
-function payloadOf(msg){
-  if (!msg) return null;
-  return msg.payload !== undefined ? msg.payload : msg;
-}
-
 Net._hostStart = function (){
   Net.state = Arena.create({
     id: Net.matchId,
@@ -339,7 +387,7 @@ Net._hostStart = function (){
     state: Net.state
   });
 
-  Net._broadcastState();
+  Net._push();
 
   let last = performance.now();
   let acc  = 0;
@@ -354,7 +402,7 @@ Net._hostStart = function (){
     acc += dt * 1000;
     if (acc >= 100){
       acc = 0;
-      Net._broadcastState();
+      Net._push();
     }
 
     if (Net.state.over) Net._hostFinish();
@@ -364,6 +412,16 @@ Net._hostStart = function (){
 Net._broadcastState = function (){
   if (!Net.matchCh || !Net.state) return;
   Net.matchCh.send({ type: 'broadcast', event: 'state', payload: Net.state });
+};
+
+/*
+  ИСПРАВЛЕНИЕ: раньше хост рассылал состояние, но себе его не отдавал —
+  его поле замирало до собственного хода. Теперь он рисует и у себя.
+*/
+Net._push = function (){
+  if (!Net.state) return;
+  if (Net.host) Net.emit('state', Net.state);
+  Net._broadcastState();
 };
 
 Net._applyIntent = function (msg, side){
@@ -384,15 +442,15 @@ Net._applyIntent = function (msg, side){
   if (res && !res.ok){
     if (Net.matchCh){
       Net.matchCh.send({
-        type: 'broadcast', event: 'error',
+        type: 'broadcast',
+        event: 'error',
         payload: { message: res.error }
       });
     }
     return;
   }
 
-  if (side === 'a') Net.emit('state', s);
-  Net._broadcastState();
+  Net._push();
 };
 
 Net._hostFinish = async function (){
@@ -474,6 +532,7 @@ Net._finish = async function (payload){
 
 Net.leaveMatch = async function (){
   if (Net.timer){ clearInterval(Net.timer); Net.timer = null; }
+  if (Net.retry){ clearInterval(Net.retry); Net.retry = null; }
 
   if (Net.matchCh){
     try { await Net.matchCh.untrack(); } catch (e){}
