@@ -7,7 +7,7 @@
 
 const VER = '11';
 const STEP = 1000;
-const MAX_ARENA = 10;п
+const MAX_ARENA = 10;
 
 const MAIN_TIME = 300;
 const OT_TIME   = 60;
