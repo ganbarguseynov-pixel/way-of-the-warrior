@@ -45,9 +45,33 @@ body{
 #playBtn:active{transform:scale(.98)}
 #playBtn.searching{background:linear-gradient(145deg,#475569,#1e293b);
   box-shadow:0 6px 16px rgba(0,0,0,.5)}
+#playBtn:disabled{opacity:.45;cursor:not-allowed}
 
 #statusMsg{font-size:13px;color:#ffcc00;min-height:36px;margin-top:10px;line-height:1.35}
 #ruleBox{font-size:12px;color:#94a3b8;line-height:1.45;margin-top:10px;min-height:34px}
+
+/* ---------- ОШИБКА ПОДКЛЮЧЕНИЯ ---------- */
+#bootErr{
+  margin-top:12px;padding:12px;border-radius:10px;
+  background:rgba(239,68,68,.12);border:1px solid #7f1d1d;
+  text-align:left;
+}
+#bootErrHead{
+  font-size:12px;font-weight:900;color:#fca5a5;margin-bottom:6px;
+  letter-spacing:.5px;
+}
+#bootErrText{
+  font-size:11px;color:#fecaca;line-height:1.45;
+  word-break:break-word;
+  font-family:ui-monospace,Menlo,Consolas,monospace;
+  max-height:150px;overflow-y:auto;
+}
+#retryBtn{
+  width:100%;margin-top:10px;padding:10px;border-radius:9px;
+  border:1px solid #b91c1c;background:linear-gradient(145deg,#ef4444,#991b1b);
+  color:#fff;font-size:13px;font-weight:800;cursor:pointer;
+}
+#retryBtn:active{transform:scale(.98)}
 
 /* ---------- БОЙ ---------- */
 #battle{display:flex;flex-direction:column;align-items:center;width:100%}
@@ -211,9 +235,15 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
     <div id="pFloor"></div>
     <div id="progWrap"><div id="progFill"></div></div>
   </div>
-  <button id="playBtn">В БОЙ</button>
+  <button id="playBtn" disabled>В БОЙ</button>
   <div id="statusMsg"></div>
   <div id="ruleBox"></div>
+
+  <div id="bootErr" class="hidden">
+    <div id="bootErrHead">База не отвечает</div>
+    <div id="bootErrText"></div>
+    <button id="retryBtn">Повторить</button>
+  </div>
 </div>
 
 <!-- ================= БОЙ ================= -->
@@ -282,6 +312,7 @@ const $ = function (id){ return document.getElementById(id); };
 let pending = null;
 let sel     = null;
 let cells   = [];
+let searching = false;
 
 /* ================= УВЕДОМЛЕНИЕ ================= */
 
@@ -339,17 +370,32 @@ function renderLobby(){
   document.body.dataset.arena = arena;
 }
 
-$('playBtn').onclick = async function (){
-  if ($('playBtn').classList.contains('searching')){
-    await Net.cancelQueue();
-    $('playBtn').classList.remove('searching');
-    $('playBtn').textContent = 'В БОЙ';
-    return;
-  }
+/* ================= ПОИСК ================= */
 
+async function startSearch(){
+  if (searching) return;
+  if (!Net.me) return;
+
+  searching = true;
   $('playBtn').classList.add('searching');
   $('playBtn').textContent = 'ОТМЕНА';
   await Net.findMatch();
+}
+
+function stopSearch(){
+  searching = false;
+  $('playBtn').classList.remove('searching');
+  $('playBtn').textContent = 'В БОЙ';
+}
+
+$('playBtn').onclick = async function (){
+  if (searching){
+    await Net.cancelQueue();
+    stopSearch();
+    $('statusMsg').textContent = '';
+    return;
+  }
+  startSearch();
 };
 
 /* ================= СОБЫТИЯ СЕТИ ================= */
@@ -363,13 +409,13 @@ Net.on('error', function (d){
 });
 
 Net.on('start', function (info){
+  stopSearch();
+  $('statusMsg').textContent = '';
+
   $('lobby').classList.add('hidden');
   $('battle').classList.remove('hidden');
   $('overlay').classList.add('hidden');
-
-  $('playBtn').classList.remove('searching');
-  $('playBtn').textContent = 'В БОЙ';
-  $('statusMsg').textContent = '';
+  $('bootErr').classList.add('hidden');
 
   pending = null;
   sel = null;
@@ -408,6 +454,8 @@ Net.on('resumeFailed', async function (){
 });
 
 Net.on('result', async function (r){
+  stopSearch();
+
   $('battle').classList.add('hidden');
   $('overlay').classList.remove('hidden');
 
@@ -682,28 +730,86 @@ $('resignBtn').onclick = function (){
   if (confirm('Сдаться? Это поражение и минус кубки.')) Net.resign();
 };
 
+/* ================= ОШИБКА ПОДКЛЮЧЕНИЯ ================= */
+
+function showBootError(e){
+  let msg = 'неизвестная ошибка';
+  let extra = '';
+
+  if (e){
+    if (typeof e === 'string') msg = e;
+    else {
+      msg = e.message || e.error_description || e.msg || e.details || msg;
+      if (e.code) extra += ' [' + e.code + ']';
+      if (e.hint) extra += '\n' + e.hint;
+    }
+  }
+
+  $('bootErrText').textContent = msg + extra;
+  $('bootErr').classList.remove('hidden');
+  $('statusMsg').textContent = '';
+  $('playBtn').disabled = true;
+  $('pName').textContent = 'База не подключена';
+  $('pCups').textContent = '—';
+  $('pArena').textContent = '';
+}
+
 /* ================= СТАРТ ================= */
 
-(function boot(){
-  const seed = parseInt(localStorage.getItem('cr_trophies') || '0', 10) || 0;
+function autoQueueRequested(){
+  try {
+    if (sessionStorage.getItem('arenaAutoQueue') === '1'){
+      sessionStorage.removeItem('arenaAutoQueue');
+      return true;
+    }
+  } catch (e){}
 
-  Net.init({
-    client: sb,
-    key: playerKey(),
-    name: playerName(),
-    seed: seed
-  }).then(async function (){
+  try {
+    const q = new URLSearchParams(window.location.search);
+    if (q.get('auto') === '1') return true;
+  } catch (e){}
+
+  return false;
+}
+
+async function boot(){
+  const auto = autoQueueRequested();
+
+  $('bootErr').classList.add('hidden');
+  $('playBtn').disabled = true;
+
+  try {
+    const seed = parseInt(localStorage.getItem('cr_trophies') || '0', 10) || 0;
+
+    await Net.init({
+      client: sb,
+      key: playerKey(),
+      name: playerName(),
+      seed: seed
+    });
+
+    $('playBtn').disabled = false;
+
     const resumed = await Net.tryResume();
-    if (!resumed) renderLobby();
-  }).catch(function (e){
+
+    if (resumed) return;
+
+    renderLobby();
+
+    // одно нажатие на главной — сразу в бой
+    if (auto) startSearch();
+
+  } catch (e){
     console.error(e);
-    $('pName').textContent = 'Ошибка базы';
-    $('pCups').textContent = '—';
-    $('pArena').textContent = '';
-    $('statusMsg').textContent =
-      'Не удалось подключиться к Supabase. Проверь, выполнен ли SQL.';
-  });
-})();
+    showBootError(e);
+  }
+}
+
+$('retryBtn').onclick = function (){
+  boot();
+};
+
+boot();
 </script>
 </body>
 </html>
