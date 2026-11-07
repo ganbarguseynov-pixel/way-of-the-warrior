@@ -24,6 +24,8 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 .currency.trophy{color:#ffcc00;border-color:#ffcc00}
 .currency.coin{color:#ffd700}
 .currency.gem{color:#34c759}
+.currency.hist{color:#93c5fd;border-color:#3b82f6;cursor:pointer;justify-content:center}
+.currency.hist:active{background:rgba(59,130,246,.25)}
 #verTag{position:fixed;left:8px;bottom:74px;z-index:1300;font-size:10px;font-weight:900;color:#facc15;letter-spacing:.5px;background:#0f172a;border:1px solid #facc15;padding:3px 8px;border-radius:6px;pointer-events:none}
 .arena-container{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding:10px 20px}
 .arena-card{width:90vw;max-width:400px;background:linear-gradient(180deg,#1e293b,#0f172a);border-radius:20px;border:3px solid #475569;box-shadow:0 20px 50px rgba(0,0,0,.9),inset 0 0 40px rgba(0,0,0,.6);padding:18px;text-align:center;position:relative;overflow:hidden;cursor:pointer;transition:transform .12s}
@@ -101,7 +103,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </head>
 <body>
 
-<div id="verTag">v14</div>
+<div id="verTag">v15</div>
 
 <div class="top-bar">
   <div class="profile-badge" id="profileBadge">
@@ -115,6 +117,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
     <div class="currency trophy">🏆 <span id="trophies-count">0</span></div>
     <div class="currency coin">🪙 <span id="coins-count">1250</span></div>
     <div class="currency gem">💎 <span id="gems-count">50</span></div>
+    <div class="currency hist" onclick="window.location.href='chess-history.html'">📜 История</div>
   </div>
 </div>
 
@@ -148,7 +151,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
   <div id="arenaModalHead">
     <div id="arenaHeadLeft">
       <h3>Все арены</h3>
-      <span class="verChip">v14</span>
+      <span class="verChip">v15</span>
     </div>
     <button id="arenaClose">✕</button>
   </div>
@@ -165,7 +168,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
     <input id="nickInput" maxlength="16" placeholder="Ник" autocomplete="off" spellcheck="false">
     <div id="nickErr"></div>
     <button id="nickOk">Сохранить</button>
-    <div id="nickVer">окно v14</div>
+    <div id="nickVer">окно v15</div>
   </div>
 </div>
 
@@ -214,7 +217,6 @@ const NICK_PRICE = 250;
 const NICK_KEY   = 'userName';
 const GEMS_KEY   = 'cr_gems';
 
-/* путь к видео каждой арены: индекс 0 — арена 1, индекс 9 — арена 10 */
 const ARENA_VIDEO = [
   '43c863bc61a4a659f002988a035cd2f0_00f0af0d-b727-48e6-a8a6-8cdaf6d648dc.mp4',
   'a9040df56be7cbb3dd6945a45b0ba959_6146206a-3a61-459a-bb05-afd6dc7f2c6d.mp4',
@@ -267,8 +269,6 @@ let slidesBuilt = false;
 let nickMode    = 'create';
 let lastCups    = 0;
 
-/* ---------------- профиль ---------------- */
-
 function playerKey(){
   const tgId = localStorage.getItem('tgId');
   if (tgId) return 'tg:' + tgId;
@@ -305,8 +305,6 @@ function setGems(v){
   $('gems-count').textContent = n;
 }
 
-/* ---------------- КЭШ ПЕРВЫХ КАДРОВ ---------------- */
-
 const POSTER_KEY = 'cr_arena_poster_';
 
 function getPoster(n){
@@ -317,25 +315,22 @@ function setPoster(n, url){
   try { localStorage.setItem(POSTER_KEY + n, url); } catch (e){}
 }
 
-/* снимаем первый кадр видео и сохраняем как картинку */
 function grabPoster(v, n){
   if (getPoster(n)) return;
   if (!v.videoWidth || !v.videoHeight) return;
 
   try {
-    const w = 360;
+    const w = 320;
     const h = Math.round(w * (v.videoHeight / v.videoWidth));
     const c = document.createElement('canvas');
     c.width = w;
     c.height = h;
     c.getContext('2d').drawImage(v, 0, 0, w, h);
-    const url = c.toDataURL('image/jpeg', 0.62);
+    const url = c.toDataURL('image/jpeg', 0.6);
     setPoster(n, url);
     v.poster = url;
   } catch (e){}
 }
-
-/* ---------------- видео арены ---------------- */
 
 function videoPath(n){
   const name = ARENA_VIDEO[n - 1];
@@ -393,8 +388,6 @@ function playArenaVideo(n){
   });
 })();
 
-/* ---------------- отрисовка ---------------- */
-
 function render(cups){
   lastCups = cups;
 
@@ -441,8 +434,6 @@ function render(cups){
 
   markMine(arena);
 }
-
-/* ---------------- ник ---------------- */
 
 function openNick(mode){
   nickMode = mode;
@@ -539,8 +530,6 @@ $('nickOk').onclick = async function (){
   }
 };
 
-/* ---------------- список арен ---------------- */
-
 function buildArenaBrowser(){
   if (slidesBuilt) return;
 
@@ -604,7 +593,6 @@ function slideOf(n){
   return $('arenaScroll').querySelector('.arena-slide[data-n="' + n + '"]');
 }
 
-/* ставим src один раз, кадр показываем сразу из кэша */
 function primeSlideVideo(n){
   const slide = slideOf(n);
   if (!slide) return;
@@ -649,7 +637,6 @@ function primeSlideVideo(n){
   try { v.load(); } catch (e){}
 }
 
-/* прогреваем все десять */
 function primeAllSlideVideos(){
   const order = [viewArena];
   for (let n = MAX_ARENA; n >= 1; n--){
@@ -783,8 +770,6 @@ $('arenaClose').onclick = function (){
   }
 };
 
-/* ---------------- загрузка профиля ---------------- */
-
 async function boot(){
   try {
     const res = await sb.rpc('arena_ensure_player', {
@@ -827,7 +812,6 @@ $('battleBtn').onclick = function (){
 render(0);
 boot();
 
-/* строим список заранее и прогреваем кадры, пока ты ещё на главной */
 setTimeout(function (){
   buildArenaBrowser();
   primeAllSlideVideos();
