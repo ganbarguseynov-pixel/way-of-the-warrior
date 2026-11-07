@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Chess Royale - Главная</title>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
@@ -42,6 +45,14 @@ body{
 .currency.trophy{color:#ffcc00;border-color:#ffcc00}
 .currency.coin{color:#ffd700}
 .currency.gem{color:#34c759}
+
+/* ---------- МЕТКА ВЕРСИИ ---------- */
+#verTag{
+  position:fixed;left:6px;bottom:72px;z-index:1300;
+  font-size:9px;color:#475569;letter-spacing:.5px;
+  background:rgba(2,6,23,.75);border:1px solid #1e293b;
+  padding:2px 6px;border-radius:5px;pointer-events:none;
+}
 
 /* ---------- КАРТОЧКА АРЕНЫ ---------- */
 .arena-container{
@@ -155,9 +166,9 @@ body{
 
 #arenaTopHint{
   flex-shrink:0;text-align:center;font-size:10.5px;color:#64748b;
-  padding:0 16px 8px;letter-spacing:.3px;line-height:1.4;
+  padding:0 16px 8px;letter-spacing:.3px;line-height:1.45;
 }
-#arenaTopHint b{color:#22c55e}
+#arenaTopHint b{color:#22c55e;font-weight:900}
 
 #arenaScroll{
   flex:1;position:relative;
@@ -179,14 +190,14 @@ body{
   position:relative;
 }
 
-/* ТВОЯ АРЕНА — помечена всегда, независимо от прокрутки */
+/* ТВОЯ АРЕНА — зелёная рамка и плашка, всегда */
 .arena-slide.mine{
   opacity:.9;transform:scale(.97);
   border-color:#22c55e;
   box-shadow:0 0 22px rgba(34,197,94,.35);
 }
 
-/* АРЕНА, КОТОРУЮ СМОТРИШЬ СЕЙЧАС — просто крупнее, без плашки */
+/* АРЕНА, КОТОРУЮ СМОТРИШЬ — только размер и серая рамка */
 .arena-slide.now{
   opacity:1;transform:scale(1);
   border-color:#94a3b8;
@@ -207,7 +218,7 @@ body{
 .arena-slide-range{font-size:11px;color:#94a3b8;margin-bottom:8px;font-weight:700}
 .arena-slide-rule{font-size:11.5px;color:#cbd5e1;line-height:1.42}
 
-/* плашка живёт только на твоей арене */
+/* плашка живёт ТОЛЬКО на твоей арене */
 .arena-slide-badge{
   display:none;position:absolute;top:10px;right:10px;
   background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;
@@ -226,9 +237,7 @@ body{
   width:8px;height:8px;border-radius:50%;background:#334155;
   border:0;padding:0;cursor:pointer;transition:.2s;
 }
-/* твоя арена на шкале — зелёная всегда */
 .arena-dot.mine{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.9)}
-/* просматриваемая — жёлтая и крупнее */
 .arena-dot.on{background:#ffcc00;transform:scale(1.5)}
 .arena-dot.mine.on{background:#ffcc00;box-shadow:0 0 0 2px #22c55e}
 
@@ -272,6 +281,8 @@ body{
 </style>
 </head>
 <body>
+
+<div id="verTag">арены v4</div>
 
 <div class="top-bar">
   <div class="profile-badge">
@@ -318,7 +329,7 @@ body{
     <h3>Все арены</h3>
     <button id="arenaClose">✕</button>
   </div>
-  <div id="arenaTopHint">Листай вверх — арены выше и сильнее</div>
+  <div id="arenaTopHint">Загрузка…</div>
   <div id="arenaScroll"></div>
   <div id="arenaDots"></div>
 </div>
@@ -399,10 +410,8 @@ const LOOK = [
   { icon:'♟️',  grad:'linear-gradient(135deg,#ded4c2,#9a8a70)', glow:'#c9a227' }
 ];
 
-/* myArena   — твоя настоящая арена, помечена навсегда
-   viewArena — арена, которую ты сейчас разглядываешь */
-let myArena     = 1;
-let viewArena   = 1;
+let myArena     = 1;   // твоя настоящая арена
+let viewArena   = 1;   // какую сейчас смотришь
 let slidesBuilt = false;
 
 /* ================= КЛЮЧ ИГРОКА ================= */
@@ -468,7 +477,7 @@ function render(cups){
   markMine(arena);
 }
 
-/* ================= ПРОСМОТР ВСЕХ АРЕН ================= */
+/* ================= СПИСОК АРЕН ================= */
 
 function buildArenaBrowser(){
   if (slidesBuilt) return;
@@ -478,7 +487,7 @@ function buildArenaBrowser(){
   track.innerHTML = '';
   dots.innerHTML  = '';
 
-  // слайды от 10 к 1: арена 10 наверху списка, арена 1 внизу
+  // от 10 к 1: арена 10 сверху, арена 1 снизу
   for (let n = MAX_ARENA; n >= 1; n--){
     const look = LOOK[n - 1];
     const from = (n - 1) * STEP;
@@ -506,7 +515,6 @@ function buildArenaBrowser(){
     track.appendChild(slide);
   }
 
-  // точки в том же порядке, что и карточки
   for (let n = MAX_ARENA; n >= 1; n--){
     const dot = document.createElement('button');
     dot.className = 'arena-dot';
@@ -528,7 +536,7 @@ function slideOf(n){
   return $('arenaScroll').querySelector('.arena-slide[data-n="' + n + '"]');
 }
 
-/* отметить ТВОЮ арену — не зависит от прокрутки */
+/* твоя арена — зелёная метка, не зависит от прокрутки */
 function markMine(n){
   myArena = n;
 
@@ -556,7 +564,7 @@ function markMine(n){
   }
 }
 
-/* отметить арену, которую сейчас смотришь */
+/* просматриваемая арена — только размер, без надписей */
 function markViewed(n){
   viewArena = n;
 
