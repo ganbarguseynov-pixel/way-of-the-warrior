@@ -21,6 +21,13 @@ body{
 }
 .hidden{display:none!important}
 
+#verTag{
+  position:fixed;left:8px;bottom:74px;z-index:1300;
+  font-size:10px;font-weight:900;color:#facc15;letter-spacing:.5px;
+  background:#0f172a;border:1px solid #facc15;
+  padding:3px 8px;border-radius:6px;pointer-events:none;
+}
+
 /* ---------- ЛОББИ ---------- */
 #lobby{width:95vw;max-width:400px;text-align:center;margin-top:20px}
 .card{
@@ -51,7 +58,6 @@ body{
 #statusMsg{font-size:13px;color:#ffcc00;min-height:36px;margin-top:10px;line-height:1.35}
 #ruleBox{font-size:12px;color:#94a3b8;line-height:1.45;margin-top:10px;min-height:34px}
 
-/* ---------- ОШИБКА ПОДКЛЮЧЕНИЯ ---------- */
 #bootErr{
   margin-top:12px;padding:12px;border-radius:10px;
   background:rgba(239,68,68,.12);border:1px solid #7f1d1d;
@@ -81,7 +87,7 @@ body{
   align-items:center;font-size:12px;margin-bottom:6px;color:#94a3b8;
 }
 #topBar b{color:#ffcc00}
-#timeLabel{font-weight:900;font-variant-numeric:tabular-nums}
+#timeLabel{font-weight:900;font-variant-numeric:tabular-nums;font-size:15px}
 
 #enemyElix{
   width:95vw;max-width:400px;height:14px;background:#020617;
@@ -98,7 +104,7 @@ body{
   background:var(--dark);box-shadow:0 12px 34px rgba(0,0,0,.85);
 }
 .cell{position:relative;display:flex;align-items:center;justify-content:center;
-  font-size:clamp(18px,6.4vw,32px);cursor:pointer;transition:filter .12s}
+  font-size:clamp(18px,6.4vw,32px);cursor:pointer}
 .cell.light{background:var(--light)}
 .cell.dark{background:var(--dark)}
 .cell.sel{outline:3px solid #4ade80;outline-offset:-3px}
@@ -118,7 +124,6 @@ body{
 .piece.mine{color:#ffe9c4}
 .piece.theirs{color:#9ec9ef}
 
-/* полоска HP короля — появляется только когда HP больше 1 */
 .king-hp{
   position:absolute;bottom:2px;left:10%;width:80%;
   height:4px;border-radius:3px;background:#000;z-index:5;
@@ -243,6 +248,8 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
 </head>
 <body data-arena="1">
 
+<div id="verTag">v6</div>
+
 <!-- ================= ЛОББИ ================= -->
 <div id="lobby">
   <div class="card">
@@ -303,7 +310,7 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
     <div class="icon-wrap"><span class="icon">🎁</span></div><span>Магазин</span></button>
   <button class="nav-btn" onclick="location.href='chess-deck.html'">
     <div class="icon-wrap"><span class="icon">🃏</span></div><span>Колода</span></button>
-  <button class="nav-btn active" onclick="location.href='chess-arena.html'">
+  <button class="nav-btn" onclick="location.href='chess-arena.html'">
     <div class="icon-wrap"><span class="icon">⚔️</span></div><span>Бой</span></button>
   <button class="nav-btn" onclick="location.href='chess-social.html'">
     <div class="icon-wrap"><span class="icon">🛡️</span></div><span>Общение</span></button>
@@ -329,6 +336,10 @@ const $ = function (id){ return document.getElementById(id); };
 let pending = null;
 let sel     = null;
 let cells   = [];
+let cellSig = [];        // подпись каждой клетки — неизменное не перерисовываем
+let handSig = '';        // подпись руки
+let lastTimeTxt = '';
+let lastSpeedTxt = '';
 let searching = false;
 
 /* ================= УВЕДОМЛЕНИЕ ================= */
@@ -436,9 +447,14 @@ Net.on('start', function (info){
 
   pending = null;
   sel = null;
+  lastTimeTxt = '';
+  lastSpeedTxt = '';
   document.body.dataset.arena = info.arena;
 
   buildBoard();
+
+  for (let i = 0; i < cellSig.length; i++) cellSig[i] = '';
+  handSig = '';
 
   const myCups  = Net.me ? Net.me.cups : 0;
   const oppCups = (info.opponent && info.opponent.cups) || 0;
@@ -530,6 +546,7 @@ function buildBoard(){
     })(i);
     b.appendChild(d);
     cells.push(d);
+    cellSig.push('');
   }
 }
 
@@ -623,6 +640,8 @@ function onCell(dx, dy){
   }
 }
 
+/* ================= ОТРИСОВКА ================= */
+
 function render(s){
   if (!s) return;
 
@@ -644,24 +663,48 @@ function render(s){
   }
 
   for (let dy = 0; dy < 8; dy++) for (let dx = 0; dx < 8; dx++){
+    const idx = dy * 8 + dx;
     const x = rot ? 7 - dx : dx;
     const y = rot ? 7 - dy : dy;
 
-    const el = cells[dy * 8 + dx];
+    const el = cells[idx];
     const pc = s.board[y] && s.board[y][x];
 
-    el.className = 'cell ' + (((x + y) % 2 === 0) ? 'light' : 'dark');
-    el.textContent = '';
+    const isLight = ((x + y) % 2 === 0);
+    const isSel   = !!(sel && sel.x === x && sel.y === y);
+    const key     = x + ':' + y;
+    const isMove  = !!moveSet[key];
+    const isCap   = isMove && !!pc;
 
-    if (s.arena === 1){
+    let trapOn = false;
+    if (s.arena === 1 && s.traps){
       for (let i = 0; i < s.traps.length; i++){
         const t = s.traps[i];
-        if (t.x === x && t.y === y && t.revealed){
-          el.classList.add('trap');
-          break;
-        }
+        if (t.x === x && t.y === y && t.revealed){ trapOn = true; break; }
       }
     }
+
+    const homeHint = pending
+      ? ((my === 'a' ? y >= 4 : y <= 3) && !pc)
+      : false;
+
+    let sig = (isLight ? 'L' : 'D');
+    if (pc){
+      sig += pc.type + pc.side + (pc.asleep ? 'a' : '') + (pc.chained ? 'c' : '');
+      if (pc.type === 'king' && pc.maxHp > 1) sig += 'h' + pc.hp;
+    }
+    if (trapOn)   sig += 'T';
+    if (isSel)    sig += 'S';
+    if (isMove)   sig += (isCap ? 'C' : 'M');
+    if (homeHint) sig += 'H';
+
+    if (cellSig[idx] === sig) continue;
+    cellSig[idx] = sig;
+
+    el.className = 'cell ' + (isLight ? 'light' : 'dark');
+    el.textContent = '';
+
+    if (trapOn) el.classList.add('trap');
 
     if (pc){
       if (pc.asleep)  el.classList.add('sleep');
@@ -673,7 +716,6 @@ function render(s){
       sp.textContent = mine ? Arena.PIECES[pc.type].w : Arena.PIECES[pc.type].b;
       el.appendChild(sp);
 
-      /* полоску рисуем только если у короля HP больше 1 */
       if (pc.type === 'king' && pc.maxHp > 1 && typeof pc.hp === 'number'){
         const bar = document.createElement('div');
         bar.className = 'king-hp' + (pc.hp / pc.maxHp <= 0.34 ? ' low' : '');
@@ -684,45 +726,58 @@ function render(s){
       }
     }
 
-    if (sel && sel.x === x && sel.y === y) el.classList.add('sel');
-    if (moveSet[x + ':' + y]) el.classList.add(pc ? 'cap' : 'move');
-
-    if (pending){
-      const home = my === 'a' ? y >= 4 : y <= 3;
-      if (home && !pc) el.classList.add('move');
-    }
+    if (isSel)    el.classList.add('sel');
+    if (isMove)   el.classList.add(isCap ? 'cap' : 'move');
+    if (homeHint) el.classList.add('move');
   }
 
+  /* эликсир */
   const myE = s.energy[my];
   const opE = s.energy[my === 'a' ? 'b' : 'a'];
   $('myElixFill').style.width    = (myE * 10) + '%';
   $('enemyElixFill').style.width = (opE * 10) + '%';
 
   const rate = Arena.energyRate(s);
-  $('speedTag').textContent = rate > 1 ? ('⚡×' + rate) : '';
+  const speedTxt = rate > 1 ? ('⚡×' + rate) : '';
+  if (speedTxt !== lastSpeedTxt){
+    lastSpeedTxt = speedTxt;
+    $('speedTag').textContent = speedTxt;
+  }
 
+  /* таймер */
   const tl = $('timeLabel');
-  tl.style.color = '';
+  let timeTxt = '';
+  let timeColor = '';
 
   if (s.arena === 10){
-    tl.textContent = '∞';
+    timeTxt = '∞';
   } else if (s.nightMode > 0){
-    tl.textContent = 'НОЧЬ ' + Math.ceil(s.nightMode);
+    timeTxt = 'НОЧЬ ' + Math.ceil(s.nightMode);
   } else {
-    const t = Math.max(0, Math.ceil(s.timeLeft));
+    let left = s.timeLeft;
+    if (typeof left !== 'number' || !isFinite(left)) left = Arena.MAIN_TIME;
+
+    const t = Math.max(0, Math.ceil(left));
     const txt = Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
 
     if (s.phase === 'overtime'){
-      tl.textContent = 'ДОП ' + txt;
-      tl.style.color = '#ef4444';
-    } else if (s.timeLeft <= Arena.FAST_FROM){
-      tl.textContent = txt;
-      tl.style.color = '#f59e0b';
+      timeTxt = 'ДОП ' + txt;
+      timeColor = '#ef4444';
+    } else if (left <= Arena.FAST_FROM){
+      timeTxt = txt;
+      timeColor = '#f59e0b';
     } else {
-      tl.textContent = txt;
+      timeTxt = txt;
     }
   }
 
+  if (timeTxt !== lastTimeTxt){
+    lastTimeTxt = timeTxt;
+    tl.textContent = timeTxt;
+  }
+  if (tl.style.color !== timeColor) tl.style.color = timeColor;
+
+  /* судная ночь */
   $('nightBtn').disabled = !(
     s.arena === 8 &&
     !s.nightUsed[my] &&
@@ -730,35 +785,41 @@ function render(s){
     !s.over
   );
 
-  const hand = $('hand');
-  hand.innerHTML = '';
-
+  /* рука — перерисовываем только когда реально поменялась */
   const cards = s.hand[my];
-  for (let i = 0; i < cards.length; i++){
-    const type = cards[i];
-    const p = Arena.PIECES[type];
-    const can = myE >= p.cost;
+  let hs = cards.join(',') + '|' + pending + '|' + myE.toFixed(1);
+  if (hs !== handSig){
+    handSig = hs;
 
-    const d = document.createElement('div');
-    d.className = 'hcard' +
-      (pending === type ? ' on' : '') +
-      (can ? '' : ' off');
+    const hand = $('hand');
+    hand.innerHTML = '';
 
-    d.innerHTML =
-      '<div class="c">' + p.cost + '</div>' +
-      '<div class="s">' + p.w + '</div>' +
-      '<div class="n">' + p.name + '</div>';
+    for (let i = 0; i < cards.length; i++){
+      const type = cards[i];
+      const p = Arena.PIECES[type];
+      const can = myE >= p.cost;
 
-    (function (t, enabled){
-      d.onclick = function (){
-        if (!enabled){ toast('Мало эликсира'); return; }
-        pending = (pending === t) ? null : t;
-        sel = null;
-        render(s);
-      };
-    })(type, can);
+      const d = document.createElement('div');
+      d.className = 'hcard' +
+        (pending === type ? ' on' : '') +
+        (can ? '' : ' off');
 
-    hand.appendChild(d);
+      d.innerHTML =
+        '<div class="c">' + p.cost + '</div>' +
+        '<div class="s">' + p.w + '</div>' +
+        '<div class="n">' + p.name + '</div>';
+
+      (function (t, enabled){
+        d.onclick = function (){
+          if (!enabled){ toast('Мало эликсира'); return; }
+          pending = (pending === t) ? null : t;
+          sel = null;
+          render(Net.state);
+        };
+      })(type, can);
+
+      hand.appendChild(d);
+    }
   }
 }
 
