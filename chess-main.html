@@ -525,7 +525,7 @@ function buildArenaBrowser(){
     slide.innerHTML =
       '<div class="arena-slide-badge">ТЫ ЗДЕСЬ</div>' +
       '<div class="arena-slide-img" style="background:' + look.grad + '">' +
-        '<video muted loop playsinline webkit-playsinline preload="none"></video>' +
+        '<video muted loop playsinline webkit-playsinline preload="auto"></video>' +
         '<span>' + look.icon + '</span>' +
       '</div>' +
       '<div class="arena-slide-title">Арена ' + n + ': ' + NAMES[n - 1] + '</div>' +
@@ -560,34 +560,59 @@ function slideOf(n){
   return $('arenaScroll').querySelector('.arena-slide[data-n="' + n + '"]');
 }
 
-/* подгружаем видео только для той карточки, что сейчас в центре */
-function loadSlideVideo(n){
+/* ставим src один раз и показываем кадр, как только он прогрузился */
+function primeSlideVideo(n){
   const slide = slideOf(n);
   if (!slide) return;
 
-  const v = slide.querySelector('video');
+  const v  = slide.querySelector('video');
   const ic = slide.querySelector('span');
-  if (!v) return;
+  if (!v || !ic) return;
 
   const src = videoPath(n);
   if (!src) return;
 
-  if (v.dataset.arena !== String(n)){
-    v.dataset.arena = String(n);
-    v.src = src;
+  if (v.dataset.arena === String(n)) return;
 
-    v.addEventListener('playing', function (){
-      v.style.display = 'block';
-      if (ic) ic.style.display = 'none';
-    }, { once: true });
+  v.dataset.arena = String(n);
+  v.preload = 'auto';
+  v.muted = true;
 
-    v.addEventListener('error', function (){
-      v.style.display = 'none';
-      if (ic) ic.style.display = '';
-    }, { once: true });
+  v.addEventListener('loadeddata', function (){
+    v.style.display = 'block';
+    ic.style.display = 'none';
+  });
 
-    try { v.load(); } catch (e){}
+  v.addEventListener('error', function (){
+    v.style.display = 'none';
+    ic.style.display = '';
+  });
+
+  v.src = src;
+  try { v.load(); } catch (e){}
+}
+
+/* грузим все карточки: текущая первой, остальные с небольшой задержкой */
+function primeAllSlideVideos(){
+  const order = [viewArena];
+  for (let n = MAX_ARENA; n >= 1; n--){
+    if (n !== viewArena) order.push(n);
   }
+
+  order.forEach(function (n, i){
+    setTimeout(function (){ primeSlideVideo(n); }, i * 120);
+  });
+}
+
+/* проигрываем только центральную карточку */
+function loadSlideVideo(n){
+  primeSlideVideo(n);
+
+  const slide = slideOf(n);
+  if (!slide) return;
+
+  const v = slide.querySelector('video');
+  if (!v) return;
 
   try { v.play().catch(function(){}); } catch (e){}
 }
@@ -673,6 +698,9 @@ function openArenaBrowser(){
   buildArenaBrowser();
   markMine(myArena);
   markViewed(myArena);
+
+  primeAllSlideVideos();
+
   $('arenaModal').classList.add('open');
 
   requestAnimationFrame(function (){
