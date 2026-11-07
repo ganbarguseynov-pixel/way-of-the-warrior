@@ -1,22 +1,18 @@
 /* ============================================================
-   arena.js — правила и движок шахматных арен
-   Доска собирается ДО боя из расстановки в колоде (v10).
+   arena.js — правила и движок шахматных арен  (VER 10)
    ============================================================ */
 (function (global) {
 'use strict';
 
+const VER = '10';
 const STEP = 1000;
 const MAX_ARENA = 10;
 
-/* ---------- ВРЕМЯ ---------- */
 const MAIN_TIME = 300;
 const OT_TIME   = 60;
 const FAST_FROM = 60;
+const KING_HP   = 1;
 
-/* ---------- ЗДОРОВЬЕ КОРОЛЯ ---------- */
-const KING_HP = 1;
-
-/* ---------- СОСТАВ АРМИИ (как в шахматах) ---------- */
 const ARMY_MAX = { p:8, r:2, n:2, b:2, q:1, k:1 };
 
 const PIECES = {
@@ -29,7 +25,6 @@ const PIECES = {
   saw:    { cost:0, name:'Пила',   w:'⚙', b:'⚙', val:9 }
 };
 
-/* буква из расстановки -> имя фигуры в PIECES */
 const TYPE_BY_LETTER = {
   p:'pawn', n:'knight', b:'bishop', r:'rook', q:'queen', k:'king'
 };
@@ -124,7 +119,15 @@ function kingDamage(type){
   return p ? p.val : 1;
 }
 
-/* ================= РАССТАНОВКА ИЗ КОЛОДЫ ================= */
+function countPieces(s){
+  let n = 0;
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
+    if (s.board[y][x]) n++;
+  }
+  return n;
+}
+
+/* ================= РАССТАНОВКА ================= */
 
 function defaultSetup(){
   const e = [null,null,null,null,null,null,null,null];
@@ -137,8 +140,6 @@ function defaultSetup(){
   ];
 }
 
-/* берём только свои два ряда: 7 — тыл, 6 — пешки.
-   Буква переводится в полное имя фигуры. */
 function armyOf(setup){
   const out = [];
   if (!Array.isArray(setup) || setup.length !== 8) return out;
@@ -200,15 +201,18 @@ function placeList(s, side, army){
   }
 }
 
+function fillStandard(s, side){
+  clearHalf(s, side);
+  placeList(s, side, armyOf(defaultSetup()));
+}
+
 function deployArmy(s, side, setup){
   let army = armyOf(setup);
   if (!armyHasKing(army)) army = armyOf(defaultSetup());
 
   placeList(s, side, army);
-  if (sideHasKing(s, side)) return;
 
-  clearHalf(s, side);
-  placeList(s, side, armyOf(defaultSetup()));
+  if (!sideHasKing(s, side)) fillStandard(s, side);
 }
 
 function placeSaws(s){
@@ -284,11 +288,17 @@ function create(opts){
   deployArmy(s, 'a', setups.a);
   deployArmy(s, 'b', setups.b);
 
+  /* страховка: если доска всё равно пустая — ставим стандарт обеим сторонам */
+  if (countPieces(s) === 0){
+    fillStandard(s, 'a');
+    fillStandard(s, 'b');
+  }
+
   if (s.arena === 10) s.energy = { a:10, b:10 };
   if (s.arena === 5)  placeSaws(s);
   if (s.arena === 1)  placeTraps(s);
 
-  log(s, 'Арена «' + ARENAS[s.arena - 1].name + '». Доска собрана из колоды. В бой.');
+  log(s, 'Арена «' + ARENAS[s.arena - 1].name + '». Доска собрана. В бой.');
   return s;
 }
 
@@ -361,10 +371,6 @@ function legalMoves(s, x, y){
 
 function place(s, side, type, x, y){
   return { ok:false, error:'Доска уже собрана до боя' };
-}
-
-function refillHand(s, side){
-  s.hand[side] = [];
 }
 
 function move(s, side, fx, fy, tx, ty){
@@ -578,7 +584,7 @@ function resign(s, side){
   return { ok:true };
 }
 
-/* ================= ТИК ВРЕМЕНИ ================= */
+/* ================= ТИК ================= */
 
 function tick(s, dt){
   if (s.over) return;
@@ -659,6 +665,7 @@ function finish(s, winner){
 /* ================= ЭКСПОРТ ================= */
 
 global.Arena = {
+  VER: VER,
   STEP: STEP,
   MAX_ARENA: MAX_ARENA,
   MAIN_TIME: MAIN_TIME,
@@ -685,6 +692,7 @@ global.Arena = {
   energyRate: energyRate,
   kingHp: kingHp,
   kingDamage: kingDamage,
+  countPieces: countPieces,
   defaultSetup: defaultSetup
 };
 
