@@ -12,8 +12,8 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
 body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;min-height:100vh;min-height:100dvh;user-select:none;padding-bottom:80px;}
 .top-bar{width:100%;padding:10px;display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:10;}
-.profile-badge{display:flex;align-items:center;gap:10px;background:linear-gradient(145deg,#1a1a2e,#0a0a14);padding:6px 12px;border-radius:12px;border:2px solid #3b82f6;box-shadow:0 4px 10px rgba(0,0,0,.6);cursor:pointer;}
-.profile-badge:active{background:linear-gradient(145deg,#22223a,#12121f);}
+.profile-badge{display:flex;align-items:center;gap:10px;background:linear-gradient(145deg,#1a1a2e,#0a0a14);padding:6px 12px;border-radius:12px;border:2px solid #3b82f6;box-shadow:0 4px 10px rgba(0,0,0,.6);cursor:pointer;transition:transform .1s;}
+.profile-badge:active{transform:scale(.97);background:linear-gradient(145deg,#22223a,#12121f);}
 .avatar{width:40px;height:40px;background:linear-gradient(145deg,#ffcc00,#ff9500);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:inset 0 2px 4px rgba(255,255,255,.5);}
 .profile-info{display:flex;flex-direction:column;min-width:0}
 .profile-name{font-size:14px;font-weight:900;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -161,7 +161,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
     <input id="nickInput" maxlength="16" placeholder="Ник" autocomplete="off" spellcheck="false">
     <div id="nickErr"></div>
     <button id="nickOk">Сохранить</button>
-    <button id="nickCancel">Отмена</button>
+    <button id="nickCancel">Позже</button>
   </div>
 </div>
 
@@ -209,6 +209,7 @@ const MAX_ARENA = 10;
 const NICK_PRICE = 250;
 const NICK_KEY   = 'userName';
 const GEMS_KEY   = 'cr_gems';
+const ASKED_KEY  = 'nickAsked';
 
 const NAMES = (window.Arena && Arena.ARENAS)
   ? Arena.ARENAS.map(function (a){ return a.name; })
@@ -247,6 +248,9 @@ let myArena     = 1;
 let viewArena   = 1;
 let slidesBuilt = false;
 let nickMode    = 'create';
+let lastCups    = 0;
+
+/* ---------------- профиль ---------------- */
 
 function playerKey(){
   const tgId = localStorage.getItem('tgId');
@@ -284,7 +288,11 @@ function setGems(v){
   $('gems-count').textContent = n;
 }
 
+/* ---------------- отрисовка ---------------- */
+
 function render(cups){
+  lastCups = cups;
+
   const arena = Math.min(MAX_ARENA, Math.floor(Math.max(0, cups) / STEP) + 1);
   const floor = (arena - 1) * STEP;
   const look  = LOOK[arena - 1] || LOOK[0];
@@ -357,6 +365,7 @@ function openNick(mode){
 
 function closeNick(){
   $('nickPanel').classList.add('hidden');
+  try { localStorage.setItem(ASKED_KEY, '1'); } catch (e){}
 }
 
 $('profileBadge').onclick = function (){
@@ -381,6 +390,11 @@ $('nickOk').onclick = async function (){
 
   const isChange = (nickMode === 'change');
   const gems = getGems();
+
+  if (isChange && v === playerName()) {
+    $('nickErr').textContent = 'Это твой текущий ник';
+    return;
+  }
 
   if (isChange && gems < NICK_PRICE){
     $('nickErr').textContent = 'Не хватает ' + (NICK_PRICE - gems) + ' 💎';
@@ -414,7 +428,7 @@ $('nickOk').onclick = async function (){
   $('nickOk').disabled = false;
   closeNick();
 
-  render($('trophies-count').textContent | 0);
+  render(lastCups);
   boot();
 };
 
@@ -570,6 +584,8 @@ $('arenaClose').onclick = function (){
   $('arenaModal').classList.remove('open');
 };
 
+/* ---------------- загрузка профиля ---------------- */
+
 async function boot(){
   try {
     const res = await sb.rpc('arena_ensure_player', {
@@ -581,10 +597,14 @@ async function boot(){
     if (res.error) throw res.error;
 
     $('dbWarn').textContent = '';
-    render(res.data.cups || 0);
 
-    if (!hasOwnNick() && $('nickPanel').classList.contains('hidden')){
-      openNick('create');
+    const cups = (res.data && res.data.cups) || 0;
+    render(cups);
+
+    if (!hasOwnNick()){
+      let asked = false;
+      try { asked = localStorage.getItem(ASKED_KEY) === '1'; } catch (e){}
+      if (!asked) setTimeout(function (){ openNick('create'); }, 350);
     }
 
     return true;
