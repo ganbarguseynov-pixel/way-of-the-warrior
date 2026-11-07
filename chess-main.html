@@ -62,7 +62,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 .arena-slide.mine{opacity:.92;transform:scale(.97);border-color:#22c55e;box-shadow:0 0 22px rgba(34,197,94,.35)}
 .arena-slide.now{opacity:1;transform:scale(1);border-color:#94a3b8;box-shadow:0 0 22px rgba(148,163,184,.3)}
 .arena-slide.mine.now{border-color:#22c55e;box-shadow:0 0 30px rgba(34,197,94,.55)}
-.arena-slide-img{height:96px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;border:1px solid rgba(255,255,255,.08);overflow:hidden;position:relative}
+.arena-slide-img{height:96px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;border:1px solid rgba(255,255,255,.08);overflow:hidden;position:relative;background-size:cover;background-position:center}
 .arena-slide-img span{font-size:46px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.7))}
 .arena-slide-img video{display:none;width:100%;height:100%;object-fit:cover;border-radius:11px}
 .arena-slide-title{font-size:15px;font-weight:900;color:#ffcc00;margin-bottom:3px}
@@ -101,7 +101,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </head>
 <body>
 
-<div id="verTag">v13</div>
+<div id="verTag">v14</div>
 
 <div class="top-bar">
   <div class="profile-badge" id="profileBadge">
@@ -148,7 +148,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
   <div id="arenaModalHead">
     <div id="arenaHeadLeft">
       <h3>Все арены</h3>
-      <span class="verChip">v13</span>
+      <span class="verChip">v14</span>
     </div>
     <button id="arenaClose">✕</button>
   </div>
@@ -165,7 +165,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
     <input id="nickInput" maxlength="16" placeholder="Ник" autocomplete="off" spellcheck="false">
     <div id="nickErr"></div>
     <button id="nickOk">Сохранить</button>
-    <div id="nickVer">окно v13</div>
+    <div id="nickVer">окно v14</div>
   </div>
 </div>
 
@@ -305,6 +305,36 @@ function setGems(v){
   $('gems-count').textContent = n;
 }
 
+/* ---------------- КЭШ ПЕРВЫХ КАДРОВ ---------------- */
+
+const POSTER_KEY = 'cr_arena_poster_';
+
+function getPoster(n){
+  try { return localStorage.getItem(POSTER_KEY + n) || ''; } catch (e){ return ''; }
+}
+
+function setPoster(n, url){
+  try { localStorage.setItem(POSTER_KEY + n, url); } catch (e){}
+}
+
+/* снимаем первый кадр видео и сохраняем как картинку */
+function grabPoster(v, n){
+  if (getPoster(n)) return;
+  if (!v.videoWidth || !v.videoHeight) return;
+
+  try {
+    const w = 360;
+    const h = Math.round(w * (v.videoHeight / v.videoWidth));
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    c.getContext('2d').drawImage(v, 0, 0, w, h);
+    const url = c.toDataURL('image/jpeg', 0.62);
+    setPoster(n, url);
+    v.poster = url;
+  } catch (e){}
+}
+
 /* ---------------- видео арены ---------------- */
 
 function videoPath(n){
@@ -332,8 +362,11 @@ function playArenaVideo(n){
     return;
   }
 
+  const cached = getPoster(n);
+  if (cached) v.poster = cached;
+
   v.dataset.arena = String(n);
-  showIconOnly();
+  if (!cached) showIconOnly();
 
   v.src = src;
   try { v.load(); } catch (e){}
@@ -348,10 +381,15 @@ function playArenaVideo(n){
     v.style.display = 'block';
     const ic = $('arena-icon');
     if (ic) ic.style.display = 'none';
+    grabPoster(v, myArena);
+  });
+
+  v.addEventListener('loadeddata', function (){
+    grabPoster(v, myArena);
   });
 
   v.addEventListener('error', function (){
-    showIconOnly();
+    if (!getPoster(myArena)) showIconOnly();
   });
 })();
 
@@ -519,14 +557,20 @@ function buildArenaBrowser(){
       ? from + ' 🏆 и выше'
       : from + ' – ' + (n * STEP) + ' 🏆';
 
+    const cached = getPoster(n);
+
+    const imgStyle = cached
+      ? look.grad + ';background-image:url(' + cached + ')'
+      : look.grad;
+
     const slide = document.createElement('div');
     slide.className = 'arena-slide';
     slide.dataset.n = n;
     slide.innerHTML =
       '<div class="arena-slide-badge">ТЫ ЗДЕСЬ</div>' +
-      '<div class="arena-slide-img" style="background:' + look.grad + '">' +
+      '<div class="arena-slide-img" style="background:' + imgStyle + '">' +
         '<video muted loop playsinline webkit-playsinline preload="auto"></video>' +
-        '<span>' + look.icon + '</span>' +
+        '<span style="' + (cached ? 'display:none' : '') + '">' + look.icon + '</span>' +
       '</div>' +
       '<div class="arena-slide-title">Арена ' + n + ': ' + NAMES[n - 1] + '</div>' +
       '<div class="arena-slide-range">' + range + '</div>' +
@@ -560,14 +604,23 @@ function slideOf(n){
   return $('arenaScroll').querySelector('.arena-slide[data-n="' + n + '"]');
 }
 
-/* ставим src один раз и показываем кадр, как только он прогрузился */
+/* ставим src один раз, кадр показываем сразу из кэша */
 function primeSlideVideo(n){
   const slide = slideOf(n);
   if (!slide) return;
 
   const v  = slide.querySelector('video');
   const ic = slide.querySelector('span');
+  const box = slide.querySelector('.arena-slide-img');
   if (!v || !ic) return;
+
+  const cached = getPoster(n);
+  if (cached){
+    v.poster = cached;
+    if (box) box.style.backgroundImage = 'url(' + cached + ')';
+    v.style.display = 'block';
+    ic.style.display = 'none';
+  }
 
   const src = videoPath(n);
   if (!src) return;
@@ -579,20 +632,24 @@ function primeSlideVideo(n){
   v.muted = true;
 
   v.addEventListener('loadeddata', function (){
+    grabPoster(v, n);
+    if (box && getPoster(n)) box.style.backgroundImage = 'url(' + getPoster(n) + ')';
     v.style.display = 'block';
     ic.style.display = 'none';
   });
 
   v.addEventListener('error', function (){
-    v.style.display = 'none';
-    ic.style.display = '';
+    if (!getPoster(n)){
+      v.style.display = 'none';
+      ic.style.display = '';
+    }
   });
 
   v.src = src;
   try { v.load(); } catch (e){}
 }
 
-/* грузим все карточки: текущая первой, остальные с небольшой задержкой */
+/* прогреваем все десять */
 function primeAllSlideVideos(){
   const order = [viewArena];
   for (let n = MAX_ARENA; n >= 1; n--){
@@ -600,11 +657,10 @@ function primeAllSlideVideos(){
   }
 
   order.forEach(function (n, i){
-    setTimeout(function (){ primeSlideVideo(n); }, i * 120);
+    setTimeout(function (){ primeSlideVideo(n); }, i * 150);
   });
 }
 
-/* проигрываем только центральную карточку */
 function loadSlideVideo(n){
   primeSlideVideo(n);
 
@@ -612,7 +668,13 @@ function loadSlideVideo(n){
   if (!slide) return;
 
   const v = slide.querySelector('video');
+  const ic = slide.querySelector('span');
   if (!v) return;
+
+  if (getPoster(n)){
+    v.style.display = 'block';
+    if (ic) ic.style.display = 'none';
+  }
 
   try { v.play().catch(function(){}); } catch (e){}
 }
@@ -764,6 +826,12 @@ $('battleBtn').onclick = function (){
 
 render(0);
 boot();
+
+/* строим список заранее и прогреваем кадры, пока ты ещё на главной */
+setTimeout(function (){
+  buildArenaBrowser();
+  primeAllSlideVideos();
+}, 600);
 
 document.addEventListener('visibilitychange', function (){
   if (!document.hidden) boot();
