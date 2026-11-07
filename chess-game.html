@@ -3,16 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Chess Royale - Игра</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;height:100vh;height:100dvh;overflow:hidden;user-select:none;}
 
 /* === ВЕРХНИЙ БАР === */
-.game-top-bar{width:95vw;max-width:400px;flex-shrink:0;display:flex;align-items:center;gap:10px;margin-top:8px;}
+.game-top-bar{width:95vw;max-width:400px;flex-shrink:0;display:flex;flex-direction:column;gap:5px;margin-top:8px;}
+.timer-row{display:flex;align-items:center;justify-content:space-between;padding:0 4px;}
+#timeLabel{font-size:15px;font-weight:900;color:#e2e8f0;font-variant-numeric:tabular-nums;letter-spacing:.5px;}
+#speedTag{font-size:11px;font-weight:900;color:#facc15;letter-spacing:.3px;}
+#verTag{position:fixed;left:6px;bottom:74px;font-size:9px;font-weight:900;color:#facc15;background:#0f172a;border:1px solid #facc15;padding:2px 6px;border-radius:5px;z-index:1300;pointer-events:none;}
+
 .elixir-container{position:relative;display:flex;align-items:center;gap:10px;padding:5px 12px;background:linear-gradient(180deg,#1a1a2e 0%,#0a0a14 100%);border-radius:14px;border:1px solid rgba(255,255,255,0.15);box-shadow:0 4px 10px rgba(0,0,0,0.6),inset 0 2px 3px rgba(255,255,255,0.1),inset 0 -3px 8px rgba(0,0,0,0.8);width:100%;}
 .elixir-fill-bg{position:relative;flex:1;height:18px;background:linear-gradient(180deg,#050510 0%,#0a0a18 100%);border-radius:9px;overflow:hidden;box-shadow:inset 0 4px 8px rgba(0,0,0,0.9),inset 0 -2px 4px rgba(0,0,0,0.7);}
-.elixir-fill{height:100%;width:0%;border-radius:9px;transition:width 0.3s ease-out;position:relative;overflow:hidden;will-change:width;}
+.elixir-fill{height:100%;width:0%;border-radius:9px;transition:width 0.12s linear;position:relative;overflow:hidden;will-change:width;}
 .elixir-fill::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);animation:elixirShimmer 2.5s infinite;pointer-events:none;}
 .elixir-fill::after{content:'';position:absolute;top:1px;left:4px;right:4px;height:35%;background:linear-gradient(180deg,rgba(255,255,255,0.5),rgba(255,255,255,0));border-radius:5px;pointer-events:none;}
 @keyframes elixirShimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
@@ -110,7 +116,13 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </head>
 <body>
 
+<div id="verTag">v7</div>
+
 <div class="game-top-bar">
+<div class="timer-row">
+<span id="timeLabel">5:00</span>
+<span id="speedTag"></span>
+</div>
 <div class="elixir-container elixir-black">
 <div class="elixir-text" id="black-elixir-text">5</div>
 <div class="elixir-fill-bg"><div class="elixir-fill" id="black-elixir-fill"></div></div>
@@ -176,6 +188,16 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </div>
 
 <script>
+/* ============================================================
+   ВРЕМЯ: 5 минут основного + 1 минута дополнительного.
+   Последняя минута основного — эликсир ×1.5.
+   Дополнительное время — эликсир ×2.
+   По истечении всего времени побеждает тот, у кого HP короля больше.
+   ============================================================ */
+const MAIN_TIME = 300;
+const OT_TIME   = 60;
+const FAST_FROM = 60;
+
 let audioCtx = null;
 function initAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -224,12 +246,111 @@ function spawnGhost(r, c, icon, color) {
 const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
 const DEFAULT_BOARD=[['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
 let boardState=[],selectedCell=null,validMoves=[];
-let whiteElixir=5,blackElixir=5,elixirInterval=null;
+let whiteElixir=5,blackElixir=5;
+let phase='main', timeLeft=MAIN_TIME, clockTimer=null, lastTickAt=0;
+let lastTimerTxt='', lastSpeedTxt='';
 let currentHand=['p','n','b','r'],selectedCardType=null;
 let enPassantTarget=null,promotionTarget=null,gameActive=true;
 let vsBot = localStorage.getItem('vsBot') === 'true';
 let botTimer = null;
 let lastBotMove = 0;
+
+/* ================= ВРЕМЯ И ЭЛИКСИР ================= */
+
+function elixirRate(){
+    if (phase === 'overtime') return 2;
+    if (timeLeft <= FAST_FROM) return 1.5;
+    return 1;
+}
+
+function startClock(){
+    stopClock();
+    lastTickAt = performance.now();
+    clockTimer = setInterval(function(){
+        if (!gameActive) return;
+        const now = performance.now();
+        let dt = (now - lastTickAt) / 1000;
+        lastTickAt = now;
+        if (dt > 0.5) dt = 0.5;
+        tickGame(dt);
+    }, 100);
+}
+
+function stopClock(){
+    if (clockTimer){ clearInterval(clockTimer); clockTimer = null; }
+}
+
+function tickGame(dt){
+    const rate = elixirRate();
+
+    if (whiteElixir < 10) whiteElixir = Math.min(10, whiteElixir + dt * rate);
+    if (blackElixir < 10) blackElixir = Math.min(10, blackElixir + dt * rate);
+
+    timeLeft -= dt;
+
+    if (timeLeft <= 0){
+        if (phase === 'main'){
+            phase = 'overtime';
+            timeLeft = OT_TIME;
+        } else {
+            timeLeft = 0;
+            updateElixirUI();
+            updateTimerUI();
+            finishByTime();
+            return;
+        }
+    }
+
+    updateElixirUI();
+    updateTimerUI();
+}
+
+function updateTimerUI(){
+    const el = document.getElementById('timeLabel');
+    if (!el) return;
+
+    const t = Math.max(0, Math.ceil(timeLeft));
+    let txt, color;
+
+    if (phase === 'overtime'){
+        txt = 'ДОП ' + Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+        color = '#ef4444';
+    } else {
+        txt = Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+        color = (timeLeft <= FAST_FROM) ? '#f59e0b' : '#e2e8f0';
+    }
+
+    if (txt !== lastTimerTxt){ lastTimerTxt = txt; el.textContent = txt; }
+    if (el.style.color !== color) el.style.color = color;
+
+    const st = document.getElementById('speedTag');
+    if (st){
+        const rate = elixirRate();
+        const s = rate > 1 ? ('⚡×' + rate) : '';
+        if (s !== lastSpeedTxt){ lastSpeedTxt = s; st.textContent = s; }
+    }
+}
+
+function findKing(color){
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++){
+        const p = boardState[r][c];
+        if (p && p.type === 'k' && p.color === color) return p;
+    }
+    return null;
+}
+
+function finishByTime(){
+    const wk = findKing('white');
+    const bk = findKing('black');
+    const whp = wk ? wk.hp : 0;
+    const bhp = bk ? bk.hp : 0;
+
+    const note = 'Время вышло. HP короля: белые ' + formatNum(whp) + ' / чёрные ' + formatNum(bhp);
+
+    if (whp > bhp) endGame('Белые', note);
+    else if (bhp > whp) endGame('Черные', note);
+    else endGame('Ничья', note);
+}
 
 function triggerShake(id){const el=document.getElementById(id);if(!el)return;el.style.transform='translateX(-6px)';setTimeout(()=>el.style.transform='translateX(6px)',80);setTimeout(()=>el.style.transform='',160);}
 function formatNum(n){if(Number.isInteger(n))return n.toString();return Number(n.toFixed(2)).toString();}
@@ -243,12 +364,15 @@ function initGame(){
     let initialData=DEFAULT_BOARD; const saved=localStorage.getItem('chessSetup');
     if(saved){ try{ const parsed=JSON.parse(saved); if(parsed&&parsed.length===8)initialData=parsed; }catch(e){} }
     boardState=initialData.map(row=>row.map(pc=>createPiece(pc)));
-    selectedCell=null;validMoves=[];selectedCardType=null;whiteElixir=5;blackElixir=5;enPassantTarget=null;promotionTarget=null;gameActive=true;
+    selectedCell=null;validMoves=[];selectedCardType=null;
+    whiteElixir=5;blackElixir=5;
+    phase='main'; timeLeft=MAIN_TIME;
+    lastTimerTxt=''; lastSpeedTxt='';
+    enPassantTarget=null;promotionTarget=null;gameActive=true;
     document.getElementById('promotion-modal').classList.remove('active');
-    clearInterval(elixirInterval);
     if(botTimer) clearInterval(botTimer);
-    elixirInterval=setInterval(()=>{if(gameActive){if(whiteElixir<10)whiteElixir++;if(blackElixir<10)blackElixir++;updateElixirUI();}},1000);
-    renderBoard();renderHand();updateElixirUI();
+    startClock();
+    renderBoard();renderHand();updateElixirUI();updateTimerUI();
     startBotLogic();
 }
 function renderBoard(){
@@ -286,14 +410,18 @@ function renderHand(){
     });
 }
 function updateElixirUI(){
-    document.getElementById('white-elixir-fill').style.width=(whiteElixir/10*100)+'%'; document.getElementById('white-elixir-text').innerText=whiteElixir;
-    document.getElementById('black-elixir-fill').style.width=(blackElixir/10*100)+'%'; document.getElementById('black-elixir-text').innerText=blackElixir;
+    const wv = Math.floor(whiteElixir), bv = Math.floor(blackElixir);
+    document.getElementById('white-elixir-fill').style.width=Math.min(100, whiteElixir/10*100)+'%';
+    document.getElementById('white-elixir-text').innerText=wv;
+    document.getElementById('black-elixir-fill').style.width=Math.min(100, blackElixir/10*100)+'%';
+    document.getElementById('black-elixir-text').innerText=bv;
 }
 function isKingInCheck(color,board){let kPos=null;for(let r=0;r<8;r++){for(let c=0;c<8;c++){if(board[r][c]&&board[r][c].type==='k'&&board[r][c].color===color)kPos={r,c};}}if(!kPos)return false;let enemyColor=color==='white'?'black':'white';for(let r=0;r<8;r++){for(let c=0;c<8;c++){let p=board[r][c];if(p&&p.color===enemyColor){let moves=getValidMoves(r,c,board,true);if(moves.some(m=>m.r===kPos.r&&m.c===kPos.c))return true;}}}return false;}
 function hasAnyValidMoves(color){for(let r=0;r<8;r++){for(let c=0;c<8;c++){let p=boardState[r][c];if(p&&p.color===color){if(getValidMoves(r,c).length>0)return true;}}}return false;}
 function checkGameEnd(){if(!gameActive)return;let whiteInCheck=isKingInCheck('white',boardState);let blackInCheck=isKingInCheck('black',boardState);let whiteMoves=hasAnyValidMoves('white');let blackMoves=hasAnyValidMoves('black');if(!whiteMoves&&whiteInCheck){endGame('Черные','МАТ!');return;}if(!blackMoves&&blackInCheck){endGame('Белые','МАТ!');return;}if(!whiteMoves&&!whiteInCheck){endGame('Ничья','ПАТ!');return;}if(!blackMoves&&!blackInCheck){endGame('Ничья','ПАТ!');return;}}
 function endGame(winner,reason){
-    gameActive=false;clearInterval(elixirInterval);
+    gameActive=false;
+    stopClock();
     if(botTimer) clearInterval(botTimer);
     setTimeout(()=>{
         if(winner==='Белые') {
@@ -392,7 +520,7 @@ function makeMove(fromR, fromC, toR, toC, opts) {
         if(attacker.type==='p'&&toR===promoRow){ promotionTarget={r:toR,c:toC,color:attacker.color}; document.getElementById('promotion-modal').classList.add('active'); }
     }
 
-    /* === ИЗМЕНЕНО: ход бота больше не сбрасывает выбор игрока === */
+    /* === ход бота больше не сбрасывает выбор игрока === */
     if (byBot) {
         if (selectedCell) {
             const keep = selectedCell;
@@ -400,7 +528,6 @@ function makeMove(fromR, fromC, toR, toC, opts) {
             if (stillThere && stillThere.color === 'white') {
                 validMoves = getValidMoves(keep.r, keep.c);
             } else {
-                // бот побил именно выбранную фигуру
                 selectedCell = null;
                 validMoves = [];
             }
@@ -408,7 +535,6 @@ function makeMove(fromR, fromC, toR, toC, opts) {
     } else {
         selectedCell = null; validMoves = []; selectedCardType = null;
     }
-    /* === конец изменения === */
 
     renderBoard(); renderHand();
 
