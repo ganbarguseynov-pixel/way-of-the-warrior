@@ -118,6 +118,16 @@ body{
 .piece.mine{color:#ffe9c4}
 .piece.theirs{color:#9ec9ef}
 
+/* полоска HP короля — появляется только когда HP больше 1 */
+.king-hp{
+  position:absolute;bottom:2px;left:10%;width:80%;
+  height:4px;border-radius:3px;background:#000;z-index:5;
+  box-shadow:0 0 0 1px rgba(0,0,0,.7);
+}
+.king-hp i{display:block;height:100%;border-radius:3px;
+  background:linear-gradient(90deg,#22c55e,#86efac)}
+.king-hp.low i{background:linear-gradient(90deg,#ef4444,#fca5a5)}
+
 #myElix{
   position:relative;
   width:95vw;max-width:400px;height:16px;background:#020617;
@@ -662,6 +672,16 @@ function render(s){
       sp.className = 'piece ' + (mine ? 'mine' : 'theirs');
       sp.textContent = mine ? Arena.PIECES[pc.type].w : Arena.PIECES[pc.type].b;
       el.appendChild(sp);
+
+      /* полоску рисуем только если у короля HP больше 1 */
+      if (pc.type === 'king' && pc.maxHp > 1 && typeof pc.hp === 'number'){
+        const bar = document.createElement('div');
+        bar.className = 'king-hp' + (pc.hp / pc.maxHp <= 0.34 ? ' low' : '');
+        const fill = document.createElement('i');
+        fill.style.width = Math.max(0, Math.min(100, (pc.hp / pc.maxHp) * 100)) + '%';
+        bar.appendChild(fill);
+        el.appendChild(bar);
+      }
     }
 
     if (sel && sel.x === x && sel.y === y) el.classList.add('sel');
