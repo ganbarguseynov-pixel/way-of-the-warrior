@@ -33,7 +33,7 @@ const BOT_NAMES = [
   'Ryan','Tyler','Dylan','Owen','Emily','Sophie','Chloe','Mia',
   'Grace','Hannah','Olivia','Ruby','Alice','Ella',
 
-  /* ники-прозвища */
+  /* прозвища */
   'Shadow','Blade','Raven','Hunter','Ghost','Falcon','Viper','Storm',
   'Nova','Echo','Frost','Ember','Wolf','Crow','Ace','Rook','Bishop','Pawnstar',
 
@@ -207,10 +207,10 @@ Net.rename = async function (raw){
   const name = String(raw || '').trim().slice(0, 16);
   if (name.length < 2) return { ok:false, error:'Слишком короткий ник' };
 
-  const res = await Net.sb
-    .from('arena_players')
-    .update({ display_name: name })
-    .eq('player_key', Net.key);
+  const res = await Net.sb.rpc('arena_set_name', {
+    p_key:  Net.key,
+    p_name: name
+  });
 
   if (res.error) return { ok:false, error: res.error.message };
 
@@ -521,15 +521,15 @@ Net._beginMatch = async function (m){
   Net._clearFallback();
   await Net.cancelQueue();
 
-  Net.botMode  = false;
-  Net.matchId  = m.matchId;
-  Net.mySide   = m.side;
-  Net.host     = (m.side === 'a');
-  Net.arena    = m.arena || 1;
-  Net.finished = false;
+  Net.botMode   = false;
+  Net.matchId   = m.matchId;
+  Net.mySide    = m.side;
+  Net.host      = (m.side === 'a');
+  Net.arena     = m.arena || 1;
+  Net.finished  = false;
   Net.finishing = false;
-  Net.state    = null;
-  Net.lastSeen = Date.now();
+  Net.state     = null;
+  Net.lastSeen  = Date.now();
 
   const myCups = Net.me ? Net.me.cups : 0;
   const meP    = { key: Net.key,  name: Net.name,  cups: myCups };
@@ -593,15 +593,15 @@ Net._startBotMatch = async function (){
   const rivalName = botNickname();
   const rivalKey  = 'pl_' + Math.random().toString(36).slice(2, 12);
 
-  Net.matchId  = uuid();
-  Net.mySide   = 'a';
-  Net.host     = true;
-  Net.botMode  = true;
-  Net.arena    = Math.min(Arena.arenaOf(myCups), Arena.arenaOf(rivalCups));
-  Net.finished = false;
+  Net.matchId   = uuid();
+  Net.mySide    = 'a';
+  Net.host      = true;
+  Net.botMode   = true;
+  Net.arena     = Math.min(Arena.arenaOf(myCups), Arena.arenaOf(rivalCups));
+  Net.finished  = false;
   Net.finishing = false;
-  Net.state    = null;
-  Net.lastSeen = Date.now();
+  Net.state     = null;
+  Net.lastSeen  = Date.now();
 
   Net.players = {
     a: { key: Net.key,  name: Net.name, cups: myCups },
@@ -997,16 +997,16 @@ Net.tryResume = async function (){
 
   const isBot = !!rec.bot;
 
-  Net.matchId  = rec.matchId;
-  Net.mySide   = rec.side;
-  Net.host     = (rec.side === 'a');
-  Net.arena    = rec.arena || 1;
-  Net.players  = rec.players;
-  Net.finished = false;
+  Net.matchId   = rec.matchId;
+  Net.mySide    = rec.side;
+  Net.host      = (rec.side === 'a');
+  Net.arena     = rec.arena || 1;
+  Net.players   = rec.players;
+  Net.finished  = false;
   Net.finishing = false;
-  Net.botMode  = isBot;
-  Net.state    = null;
-  Net.lastSeen = Date.now();
+  Net.botMode   = isBot;
+  Net.state     = null;
+  Net.lastSeen  = Date.now();
 
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); } catch (e){}
