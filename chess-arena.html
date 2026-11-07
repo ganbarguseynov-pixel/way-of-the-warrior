@@ -196,22 +196,28 @@ body.battle-mode #verTag{display:none!important}
 }
 .cell.cap::after{content:'';position:absolute;inset:6%;
   border:3px solid #ef4444;border-radius:50%}
-.cell.trap{background:#6b1212!important;box-shadow:inset 0 0 14px #ff3b3b}
-.cell.chain::before{content:'⛓';position:absolute;color:#d4a017;
-  font-size:55%;opacity:.95;z-index:8}
-.cell.sleep{filter:grayscale(.85) brightness(.55)}
 .cell.check{box-shadow:inset 0 0 0 3px #ef4444,inset 0 0 20px rgba(239,68,68,.8)}
-.cell.check .piece{color:#ff5a5a!important;animation:checkPulse .65s infinite alternate}
-@keyframes checkPulse{from{filter:brightness(1)}to{filter:brightness(1.9) drop-shadow(0 0 10px #ef4444)}}
+.cell.check .piece{animation:checkPulse .65s infinite alternate}
+@keyframes checkPulse{from{filter:brightness(1)}to{filter:brightness(1.9)}}
 
 .piece{
   position:relative;z-index:3;line-height:1;
   margin-bottom:7px;
-  text-shadow:0 2px 4px rgba(0,0,0,.9);
+  font-weight:400;
   pointer-events:none;
 }
-.piece.mine{color:#ffe9c4}
-.piece.theirs{color:#9ec9ef}
+
+/* мои фигуры — всегда синие */
+.piece.mine{
+  color:#5aa9ec;
+  text-shadow:0 0 6px rgba(90,169,236,.75),0 2px 4px rgba(0,0,0,.95);
+}
+
+/* фигуры соперника — всегда красные */
+.piece.theirs{
+  color:#ef5350;
+  text-shadow:0 0 6px rgba(239,83,80,.75),0 2px 4px rgba(0,0,0,.95);
+}
 
 .cost-badge{
   position:absolute;top:0;right:0;
@@ -361,13 +367,21 @@ body[data-arena="7"] {--dark:#1c1414;--light:#332222;--accent:#8b1a1a;--bg:#0805
 body[data-arena="8"] {--dark:#1b1b22;--light:#2b2b38;--accent:#3b6fd4;--bg:#08080c}
 body[data-arena="9"] {--dark:#262a1a;--light:#3a4028;--accent:#6a8f3a;--bg:#0a0c07}
 body[data-arena="10"]{--dark:#a89880;--light:#ded4c2;--accent:#c9a227;--bg:#0d0b08}
-body[data-arena="10"] .piece.mine{color:#7a4a10;text-shadow:0 0 3px #fff8e0}
-body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
+
+/* на светлом мраморе синий и красный затемняются ради контраста */
+body[data-arena="10"] .piece.mine{
+  color:#15529c;
+  text-shadow:0 0 4px rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.35);
+}
+body[data-arena="10"] .piece.theirs{
+  color:#a01818;
+  text-shadow:0 0 4px rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.35);
+}
 </style>
 </head>
 <body data-arena="1">
 
-<div id="verTag">v17</div>
+<div id="verTag">v20</div>
 
 <div id="lobby">
   <div class="card">
@@ -409,7 +423,6 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
 
   <div id="tools">
     <button id="drawBtn">🤝 Ничья</button>
-    <button id="nightBtn" disabled>Ночь</button>
     <button id="resignBtn">Сдаться</button>
   </div>
 </div>
@@ -440,7 +453,7 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
     <div class="icon-wrap"><span class="icon">🎁</span></div><span>Магазин</span></button>
   <button class="nav-btn" onclick="location.href='chess-deck.html'">
     <div class="icon-wrap"><span class="icon">🃏</span></div><span>Колода</span></button>
-  <button class="nav-btn active" onclick="location.href='chess-arena.html'">
+  <button class="nav-btn" onclick="location.href='chess-arena.html'">
     <div class="icon-wrap"><span class="icon">⚔️</span></div><span>Бой</span></button>
   <button class="nav-btn" onclick="location.href='chess-social.html'">
     <div class="icon-wrap"><span class="icon">🛡️</span></div><span>Клан</span></button>
@@ -448,7 +461,7 @@ body[data-arena="10"] .piece.theirs{color:#1b3a5e;text-shadow:0 0 3px #dfeaf5}
     <div class="icon-wrap"><span class="icon">🏆</span></div><span>Рейтинг</span></button>
 </div>
 
-<script src="arena.js?v=15"></script>
+<script src="arena.js?v=17"></script>
 <script src="net.js?v=13"></script>
 <script>
 const sb = supabase.createClient(
@@ -697,8 +710,6 @@ function onCell(dx, dy){
     }
 
     if (pc && pc.side === my){
-      if (pc.chained){ Net.intent({ t:'unlock', x:x, y:y }); return; }
-      if (pc.asleep){ toast('Фигура спит. Её разбудит только взятие.'); return; }
       sel = { x:x, y:y };
       render(s);
       return;
@@ -731,14 +742,6 @@ function onCell(dx, dy){
   }
 
   if (pc && pc.side === my){
-    if (pc.chained){
-      Net.intent({ t:'unlock', x:x, y:y });
-      return;
-    }
-    if (pc.asleep){
-      toast('Фигура спит. Её разбудит только взятие.');
-      return;
-    }
     sel = { x:x, y:y };
     render(s);
   }
@@ -841,25 +844,15 @@ function render(s){
     const isMove  = !!moveSet[key];
     const isCap   = isMove && !!pc;
 
-    let trapOn = false;
-    if (s.arena === 1 && s.traps){
-      for (let i = 0; i < s.traps.length; i++){
-        const t = s.traps[i];
-        if (t.x === x && t.y === y && t.revealed){ trapOn = true; break; }
-      }
-    }
-
     const kingChk = !!(pc && pc.type === 'king' &&
                        ((pc.side === my) ? myCheck : opCheck));
 
     let sig = (isLight ? 'L' : 'D');
     if (pc){
       const h = pieceHp(pc);
-      sig += pc.type + pc.side + (pc.asleep ? 'a' : '') + (pc.chained ? 'c' : '');
-      sig += 'h' + h.hp + '/' + h.max;
+      sig += pc.type + pc.side + 'h' + h.hp + '/' + h.max;
     }
     if (kingChk) sig += 'K';
-    if (trapOn)  sig += 'T';
     if (isSel)   sig += 'S';
     if (isMove)  sig += (isCap ? 'C' : 'M');
 
@@ -869,16 +862,13 @@ function render(s){
     el.className = 'cell ' + (isLight ? 'light' : 'dark');
     el.textContent = '';
 
-    if (trapOn)  el.classList.add('trap');
     if (kingChk) el.classList.add('check');
 
     if (pc){
-      if (pc.asleep)  el.classList.add('sleep');
-      if (pc.chained) el.classList.add('chain');
-
       const mine = (pc.side === my);
       const def  = Arena.PIECES[pc.type];
 
+      /* моя фигура — синяя, чужая — красная */
       const sp = document.createElement('span');
       sp.className = 'piece ' + (mine ? 'mine' : 'theirs');
       sp.textContent = def ? (mine ? def.w : def.b) : '?';
@@ -936,26 +926,20 @@ function render(s){
   let timeTxt = '';
   let timeColor = '';
 
-  if (s.arena === 10){
-    timeTxt = '∞';
-  } else if (s.nightMode > 0){
-    timeTxt = 'НОЧЬ ' + Math.ceil(s.nightMode);
+  let left = s.timeLeft;
+  if (typeof left !== 'number' || !isFinite(left)) left = Arena.MAIN_TIME;
+
+  const t = Math.max(0, Math.ceil(left));
+  const txt = Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+
+  if (s.phase === 'overtime'){
+    timeTxt = 'ДОП ' + txt;
+    timeColor = '#ef4444';
+  } else if (left <= Arena.FAST_FROM){
+    timeTxt = txt;
+    timeColor = '#f59e0b';
   } else {
-    let left = s.timeLeft;
-    if (typeof left !== 'number' || !isFinite(left)) left = Arena.MAIN_TIME;
-
-    const t = Math.max(0, Math.ceil(left));
-    const txt = Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
-
-    if (s.phase === 'overtime'){
-      timeTxt = 'ДОП ' + txt;
-      timeColor = '#ef4444';
-    } else if (left <= Arena.FAST_FROM){
-      timeTxt = txt;
-      timeColor = '#f59e0b';
-    } else {
-      timeTxt = txt;
-    }
+    timeTxt = txt;
   }
 
   if (timeTxt !== lastTimeTxt){
@@ -963,12 +947,6 @@ function render(s){
     tl.textContent = timeTxt;
   }
   if (tl.style.color !== timeColor) tl.style.color = timeColor;
-
-  $('nightBtn').disabled = !(
-    s.arena === 8 &&
-    !s.nightUsed[my] &&
-    !s.over
-  );
 }
 
 $('drawBtn').onclick = function (){
@@ -981,10 +959,6 @@ $('drawAccept').onclick = function (){
 
 $('drawDecline').onclick = function (){
   Net.intent({ t:'undraw' });
-};
-
-$('nightBtn').onclick = function (){
-  Net.intent({ t:'night' });
 };
 
 $('resignBtn').onclick = function (){
