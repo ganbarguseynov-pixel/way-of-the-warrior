@@ -1,11 +1,11 @@
 /* ============================================================
-   arena.js — правила и движок шахматных арен  (VER 14)
-   Стоимость хода = цена фигуры. Короля не съесть. Мат — урон.
+   arena.js — правила и движок шахматных арен  (VER 15)
+   Эликсир: 1 единица ровно за 1 секунду, только целые числа.
    ============================================================ */
 (function (global) {
 'use strict';
 
-const VER = '14';
+const VER = '15';
 const STEP = 1000;
 const MAX_ARENA = 10;
 
@@ -15,6 +15,8 @@ const FAST_FROM = 60;
 const KING_HP   = 1;
 const MATE_DAMAGE = 1;
 const STATUS_STEP = 0.35;
+const ENERGY_MAX = 10;
+const ENERGY_PER_SEC = 1;
 
 const ARMY_MAX = { p:8, r:2, n:2, b:2, q:1, k:1 };
 
@@ -483,6 +485,7 @@ function create(opts){
 
     board: Array.from({ length:8 }, () => Array(8).fill(null)),
     energy: { a:5, b:5 },
+    energyAcc: { a:0, b:0 },
     hand:   { a:[], b:[] },
     deck:   { a:[], b:[] },
     placed: { a:0, b:0 },
@@ -556,17 +559,16 @@ function move(s, side, fx, fy, tx, ty){
     return { ok:false, error:'Так ходить нельзя' };
   }
 
-  /* цена хода = цена этой фигуры, а не единица */
   const cost = moveCost(s, pc);
   if (s.energy[side] < cost) return { ok:false, error:'Мало эликсира' };
-  s.energy[side] -= cost;
+  s.energy[side] = Math.max(0, Math.floor(s.energy[side]) - cost);
 
   const dx = tx - fx, dy = ty - fy;
 
   if (tgt){
     capture(s, pc, fx, fy, tx, ty);
-    if (s.over) return { ok:true };
-    if (s.board[ty][tx]) return { ok:true };
+    if (s.over) return { ok:true, cost: cost };
+    if (s.board[ty][tx]) return { ok:true, cost: cost };
     relocate(s, fx, fy, tx, ty);
     if (pc.type === 'saw' && s.arena === 5) sawChain(s, tx, ty, dx, dy);
   } else {
@@ -615,8 +617,8 @@ function capture(s, attacker, fx, fy, tx, ty){
   s.board[ty][tx] = null;
 
   if (s.arena === 10){
-    s.energy[attacker.side] = Math.min(10,
-      s.energy[attacker.side] + (PIECES[victim.type].val || 0));
+    s.energy[attacker.side] = Math.min(ENERGY_MAX,
+      Math.floor(s.energy[attacker.side]) + (PIECES[victim.type].val || 0));
     s.idle = 0;
   }
 
@@ -709,7 +711,7 @@ function unlock(s, side, x, y){
   if (!pc.chained) return { ok:false, error:'Не прикована' };
   if (s.energy[side] < 4) return { ok:false, error:'Нужно 4 эликсира' };
 
-  s.energy[side] -= 4;
+  s.energy[side] = Math.max(0, Math.floor(s.energy[side]) - 4);
   pc.chained = false;
   log(s, nameOf(s, side) + ' разрывает цепи');
   return { ok:true };
@@ -723,19 +725,40 @@ function resign(s, side){
 
 /* ================= ТИК ================= */
 
+function growEnergy(s, side, dt){
+  let e = s.energy[side];
+  if (typeof e !== 'number' || !isFinite(e)) e = 0;
+  e = Math.floor(e);
+
+  if (e >= ENERGY_MAX){
+    s.energy[side] = ENERGY_MAX;
+    s.energyAcc[side] = 0;
+    return;
+  }
+
+  s.energyAcc[side] += dt * energyRate(s) * ENERGY_PER_SEC;
+
+  while (s.energyAcc[side] >= 1 && e < ENERGY_MAX){
+    s.energyAcc[side] -= 1;
+    e += 1;
+  }
+
+  s.energy[side] = e;
+}
+
 function tick(s, dt){
   if (s.over) return;
 
   if (typeof s.timeLeft !== 'number' || !isFinite(s.timeLeft)) s.timeLeft = MAIN_TIME;
   if (!s.phase) s.phase = 'main';
   if (typeof s.elapsed !== 'number' || !isFinite(s.elapsed)) s.elapsed = 0;
+  if (!s.energyAcc) s.energyAcc = { a:0, b:0 };
 
   s.elapsed += dt;
 
   if (s.arena !== 10){
-    const rate = energyRate(s);
-    s.energy.a = Math.min(10, s.energy.a + dt * 0.5 * rate);
-    s.energy.b = Math.min(10, s.energy.b + dt * 0.5 * rate);
+    growEnergy(s, 'a', dt);
+    growEnergy(s, 'b', dt);
 
     s.timeLeft -= dt;
 
@@ -750,6 +773,8 @@ function tick(s, dt){
       }
     }
   } else {
+    s.energy.a = Math.floor(s.energy.a);
+    s.energy.b = Math.floor(s.energy.b);
     s.idle += dt;
     if (s.idle > 45 && s.energy.a < 1 && s.energy.b < 1){ timeUp(s); return; }
   }
@@ -815,6 +840,8 @@ global.Arena = {
   OT_TIME: OT_TIME,
   FAST_FROM: FAST_FROM,
   KING_HP: KING_HP,
+  ENERGY_MAX: ENERGY_MAX,
+  ENERGY_PER_SEC: ENERGY_PER_SEC,
   ARMY_MAX: ARMY_MAX,
   PIECES: PIECES,
   ARENAS: ARENAS,
