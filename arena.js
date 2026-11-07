@@ -1,11 +1,12 @@
 /* ============================================================
-   arena.js — правила и движок шахматных арен  (VER 15)
-   Эликсир: 1 единица ровно за 1 секунду, только целые числа.
+   arena.js — правила и движок шахматных арен  (VER 17)
+   Все арены играются по одним правилам. Отличается только вид.
+   Короля не съесть. Шах — обязан уйти. Мат — урон.
    ============================================================ */
 (function (global) {
 'use strict';
 
-const VER = '15';
+const VER = '17';
 const STEP = 1000;
 const MAX_ARENA = 10;
 
@@ -26,8 +27,7 @@ const PIECES = {
   bishop: { cost:3, name:'Слон',   w:'♗', b:'♝', val:4 },
   rook:   { cost:4, name:'Ладья',  w:'♖', b:'♜', val:5 },
   king:   { cost:5, name:'Король', w:'♔', b:'♚', val:0 },
-  queen:  { cost:6, name:'Ферзь',  w:'♕', b:'♛', val:8 },
-  saw:    { cost:0, name:'Пила',   w:'⚙', b:'⚙', val:9 }
+  queen:  { cost:6, name:'Ферзь',  w:'♕', b:'♛', val:8 }
 };
 
 const TYPE_BY_LETTER = {
@@ -35,26 +35,26 @@ const TYPE_BY_LETTER = {
 };
 
 const ARENAS = [
-  { n:1,  name:'Капкан',
-    rule:'8 скрытых ловушек на доске. Наступил — фигура погибает. Король невредим.' },
+  { n:1,  name:'Разминка',
+    rule:'Чистая доска. Обычные правила, ничего лишнего.' },
   { n:2,  name:'Псарня',
-    rule:'Каждые 15 секунд с краёв выбегают пешки. Назад ходить нельзя.' },
+    rule:'Вытоптанный двор, земляные тона, простор.' },
   { n:3,  name:'Мясорубка',
-    rule:'Взятие уничтожает все фигуры вокруг клетки — и чужие, и свои.' },
+    rule:'Ржавый цех. Металл, гарь, тяжёлый воздух.' },
   { n:4,  name:'Кошмар на улице Вязов',
-    rule:'Первые 3 фигуры каждого засыпают. Каждое взятие будит одну.' },
+    rule:'Багровый сумрак. Доска как из сна.' },
   { n:5,  name:'Техасская резня',
-    rule:'Пила, взяв фигуру, продолжает рубить дальше по той же линии.' },
+    rule:'Выжженное дерево и пыль. Глушь.' },
   { n:6,  name:'Хостел',
-    rule:'Взятая фигура не гибнет, а переходит врагу. Король не переходит.' },
+    rule:'Серый кафель. Пусто, холодно, тихо.' },
   { n:7,  name:'Восставший из ада',
-    rule:'Первые 2 фигуры прикованы. Освобождение стоит 4 эликсира.' },
+    rule:'Кровавый мрак. Камень и ржавые цепи.' },
   { n:8,  name:'Судная ночь',
-    rule:'Раз за бой: 10 секунд без правил. Все ходят на 1 клетку, эликсир не тратится.' },
+    rule:'Синий сумрак. Город замер до утра.' },
   { n:9,  name:'Зловещие мертвецы',
-    rule:'Убитая фигура встаёт обратно через 20 секунд, если клетка свободна.' },
+    rule:'Болотная зелень. Сырость и старый лес.' },
   { n:10, name:'Бессмертная партия',
-    rule:'Эликсир только за взятия. Времени нет. Ничьей нет.' }
+    rule:'Светлый мрамор. Парадный зал.' }
 ];
 
 const DIR8 = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
@@ -70,14 +70,6 @@ const KNIGHT = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
 const inside = (x, y) => x >= 0 && x < 8 && y >= 0 && y < 8;
 const coord  = (x, y) => 'abcdefgh'[x] + (8 - y);
 const foeOf  = (side) => side === 'a' ? 'b' : 'a';
-
-function shuffle(a){
-  for (let i = a.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
-    const t = a[i]; a[i] = a[j]; a[j] = t;
-  }
-  return a;
-}
 
 function arenaOf(c){ return Math.min(MAX_ARENA, Math.floor(Math.max(0, c) / STEP) + 1); }
 function floorOf(c){ return (arenaOf(c) - 1) * STEP; }
@@ -98,22 +90,18 @@ function log(s, text){
   if (s.log.length > 40) s.log.length = 40;
 }
 
-/* ================= ВРЕМЯ И ЭЛИКСИР ================= */
+/* ================= ЭЛИКСИР ================= */
 
-function energyRate(s){
-  if (!s || s.arena === 10) return 1;
-  if (s.phase === 'overtime') return 2;
-  if (s.timeLeft <= FAST_FROM) return 1.5;
-  return 1;
-}
+function energyRate(s){ return ENERGY_PER_SEC; }
 
 function moveCost(s, pc){
   if (!pc) return 1;
-  if (s.nightMode > 0) return 0;
   const def = PIECES[pc.type];
   if (def && typeof def.cost === 'number') return def.cost;
   return 1;
 }
+
+/* ================= ПОИСК ФИГУР ================= */
 
 function kingPos(s, side){
   for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
@@ -145,13 +133,11 @@ function boardSig(s){
       const pc = s.board[y][x];
       if (!pc){ sig += '.'; continue; }
       sig += pc.type + pc.side;
-      if (pc.asleep) sig += 'a';
-      if (pc.chained) sig += 'c';
       if (pc.type === 'king') sig += 'h' + (pc.hp || 0);
       sig += ',';
     }
   }
-  return sig + '#' + s.arena + '#' + (s.nightMode > 0 ? 1 : 0);
+  return sig;
 }
 
 /* ================= РАССТАНОВКА ================= */
@@ -236,41 +222,12 @@ function deployArmy(s, side, setup){
   if (!sideHasKing(s, side)) fillStandard(s, side);
 }
 
-function placeSaws(s){
-  const rows = [ { row:4, side:'a' }, { row:3, side:'b' } ];
-  for (let i = 0; i < rows.length; i++){
-    for (let c = 0; c < 8; c++){
-      if (!s.board[rows[i].row][c]){
-        s.board[rows[i].row][c] = { type:'saw', side:rows[i].side };
-        break;
-      }
-    }
-  }
-}
-
-function placeTraps(s){
-  const cells = [];
-  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
-    if (!s.board[y][x]) cells.push([x, y]);
-  }
-  shuffle(cells);
-
-  let low = 0, high = 0;
-  for (let i = 0; i < cells.length; i++){
-    if (s.traps.length >= 8) break;
-    const x = cells[i][0], y = cells[i][1];
-    if (y >= 4 && low < 4){ s.traps.push({ x:x, y:y, revealed:false }); low++; }
-    else if (y < 4 && high < 4){ s.traps.push({ x:x, y:y, revealed:false }); high++; }
-  }
-}
-
 /* ================= ХОДЫ ================= */
 
 function pseudoMoves(s, x, y){
   const row = s.board[y];
   const pc = row && row[x];
   if (!pc) return [];
-  if (pc.asleep || pc.chained) return [];
 
   const side = pc.side;
   const out = [];
@@ -281,11 +238,6 @@ function pseudoMoves(s, x, y){
     if (t && t.side === side) return false;
     out.push([a, b]);
     return !t;
-  }
-
-  if (s.nightMode > 0){
-    for (let i = 0; i < DIR8.length; i++) push(x + DIR8[i][0], y + DIR8[i][1]);
-    return out;
   }
 
   if (pc.type === 'pawn'){
@@ -308,10 +260,6 @@ function pseudoMoves(s, x, y){
     for (let i = 0; i < DIR8.length; i++)
       push(x + DIR8[i][0], y + DIR8[i][1]);
 
-  } else if (pc.type === 'saw'){
-    for (let i = 0; i < DIR8.length; i++)
-      push(x + DIR8[i][0], y + DIR8[i][1]);
-
   } else {
     const dirs = DIRS[pc.type] || [];
     for (let i = 0; i < dirs.length; i++){
@@ -326,11 +274,6 @@ function pseudoMoves(s, x, y){
         b += dirs[i][1];
       }
     }
-  }
-
-  if (s.arena === 2 && s.nightMode === 0){
-    const back = side === 'a' ? 1 : -1;
-    return out.filter(m => (m[1] - y) * back <= 0);
   }
 
   return out;
@@ -376,7 +319,6 @@ function selfCheckAfter(s, fx, fy, tx, ty){
 function legalMoves(s, x, y){
   const pc = s.board[y] && s.board[y][x];
   if (!pc) return [];
-  if (pc.asleep || pc.chained) return [];
 
   const raw = pseudoMoves(s, x, y);
   const out = [];
@@ -398,7 +340,6 @@ function sideHasAnyLegal(s, side){
   for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
     const pc = s.board[y][x];
     if (!pc || pc.side !== side) continue;
-    if (pc.asleep || pc.chained) continue;
     if (legalMoves(s, x, y).length) return true;
   }
   return false;
@@ -497,7 +438,7 @@ function create(opts){
     timeLeft: MAIN_TIME,
     nightMode: 0,
     nightUsed: { a:false, b:false },
-    spawnTimer: 15,
+    spawnTimer: 0,
     idle: 0,
 
     check:   { a:false, b:false },
@@ -520,10 +461,6 @@ function create(opts){
     fillStandard(s, 'b');
   }
 
-  if (s.arena === 10) s.energy = { a:10, b:10 };
-  if (s.arena === 5)  placeSaws(s);
-  if (s.arena === 1)  placeTraps(s);
-
   log(s, 'Арена «' + ARENAS[s.arena - 1].name + '». Короля не съесть — ставь мат.');
 
   updateStatus(s, true);
@@ -543,8 +480,6 @@ function move(s, side, fx, fy, tx, ty){
   const pc = s.board[fy][fx];
   if (!pc) return { ok:false, error:'Пустая клетка' };
   if (pc.side !== side) return { ok:false, error:'Не твоя фигура' };
-  if (pc.chained) return { ok:false, error:'Фигура прикована' };
-  if (pc.asleep) return { ok:false, error:'Фигура спит' };
 
   const tgt = s.board[ty][tx];
   if (tgt && tgt.type === 'king') return { ok:false, error:'Короля нельзя съесть — ставь мат' };
@@ -563,17 +498,12 @@ function move(s, side, fx, fy, tx, ty){
   if (s.energy[side] < cost) return { ok:false, error:'Мало эликсира' };
   s.energy[side] = Math.max(0, Math.floor(s.energy[side]) - cost);
 
-  const dx = tx - fx, dy = ty - fy;
-
   if (tgt){
-    capture(s, pc, fx, fy, tx, ty);
+    capture(s, pc, tx, ty);
     if (s.over) return { ok:true, cost: cost };
-    if (s.board[ty][tx]) return { ok:true, cost: cost };
     relocate(s, fx, fy, tx, ty);
-    if (pc.type === 'saw' && s.arena === 5) sawChain(s, tx, ty, dx, dy);
   } else {
     relocate(s, fx, fy, tx, ty);
-    triggerTrap(s, tx, ty);
   }
 
   if (!s.over) updateStatus(s);
@@ -592,129 +522,23 @@ function relocate(s, fx, fy, tx, ty){
   }
 }
 
-function capture(s, attacker, fx, fy, tx, ty){
+function capture(s, attacker, tx, ty){
   const victim = s.board[ty][tx];
   if (!victim) return 'none';
   if (victim.type === 'king') return 'king';
 
-  const night = s.nightMode > 0;
-
-  if (!night && s.arena === 6){
-    victim.side = attacker.side;
-    log(s, 'Хостел: ' + PIECES[victim.type].name + ' переходит к ' + nameOf(s, attacker.side));
-    return 'hostel';
-  }
-
-  if (!night && s.arena === 9){
-    s.returns.push({
-      x:tx, y:ty,
-      type:victim.type,
-      side:victim.side,
-      at:s.elapsed + 20
-    });
-  }
-
   s.board[ty][tx] = null;
-
-  if (s.arena === 10){
-    s.energy[attacker.side] = Math.min(ENERGY_MAX,
-      Math.floor(s.energy[attacker.side]) + (PIECES[victim.type].val || 0));
-    s.idle = 0;
-  }
-
-  if (!night && s.arena === 4) wakeOne(s, attacker.side);
-
-  if (!night && s.arena === 3){
-    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++){
-      if (!a && !b) continue;
-      const nx = tx + a, ny = ty + b;
-      if (!inside(nx, ny)) continue;
-      if (nx === fx && ny === fy) continue;
-      const n = s.board[ny][nx];
-      if (n && n.type !== 'king'){
-        s.board[ny][nx] = null;
-        log(s, 'Мясорубка: ' + PIECES[n.type].name + ' перемолота');
-      }
-    }
-  }
 
   log(s, nameOf(s, attacker.side) + ' бьёт ' + PIECES[victim.type].name.toLowerCase());
   return 'killed';
 }
 
-function sawChain(s, sx, sy, dx, dy){
-  let cx = sx, cy = sy;
-
-  for (let i = 0; i < 8; i++){
-    const nx = cx + dx, ny = cy + dy;
-    if (!inside(nx, ny)) return;
-
-    const saw = s.board[cy][cx];
-    const t = s.board[ny][nx];
-    if (!t || t.side === saw.side) return;
-    if (t.type === 'king') return;
-
-    s.board[ny][nx] = saw;
-    s.board[cy][cx] = null;
-    cx = nx;
-    cy = ny;
-
-    log(s, 'Пила рубит дальше: ' + PIECES[t.type].name);
-  }
-}
-
-function triggerTrap(s, x, y){
-  if (s.arena !== 1) return;
-
-  let t = null;
-  for (let i = 0; i < s.traps.length; i++){
-    const tr = s.traps[i];
-    if (tr.x === x && tr.y === y && !tr.revealed){ t = tr; break; }
-  }
-  if (!t) return;
-
-  t.revealed = true;
-
-  const pc = s.board[y][x];
-  if (pc && pc.type !== 'king'){
-    s.board[y][x] = null;
-    log(s, 'КАПКАН! ' + PIECES[pc.type].name + ' уничтожена');
-  }
-}
-
-function wakeOne(s, side){
-  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
-    const pc = s.board[y][x];
-    if (pc && pc.side === side && pc.asleep){
-      pc.asleep = false;
-      log(s, nameOf(s, side) + ': фигура проснулась');
-      return;
-    }
-  }
-}
-
 function castNight(s, side){
-  if (s.arena !== 8) return { ok:false, error:'Не на этой арене' };
-  if (s.over) return { ok:false, error:'Бой окончен' };
-  if (s.nightUsed[side]) return { ok:false, error:'Уже использовано' };
-
-  s.nightUsed[side] = true;
-  s.nightMode = 10;
-  log(s, nameOf(s, side) + ' объявляет СУДНУЮ НОЧЬ');
-  return { ok:true };
+  return { ok:false, error:'Этого действия нет' };
 }
 
 function unlock(s, side, x, y){
-  const row = s.board[y];
-  const pc = row && row[x];
-  if (!pc || pc.side !== side) return { ok:false, error:'Не твоя фигура' };
-  if (!pc.chained) return { ok:false, error:'Не прикована' };
-  if (s.energy[side] < 4) return { ok:false, error:'Нужно 4 эликсира' };
-
-  s.energy[side] = Math.max(0, Math.floor(s.energy[side]) - 4);
-  pc.chained = false;
-  log(s, nameOf(s, side) + ' разрывает цепи');
-  return { ok:true };
+  return { ok:false, error:'Этого действия нет' };
 }
 
 function resign(s, side){
@@ -736,7 +560,7 @@ function growEnergy(s, side, dt){
     return;
   }
 
-  s.energyAcc[side] += dt * energyRate(s) * ENERGY_PER_SEC;
+  s.energyAcc[side] += dt * ENERGY_PER_SEC;
 
   while (s.energyAcc[side] >= 1 && e < ENERGY_MAX){
     s.energyAcc[side] -= 1;
@@ -756,53 +580,21 @@ function tick(s, dt){
 
   s.elapsed += dt;
 
-  if (s.arena !== 10){
-    growEnergy(s, 'a', dt);
-    growEnergy(s, 'b', dt);
+  growEnergy(s, 'a', dt);
+  growEnergy(s, 'b', dt);
 
-    s.timeLeft -= dt;
+  s.timeLeft -= dt;
 
-    if (s.timeLeft <= 0){
-      if (s.phase === 'main'){
-        s.phase = 'overtime';
-        s.timeLeft = OT_TIME;
-        log(s, 'Основное время вышло. Дополнительная минута, эликсир ×2.');
-      } else {
-        timeUp(s);
-        return;
-      }
-    }
-  } else {
-    s.energy.a = Math.floor(s.energy.a);
-    s.energy.b = Math.floor(s.energy.b);
-    s.idle += dt;
-    if (s.idle > 45 && s.energy.a < 1 && s.energy.b < 1){ timeUp(s); return; }
-  }
-
-  if (s.arena === 2){
-    s.spawnTimer -= dt;
-    if (s.spawnTimer <= 0){
-      s.spawnTimer = 15;
-      const x = Math.floor(Math.random() * 8);
-      if (!s.board[7][x]) s.board[7][x] = { type:'pawn', side:'a' };
-      if (!s.board[0][x]) s.board[0][x] = { type:'pawn', side:'b' };
-      log(s, 'Из псарни выбежали пешки');
+  if (s.timeLeft <= 0){
+    if (s.phase === 'main'){
+      s.phase = 'overtime';
+      s.timeLeft = OT_TIME;
+      log(s, 'Основное время вышло. Дополнительная минута.');
+    } else {
+      timeUp(s);
+      return;
     }
   }
-
-  if (s.arena === 9 && s.returns.length){
-    for (let i = s.returns.length - 1; i >= 0; i--){
-      const r = s.returns[i];
-      if (s.elapsed >= r.at){
-        if (!s.board[r.y][r.x]){
-          s.board[r.y][r.x] = { type:r.type, side:r.side };
-        }
-        s.returns.splice(i, 1);
-      }
-    }
-  }
-
-  if (s.nightMode > 0) s.nightMode = Math.max(0, s.nightMode - dt);
 
   s.statusAt = (s.statusAt || 0) + dt;
   if (s.statusAt >= STATUS_STEP){
