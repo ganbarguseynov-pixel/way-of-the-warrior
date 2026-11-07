@@ -1,16 +1,12 @@
 /* ============================================================
    net.js — сеть: очередь, матч, запись кубков
-   Выход игрока отдельно не обрабатывается.
-   Возврат в незавершённый бой — через запись в localStorage.
+   Поиск соперника мгновенный: берётся ближайший по кубкам.
    ============================================================ */
 (function (global) {
 'use strict';
 
 const RECORD_KEY = 'arenaActiveMatch';
 const STATE_KEY  = 'arenaActiveState';
-
-const NARROW   = 30;
-const PATIENCE = 30;
 
 const Net = {
   sb: null,
@@ -147,7 +143,7 @@ Net.findMatch = async function (){
   await Net.refresh();
 
   Net.queueSince = Date.now();
-  Net.emit('status', { text: 'Ищем соперника ±' + NARROW + ' 🏆…' });
+  Net.emit('status', { text: 'Ищем соперника…' });
 
   const ch = Net.sb.channel('arena_queue', {
     config: { presence: { key: Net.key } }
@@ -177,7 +173,7 @@ Net.findMatch = async function (){
   });
 
   if (Net.retry) clearInterval(Net.retry);
-  Net.retry = setInterval(function (){ Net._tryPair(); }, 1500);
+  Net.retry = setInterval(function (){ Net._tryPair(); }, 800);
 };
 
 Net.cancelQueue = async function (){
@@ -217,24 +213,24 @@ Net._presenceList = function (ch){
   return list;
 };
 
+/*
+  Мгновенный подбор: никакого ожидания и никаких фаз.
+  Берём ближайшего по кубкам из тех, кто уже в очереди.
+*/
 Net._tryPair = function (){
   if (!Net.queueCh || Net.matchId || Net.pending) return;
 
   const all = Net._presenceList(Net.queueCh);
   const others = all.filter(function (p){ return p.key !== Net.key; });
 
-  const myCups = Net.me ? Net.me.cups : 0;
-  const waited = Math.floor((Date.now() - Net.queueSince) / 1000);
-
   if (!others.length){
-    Net.emit('status', {
-      text: waited < PATIENCE
-        ? 'В очереди. Ждём соперника ±' + NARROW + ' 🏆.'
-        : 'В очереди. Ждём любого соперника.'
-    });
+    Net.emit('status', { text: 'Ищем соперника…' });
     return;
   }
 
+  const myCups = Net.me ? Net.me.cups : 0;
+
+  // ближайший по кубкам; при равенстве — по ключу, чтобы оба выбрали друг друга
   others.sort(function (x, y){
     const dx = Math.abs(x.cups - myCups);
     const dy = Math.abs(y.cups - myCups);
@@ -242,22 +238,10 @@ Net._tryPair = function (){
     return x.key < y.key ? -1 : (x.key > y.key ? 1 : 0);
   });
 
-  let opp = null;
+  const opp = others[0];
+  if (!opp) return;
 
-  if (waited < PATIENCE){
-    if (Math.abs(others[0].cups - myCups) <= NARROW) opp = others[0];
-  } else {
-    opp = others[0];
-  }
-
-  if (!opp){
-    Net.emit('status', {
-      text: 'Ищем ±' + NARROW + ' 🏆. Через ' + Math.max(0, PATIENCE - waited) +
-            ' с начнём искать ближайшего по кубкам.'
-    });
-    return;
-  }
-
+  // приглашает тот, у кого ключ меньше
   if (Net.key >= opp.key) return;
 
   const matchId = uuid();
@@ -349,7 +333,6 @@ Net._attach = async function (){
     Net.emit('state', Net.state);
   });
 
-  // вернувшийся игрок просит прислать текущее состояние
   ch.on('broadcast', { event: 'hello' }, function (){
     if (Net.host && Net.state) Net._push();
   });
@@ -363,7 +346,6 @@ Net._attach = async function (){
     Net._finish(payloadOf(msg));
   });
 
-  // кто-то зашёл в канал — хост отправляет свежее состояние
   ch.on('presence', { event: 'sync' }, function (){
     if (Net.host && Net.state) Net._push();
   });
@@ -554,7 +536,6 @@ Net.tryResume = async function (){
   const rec = Net._readRecord();
   if (!rec || !rec.matchId || !rec.side) return false;
 
-  // брошенные матчи старше 20 минут не восстанавливаем
   if (Date.now() - (rec.at || 0) > 20 * 60 * 1000){
     Net._clearMatch();
     return false;
