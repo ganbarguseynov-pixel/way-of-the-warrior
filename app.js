@@ -25,7 +25,24 @@ async function saveFoodToCloud(e){const t=localStorage.getItem('tgId'),n=localSt
 async function syncWaterToProfile(){let e=[];try{e=JSON.parse(localStorage.getItem('todayWater')||'[]')}catch(e){}const t=localStorage.getItem('waterListDate');let n=JSON.parse(localStorage.getItem('cachedProfile')||'{}');n.water=e,n.waterDate=t,localStorage.setItem('cachedProfile',JSON.stringify(n));const s=localStorage.getItem('tgId'),a=localStorage.getItem('linkedEmail')||localStorage.getItem('currentEmail'),o=localStorage.getItem('userName')||"Атлет";await saveProgressToCloud(s,a,o,n,currentXP,totalBurnedCalories)}
 async function saveProgressToCloud(e,t,n,s,a,o){try{let r=e||localStorage.getItem('tgId'),l=t||localStorage.getItem('linkedEmail')||localStorage.getItem('currentEmail'),c=n||localStorage.getItem('userName')||"Атлет";if(!r&&!l)return;const d=await resolveUserRecord(r,l);d?await supabaseClient.from('user_links').update({profile:s,xp:a,burned:o,name:c,telegram_id:r||null,email:l||null}).eq('id',d.id):await supabaseClient.from('user_links').insert([{telegram_id:r,email:l,profile:s,xp:a,burned:o,name:c}])}catch(e){console.log("Ошибка сохранения:",e)}}
 
-const levelsData={male:[{xp:0,title:"Странник",video:"VID_20261028_173134_198.mp4"},{xp:100,title:"Берсерк",video:"VID_20261028_173215_440.mp4"}],female:[{xp:0,title:"Новичок",video:"VID_20261028_175618_746.mp4"},{xp:100,title:"Фурия",video:"VID_20261028_175631_701.mp4"}]};
+const levelsData={
+male:[
+{xp:0,title:"Странник",video:"VID_20261028_173134_198.mp4"},
+{xp:100,title:"Берсерк",video:"VID_20261028_173215_440.mp4"},
+{xp:250,title:"Мечник",video:"VID_20261028_162626_544.mp4"},
+{xp:450,title:"Ветеран",video:"VID_20261028_173219_295.mp4"},
+{xp:700,title:"Гладиатор",video:"VID_20261028_173227_311.mp4"},
+{xp:1000,title:"Чемпион",video:"VID_20261028_173233_432.mp4"},
+{xp:1400,title:"Мастер клинка",video:"VID_20261028_173238_313.mp4"},
+{xp:1900,title:"Воевода",video:"VID_20261028_173251_027.mp4"},
+{xp:2500,title:"Легенда",video:"VID_20261028_173803_138.mp4"},
+{xp:3500,title:"Бессмертный",video:"VID_20261028_173808_318.mp4"}
+],
+female:[
+{xp:0,title:"Новичок",video:"VID_20261028_175618_746.mp4"},
+{xp:100,title:"Фурия",video:"VID_20261028_175631_701.mp4"}
+]
+};
 let currentXP=0,totalBurnedCalories=0,userGender='male',currentProfileData=null,currentLevelIndex=-1;
 function calculateNutrition(e){if(e.custom_calories&&e.custom_calories>0)return{calories:parseInt(e.custom_calories),protein:parseInt(e.custom_protein)||0,fat:parseInt(e.custom_fat)||0,carbs:parseInt(e.custom_carbs)||0};let t=parseFloat(e.weight)||70,n=parseFloat(e.height)||175,s=parseInt(e.age)||25,a=e.gender==='male'?10*t+6.25*n-5*s+5:10*t+6.25*n-5*s-161,o=a*1.375;return e.goal==='lose'&&(o-=500),e.goal==='gain'&&(o+=500),{calories:Math.round(o),protein:Math.round(o*0.3/4),fat:Math.round(o*0.3/9),carbs:Math.round(o*0.4/4)}}
 function checkDayReset(){const e=new Date(),t=e.getFullYear()+'-'+String(e.getMonth()+1).padStart(2,'0')+'-'+String(e.getDate()).padStart(2,'0');localStorage.getItem('foodListDate')!==t&&(localStorage.setItem('todayFood','[]'),localStorage.setItem('foodListDate',t)),localStorage.getItem('waterListDate')!==t&&(localStorage.setItem('todayWater','[]'),localStorage.setItem('waterListDate',t))}
@@ -192,13 +209,15 @@ if(currentXP>=e[n].xp) t=n;
 }
 const n=e[t];
 currentLevelIndex=t;
-document.getElementById('char-level')&&(document.getElementById('char-level').innerText="Уровень "+(t+1));
+document.getElementById('char-level')&&(document.getElementById('char-level').innerText="Уровень "+(t+1)+" / "+e.length);
 document.getElementById('char-title')&&(document.getElementById('char-title').innerText=n.title);
 document.getElementById('xp-text')&&(document.getElementById('xp-text').innerText=currentXP+" XP");
-let s=100;
-t+1<e.length&&(s=e[t+1].xp);
-let a=currentXP/s*100;
-a>100&&(a=100);
+const from=e[t].xp;
+const to=(t+1<e.length)?e[t+1].xp:null;
+let a;
+if(to===null){a=100;}else{a=(currentXP-from)/(to-from)*100;}
+if(a>100)a=100;
+if(a<0)a=0;
 document.getElementById('xp-bar')&&(document.getElementById('xp-bar').style.width=a+"%");
 }
 
@@ -214,4 +233,4 @@ async function logout(){confirm("Выйти из аккаунта? Прогре�
 
 let isShakeTesting=!1,maxShakeValue=0;
 async function startShakeTest(){if(!isShakeTesting){if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function')try{const e=await DeviceMotionEvent.requestPermission();if(e!=='granted'){tg.showAlert("Нет доступа.");return}}catch(e){return}isShakeTesting=!0,maxShakeValue=0,document.getElementById('test-shake-btn').style.display='none',document.getElementById('stop-shake-btn').style.display='block',window.addEventListener('devicemotion',function(e){if(!isShakeTesting)return;const t=e.accelerationIncludingGravity;if(t){const e=Math.abs(t.x||0)+Math.abs(t.y||0)+Math.abs(t.z||0);Math.round(e)>maxShakeValue&&(maxShakeValue=Math.round(e))}}),tg.showAlert("Тряси телефон!")}}
-function stopShakeTest(){isShakeTesting=!1,document.getElementById('test-shake-btn').style.display='block',document.getElementById('stop-shake-btn').style.display='none',tg.showAlert("Максимум: "+maxShakeValue)}
+function stopShakeTest(){isShakeTesting=!1,document.getElementById('test-shake-btn').style.display='block',document.getElementById('stop-shake-btn').style.display='none',tg.showAlert("Максимум: "+maxShakeValue)}}
