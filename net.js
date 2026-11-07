@@ -1,5 +1,5 @@
 /* ============================================================
-   net.js — сеть: очередь, матч, бот, ничья (VER 13)
+   net.js — сеть: очередь, матч, бот, ничья (VER 14)
    Бой идёт по реальному времени. Вышел — соперник продолжает.
    ============================================================ */
 (function (global) {
@@ -15,10 +15,8 @@ const TICK_MS = 100;
 const SEARCH_LIMIT_MS = 3000;
 const RESUME_LIMIT_MS = 6 * 60 * 60 * 1000;
 
-/* сколько секунд отсутствия уже считаются «ушёл из боя» */
 const AWAY_GRACE_MS = 15000;
 
-/* шаг догоняющей симуляции */
 const CATCHUP_STEP = 1.2;
 const CATCHUP_MAX  = 600;
 
@@ -606,8 +604,6 @@ Net._pickMove = function (s, side){
     for (let x = 0; x < 8; x++){
       const pc = s.board[y][x];
       if (!pc || pc.side !== side) continue;
-      if (pc.asleep) continue;
-      if (pc.chained) continue;
 
       const cost = Arena.moveCost(s, pc);
       if (s.energy[side] < cost) continue;
@@ -636,7 +632,8 @@ Net._autoMove = function (s, side){
   const pick = Net._pickMove(s, side);
   if (!pick) return false;
 
-  const res = Arena.move(s, side, pick.fx, pick.fy, pick.tx, pick.ty);
+  const promo = Arena.PROMO_CHOICES[Math.floor(Math.random() * Arena.PROMO_CHOICES.length)];
+  const res = Arena.move(s, side, pick.fx, pick.fy, pick.tx, pick.ty, promo);
   return !!(res && res.ok);
 };
 
@@ -667,7 +664,6 @@ Net._catchUp = function (s, awayMs, absentSide){
     Arena.tick(s, dt);
     if (s.over) break;
 
-    /* отсутствующий не ходит — играет только соперник */
     Net._autoMove(s, foe);
   }
 
@@ -803,7 +799,9 @@ Net._applyIntent = function (msg, side){
     res = Net._drawIntent(side, msg.t);
   } else {
     switch (msg.t){
-      case 'move':   res = Arena.move(s, side, msg.fx, msg.fy, msg.tx, msg.ty); break;
+      case 'move':
+        res = Arena.move(s, side, msg.fx, msg.fy, msg.tx, msg.ty, msg.promo);
+        break;
       case 'night':  res = Arena.castNight(s, side); break;
       case 'unlock': res = Arena.unlock(s, side, msg.x, msg.y); break;
       case 'resign': res = Arena.resign(s, side); break;
@@ -932,7 +930,6 @@ Net.tryResume = async function (){
   try { saved = JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); } catch (e){}
   if (saved && !saved.board) saved = null;
 
-  /* бой с ботом: состояние живёт на телефоне */
   if (isBot){
     if (!saved){
       Net._clearMatch();
