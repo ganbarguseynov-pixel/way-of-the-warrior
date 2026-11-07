@@ -279,9 +279,9 @@ try { tg.ready(); tg.expand(); } catch (e){}
 
 const $ = function (id){ return document.getElementById(id); };
 
-let pending = null;   // какая карта выбрана для выставления
-let sel     = null;   // какая фигура выбрана для хода
-let cells   = [];     // 64 элемента доски
+let pending = null;
+let sel     = null;
+let cells   = [];
 
 /* ================= УВЕДОМЛЕНИЕ ================= */
 
@@ -291,7 +291,7 @@ function toast(text){
   t.textContent = text;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function (){ t.classList.remove('show'); }, 1800);
+  toastTimer = setTimeout(function (){ t.classList.remove('show'); }, 2200);
 }
 
 /* ================= КЛЮЧ ИГРОКА ================= */
@@ -377,33 +377,34 @@ Net.on('start', function (info){
 
   buildBoard();
 
-  const myCups = Net.me ? Net.me.cups : 0;
-  const oppCups = info.opponent.cups || 0;
+  const myCups  = Net.me ? Net.me.cups : 0;
+  const oppCups = (info.opponent && info.opponent.cups) || 0;
   const diff = myCups - oppCups;
   const win  = diff === 0 ? 30 : (diff < 0 ? 31 : 29);
   const lose = Arena.lossFor(myCups, win);
 
-  $('oppLabel').textContent = info.opponent.name + ' (' + oppCups + ' 🏆)';
+  $('oppLabel').textContent =
+    (info.opponent ? info.opponent.name : 'Соперник') + ' (' + oppCups + ' 🏆)';
   $('stakeWin').textContent  = '+' + win;
   $('stakeLose').textContent = '−' + lose;
 
-  if (info.state) render(info.state);
+  if (info.state){
+    render(info.state);
+  } else {
+    $('timeLabel').textContent = '…';
+    toast('Восстанавливаем бой…');
+  }
 });
 
 Net.on('state', function (s){ render(s); });
 
-Net.on('disconnect', async function (){
-  if (Net.host && Net.state){
-    Arena.finish(Net.state, 'a');
-    toast('Соперник отключился. Победа за тобой.');
-  } else {
-    toast('Соперник отключился. Бой не засчитан.');
-    await Net.leaveMatch();
-    $('battle').classList.add('hidden');
-    $('lobby').classList.remove('hidden');
-    await Net.refresh();
-    renderLobby();
-  }
+Net.on('resumeFailed', async function (){
+  toast('Бой уже не восстановить.');
+  await Net.leaveMatch();
+  $('battle').classList.add('hidden');
+  $('lobby').classList.remove('hidden');
+  await Net.refresh();
+  renderLobby();
 });
 
 Net.on('result', async function (r){
@@ -467,7 +468,6 @@ function buildBoard(){
   }
 }
 
-// экранные координаты → координаты на доске
 function toCanon(dx, dy){
   return Net.mySide === 'a' ? [dx, dy] : [7 - dx, 7 - dy];
 }
@@ -481,7 +481,6 @@ function onCell(dx, dy){
   const x = xy[0], y = xy[1];
   const pc = s.board[y][x];
 
-  // ---- выставление карты ----
   if (pending){
     const p = Arena.PIECES[pending];
 
@@ -510,7 +509,6 @@ function onCell(dx, dy){
     return;
   }
 
-  // ---- ход выбранной фигурой ----
   if (sel){
     const same = (pc && pc.side === my && sel.x === x && sel.y === y);
 
@@ -520,7 +518,6 @@ function onCell(dx, dy){
       return;
     }
 
-    // клик по другой своей фигуре — переключить выбор, а не отправить ход
     if (pc && pc.side === my){
       if (pc.chained){ Net.intent({ t:'unlock', x:x, y:y }); return; }
       if (pc.asleep){ toast('Фигура спит. Её разбудит только взятие.'); return; }
@@ -529,7 +526,6 @@ function onCell(dx, dy){
       return;
     }
 
-    // ход по правилам?
     const legal = Arena.legalMoves(s, sel.x, sel.y);
     let ok = false;
     for (let i = 0; i < legal.length; i++){
@@ -548,7 +544,6 @@ function onCell(dx, dy){
     return;
   }
 
-  // ---- выбор своей фигуры ----
   if (pc && pc.side === my){
     if (pc.chained){
       Net.intent({ t:'unlock', x:x, y:y });
@@ -569,18 +564,12 @@ function render(s){
   const my  = Net.mySide;
   const rot = (my === 'b');
 
-  /*
-    Выбор НЕ сбрасывается при обновлении от соперника.
-    Снимаем только если фигура исчезла или стала чужой
-    (например, на арене 6 «Хостел» перешла врагу).
-  */
   if (sel){
     const p = s.board[sel.y] && s.board[sel.y][sel.x];
     if (!p || p.side !== my) sel = null;
   }
   if (pending && s.hand[my].indexOf(pending) < 0) pending = null;
 
-  // возможные ходы выбранной фигуры
   const moveSet = {};
   if (sel){
     const legal = Arena.legalMoves(s, sel.x, sel.y);
@@ -621,11 +610,8 @@ function render(s){
     }
 
     if (sel && sel.x === x && sel.y === y) el.classList.add('sel');
-
-    // подсветка возможных ходов
     if (moveSet[x + ':' + y]) el.classList.add(pc ? 'cap' : 'move');
 
-    // подсветка половины при выборе карты
     if (pending){
       const home = my === 'a' ? y >= 4 : y <= 3;
       if (home && !pc) el.classList.add('move');
@@ -706,8 +692,9 @@ $('resignBtn').onclick = function (){
     key: playerKey(),
     name: playerName(),
     seed: seed
-  }).then(function (){
-    renderLobby();
+  }).then(async function (){
+    const resumed = await Net.tryResume();
+    if (!resumed) renderLobby();
   }).catch(function (e){
     console.error(e);
     $('pName').textContent = 'Ошибка базы';
