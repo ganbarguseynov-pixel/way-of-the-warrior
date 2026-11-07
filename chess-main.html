@@ -133,7 +133,7 @@ body{
 }
 .btn-train:active{transform:translateY(3px);box-shadow:0 1px 0 #0f172a}
 
-/* ---------- ПРОСМОТР ВСЕХ АРЕН (АРЕНА 1 ВНИЗУ, 10 НАВЕРХУ) ---------- */
+/* ---------- ВСЕ АРЕНЫ: 1 ВНИЗУ, 10 НАВЕРХУ ---------- */
 #arenaModal{
   position:fixed;inset:0;background:rgba(2,6,23,.97);z-index:1200;
   display:none;flex-direction:column;
@@ -142,8 +142,7 @@ body{
 
 #arenaModalHead{
   display:flex;justify-content:space-between;align-items:center;
-  width:100%;padding:14px 18px 10px;flex-shrink:0;
-  border-bottom:1px solid rgba(255,255,255,.07);
+  width:100%;padding:14px 18px 8px;flex-shrink:0;
   background:linear-gradient(180deg,#0f172a,rgba(15,23,42,0));
 }
 #arenaModalHead h3{margin:0;font-size:16px;color:#e2e8f0;letter-spacing:.5px}
@@ -154,21 +153,20 @@ body{
 }
 #arenaClose:active{background:#334155}
 
+#arenaTopHint{
+  flex-shrink:0;text-align:center;font-size:10.5px;color:#64748b;
+  padding:0 16px 8px;letter-spacing:.3px;
+}
+
 #arenaScroll{
   flex:1;position:relative;
   overflow-y:auto;overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
   scroll-snap-type:y mandatory;
   scrollbar-width:none;
-  padding:16px 0 20px;
+  padding:10px 0 20px;
 }
 #arenaScroll::-webkit-scrollbar{display:none}
-
-/* подсказка сверху: выше — сильнее */
-#arenaTopHint{
-  flex-shrink:0;text-align:center;font-size:10px;color:#475569;
-  padding:6px 16px 0;letter-spacing:.4px;
-}
 
 .arena-slide{
   scroll-snap-align:center;
@@ -297,7 +295,7 @@ body{
     <h3>Все арены</h3>
     <button id="arenaClose">✕</button>
   </div>
-  <div id="arenaTopHint">Листай вверх — там арены выше</div>
+  <div id="arenaTopHint">▲ Листай вверх — арены выше и сильнее</div>
   <div id="arenaScroll"></div>
   <div id="arenaDots"></div>
 </div>
@@ -449,9 +447,10 @@ function render(cups){
 /* ================= ПРОСМОТР ВСЕХ АРЕН ================= */
 
 /*
-  Собираем слайды ОТ СТАРШЕЙ К МЛАДШЕЙ: 10, 9, 8 … 1.
-  Арена 10 оказывается наверху, арена 1 — внизу.
-  Листаешь вверх — растёшь по аренам.
+  Порядок снизу вверх.
+  Слайды кладём в разметку от 10 к 1: арена 10 — самый первый элемент,
+  значит она наверху списка; арена 1 — последний, значит внизу.
+  Листаешь вверх — попадаешь на арены выше.
 */
 function buildArenaBrowser(){
   if (slidesBuilt) return;
@@ -488,8 +487,8 @@ function buildArenaBrowser(){
     track.appendChild(slide);
   }
 
-  // точки — по возрастанию слева направо: 1, 2, 3 … 10
-  for (let n = 1; n <= MAX_ARENA; n++){
+  // точки в том же порядке, что и карточки: слева — верхняя арена
+  for (let n = MAX_ARENA; n >= 1; n--){
     const dot = document.createElement('button');
     dot.className = 'arena-dot';
     dot.dataset.n = n;
