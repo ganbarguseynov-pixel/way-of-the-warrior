@@ -199,7 +199,8 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 </div>
 
 <script src="arena.js?v=18"></script>
-<script src="net.js?v=19"></script>
+<script src="friends.js"></script>
+<script src="net.js?v=20"></script>
 <script>
 const sb = supabase.createClient(
   'https://qnpriwfxzuoymoumdtrl.supabase.co',
@@ -337,6 +338,11 @@ Net.on('start', function (info){
   $('stakeWin').textContent  = '+' + win;
   $('stakeLose').textContent = '−' + lose;
 
+  if (info.friendly){
+    $('stakeWin').textContent  = '±0';
+    $('stakeLose').textContent = '±0';
+  }
+
   if (info.state) render(info.state);
   else { $('timeLabel').textContent = '…'; toast('Собираем доску…'); }
 });
@@ -378,7 +384,10 @@ Net.on('result', function (r){
   const arenaNow  = Arena.arenaOf(r.after);
   const arenaThen = Arena.arenaOf(r.before);
 
-  if (arenaNow > arenaThen){
+  if (r.friendly){
+    $('ovNote').textContent = 'Дружеская партия — кубки не изменились';
+    $('ovNote').style.color = '#64748b';
+  } else if (arenaNow > arenaThen){
     $('ovNote').textContent = '⬆ НОВАЯ АРЕНА: ' + Arena.ARENAS[arenaNow - 1].name;
     $('ovNote').style.color = '#22c55e';
   } else if (arenaNow < arenaThen){
@@ -502,7 +511,6 @@ $('promoCancel').onclick = function (){
   if (Net.state) render(Net.state);
 };
 
-/* сколько предложений ничьей осталось у меня */
 function drawsLeftOf(s, my){
   const used = (s && s.drawUsed && s.drawUsed[my]) || 0;
   return Math.max(0, DRAW_MAX - used);
@@ -576,8 +584,8 @@ function render(s){
   updateDrawUI(s, my, opp);
 
   if (sel){
-    const p = s.board[sel.y] && s.board[sel.y][sel.x];
-    if (!p || p.side !== my) sel = null;
+    const p0 = s.board[sel.y] && s.board[sel.y][sel.x];
+    if (!p0 || p0.side !== my) sel = null;
   }
 
   const moveSet = {};
@@ -605,13 +613,10 @@ function render(s){
     const kingChk = !!(pc && pc.type === 'king' && ((pc.side === my) ? myCheck : opCheck));
 
     let sig = (isLight ? 'L' : 'D');
-    if (pc){
-      const h = pieceHp(pc);
-      sig += pc.type + pc.side + 'h' + h.hp + '/' + h.max;
-    }
+    if (pc){ const hp1 = pieceHp(pc); sig += pc.type + pc.side + 'h' + hp1.hp + '/' + hp1.max; }
     if (kingChk) sig += 'K';
-    if (isSel)   sig += 'S';
-    if (isMove)  sig += (isCap ? 'C' : 'M');
+    if (isSel) sig += 'S';
+    if (isMove) sig += (isCap ? 'C' : 'M');
 
     if (cellSig[idx] === sig) continue;
     cellSig[idx] = sig;
@@ -623,7 +628,7 @@ function render(s){
 
     if (pc){
       const mine = (pc.side === my);
-      const def  = Arena.PIECES[pc.type];
+      const def = Arena.PIECES[pc.type];
 
       const sp = document.createElement('span');
       sp.className = 'piece ' + (mine ? 'mine' : 'theirs');
@@ -637,34 +642,35 @@ function render(s){
         el.appendChild(cb);
       }
 
-      const h = pieceHp(pc);
-      const pct = Math.max(0, Math.min(100, (h.hp / h.max) * 100));
+      const hh = pieceHp(pc);
+      const pct = Math.max(0, Math.min(100, (hh.hp / hh.max) * 100));
 
       let cls = 'hp-fill';
       if (pct <= 30) cls += ' low';
       else if (pct <= 60) cls += ' mid';
 
-      const bar = document.createElement('div');
-      bar.className = 'hp-bar';
+      const bar2 = document.createElement('div');
+      bar2.className = 'hp-bar';
 
       const fill = document.createElement('div');
       fill.className = cls;
       fill.style.width = pct + '%';
-      bar.appendChild(fill);
+      bar2.appendChild(fill);
 
       const lvl = document.createElement('span');
       lvl.className = 'hp-lvl';
       lvl.textContent = '1';
-      bar.appendChild(lvl);
-      el.appendChild(bar);
+      bar2.appendChild(lvl);
+
+      el.appendChild(bar2);
 
       const txt = document.createElement('div');
       txt.className = 'hp-text';
-      txt.textContent = h.hp + '/' + h.max;
+      txt.textContent = hh.hp + '/' + hh.max;
       el.appendChild(txt);
     }
 
-    if (isSel)  el.classList.add('sel');
+    if (isSel) el.classList.add('sel');
     if (isMove) el.classList.add(isCap ? 'cap' : 'move');
   }
 
@@ -685,11 +691,11 @@ function render(s){
   if (typeof left !== 'number' || !isFinite(left)) left = Arena.MAIN_TIME;
 
   const t = Math.max(0, Math.ceil(left));
-  const txt = Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+  const txt2 = Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
 
-  if (s.phase === 'overtime'){ timeTxt = 'ДОП ' + txt; timeColor = '#ef4444'; }
-  else if (left <= Arena.FAST_FROM){ timeTxt = txt; timeColor = '#f59e0b'; }
-  else { timeTxt = txt; }
+  if (s.phase === 'overtime'){ timeTxt = 'ДОП ' + txt2; timeColor = '#ef4444'; }
+  else if (left <= Arena.FAST_FROM){ timeTxt = txt2; timeColor = '#f59e0b'; }
+  else { timeTxt = txt2; }
 
   if (timeTxt !== lastTimeTxt){ lastTimeTxt = timeTxt; tl.textContent = timeTxt; }
   if (tl.style.color !== timeColor) tl.style.color = timeColor;
@@ -727,12 +733,7 @@ async function boot(){
   $('pName').textContent = 'Загрузка…';
 
   try {
-    await Net.init({
-      client: sb,
-      key: playerKey(),
-      name: playerName(),
-      seed: 0
-    });
+    await Net.init({ client: sb, key: playerKey(), name: playerName(), seed: 0 });
   } catch (e){
     showBootError(e);
     return;
@@ -757,6 +758,110 @@ document.addEventListener('visibilitychange', function (){
 });
 
 boot();
+</script>
+
+<script>
+/* ===== дружеский вызов: приём и отправка ===== */
+(function(){
+  var qs = new URLSearchParams(location.search);
+  var chId = qs.get('ch');
+  if (!chId) return;
+
+  var role    = qs.get('role') === 'guest' ? 'guest' : 'host';
+  var oppKey  = qs.get('opp') || '';
+  var oppName = qs.get('name') || 'Соперник';
+  var oppCups = parseInt(qs.get('cups') || '0', 10) || 0;
+  var arena   = parseInt(qs.get('arena') || '1', 10) || 1;
+
+  var done = false, tick = null, poll = null;
+
+  function killOverlay(){
+    done = true;
+    if (tick){ clearInterval(tick); tick = null; }
+    if (poll){ clearInterval(poll); poll = null; }
+    var o = document.getElementById('frOv');
+    if (o) o.remove();
+  }
+
+  function overlay(title, sub){
+    var o = document.getElementById('frOv');
+    if (!o){
+      o = document.createElement('div');
+      o.id = 'frOv';
+      o.style.cssText = 'position:fixed;inset:0;background:rgba(2,6,23,.97);z-index:2000;' +
+        'display:flex;align-items:center;justify-content:center;padding:24px;text-align:center';
+      o.innerHTML =
+        '<div style="max-width:340px;width:100%">' +
+          '<div style="font-size:44px;margin-bottom:10px">⚔️</div>' +
+          '<div id="frT" style="font-size:17px;font-weight:900;margin-bottom:8px"></div>' +
+          '<div id="frS" style="font-size:12.5px;color:#94a3b8;line-height:1.5;margin-bottom:16px"></div>' +
+          '<button id="frC" style="width:100%;padding:13px;border:0;border-radius:10px;' +
+          'background:linear-gradient(145deg,#ef4444,#991b1b);color:#fff;font-weight:900;' +
+          'font-size:14px;cursor:pointer">Отменить</button>' +
+        '</div>';
+      document.body.appendChild(o);
+
+      document.getElementById('frC').onclick = function(){
+        killOverlay();
+        try { Net.leaveMatch(); } catch (e){}
+        location.href = 'chess-social.html';
+      };
+    }
+    document.getElementById('frT').textContent = title;
+    document.getElementById('frS').textContent = sub;
+  }
+
+  function waitNet(cb){
+    var n = 0;
+    tick = setInterval(function(){
+      n++;
+      if (window.Net && Net.me && Net.sb){
+        clearInterval(tick); tick = null; cb();
+      } else if (n > 100){
+        clearInterval(tick); tick = null; killOverlay();
+      }
+    }, 150);
+  }
+
+  function start(){
+    try { Net.leaveMatch(); } catch (e){}
+
+    if (role === 'host'){
+      overlay('Вызов отправлен', 'Ждём, пока ' + oppName + ' примет вызов…');
+
+      Net.startFriendlyHost({
+        matchId: chId, oppKey: oppKey, oppName: oppName,
+        oppCups: oppCups, arena: arena
+      });
+
+      poll = setInterval(async function(){
+        if (done) return;
+        var r = await sb.from('arena_challenges').select('status').eq('id', chId).maybeSingle();
+        var st = (r && r.data) ? r.data.status : null;
+        if (st && st !== 'pending' && st !== 'accepted'){
+          killOverlay();
+          try { await Net.leaveMatch(); } catch (e){}
+          location.href = 'chess-social.html';
+        }
+      }, 2500);
+
+    } else {
+      Net.joinFriendly({
+        matchId: chId, oppKey: oppKey, oppName: oppName,
+        oppCups: oppCups, arena: arena
+      });
+      overlay('Загружаем партию', 'Соединяемся с ' + oppName + '…');
+    }
+  }
+
+  if (window.Net){
+    Net.on('state', function(s){ if (s && s.board) killOverlay(); });
+    Net.on('result', function(){ killOverlay(); });
+  }
+
+  history.replaceState(null, '', location.pathname);
+  waitNet(start);
+})();
 </script>
 </body>
 </html>
