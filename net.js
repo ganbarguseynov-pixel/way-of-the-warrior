@@ -1,6 +1,6 @@
 /* ============================================================
-   net.js — сеть: очередь, матч, обмен расстановками
-   v9: при соединении игроки обмениваются расстановками из колоды.
+   net.js — сеть: очередь, матч, подбор соперника (VER 11)
+   5 секунд поиска → если никого, бой с «живым» ботом.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -11,6 +11,14 @@ const SETUP_KEY  = 'chessSetup';
 
 const PUSH_MS = 200;
 const TICK_MS = 100;
+
+const SEARCH_LIMIT_MS = 5000;
+
+const BOT_NAMES = [
+  'Дмитрий','Алексей','Максим','Артём','Сергей','Кирилл','Иван',
+  'Никита','Роман','Егор','Даниил','Михаил','Андрей','Павел',
+  'Владислав','Глеб','Тимур','Матвей','Саша','Лёша'
+];
 
 const Net = {
   sb: null,
@@ -36,7 +44,11 @@ const Net = {
   saveMark: 0,
   queueSince: 0,
   pending: null,
-  finished: false
+  finished: false,
+
+  botMode: false,
+  botTimer: null,
+  fallbackTimer: null
 };
 
 /* ---------------- события ---------------- */
@@ -185,6 +197,7 @@ Net._saveState = function (force){
 
 Net._clearMatch = function (){
   if (Net.timer){ clearInterval(Net.timer); Net.timer = null; }
+  if (Net.botTimer){ clearTimeout(Net.botTimer); Net.botTimer = null; }
   if (Net.resumeTimer){ clearTimeout(Net.resumeTimer); Net.resumeTimer = null; }
 
   try { localStorage.removeItem(RECORD_KEY); } catch (e){}
@@ -192,6 +205,19 @@ Net._clearMatch = function (){
 };
 
 /* ---------------- очередь ---------------- */
+
+Net._clearFallback = function (){
+  if (Net.fallbackTimer){ clearTimeout(Net.fallbackTimer); Net.fallbackTimer = null; }
+};
+
+Net._startFallback = function (){
+  Net._clearFallback();
+  Net.fallbackTimer = setTimeout(function (){
+    Net.fallbackTimer = null;
+    if (Net.matchId || Net.finished || Net.botMode) return;
+    Net._startBotMatch();
+  }, SEARCH_LIMIT_MS);
+};
 
 Net.findMatch = async function (){
   if (Net.queueCh) return;
@@ -229,11 +255,14 @@ Net.findMatch = async function (){
   });
 
   if (Net.retry) clearInterval(Net.retry);
-  Net.retry = setInterval(function (){ Net._tryPair(); }, 800);
+  Net.retry = setInterval(function (){ Net._tryPair(); }, 500);
+
+  Net._startFallback();
 };
 
 Net.cancelQueue = async function (){
   if (Net.retry){ clearInterval(Net.retry); Net.retry = null; }
+  Net._clearFallback();
 
   if (!Net.queueCh){
     Net.pending = null;
@@ -411,11 +440,13 @@ Net._attach = async function (){
   return ch;
 };
 
-/* ---------------- бой ---------------- */
+/* ---------------- бой с живым игроком ---------------- */
 
 Net._beginMatch = async function (m){
+  Net._clearFallback();
   await Net.cancelQueue();
 
+  Net.botMode  = false;
   Net.matchId  = m.matchId;
   Net.mySide   = m.side;
   Net.host     = (m.side === 'a');
@@ -453,6 +484,116 @@ Net._beginMatch = async function (m){
     });
   }
 };
+
+/* ---------------- бой с подставным соперником ---------------- */
+
+function botNickname(){
+  const base = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
+  const tail = Math.random() < 0.5
+    ? ''
+    : ' ' + Math.floor(Math.random() * 89 + 10);
+  return base + tail;
+}
+
+function botCupsFor(myCups){
+  let shift = Math.floor(Math.random() * 101) - 50;   /* -50..+50 */
+  if (Math.abs(shift) < 8) shift = (shift < 0 ? -12 : 12);
+
+  let cups = Math.max(0, myCups + shift);
+  if (Math.abs(cups - myCups) < 8) cups = Math.max(0, myCups + 12);
+  return cups;
+}
+
+Net._startBotMatch = async function (){
+  if (Net.matchId || Net.botMode) return;
+
+  await Net.cancelQueue();
+  Net._clearFallback();
+
+  const myCups = Net.me ? Net.me.cups : 0;
+  const rivalCups = botCupsFor(myCups);
+  const rivalName = botNickname();
+  const rivalKey  = 'pl_' + Math.random().toString(36).slice(2, 12);
+
+  Net.matchId  = uuid();
+  Net.mySide   = 'a';
+  Net.host     = true;
+  Net.botMode  = true;
+  Net.arena    = Math.min(Arena.arenaOf(myCups), Arena.arenaOf(rivalCups));
+  Net.finished = false;
+  Net.state    = null;
+
+  Net.players = {
+    a: { key: Net.key,  name: Net.name, cups: myCups },
+    b: { key: rivalKey, name: rivalName, cups: rivalCups }
+  };
+
+  Net.setups = { a: Net.mySetup(), b: null };
+
+  Net._hostStart();
+  Net._startBotBrain();
+};
+
+Net._startBotBrain = function (){
+  if (Net.botTimer){ clearTimeout(Net.botTimer); Net.botTimer = null; }
+  Net._botTick();
+};
+
+Net._botTick = function (){
+  if (Net.botTimer){ clearTimeout(Net.botTimer); Net.botTimer = null; }
+  if (!Net.botMode || Net.finished) return;
+
+  const wait = 850 + Math.random() * 850;
+
+  Net.botTimer = setTimeout(function (){
+    Net.botTimer = null;
+    if (!Net.botMode || Net.finished) return;
+    if (Net.state && !Net.state.over) Net._botMove();
+    Net._botTick();
+  }, wait);
+};
+
+Net._botMove = function (){
+  const s = Net.state;
+  if (!s || s.over) return;
+  if (s.energy.b < 1) return;
+
+  const moves = [];
+
+  for (let y = 0; y < 8; y++){
+    for (let x = 0; x < 8; x++){
+      const pc = s.board[y][x];
+      if (!pc || pc.side !== 'b') continue;
+      if (pc.asleep) continue;
+      if (pc.chained) continue;
+
+      const list = Arena.legalMoves(s, x, y);
+      for (let i = 0; i < list.length; i++){
+        moves.push({
+          fx:x, fy:y,
+          tx:list[i][0], ty:list[i][1],
+          cap:(s.board[list[i][1]][list[i][0]] ? 1 : 0)
+        });
+      }
+    }
+  }
+
+  if (!moves.length) return;
+
+  const caps = [];
+  for (let i = 0; i < moves.length; i++) if (moves[i].cap) caps.push(moves[i]);
+
+  const pool = (caps.length && Math.random() < 0.75) ? caps : moves;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+
+  Net._applyIntent({
+    t:'move',
+    fx:pick.fx, fy:pick.fy,
+    tx:pick.tx, ty:pick.ty
+  }, 'b');
+};
+
+/* ---------------- запуск боя ---------------- */
 
 Net._hostStart = function (){
   Net.state = Arena.create({
@@ -533,7 +674,7 @@ Net._applyIntent = function (msg, side){
   }
 
   if (res && !res.ok){
-    if (Net.matchCh){
+    if (Net.matchCh && !Net.botMode){
       Net.matchCh.send({
         type: 'broadcast',
         event: 'error',
@@ -544,6 +685,33 @@ Net._applyIntent = function (msg, side){
   }
 
   Net._push();
+};
+
+/* ---------------- конец боя ---------------- */
+
+Net._localCups = async function (winner){
+  const myCups = Net.me ? Net.me.cups : 0;
+  const oppCups = Net.players && Net.players.b ? Net.players.b.cups : myCups;
+
+  let delta = 0;
+
+  if (winner === 'a'){
+    delta = Arena.deltaFor(myCups, oppCups);
+  } else if (winner === 'b'){
+    delta = -Arena.lossFor(myCups, Arena.deltaFor(oppCups, myCups));
+  }
+
+  const before = myCups;
+  const after = Math.max(Arena.floorOf(myCups), myCups + delta);
+
+  try {
+    await Net.sb.from('arena_players').update({ cups: after }).eq('player_key', Net.key);
+  } catch (e){}
+
+  return {
+    a_before: before, a_after: after,
+    b_before: oppCups, b_after: oppCups
+  };
 };
 
 Net._hostFinish = async function (){
@@ -566,11 +734,15 @@ Net._hostFinish = async function (){
       p_arena:  Net.arena
     });
 
-    if (!res.error) payload.cups = res.data;
-    else console.error('[net] report failed', res.error);
+    if (!res.error){
+      payload.cups = res.data;
+    } else {
+      console.error('[net] report failed', res.error);
+      if (Net.botMode) payload.cups = await Net._localCups(s.winner);
+    }
   }
 
-  if (Net.matchCh){
+  if (Net.matchCh && !Net.botMode){
     Net.matchCh.send({ type: 'broadcast', event: 'result', payload: payload });
   }
 
@@ -588,8 +760,9 @@ Net.intent = function (msg){
 };
 
 Net.resign = function (){
-  if (Net.host) Net._applyIntent({ t: 'resign' }, Net.mySide);
-  else if (Net.matchCh){
+  if (Net.host){
+    Net._applyIntent({ t: 'resign' }, Net.mySide);
+  } else if (Net.matchCh){
     Net.matchCh.send({ type: 'broadcast', event: 'intent', payload: { t: 'resign' } });
   }
 };
@@ -611,6 +784,7 @@ Net.tryResume = async function (){
   Net.arena    = rec.arena || 1;
   Net.players  = rec.players;
   Net.finished = false;
+  Net.botMode  = false;
   Net.state    = null;
 
   await Net._attach();
@@ -665,6 +839,9 @@ Net._finish = async function (payload){
   if (!payload || Net.finished) return;
 
   Net.finished = true;
+
+  if (Net.botTimer){ clearTimeout(Net.botTimer); Net.botTimer = null; }
+
   Net._clearMatch();
 
   let before = Net.me ? Net.me.cups : 0;
@@ -682,6 +859,8 @@ Net._finish = async function (payload){
     ? (Net.mySide === 'a' ? Net.players.b : Net.players.a)
     : { name: 'Враг' };
 
+  Net.botMode = false;
+
   Net.emit('result', {
     winner:   payload.winner,
     mySide:   Net.mySide,
@@ -695,6 +874,7 @@ Net._finish = async function (payload){
 
 Net.leaveMatch = async function (){
   Net._clearMatch();
+  Net._clearFallback();
 
   if (Net.retry){ clearInterval(Net.retry); Net.retry = null; }
 
@@ -710,6 +890,7 @@ Net.leaveMatch = async function (){
   Net.mySide  = null;
   Net.pending = null;
   Net.finished = false;
+  Net.botMode  = false;
 };
 
 global.Net = Net;
