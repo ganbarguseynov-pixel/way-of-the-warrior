@@ -2,6 +2,7 @@
    arena.js — правила и движок шахматных арен
    Один файл работает и у хоста, и у гостя.
    Время: 5 минут основного + 1 минута дополнительного.
+   HP короля — обычное число. Сейчас 1, с прокачкой будет расти.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -13,6 +14,9 @@ const MAX_ARENA = 10;
 const MAIN_TIME = 300;   // 5 минут основного времени
 const OT_TIME   = 60;    // 1 минута дополнительного
 const FAST_FROM = 60;    // последняя минута основного — эликсир ×1.5
+
+/* ---------- ЗДОРОВЬЕ КОРОЛЯ ---------- */
+const KING_HP = 1;       // базовое HP короля; прокачка будет его поднимать
 
 const PIECES = {
   pawn:   { cost:1, name:'Пешка',  w:'♙', b:'♟', val:2 },
@@ -101,13 +105,21 @@ function energyRate(s){
   return 1;
 }
 
-/* король на доске — 1, нет короля — 0 */
+/* текущее HP короля; 0 — короля нет на доске */
 function kingHp(s, side){
   for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
     const pc = s.board[y][x];
-    if (pc && pc.type === 'king' && pc.side === side) return 1;
+    if (pc && pc.type === 'king' && pc.side === side){
+      return (typeof pc.hp === 'number') ? pc.hp : KING_HP;
+    }
   }
   return 0;
+}
+
+/* урон по королю = сила атакующей фигуры */
+function kingDamage(type){
+  const p = PIECES[type];
+  return p ? p.val : 1;
 }
 
 /* ================= СОЗДАНИЕ БОЯ ================= */
@@ -275,7 +287,11 @@ function place(s, side, type, x, y){
   s.energy[side] -= p.cost;
 
   const pc = { type:type, side:side };
-  if (type !== 'king'){
+
+  if (type === 'king'){
+    pc.hp = KING_HP;
+    pc.maxHp = KING_HP;
+  } else {
     if (s.arena === 4 && s.placed[side] < 3) pc.asleep = true;
     if (s.arena === 7 && s.placed[side] < 2) pc.chained = true;
   }
@@ -341,15 +357,35 @@ function relocate(s, fx, fy, tx, ty){
   }
 }
 
+/* удар по королю: снимаем HP, а не убиваем сразу */
+function hitKing(s, king, attackerType){
+  if (typeof king.hp !== 'number') king.hp = KING_HP;
+
+  const dmg = kingDamage(attackerType);
+  king.hp = Math.max(0, king.hp - dmg);
+
+  log(s, PIECES[attackerType].name + ' бьёт короля: −' + dmg +
+         ', осталось ' + king.hp + '/' + (king.maxHp || KING_HP));
+
+  return king.hp;
+}
+
 function capture(s, attacker, fx, fy, tx, ty){
   const victim = s.board[ty][tx];
   if (!victim) return 'none';
   const night = s.nightMode > 0;
 
   if (victim.type === 'king'){
-    s.board[ty][tx] = null;
-    finish(s, attacker.side);
-    return 'end';
+    const left = hitKing(s, victim, attacker.type);
+
+    if (left <= 0){
+      s.board[ty][tx] = null;
+      finish(s, attacker.side);
+      return 'end';
+    }
+
+    /* король выжил — атакующий остаётся на месте */
+    return 'kinghit';
   }
 
   if (!night && s.arena === 6){
@@ -407,9 +443,12 @@ function sawChain(s, sx, sy, dx, dy){
     if (!t || t.side === saw.side) return;
 
     if (t.type === 'king'){
-      s.board[ny][nx] = null;
-      s.board[cy][cx] = null;
-      finish(s, saw.side);
+      const left = hitKing(s, t, 'saw');
+      if (left <= 0){
+        s.board[ny][nx] = null;
+        s.board[cy][cx] = null;
+        finish(s, saw.side);
+      }
       return;
     }
 
@@ -539,12 +578,12 @@ function tick(s, dt){
   if (s.nightMode > 0) s.nightMode = Math.max(0, s.nightMode - dt);
 }
 
-/* время вышло: у кого короля нет на доске — тот проиграл */
+/* время вышло: у кого HP короля больше — тот победил */
 function timeUp(s){
   const a = kingHp(s, 'a');
   const b = kingHp(s, 'b');
 
-  log(s, 'Время вышло. Король на доске: ' + nameOf(s,'a') + ' ' + a +
+  log(s, 'Время вышло. HP короля: ' + nameOf(s,'a') + ' ' + a +
          ' / ' + nameOf(s,'b') + ' ' + b);
 
   if (a > b) finish(s, 'a');
@@ -567,6 +606,7 @@ global.Arena = {
   MAIN_TIME: MAIN_TIME,
   OT_TIME: OT_TIME,
   FAST_FROM: FAST_FROM,
+  KING_HP: KING_HP,
   PIECES: PIECES,
   ARENAS: ARENAS,
   DECK: DECK,
@@ -585,7 +625,8 @@ global.Arena = {
   resign: resign,
   finish: finish,
   energyRate: energyRate,
-  kingHp: kingHp
+  kingHp: kingHp,
+  kingDamage: kingDamage
 };
 
 })(window);
