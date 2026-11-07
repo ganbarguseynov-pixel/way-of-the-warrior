@@ -1,12 +1,11 @@
 /* ============================================================
-   arena.js — правила и движок шахматных арен  (VER 17)
-   Все арены играются по одним правилам. Отличается только вид.
-   Короля не съесть. Шах — обязан уйти. Мат — урон.
+   arena.js — правила и движок шахматных арен  (VER 18)
+   Пешка на последней линии превращается в выбранную фигуру.
    ============================================================ */
 (function (global) {
 'use strict';
 
-const VER = '17';
+const VER = '18';
 const STEP = 1000;
 const MAX_ARENA = 10;
 
@@ -33,6 +32,9 @@ const PIECES = {
 const TYPE_BY_LETTER = {
   p:'pawn', n:'knight', b:'bishop', r:'rook', q:'queen', k:'king'
 };
+
+/* какие фигуры можно выбрать при превращении пешки */
+const PROMO_CHOICES = ['q', 'r', 'b', 'n'];
 
 const ARENAS = [
   { n:1,  name:'Разминка',
@@ -351,6 +353,14 @@ function kingAttacked(s, side){
   return isSquareAttacked(s, kp.x, kp.y, foeOf(side));
 }
 
+/* проверка: превратится ли пешка, идя с (fy) на (ty) */
+function isPromotion(s, fx, fy, tx, ty){
+  const pc = s.board[fy] && s.board[fy][fx];
+  if (!pc || pc.type !== 'pawn') return false;
+  const promoRank = (pc.side === 'a') ? 0 : 7;
+  return ty === promoRank;
+}
+
 /* ================= ШАХ, МАТ, УРОН ================= */
 
 function updateStatus(s, force){
@@ -473,7 +483,7 @@ function place(s, side, type, x, y){
   return { ok:false, error:'Доска уже собрана до боя' };
 }
 
-function move(s, side, fx, fy, tx, ty){
+function move(s, side, fx, fy, tx, ty, promo){
   if (s.over) return { ok:false, error:'Бой окончен' };
   if (!inside(fx, fy) || !inside(tx, ty)) return { ok:false, error:'Мимо доски' };
 
@@ -501,24 +511,31 @@ function move(s, side, fx, fy, tx, ty){
   if (tgt){
     capture(s, pc, tx, ty);
     if (s.over) return { ok:true, cost: cost };
-    relocate(s, fx, fy, tx, ty);
+    relocate(s, fx, fy, tx, ty, promo);
   } else {
-    relocate(s, fx, fy, tx, ty);
+    relocate(s, fx, fy, tx, ty, promo);
   }
 
   if (!s.over) updateStatus(s);
   return { ok:true, cost: cost };
 }
 
-function relocate(s, fx, fy, tx, ty){
+function relocate(s, fx, fy, tx, ty, promo){
   const pc = s.board[fy][fx];
   s.board[ty][tx] = pc;
   s.board[fy][fx] = null;
 
-  const promo = (pc.side === 'a' && ty === 0) || (pc.side === 'b' && ty === 7);
-  if (pc.type === 'pawn' && promo){
-    pc.type = 'queen';
-    log(s, 'Пешка ' + nameOf(s, pc.side) + ' стала ферзём');
+  const promoRank = (pc.side === 'a') ? 0 : 7;
+
+  if (pc.type === 'pawn' && ty === promoRank){
+    const key  = String(promo || 'q').toLowerCase();
+    const type = TYPE_BY_LETTER[key] || 'queen';
+
+    if (type !== 'pawn' && type !== 'king'){
+      pc.type = type;
+      log(s, 'Пешка ' + nameOf(s, pc.side) + ' стала ' +
+             PIECES[type].name.toLowerCase());
+    }
   }
 }
 
@@ -637,6 +654,7 @@ global.Arena = {
   ARMY_MAX: ARMY_MAX,
   PIECES: PIECES,
   ARENAS: ARENAS,
+  PROMO_CHOICES: PROMO_CHOICES,
   arenaOf: arenaOf,
   floorOf: floorOf,
   deltaFor: deltaFor,
@@ -646,6 +664,7 @@ global.Arena = {
   tick: tick,
   legalMoves: legalMoves,
   pseudoMoves: pseudoMoves,
+  isPromotion: isPromotion,
   place: place,
   move: move,
   moveCost: moveCost,
