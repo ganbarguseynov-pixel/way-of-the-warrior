@@ -133,7 +133,7 @@ body{
 }
 .btn-train:active{transform:translateY(3px);box-shadow:0 1px 0 #0f172a}
 
-/* ---------- ПРОСМОТР ВСЕХ АРЕН (ВЕРТИКАЛЬНО) ---------- */
+/* ---------- ПРОСМОТР ВСЕХ АРЕН (АРЕНА 1 ВНИЗУ, 10 НАВЕРХУ) ---------- */
 #arenaModal{
   position:fixed;inset:0;background:rgba(2,6,23,.97);z-index:1200;
   display:none;flex-direction:column;
@@ -163,6 +163,12 @@ body{
   padding:16px 0 20px;
 }
 #arenaScroll::-webkit-scrollbar{display:none}
+
+/* подсказка сверху: выше — сильнее */
+#arenaTopHint{
+  flex-shrink:0;text-align:center;font-size:10px;color:#475569;
+  padding:6px 16px 0;letter-spacing:.4px;
+}
 
 .arena-slide{
   scroll-snap-align:center;
@@ -285,12 +291,13 @@ body{
   <button class="btn-train" id="trainBtn">🤖 Тренировка с ботом</button>
 </div>
 
-<!-- ================= ВСЕ АРЕНЫ, ЛИСТАЮТСЯ ВНИЗ ================= -->
+<!-- ================= ВСЕ АРЕНЫ: 1 ВНИЗУ, 10 НАВЕРХУ ================= -->
 <div id="arenaModal">
   <div id="arenaModalHead">
     <h3>Все арены</h3>
     <button id="arenaClose">✕</button>
   </div>
+  <div id="arenaTopHint">Листай вверх — там арены выше</div>
   <div id="arenaScroll"></div>
   <div id="arenaDots"></div>
 </div>
@@ -441,6 +448,11 @@ function render(cups){
 
 /* ================= ПРОСМОТР ВСЕХ АРЕН ================= */
 
+/*
+  Собираем слайды ОТ СТАРШЕЙ К МЛАДШЕЙ: 10, 9, 8 … 1.
+  Арена 10 оказывается наверху, арена 1 — внизу.
+  Листаешь вверх — растёшь по аренам.
+*/
 function buildArenaBrowser(){
   if (slidesBuilt) return;
 
@@ -449,7 +461,7 @@ function buildArenaBrowser(){
   track.innerHTML = '';
   dots.innerHTML  = '';
 
-  for (let n = 1; n <= MAX_ARENA; n++){
+  for (let n = MAX_ARENA; n >= 1; n--){
     const look = LOOK[n - 1];
     const from = (n - 1) * STEP;
 
@@ -474,7 +486,10 @@ function buildArenaBrowser(){
     })(n);
 
     track.appendChild(slide);
+  }
 
+  // точки — по возрастанию слева направо: 1, 2, 3 … 10
+  for (let n = 1; n <= MAX_ARENA; n++){
     const dot = document.createElement('button');
     dot.className = 'arena-dot';
     dot.dataset.n = n;
@@ -589,10 +604,6 @@ async function boot(){
 
 /* ================= КНОПКИ ================= */
 
-/*
-  Одно нажатие — сразу поиск.
-  Ставим флажок, арена его прочитает и начнёт искать без второго тапа.
-*/
 $('battleBtn').onclick = function (){
   try { sessionStorage.setItem('arenaAutoQueue', '1'); } catch (e){}
   window.location.href = 'chess-arena.html';
