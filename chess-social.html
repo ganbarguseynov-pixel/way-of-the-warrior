@@ -14,121 +14,105 @@
 <meta property="og:url" content="https://ganbarguseynov-pixel.github.io/way-of-the-warrior/chess-social.html">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://ganbarguseynov-pixel.github.io/way-of-the-warrior/IMG_20261108_042932_946.jpg">
+<link rel="stylesheet" href="royale.css?v=1">
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-body{margin:0;background:radial-gradient(circle at center,#1e293b,#0f172a);color:#fff;min-height:100dvh;padding-bottom:80px;user-select:none}
+body{margin:0;color:#fff;min-height:100dvh;padding-bottom:80px;user-select:none}
 .hide{display:none!important}
 .tb{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 10px}
 .tt{font-size:20px;font-weight:900}
-.cu{display:flex;gap:5px;background:rgba(0,0,0,.6);padding:5px 12px;border-radius:10px;font-size:13px;font-weight:bold;color:#ffcc00;border:1px solid #ffcc00}
+.cu{display:flex;gap:5px;padding:5px 12px;border-radius:10px;font-size:13px;font-weight:900}
 .tabs{display:flex;gap:6px;padding:6px 12px 10px}
-.tab{flex:1;padding:10px 4px;border-radius:10px;border:1px solid #334155;background:#1e293b;color:#94a3b8;font-size:12.5px;font-weight:900;cursor:pointer}
-.tab.on{background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000;border-color:#fff}
-.bn{margin:0 12px 12px;padding:12px 14px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#5b21b6);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tab{flex:1;padding:10px 4px;border-radius:10px;font-size:12.5px;font-weight:900;cursor:pointer}
+.bn{margin:0 12px 12px;padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:3px solid #fff;display:flex;align-items:center;justify-content:space-between;gap:10px}
 .bn span{font-size:13px;font-weight:900;line-height:1.3}
 .bn button{background:#fff;color:#4c1d95;border:0;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap}
 #app{padding:0 12px 20px}
-.sw{width:100%;padding:13px;border-radius:12px;border:2px solid #334155;background:#1e293b;color:#ffcc00;font-size:13.5px;font-weight:900;cursor:pointer;margin-bottom:12px}
-.st{text-align:center;font-size:12.5px;font-weight:900;color:#cbd5e1;margin:14px 0 12px;display:flex;align-items:center;gap:10px}
-.st:before,.st:after{content:'';flex:1;height:1px;background:#334155}
-.pill{font-size:10px;font-weight:900;color:#000;background:linear-gradient(145deg,#ffcc00,#ff9500);padding:1px 6px;border-radius:6px;margin-left:5px;display:inline-block}
-.cc{display:flex;align-items:center;gap:10px;background:#1e293b;border:2px solid #334155;border-radius:14px;padding:12px;margin-bottom:10px;cursor:pointer}
-.cc:active{border-color:#64748b}
-.ce{width:46px;height:46px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.25)}
+.sw{width:100%;padding:13px;border-radius:12px;font-size:13.5px;font-weight:900;cursor:pointer;margin-bottom:12px}
+.st{text-align:center;font-size:12.5px;font-weight:900;margin:14px 0 12px;display:flex;align-items:center;gap:10px}
+.st:before,.st:after{content:'';flex:1;height:1px;background:rgba(255,255,255,.3)}
+.pill{font-size:10px;font-weight:900;padding:1px 6px;border-radius:6px;margin-left:5px;display:inline-block}
+.cc{display:flex;align-items:center;gap:10px;padding:12px;margin-bottom:10px;cursor:pointer}
+.ce{width:46px;height:46px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.6)}
 .ci{flex:1;min-width:0}
 .cn{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cs{font-size:11px;color:#94a3b8;margin-top:2px}
-.cj{border:0;border-radius:10px;padding:9px 13px;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap}
+.cs{font-size:11px;margin-top:2px;opacity:.85;font-weight:700}
+.cj{border:0;border-radius:10px;padding:9px 13px;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap}
 .cj:disabled{background:#334155;color:#64748b}
 .mi{border:0;border-radius:8px;color:#fff;font-size:11px;font-weight:900;padding:7px 9px;cursor:pointer;white-space:nowrap}
-.mi.sh{background:linear-gradient(145deg,#8b5cf6,#6d28d9)}
-.mi.pl{background:linear-gradient(145deg,#22c55e,#15803d)}
-.mi.ad{background:linear-gradient(145deg,#3b82f6,#1d4ed8)}
-.mi.kk{background:linear-gradient(145deg,#ef4444,#991b1b)}
-.bw{width:100%;padding:14px;border:0;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;color:#fff;background:linear-gradient(145deg,#22c55e,#15803d);margin-top:8px}
-.bw.gy{background:linear-gradient(145deg,#475569,#1e293b)}
-.bw.bl{background:linear-gradient(145deg,#3b82f6,#1d4ed8)}
-.cbar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;cursor:pointer;margin-bottom:10px}
-.cbar .ce{background:rgba(0,0,0,.28);border-color:rgba(255,255,255,.6)}
-.mb{display:flex;align-items:center;gap:8px;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:10px 12px;margin-bottom:8px}
-.mb.me{border-color:#22c55e}
-.rk{width:26px;height:26px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#0f172a;background:linear-gradient(180deg,#e2e8f0,#94a3b8)}
-.rk.r1{background:linear-gradient(180deg,#ffe680,#e0a200)}
-.rk.r2{background:linear-gradient(180deg,#e2e8f0,#9aa7b8)}
-.rk.r3{background:linear-gradient(180deg,#f0b27a,#b06a2c)}
-.av{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(0,0,0,.4);border:1px solid #475569}
+.bw{width:100%;padding:14px;border:0;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;color:#fff;margin-top:8px}
+.cbar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;cursor:pointer;margin-bottom:10px}
+.mb{display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:8px}
+.rk{width:26px;height:26px;flex-shrink:0;font-size:11px;font-weight:900;color:#0f172a}
+.av{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.35)}
 .mn{flex:1;min-width:0;cursor:pointer}
 .mname{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mrole{font-size:10.5px;color:#fbbf24;font-weight:800;margin-top:1px}
-.mcup{font-size:11.5px;color:#ffcc00;font-weight:900;white-space:nowrap}
-.chat{background:#131c2e;border:1px solid #334155;border-radius:12px;padding:10px;height:calc(100dvh - 400px);min-height:170px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
-.msg{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:8px 10px;max-width:92%}
-.msg.mine{align-self:flex-end;background:#14532d;border-color:#166534}
-.mh{font-size:10px;color:#94a3b8;font-weight:800;margin-bottom:3px}
+.mrole{font-size:10.5px;color:#ffd447;font-weight:800;margin-top:1px}
+.mcup{font-size:11.5px;color:#ffd447;font-weight:900;white-space:nowrap}
+.chat{padding:10px;height:calc(100dvh - 400px);min-height:170px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.msg{padding:8px 10px;max-width:92%}
+.msg.mine{align-self:flex-end}
+.mh{font-size:10px;color:#c6d8ff;font-weight:800;margin-bottom:3px}
 .mt{font-size:13.5px;line-height:1.4;word-break:break-word}
 .emr{display:flex;gap:4px;overflow-x:auto;padding:8px 0 0;scrollbar-width:none}
 .emr::-webkit-scrollbar{display:none}
-.emr button{flex:0 0 auto;width:36px;height:36px;border-radius:9px;border:1px solid #334155;background:#0f172a;font-size:18px;cursor:pointer;padding:0}
+.emr button{flex:0 0 auto;width:36px;height:36px;font-size:18px;cursor:pointer;padding:0}
 .crow{display:flex;gap:6px;margin-top:8px}
-.crow input{flex:1;padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none}
-.crow button{padding:0 16px;border:0;border-radius:10px;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-size:16px;font-weight:900;cursor:pointer}
-.mod{position:fixed;inset:0;background:rgba(2,6,23,.94);display:flex;align-items:center;justify-content:center;padding:14px;z-index:1000;overflow-y:auto}
-.mbox{width:100%;max-width:390px;background:linear-gradient(180deg,#243b6b,#1a2745);border:2px solid #64748b;border-radius:16px;padding:14px;max-height:88vh;overflow-y:auto}
-.mt2{font-size:17px;font-weight:900;margin-bottom:12px;text-align:center}
+.crow input{flex:1;padding:12px;font-size:14px}
+.crow button{padding:0 16px;border:0;border-radius:10px;color:#fff;font-size:16px;font-weight:900;cursor:pointer}
+.mod{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;z-index:1000;overflow-y:auto}
+.mbox{width:100%;max-width:390px;max-height:88vh;overflow-y:auto}
 #clanModal .mbox{padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:90vh}
-.ctop{display:flex;align-items:center;justify-content:center;position:relative;padding:10px 14px;background:linear-gradient(180deg,#4ab3f8,#1b6fd6);border-bottom:3px solid #f7c948;flex-shrink:0}
+.ctop{display:flex;align-items:center;justify-content:center;position:relative;padding:10px 14px;flex-shrink:0}
 .ctop h3{margin:0;font-size:16px;font-weight:900}
-.x{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:9px;border:2px solid #fff;background:linear-gradient(180deg,#f4665e,#c62828);color:#fff;font-size:14px;cursor:pointer;line-height:1}
+.x{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:2px solid #fff;font-size:14px;cursor:pointer;line-height:1}
 .csc{flex:1;overflow-y:auto;padding:12px}
 .ch{display:flex;align-items:center;gap:11px;margin-bottom:10px}
-.cemb{width:58px;height:58px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24}
+.cemb{width:58px;height:58px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(145deg,#f59e0b,#b45309);border:3px solid #fff;border-radius:14px}
 .cnm{font-size:16px;font-weight:900;line-height:1.2}
 .csub{font-size:11px;color:#c6d8ff;margin-top:3px}
 .ccups{margin-left:auto;text-align:right;flex-shrink:0}
-.ccups b{display:block;font-size:16px;font-weight:900;color:#ffcc00;line-height:1.1}
+.ccups b{display:block;font-size:16px;font-weight:900;color:#ffd447;line-height:1.1}
 .ccups span{font-size:9px;color:#c6d8ff;font-weight:800}
-.cd{font-size:12.5px;line-height:1.45;color:#e2e8f0;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:9px 11px;white-space:pre-wrap;word-break:break-word;margin-bottom:10px}
+.cd{font-size:12.5px;line-height:1.45;padding:9px 11px;white-space:pre-wrap;word-break:break-word;margin-bottom:10px;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.18);border-radius:10px}
 .cd.em{color:#8fa3c8;font-style:italic}
-.cdta{width:100%;height:74px;resize:none;padding:9px 11px;border-radius:10px;border:1px solid #64748b;background:#0f172a;color:#fff;font-size:12.5px;outline:none;font-family:inherit;margin-bottom:6px}
+.cdta{width:100%;height:74px;resize:none;padding:9px 11px;font-size:12.5px;font-family:inherit;margin-bottom:6px}
 .cdc{font-size:10px;color:#8fa3c8;text-align:right;margin-bottom:6px}
 .cdr{display:flex;gap:7px;margin-bottom:10px}
 .cdr button{flex:1;padding:10px;border:0;border-radius:9px;font-size:12px;font-weight:900;color:#fff;cursor:pointer}
-#dCan{background:linear-gradient(180deg,#64748b,#334155)}
-#dSav{background:linear-gradient(180deg,#5ddc7a,#1f9e42)}
-.cded{font-size:11px;font-weight:900;color:#ffcc00;background:rgba(0,0,0,.3);border:1px solid #f7c948;border-radius:8px;padding:4px 9px;cursor:pointer;float:right;margin:-2px 0 8px 8px}
-.cstat{display:flex;background:linear-gradient(180deg,#2f74d8,#1a4c9e);border-radius:10px;overflow:hidden;margin-bottom:10px;border:1px solid #3b82f6}
-.cstat div{flex:1;padding:8px 4px;text-align:center;border-right:1px solid rgba(255,255,255,.18)}
+.cded{font-size:11px;font-weight:900;padding:4px 9px;cursor:pointer;float:right;margin:-2px 0 8px 8px}
+.cstat{display:flex;border-radius:10px;overflow:hidden;margin-bottom:10px}
+.cstat div{flex:1;padding:8px 4px;text-align:center;border-right:1px solid rgba(255,255,255,.2)}
 .cstat div:last-child{border-right:0}
 .cstat span{display:block;font-size:8.5px;color:#c6d8ff;font-weight:800;line-height:1.2}
 .cstat b{display:block;font-size:14px;color:#fff;font-weight:900;margin-top:3px}
 .cbr{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-.cbrl{font-size:9.5px;font-weight:900;color:#8fa3c8;line-height:1.2}
+.cbrl{font-size:9.5px;font-weight:900;color:#c6d8ff;line-height:1.2}
 .cbrl b{display:block;font-size:15px;color:#fff;margin-top:2px}
 .cbtn{display:flex;align-items:center;gap:7px}
-.clv{padding:11px 14px;border:2px solid #fff;border-radius:10px;background:linear-gradient(180deg,#f4665e,#c62828);color:#fff;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #7f1d1d;white-space:nowrap}
-.cjbig{width:100%;padding:14px;border:0;border-radius:11px;background:linear-gradient(180deg,#5ddc7a,#1f9e42);color:#fff;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #10592a;margin-bottom:10px}
-.cjoined{width:100%;padding:13px;border-radius:11px;background:rgba(255,255,255,.12);border:2px solid #22c55e;color:#86efac;font-size:13px;font-weight:900;text-align:center;margin-bottom:10px}
-.csr{width:42px;height:42px;border:2px solid #fff;border-radius:10px;background:linear-gradient(180deg,#5ea8ff,#1e63c8);color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 #123b7a}
+.clv{padding:11px 14px;border:2px solid #fff;border-radius:10px;color:#fff;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap}
+.cjbig{width:100%;padding:14px;border:0;border-radius:11px;color:#fff;font-size:15px;font-weight:900;cursor:pointer;margin-bottom:10px}
+.cjoined{width:100%;padding:13px;border-radius:11px;font-size:13px;font-weight:900;text-align:center;margin-bottom:10px}
+.csr{width:42px;height:42px;border:2px solid #fff;border-radius:10px;color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .emrow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px}
 .emopt{width:42px;height:42px;border-radius:12px;border:2px solid #334155;background:#0f172a;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .emopt.on{border-color:#22c55e;background:#064e3b}
-.mbox input,.mbox textarea{width:100%;margin-bottom:10px;padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none;font-family:inherit}
+.mbox input,.mbox textarea{width:100%;margin-bottom:10px;padding:12px;font-size:14px;font-family:inherit}
 .mbox textarea{resize:none;height:70px}
+.mt2{font-size:17px;font-weight:900;margin-bottom:12px;text-align:center}
 .mbtns{display:flex;gap:8px;margin-top:6px}
-.mbtns button{flex:1;padding:13px;border:0;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;color:#fff;background:linear-gradient(145deg,#22c55e,#15803d)}
+.mbtns button{flex:1;padding:13px;border:0;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;color:#fff}
 .mbtns button.off{background:linear-gradient(145deg,#475569,#1e293b)}
-.emp{text-align:center;color:#64748b;font-size:13px;padding:22px 10px;line-height:1.5}
-.eb{margin:0 12px 12px;padding:12px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid #7f1d1d;color:#fecaca;font-size:11.5px;word-break:break-word}
-.tst{position:fixed;bottom:150px;left:50%;transform:translateX(-50%) translateY(10px);background:#1e293b;border:1px solid #475569;color:#ffcc00;padding:10px 16px;border-radius:8px;font-size:12.5px;opacity:0;transition:.2s;pointer-events:none;z-index:2300;max-width:80vw;text-align:center}
+.emp{text-align:center;font-size:13px;padding:22px 10px;line-height:1.5}
+.eb{margin:0 12px 12px;padding:12px;border-radius:10px;background:rgba(239,68,68,.18);border:2px solid #7f1d1d;color:#fecaca;font-size:11.5px;word-break:break-word}
+.tst{position:fixed;bottom:150px;left:50%;transform:translateX(-50%) translateY(10px);padding:10px 16px;border-radius:10px;font-size:12.5px;font-weight:800;opacity:0;transition:.2s;pointer-events:none;z-index:2300;max-width:80vw;text-align:center}
 .tst.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e,#0f0f1e);border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom)}
-.nb{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px}
-.nb i{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);font-size:20px;font-style:normal}
-.nb.on{color:#ffcc00}
-.nb.on i{background:linear-gradient(145deg,#ffcc00,#ff9500)}
+.nav{position:fixed;bottom:0;left:0;width:100%;height:68px;display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom)}
+.nb{background:transparent;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px}
+.nb i{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-style:normal}
 .sp{width:24px;height:28px;position:relative}
-.sp b{position:absolute;width:16px;height:22px;border-radius:3px;border:1px solid rgba(255,255,255,.5);font-size:12px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff}
+.sp b{position:absolute;width:16px;height:22px;border-radius:3px;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff}
 .sp b:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c)}
 .sp b:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe)}
 .sp b:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7)}
@@ -143,11 +127,11 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b,#0f172a);color
 <div id="app"></div>
 
 <div id="searchModal" class="mod hide"><div class="mbox">
-<div class="ctop" style="margin:-14px -14px 12px;border-radius:14px 14px 0 0"><h3>Поиск</h3><button class="x" id="sClose">✕</button></div>
+<div class="ctop" style="margin:-14px -14px 12px"><h3>Поиск</h3><button class="x" id="sClose">✕</button></div>
 <input id="sInput" type="text" placeholder="#тег или имя" autocomplete="off" spellcheck="false">
 <div style="display:flex;gap:6px">
-<button class="cj" style="flex:1" data-m="clans" id="mC">Кланы</button>
-<button class="cj" style="flex:1;background:#334155" data-m="players" id="mP">Игроки</button>
+<button class="cj" style="flex:1" id="mC">Кланы</button>
+<button class="cj" style="flex:1;background:#334155" id="mP">Игроки</button>
 </div>
 <div id="sOut"></div>
 </div></div>
@@ -163,13 +147,6 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b,#0f172a);color
 <input id="cName" type="text" maxlength="20" placeholder="Название клана">
 <textarea id="cDesc" maxlength="120" placeholder="Описание (необязательно)"></textarea>
 <div class="mbtns"><button class="off" id="cCancel">Отмена</button><button id="cOk">Создать</button></div>
-</div></div>
-
-<div id="addModal" class="mod hide"><div class="mbox">
-<div class="mt2">Добавить друга</div>
-<input id="aNick" type="text" maxlength="16" placeholder="Ник или #тег">
-<div class="mbtns"><button class="off" id="aCancel">Отмена</button><button id="aFind">Найти</button></div>
-<div id="aOut"></div>
 </div></div>
 
 <div class="tst" id="tst"></div>
@@ -324,7 +301,7 @@ function drawClan(a){
     h+='<div class="cbar" id="cbar"><div class="ce">'+(MYCLAN.emblem||'🛡️')+'</div>';
     h+='<div class="ci"><div class="cn">'+esc(MYCLAN.name)+' #'+esc(MYCLAN.tag||'—')+'</div>';
     h+='<div class="cs">'+memOf(MYCLAN.id).length+' / '+MAXM+' · 🏆 '+cupsOf(MYCLAN.id)+'</div></div>';
-    h+='<div style="font-size:22px;opacity:.85">›</div></div>';
+    h+='<div style="font-size:22px">›</div></div>';
     h+='<div class="chat" id="chatBox"></div>';
     h+='<div class="emr" id="emr"></div>';
     h+='<div class="crow"><input id="chatIn" maxlength="200" placeholder="Сообщение в клан…"><button id="chatGo">➤</button></div>';
@@ -358,7 +335,7 @@ function clanList(){
     h+='<div class="cc" data-prev="'+esc(c.id)+'"><div class="ce">'+(c.emblem||'🛡️')+'</div>';
     h+='<div class="ci"><div class="cn">'+esc(c.name)+pill(c.tag,'clan',c.name)+'</div>';
     h+='<div class="cs">'+m.length+' / '+MAXM+' участников · 🏆 '+cupsOf(c.id)+'</div></div>';
-    h+='<button class="mi sh" data-share="'+esc(c.tag||'')+'" data-sname="'+esc(c.name)+'">📤</button>';
+    h+='<button class="mi" data-share="'+esc(c.tag||'')+'" data-sname="'+esc(c.name)+'">📤</button>';
     if(mine)h+='<button class="cj" data-pbtn="'+esc(c.id)+'">Мой</button>';
     else if(MYMEM)h+='<button class="cj" disabled>В клане</button>';
     else if(full)h+='<button class="cj" data-pbtn="'+esc(c.id)+'">Полон</button>';
@@ -396,7 +373,7 @@ async function searchClans(o,q){
     h+='<div class="cc" data-prev="'+esc(c.id)+'"><div class="ce">'+(c.emblem||'🛡️')+'</div>';
     h+='<div class="ci"><div class="cn">'+esc(c.name)+pill(c.code,'clan',c.name)+'</div>';
     h+='<div class="cs">'+(Number(c.member_count)||0)+' / '+MAXM+' · 🏆 '+(Number(c.total_cups)||0)+'</div></div>';
-    h+='<button class="mi sh" data-share="'+esc(c.code||'')+'" data-sname="'+esc(c.name)+'">📤</button>';
+    h+='<button class="mi" data-share="'+esc(c.code||'')+'" data-sname="'+esc(c.name)+'">📤</button>';
     if(mine)h+='<button class="cj" data-pbtn="'+esc(c.id)+'">Мой</button>';
     else if(MYMEM)h+='<button class="cj" disabled>В клане</button>';
     else if(full)h+='<button class="cj" data-pbtn="'+esc(c.id)+'">Полон</button>';
@@ -416,9 +393,9 @@ async function searchPlayers(o,q){
     var p=l[i];if(p.player_key===MEK)continue;n++;
     h+='<div class="mb"><div class="av" data-prof="'+esc(p.player_key)+'">🎮</div>';
     h+='<div class="mn" data-prof="'+esc(p.player_key)+'"><div class="mname">'+esc(p.display_name||'Игрок')+pill(p.tag,'player',p.display_name)+'</div>';
-    h+='<div class="mrole" style="color:#94a3b8">🏆 '+(p.cups||0)+'</div></div>';
-    h+='<button class="mi ad" data-add="'+esc(p.player_key)+'" data-aname="'+esc(p.display_name||'Игрок')+'">+</button>';
-    h+='<button class="mi pl" data-inv="'+esc(p.player_key)+'" data-iname="'+esc(p.display_name||'Игрок')+'" data-icups="'+(p.cups||0)+'">⚔️</button></div>';
+    h+='<div class="mrole" style="color:#c6d8ff">🏆 '+(p.cups||0)+'</div></div>';
+    h+='<button class="mi" data-add="'+esc(p.player_key)+'" data-aname="'+esc(p.display_name||'Игрок')+'">+</button>';
+    h+='<button class="mi" data-inv="'+esc(p.player_key)+'" data-iname="'+esc(p.display_name||'Игрок')+'" data-icups="'+(p.cups||0)+'">⚔️</button></div>';
   }
   if(!n){o.innerHTML='<div class="emp">Это ты. Введи другой тег.</div>';return;}
   o.innerHTML=h;bind(o);
@@ -456,10 +433,10 @@ function memberRows(m,ownerActions){
     h+='<div class="mrole">'+(chief?'Глава клана':'Участник')+'</div></div>';
     h+='<div class="mcup">🏆 '+(mm.cups||0)+'</div>';
     if(!isMe){
-      h+='<button class="mi pl" data-inv="'+esc(mm.player_key)+'" data-iname="'+esc(mm.name||'Игрок')+'" data-icups="'+(mm.cups||0)+'">⚔️</button>';
-      h+='<button class="mi ad" data-add="'+esc(mm.player_key)+'" data-aname="'+esc(mm.name||'Игрок')+'">+</button>';
+      h+='<button class="mi" data-inv="'+esc(mm.player_key)+'" data-iname="'+esc(mm.name||'Игрок')+'" data-icups="'+(mm.cups||0)+'">⚔️</button>';
+      h+='<button class="mi" data-add="'+esc(mm.player_key)+'" data-aname="'+esc(mm.name||'Игрок')+'">+</button>';
     }
-    if(ownerActions&&!isMe)h+='<button class="mi kk" data-kick="'+esc(mm.player_key)+'">✕</button>';
+    if(ownerActions&&!isMe)h+='<button class="mi" data-kick="'+esc(mm.player_key)+'">✕</button>';
     h+='</div>';
   }
   return h;
@@ -512,7 +489,7 @@ function drawMine(){
   h+='<div class="cbtn"><button class="clv" id="cLeave">🚪 Покинуть</button>';
   h+='<button class="csr" id="cFind">🔍</button></div></div>';
   h+=memberRows(m,owner);
-  h+='<button class="bw bl" id="cShare" style="margin-bottom:10px">📤 Позвать в клан</button>';
+  h+='<button class="bw" id="cShare" style="margin-bottom:10px">📤 Позвать в клан</button>';
   $('cBody').innerHTML=h;bind($('cBody'));
   var ta=$('dIn');
   if(ta){ta.addEventListener('input',function(){$('dLeft').textContent=120-ta.value.length;});
@@ -548,12 +525,12 @@ function drawFriends(a){
       var f=FRIENDS[i];
       h+='<div class="mb"><div class="av" data-prof="'+esc(f.key)+'">🎮</div>';
       h+='<div class="mn" data-prof="'+esc(f.key)+'"><div class="mname">'+esc(f.name)+pill(f.tag,'player',f.name)+'</div>';
-      h+='<div class="mrole" style="color:#94a3b8">🏆 '+f.cups+'</div></div>';
-      h+='<button class="mi pl" data-finv="'+esc(f.key)+'">⚔️</button>';
-      h+='<button class="mi kk" data-fdel="'+esc(f.key)+'">✕</button></div>';
+      h+='<div class="mrole" style="color:#c6d8ff">🏆 '+f.cups+'</div></div>';
+      h+='<button class="mi" data-finv="'+esc(f.key)+'">⚔️</button>';
+      h+='<button class="mi" data-fdel="'+esc(f.key)+'">✕</button></div>';
     }
   }
-  h+='<button class="bw bl" id="addFBtn">+ Найти по тегу</button>';
+  h+='<button class="bw" id="addFBtn">+ Найти по тегу</button>';
   a.innerHTML=h;
   $('addFBtn').onclick=function(){openSearch('players','');};
   var inv=a.querySelectorAll('[data-finv]');
@@ -711,8 +688,7 @@ async function deepLink(){
   history.replaceState(null,'',location.pathname);
   if(clan){
     TAB='clan';
-    document.querySelectorAll('.tab')[0].classList.add('on');
-    document.querySelectorAll('.tab')[1].classList.remove('on');
+    var tb=document.querySelectorAll('.tab');tb[0].classList.add('on');tb[1].classList.remove('on');
     if(MYMEM&&MYCLAN&&(String(MYCLAN.tag||'').toUpperCase()===q.toUpperCase()||String(MYCLAN.id)===q)){
       PREV=null;$('cTitle').textContent='Клан';drawMine();
       $('clanModal').classList.remove('hide');
@@ -761,7 +737,6 @@ $('clanModal').onclick=function(e){if(e.target===$('clanModal'))closeClan();};
 $('searchModal').onclick=function(e){if(e.target===$('searchModal'))closeSearch();};
 $('cCancel').onclick=function(){$('createModal').classList.add('hide');};
 $('cOk').onclick=createClan;
-$('aCancel').onclick=function(){$('addModal').classList.add('hide');};
 $('mC').onclick=function(){SEARCHM='clans';openSearch('clans',SEARCHQ);};
 $('mP').onclick=function(){SEARCHM='players';openSearch('players',SEARCHQ);};
 
@@ -770,30 +745,6 @@ $('sInput').addEventListener('input',function(){
   clearTimeout(window.__sq);
   window.__sq=setTimeout(doSearch,350);
 });
-
-$('aFind').onclick=async function(){
-  if(!window.Friends){toast('friends.js не подключён');return;}
-  var nk=$('aNick').value.trim();
-  if(nk.replace('#','').length<2){toast('Минимум 2 символа');return;}
-  var box=$('aOut');box.innerHTML='<div class="emp">Ищем…</div>';
-  var l=[];
-  try{var r=await SB.rpc('search_players',{p_q:nk,p_limit:15});
-    if(!r.error)l=r.data||[];}catch(e){}
-  if(!l.length){box.innerHTML='<div class="emp">Никого не нашли</div>';return;}
-  var h='';
-  for(var i=0;i<l.length;i++){
-    var p=l[i];if(p.player_key===MEK)continue;
-    h+='<div class="mb"><div class="av">🎮</div><div class="mn"><div class="mname">'+esc(p.display_name||'Игрок')+pill(p.tag,'player',p.display_name)+'</div>';
-    h+='<div class="mrole" style="color:#94a3b8">🏆 '+(p.cups||0)+'</div></div>';
-    h+='<button class="mi ad" data-pick="'+esc(p.player_key)+'" data-pn="'+esc(p.display_name||'Игрок')+'">Добавить</button></div>';
-  }
-  box.innerHTML=h||'<div class="emp">Никого не нашли</div>';
-  var pk=box.querySelectorAll('[data-pick]');
-  for(var k=0;k<pk.length;k++){(function(b){b.onclick=async function(){
-    var ok=await Friends.add(b.getAttribute('data-pick'),b.getAttribute('data-pn'));
-    toast(ok?'Добавлен':'Не удалось');
-    if(ok){$('addModal').classList.add('hide');await loadFriends();}};})(pk[k]);}
-};
 
 buildEmb();
 boot();
