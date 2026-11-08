@@ -1,6 +1,7 @@
 /* ============================================================
-   profile.js — публичный профиль игрока (VER 2)
-   Profile.open(keyOrTag) — открыть карточку любого игрока
+   profile.js — публичный профиль игрока (VER 3)
+   Profile.open(keyOrTag)  — открыть карточку любого игрока
+   CopyShare.show(label, url, phrase) — скопировать и предложить «Поделиться»
    ============================================================ */
 (function (global) {
 'use strict';
@@ -46,6 +47,106 @@ function num(n){
   return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, '\u2009');
 }
 
+/* ============================================================
+   COPY + SHARE
+   ============================================================ */
+
+var CopyShare = {};
+var csTimer = null;
+
+CopyShare.copy = function (text){
+  var ok = false;
+
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text);
+      ok = true;
+    }
+  } catch (e){}
+
+  if (!ok){
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      ok = true;
+    } catch (e){}
+  }
+
+  return ok;
+};
+
+CopyShare.shareLink = function (url, phrase){
+  var tg = global.Telegram && global.Telegram.WebApp;
+
+  if (tg && tg.openTelegramLink){
+    try {
+      tg.openTelegramLink(
+        'https://t.me/share/url?url=' + encodeURIComponent(url) +
+        '&text=' + encodeURIComponent(phrase)
+      );
+      return;
+    } catch (e){}
+  }
+
+  if (navigator.share){
+    try {
+      navigator.share({ title: 'Chess Royale', text: phrase, url: url }).catch(function(){});
+      return;
+    } catch (e){}
+  }
+
+  CopyShare.copy(phrase + '\n' + url);
+  CopyShare.note('Ссылка скопирована');
+};
+
+CopyShare.note = function (text){
+  var bar = document.getElementById('csBar');
+  if (!bar) return;
+  var t = document.getElementById('csTxt');
+  if (t) t.textContent = text;
+};
+
+CopyShare.hide = function (){
+  var bar = document.getElementById('csBar');
+  if (bar) bar.classList.remove('show');
+  if (csTimer){ clearTimeout(csTimer); csTimer = null; }
+};
+
+CopyShare.show = function (label, url, phrase){
+  CopyShare.copy(label);
+
+  var bar = document.getElementById('csBar');
+
+  if (!bar){
+    bar = document.createElement('div');
+    bar.id = 'csBar';
+    bar.innerHTML =
+      '<span id="csTxt"></span>' +
+      '<button id="csShare">📤 Поделиться</button>' +
+      '<button id="csClose">✕</button>';
+    document.body.appendChild(bar);
+
+    bar.querySelector('#csClose').onclick = CopyShare.hide;
+  }
+
+  document.getElementById('csTxt').textContent = 'Скопировано ' + label;
+
+  var sh = document.getElementById('csShare');
+  sh.onclick = function (){ CopyShare.shareLink(url, phrase); };
+
+  bar.classList.add('show');
+
+  if (csTimer) clearTimeout(csTimer);
+  csTimer = setTimeout(CopyShare.hide, 7000);
+};
+
+global.CopyShare = CopyShare;
+
 /* ---------- стили ---------- */
 
 var CSS = `
@@ -86,7 +187,9 @@ box-shadow:0 8px 20px rgba(0,0,0,.5)}
 text-shadow:0 2px 6px rgba(0,0,0,.55);line-height:1.2}
 .pf-tag{display:inline-block;margin-top:8px;font-size:13px;font-weight:800;letter-spacing:1px;
 color:#2a1c00;background:linear-gradient(180deg,#ffe680,#f3b300);
-padding:3px 14px;border-radius:9px;border:2px solid rgba(255,255,255,.85)}
+padding:3px 14px;border-radius:9px;border:2px solid rgba(255,255,255,.85);cursor:pointer}
+.pf-tag:active{transform:scale(.96)}
+.pf-hint{margin-top:6px;font-size:10.5px;font-weight:600;color:#9fb9e8}
 .pf-arena{margin-top:9px;font-size:12.5px;font-weight:600;color:#c6d8ff}
 
 .pf-sec{margin:0 14px 15px;border-radius:16px;padding-bottom:12px;
@@ -150,6 +253,20 @@ font-size:13px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.2px}
 
 .pf-load{padding:70px 24px;text-align:center;color:#c6d8ff;font-size:13.5px;
 font-weight:600;line-height:1.6}
+
+#csBar{position:fixed;left:50%;bottom:86px;transform:translate(-50%,14px);
+display:none;align-items:center;gap:8px;padding:9px 10px 9px 14px;
+background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #475569;
+border-radius:13px;box-shadow:0 12px 30px rgba(0,0,0,.6);z-index:2400;
+max-width:calc(100vw - 24px);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+#csBar.show{display:flex;animation:csUp .18s ease-out forwards}
+@keyframes csUp{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+#csTxt{font-size:11.5px;font-weight:800;color:#94a3b8;white-space:nowrap;
+overflow:hidden;text-overflow:ellipsis;max-width:44vw}
+#csShare{border:0;border-radius:9px;padding:9px 12px;font-size:11.5px;font-weight:900;
+color:#fff;background:linear-gradient(180deg,#5ea8ff,#1e63c8);cursor:pointer;white-space:nowrap}
+#csClose{border:0;border-radius:9px;width:32px;height:32px;font-size:12px;font-weight:900;
+color:#94a3b8;background:#0f172a;cursor:pointer;flex-shrink:0}
 `;
 
 function ensure(){
@@ -241,7 +358,8 @@ function render(p){
   h += '<div class="pf-hero">';
   h += '<div class="pf-ava">👑</div>';
   h += '<div class="pf-name">' + esc(p.name || 'Игрок') + '</div>';
-  h += '<div class="pf-tag">#' + esc(p.tag || '—') + '</div>';
+  h += '<div class="pf-tag" id="pfTag">#' + esc(p.tag || '—') + '</div>';
+  h += '<div class="pf-hint">Нажми на тег, чтобы скопировать</div>';
   h += '<div class="pf-arena">Арена ' + arena + ' · ' + esc(ARENAS[arena - 1]) + '</div>';
   h += '</div>';
 
@@ -315,6 +433,19 @@ function render(p){
 }
 
 function bind(p, isMe){
+  var tagEl = document.getElementById('pfTag');
+  if (tagEl){
+    tagEl.onclick = function (){
+      var code = p.tag || '';
+      if (!code) return;
+      var url = location.origin + location.pathname + '?player=' + encodeURIComponent(code);
+      var phrase = (p.key === Profile.self())
+        ? 'Мой профиль в Chess Royale — #' + code + '. Кубки: ' + num(p.cups) + '. Заходи и вызывай на партию!'
+        : 'Профиль ' + (p.name || 'игрока') + ' — #' + code + ' в Chess Royale. Кубки: ' + num(p.cups) + '.';
+      CopyShare.show('#' + code, url, phrase);
+    };
+  }
+
   var nick = document.getElementById('pfNick');
   if (nick){
     nick.onclick = function (){
@@ -355,38 +486,11 @@ function bind(p, isMe){
 
 function shareProfile(p){
   var url = location.origin + location.pathname + '?player=' + encodeURIComponent(p.tag || p.key);
-  var phrase = 'Мой профиль в Chess Royale — #' + (p.tag || '') +
-               '. Кубки: ' + num(p.cups) + '. Заходи и вызывай на партию!';
+  var phrase = (p.key === Profile.self())
+    ? 'Мой профиль в Chess Royale — #' + (p.tag || '') + '. Кубки: ' + num(p.cups) + '. Заходи и вызывай на партию!'
+    : 'Профиль ' + (p.name || 'игрока') + ' — #' + (p.tag || '') + ' в Chess Royale. Кубки: ' + num(p.cups) + '.';
 
-  if (p.key !== Profile.self()){
-    phrase = 'Профиль игрока ' + (p.name || '') + ' — #' + (p.tag || '') +
-             ' в Chess Royale. Кубки: ' + num(p.cups) + '.';
-  }
-
-  var tg = global.Telegram && global.Telegram.WebApp;
-
-  if (tg && tg.openTelegramLink){
-    try {
-      tg.openTelegramLink(
-        'https://t.me/share/url?url=' + encodeURIComponent(url) +
-        '&text=' + encodeURIComponent(phrase)
-      );
-      return;
-    } catch (e){}
-  }
-
-  if (navigator.share){
-    try {
-      navigator.share({ title: 'Chess Royale', text: phrase, url: url }).catch(function(){});
-      return;
-    } catch (e){}
-  }
-
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(phrase + '\n' + url).then(function(){}).catch(function(){});
-    }
-  } catch (e){}
+  CopyShare.shareLink(url, phrase);
 }
 
 /* ---------- открытие ---------- */
