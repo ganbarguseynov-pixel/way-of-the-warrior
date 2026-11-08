@@ -5,16 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Chess Royale — Клан</title>
+
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Chess Royale">
 <meta property="og:title" content="Chess Royale — шахматы на аренах">
 <meta property="og:description" content="Вступай в клан, вызывай друзей на партию, поднимайся по аренам.">
-<meta property="og:image" content="ВАШ-САЙТ/IMG_20261108_042932_946.jpg">
+<meta property="og:image" content="https://ganbarguseynov-pixel.github.io/way-of-the-warrior/IMG_20261108_042932_946.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:url" content="ВАШ-САЙТ/chess-social.html">
+<meta property="og:url" content="https://ganbarguseynov-pixel.github.io/way-of-the-warrior/chess-social.html">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="ВАШ-САЙТ/IMG_20261108_042932_946.jpg">
+<meta name="twitter:image" content="https://ganbarguseynov-pixel.github.io/way-of-the-warrior/IMG_20261108_042932_946.jpg">
+
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
@@ -93,7 +95,6 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .modal{position:fixed;inset:0;background:rgba(2,6,23,.94);display:flex;align-items:center;justify-content:center;padding:14px;z-index:1000;overflow-y:auto}
 .modal-box{width:100%;max-width:390px;background:linear-gradient(180deg,#243b6b,#1a2745);border:2px solid #64748b;border-radius:16px;padding:14px;max-height:88vh;overflow-y:auto}
 .modal-title{font-size:17px;font-weight:900;margin-bottom:12px;text-align:center}
-/* карточка клана */
 #clanInfoModal .modal-box{padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:90vh}
 .cr-top{display:flex;align-items:center;justify-content:center;position:relative;padding:10px 14px;background:linear-gradient(180deg,#4ab3f8,#1b6fd6);border-bottom:3px solid #f7c948;flex-shrink:0}
 .cr-top h3{margin:0;font-size:16px;font-weight:900;letter-spacing:.5px}
@@ -461,7 +462,6 @@ function render(){
   if(activeTab==='clan') renderClanTab(app); else renderFriendsTab(app);
 }
 
-/* ---- главный экран: только шапка клана и чат ---- */
 function renderClanTab(app){
   let h='';
   if(myMember&&myClan){
@@ -595,7 +595,6 @@ async function renderPlayerResults(out,q){
   out.innerHTML=h; bindActions(out);
 }
 
-/* ---- карточка клана как в Clash Royale ---- */
 function openClanModal(){
   if(!myClan) return;
   descEditing=false;
@@ -1166,8 +1165,14 @@ function handleDeepLink(){
 
   setTab('clan');
 
-  if(clan){ openSearch('clans',q); }
-  else {
+  if(clan){
+    if(myMember && myClan && (myClan.tag===q || String(myClan.id)===q)){
+      openClanModal();
+      showToast('Ты уже в этом клане');
+    } else {
+      openSearch('clans',q);
+    }
+  } else {
     openSearch('players',q);
     setTimeout(function(){ openProfile(q); },600);
   }
