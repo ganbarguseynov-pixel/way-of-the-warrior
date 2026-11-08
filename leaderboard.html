@@ -4,272 +4,116 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Рейтинг</title>
+<link rel="stylesheet" href="royale.css?v=1">
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-body{
-  background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);
-  color:#fff;margin:0;padding-bottom:75px;min-height:100vh;
-}
-.inner-screen{padding:16px;max-width:400px;margin:0 auto;}
-.back-btn{
-  background:rgba(255,255,255,.1);border:none;color:#fff;
-  padding:8px 15px;border-radius:8px;font-size:14px;cursor:pointer;margin-bottom:12px;
-}
-.back-btn:active{background:rgba(255,255,255,.2)}
-
-h1{margin:0 0 4px;font-size:23px;text-align:center}
-.subtitle{text-align:center;color:#94a3b8;font-size:12px;margin:0 0 16px}
-
-.leaderboard-item{
-  display:flex;align-items:center;
-  background:linear-gradient(145deg,#1e293b,#0f172a);
-  padding:11px 12px;border-radius:12px;margin-bottom:9px;
-  border:2px solid #3a3a3c;box-shadow:0 4px 6px rgba(0,0,0,.5);
-}
-.my-row{
-  border-color:#ffcc00;
-  background:linear-gradient(145deg,#2a1a00,#1a0f00);
-}
-.rank{
-  font-size:17px;font-weight:bold;width:34px;text-align:center;
-  color:#94a3b8;flex-shrink:0;
-}
-.avatar-cell{
-  width:34px;height:34px;border-radius:50%;flex-shrink:0;
-  background:linear-gradient(145deg,#2a2a3e,#15151f);
-  display:flex;align-items:center;justify-content:center;font-size:17px;
-  border:1px solid #475569;
-  margin-left:4px;
-}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{margin:0;color:#fff;padding-bottom:88px;min-height:100vh}
+.inner-screen{padding:16px;max-width:400px;margin:0 auto}
+h1{margin:8px 0 4px;font-size:23px;text-align:center}
+.subtitle{text-align:center;font-size:12px;color:#dbe9ff;font-weight:700;margin:0 0 16px}
+.leaderboard-item{display:flex;align-items:center;padding:11px 12px;border-radius:12px;margin-bottom:9px}
+.rank{font-size:17px;font-weight:900;width:34px;text-align:center;color:#ffd447;flex-shrink:0}
+.avatar-cell{width:34px;height:34px;border-radius:50%;flex-shrink:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:17px;border:2px solid rgba(255,255,255,.5);margin-left:4px}
 .user-info{flex:1;margin-left:10px;min-width:0}
-.user-name{
-  font-weight:bold;font-size:15px;margin:0;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.user-meta{margin:1px 0 0;font-size:10.5px;color:#94a3b8;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cups-cell{
-  display:flex;align-items:center;gap:4px;
-  font-weight:900;font-size:15px;color:#ffcc00;flex-shrink:0;
-}
-.state-msg{text-align:center;color:#94a3b8;font-size:13px;padding:30px 10px;line-height:1.5}
-.state-msg.err{color:#ef4444}
-.refresh-note{
-  text-align:center;font-size:10.5px;color:#475569;margin-top:14px;
-}
-
-/* ---------- НАВИГАЦИЯ ---------- */
-.bottom-nav{
-  position:fixed;bottom:0;left:0;width:100%;height:68px;
-  background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);
-  border-top:1px solid rgba(255,255,255,.08);
-  display:flex;justify-content:space-around;align-items:center;z-index:999;
-  padding-bottom:env(safe-area-inset-bottom);
-  box-shadow:0 -4px 15px rgba(0,0,0,.7);
-}
-.nav-btn{
-  background:transparent;border:none;color:#94a3b8;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;
-  transition:.2s;
-}
-.nav-btn .icon-wrap{
-  width:38px;height:38px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(145deg,#2a2a3e,#15151f);
-  box-shadow:0 3px 6px rgba(0,0,0,.5),inset 0 2px 3px rgba(255,255,255,.08),inset 0 -3px 6px rgba(0,0,0,.6);
-  transition:all .3s;
-}
-.nav-btn .icon{font-size:20px;text-shadow:0 1px 2px rgba(0,0,0,.6);transition:transform .3s}
-.nav-btn.active{color:#ffcc00}
-.nav-btn.active .icon-wrap{
-  background:linear-gradient(145deg,#ffcc00,#ff9500);
-  box-shadow:0 3px 10px rgba(255,204,0,.4),inset 0 2px 3px rgba(255,255,255,.4);
-}
-.nav-btn.active .icon{transform:scale(1.12)}
-.deck-stack{position:relative;width:24px;height:28px}
-.deck-stack .deck-card{
-  position:absolute;width:16px;height:22px;border-radius:3px;
-  border:1px solid rgba(255,255,255,.5);box-shadow:0 1px 3px rgba(0,0,0,.6);
-}
-.deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c)}
-.deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe)}
-.deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900}
+.user-name{font-weight:900;font-size:15px;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-meta{margin:2px 0 0;font-size:10.5px;color:#c6d8ff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cups-cell{display:flex;align-items:center;gap:4px;font-weight:900;font-size:15px;color:#ffd447;flex-shrink:0}
+.state-msg{text-align:center;font-size:13px;padding:34px 14px;line-height:1.5;font-weight:800}
+.refresh-note{text-align:center;font-size:10.5px;color:#dbe9ff;font-weight:700;margin-top:14px;opacity:.75}
+.nav{position:fixed;bottom:0;left:0;width:100%;height:68px;display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom)}
+.nb{background:transparent;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px}
+.nb i{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-style:normal}
+.sp{width:24px;height:28px;position:relative}
+.sp b{position:absolute;width:16px;height:22px;border-radius:3px;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff}
+.sp b:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c)}
+.sp b:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe)}
+.sp b:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7)}
 </style>
 </head>
 <body>
 
 <div class="inner-screen">
-  <button class="back-btn" onclick="window.location.href='chess-main.html'">← Назад</button>
   <h1>🏆 Мировой рейтинг</h1>
   <p class="subtitle">Топ игроков по кубкам</p>
-
-  <div id="leaderboard-list">
-    <p class="state-msg">Загрузка…</p>
-  </div>
-
+  <div id="leaderboard-list"><p class="state-msg">Загрузка…</p></div>
   <div class="refresh-note">Обновляется каждые 15 секунд</div>
 </div>
 
-<div class="bottom-nav">
-  <button class="nav-btn" onclick="window.location.href='chess-shop.html'">
-    <div class="icon-wrap"><span class="icon">🎁</span></div>
-    <span>Магазин</span>
-  </button>
-  <button class="nav-btn" onclick="window.location.href='chess-deck.html'">
-    <div class="icon-wrap">
-      <div class="deck-stack">
-        <div class="deck-card"></div>
-        <div class="deck-card"></div>
-        <div class="deck-card">♠</div>
-      </div>
-    </div>
-    <span>Колода</span>
-  </button>
-  <button class="nav-btn" onclick="window.location.href='chess-main.html'">
-    <div class="icon-wrap"><span class="icon">⚔️</span></div>
-    <span>Бой</span>
-  </button>
-  <button class="nav-btn" onclick="window.location.href='chess-social.html'">
-    <div class="icon-wrap"><span class="icon">🛡️</span></div>
-    <span>Общение</span>
-  </button>
-  <button class="nav-btn active" onclick="window.location.href='leaderboard.html'">
-    <div class="icon-wrap"><span class="icon">🏆</span></div>
-    <span>Рейтинг</span>
-  </button>
+<div class="nav">
+<button class="nb" onclick="location.href='chess-shop.html'"><i>🎁</i><span>Магазин</span></button>
+<button class="nb" onclick="location.href='chess-deck.html'"><i><span class="sp"><b></b><b></b><b>♠</b></span></i><span>Колода</span></button>
+<button class="nb" onclick="location.href='chess-main.html'"><i>⚔️</i><span>Бой</span></button>
+<button class="nb" onclick="location.href='chess-social.html'"><i>🛡️</i><span>Клан</span></button>
+<button class="nb on" onclick="location.href='leaderboard.html'"><i>🏆</i><span>Рейтинг</span></button>
 </div>
 
 <script src="arena.js"></script>
 <script>
-/* ================= ПОДКЛЮЧЕНИЕ ================= */
-
-const sb = supabase.createClient(
-  'https://qnpriwfxzuoymoumdtrl.supabase.co',
-  'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF'
-);
-
-const $ = function (id){ return document.getElementById(id); };
-
-const STEP = 1000;
-const MAX_ARENA = 10;
-
-const NAMES = (window.Arena && Arena.ARENAS)
-  ? Arena.ARENAS.map(function (a){ return a.name; })
-  : ['Капкан','Псарня','Мясорубка','Кошмар на улице Вязов','Техасская резня',
-     'Хостел','Восставший из ада','Судная ночь','Зловещие мертвецы','Бессмертная партия'];
-
-const AVATARS = ['👑','😎','😈','🤠','🤖','🐺','🦊','🐻','🐯','🦁','👽','🎃','💀','🧙','🥷'];
-
-/* ================= КЛЮЧ ИГРОКА ================= */
+const sb=supabase.createClient('https://qnpriwfxzuoymoumdtrl.supabase.co','sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF');
+const $=function(id){return document.getElementById(id);};
+const STEP=1000,MAX_ARENA=10;
+const NAMES=(window.Arena&&Arena.ARENAS)?Arena.ARENAS.map(function(a){return a.name;}):
+['Капкан','Псарня','Мясорубка','Кошмар на улице Вязов','Техасская резня','Хостел','Восставший из ада','Судная ночь','Зловещие мертвецы','Бессмертная партия'];
+const AVATARS=['👑','😎','😈','🤠','🤖','🐺','🦊','🐻','🐯','🦁','👽','🎃','💀','🧙','🥷'];
 
 function playerKey(){
-  const tgId = localStorage.getItem('tgId');
-  if (tgId) return 'tg:' + tgId;
-
-  const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
-  if (email) return 'email:' + email.toLowerCase();
-
-  let anon = localStorage.getItem('arenaAnonId');
-  if (!anon){
-    anon = 'anon:' + Math.random().toString(36).slice(2, 10);
-    localStorage.setItem('arenaAnonId', anon);
-  }
-  return anon;
+  const t=localStorage.getItem('tgId');if(t)return 'tg:'+t;
+  const e=localStorage.getItem('currentEmail')||localStorage.getItem('linkedEmail');if(e)return 'email:'+e.toLowerCase();
+  let a=localStorage.getItem('arenaAnonId');
+  if(!a){a='anon:'+Math.random().toString(36).slice(2,10);localStorage.setItem('arenaAnonId',a);}
+  return a;
 }
-
-/* Устойчивый выбор аватарки по имени — у одного игрока всегда одна и та же */
 function avatarFor(name){
-  let h = 0;
-  const s = String(name || '');
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) & 0xffff;
-  return AVATARS[h % AVATARS.length];
+  let h=0;const s=String(name||'');
+  for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))&0xffff;
+  return AVATARS[h%AVATARS.length];
 }
-
-/* ================= ОТРИСОВКА ================= */
-
-function medalFor(i){
-  if (i === 0) return '🥇';
-  if (i === 1) return '🥈';
-  if (i === 2) return '🥉';
-  return String(i + 1);
+function medalFor(i){if(i===0)return '🥇';if(i===1)return '🥈';if(i===2)return '🥉';return String(i+1);}
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function render(rows){
-  const box = $('leaderboard-list');
-
-  if (!rows || !rows.length){
-    box.innerHTML = '<p class="state-msg">Пока нет игроков. Стань первым!</p>';
-    return;
+  const box=$('leaderboard-list');
+  if(!rows||!rows.length){box.innerHTML='<p class="state-msg">Пока нет игроков. Стань первым!</p>';return;}
+  const myKey=playerKey();
+  let html='';
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];
+    const isMe=(r.player_key===myKey);
+    const arenaNum=Math.min(MAX_ARENA,Math.floor(Math.max(0,r.cups||0)/STEP)+1);
+    const arenaName=NAMES[arenaNum-1]||'';
+    html+='<div class="leaderboard-item'+(isMe?' my-row':'')+'">';
+    html+='<div class="rank">'+medalFor(i)+'</div>';
+    html+='<div class="avatar-cell">'+avatarFor(r.display_name)+'</div>';
+    html+='<div class="user-info">';
+    html+='<p class="user-name">'+escapeHtml(r.display_name||'Игрок')+(isMe?' · ты':'')+'</p>';
+    html+='<p class="user-meta">Арена '+arenaNum+' · '+escapeHtml(arenaName)+' · '+(r.wins||0)+'П / '+(r.losses||0)+'Пр</p>';
+    html+='</div>';
+    html+='<div class="cups-cell">🏆 '+(r.cups||0)+'</div>';
+    html+='</div>';
   }
-
-  const myKey = playerKey();
-  let html = '';
-
-  for (let i = 0; i < rows.length; i++){
-    const r = rows[i];
-    const isMe = (r.player_key === myKey);
-    const arenaNum = Math.min(MAX_ARENA, Math.floor(Math.max(0, r.cups || 0) / STEP) + 1);
-    const arenaName = NAMES[arenaNum - 1] || '';
-
-    html += '<div class="leaderboard-item' + (isMe ? ' my-row' : '') + '">';
-    html +=   '<div class="rank">' + medalFor(i) + '</div>';
-    html +=   '<div class="avatar-cell">' + avatarFor(r.display_name) + '</div>';
-    html +=   '<div class="user-info">';
-    html +=     '<p class="user-name">' + escapeHtml(r.display_name || 'Игрок') +
-                (isMe ? ' · ты' : '') + '</p>';
-    html +=     '<p class="user-meta">Арена ' + arenaNum + ' · ' + escapeHtml(arenaName) +
-                ' · ' + (r.wins || 0) + 'П / ' + (r.losses || 0) + 'Пр</p>';
-    html +=   '</div>';
-    html +=   '<div class="cups-cell">🏆 ' + (r.cups || 0) + '</div>';
-    html += '</div>';
-  }
-
-  box.innerHTML = html;
+  box.innerHTML=html;
 }
 
-function escapeHtml(s){
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-/* ================= ЗАГРУЗКА ================= */
-
-let loading = false;
-
+let loading=false;
 async function load(){
-  if (loading) return;
-  loading = true;
-
-  try {
-    const res = await sb.rpc('arena_top', { p_limit: 50 });
-
-    if (res.error){
-      throw res.error;
-    }
-    render(res.data || []);
-
-  } catch (e){
+  if(loading)return;
+  loading=true;
+  try{
+    const res=await sb.rpc('arena_top',{p_limit:50});
+    if(res.error)throw res.error;
+    render(res.data||[]);
+  }catch(e){
     console.error(e);
-    $('leaderboard-list').innerHTML =
-      '<p class="state-msg err">Не удалось загрузить рейтинг.<br>' +
-      'Проверь, что SQL-схема выполнена в Supabase и функция arena_top существует.</p>';
-  } finally {
-    loading = false;
-  }
+    $('leaderboard-list').innerHTML='<p class="state-msg">Не удалось загрузить рейтинг.<br>Проверь, что функция arena_top существует в Supabase.</p>';
+  }finally{loading=false;}
 }
 
 load();
-setInterval(load, 15000);
-
-document.addEventListener('visibilitychange', function (){
-  if (!document.hidden) load();
-});
+setInterval(load,15000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)load();});
 </script>
 </body>
 </html>
