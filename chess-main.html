@@ -10,102 +10,445 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;min-height:100vh;min-height:100dvh;user-select:none;padding-bottom:80px}
-.top-bar{width:100%;padding:10px;display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:10}
-.profile-badge{display:flex;align-items:center;gap:10px;background:linear-gradient(145deg,#1a1a2e,#0a0a14);padding:6px 12px;border-radius:12px;border:2px solid #3b82f6;box-shadow:0 4px 10px rgba(0,0,0,.6);cursor:pointer;transition:transform .1s}
-.profile-badge:active{transform:scale(.97);background:linear-gradient(145deg,#22223a,#12121f)}
-.avatar{width:40px;height:40px;background:linear-gradient(145deg,#ffcc00,#ff9500);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:inset 0 2px 4px rgba(255,255,255,.5)}
+
+/* ================= ФОН: НЕБО CLASH ROYALE ================= */
+body{
+  margin:0;padding:0;color:#fff;
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100vh;min-height:100dvh;user-select:none;padding-bottom:80px;
+  background:linear-gradient(180deg,#1f7ae0 0%,#38a3f5 35%,#7dd0fb 70%,#bfe9ff 100%);
+  background-attachment:fixed;
+  position:relative;overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 180px 60px at 15% 12%,rgba(255,255,255,.85),transparent 70%),
+    radial-gradient(ellipse 140px 50px at 22% 14%,rgba(255,255,255,.75),transparent 70%),
+    radial-gradient(ellipse 200px 65px at 78% 22%,rgba(255,255,255,.7),transparent 70%),
+    radial-gradient(ellipse 150px 45px at 86% 24%,rgba(255,255,255,.6),transparent 70%),
+    radial-gradient(ellipse 220px 70px at 50% 48%,rgba(255,255,255,.4),transparent 70%);
+  animation:clouds 40s linear infinite;
+}
+@keyframes clouds{0%{transform:translateX(0)}50%{transform:translateX(-30px)}100%{transform:translateX(0)}}
+
+/* золотая линия сверху */
+body::after{
+  content:'';position:fixed;top:0;left:0;right:0;height:4px;z-index:1200;pointer-events:none;
+  background:linear-gradient(90deg,#ffe082,#ffb300,#ffe082,#ffb300,#ffe082);
+  background-size:200% 100%;animation:goldmove 5s linear infinite;
+}
+@keyframes goldmove{0%{background-position:0 0}100%{background-position:200% 0}}
+
+/* ================= ВЕРХНЯЯ ПАНЕЛЬ ================= */
+.top-bar{
+  width:100%;padding:12px 10px 10px;display:flex;justify-content:space-between;
+  align-items:flex-start;position:relative;z-index:10;
+}
+
+.profile-badge{
+  display:flex;align-items:center;gap:10px;
+  background:linear-gradient(180deg,#2a4a9e,#16306e);
+  padding:6px 14px 6px 6px;border-radius:16px;
+  border:3px solid #ffd447;
+  box-shadow:0 4px 0 #0b1b45,0 8px 18px rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.25);
+  cursor:pointer;transition:transform .1s;max-width:190px;
+}
+.profile-badge:active{transform:translateY(2px) scale(.98)}
+.avatar{
+  width:42px;height:42px;flex-shrink:0;
+  background:linear-gradient(180deg,#ffd447,#ff9f1c);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;
+  box-shadow:inset 0 2px 4px rgba(255,255,255,.6),0 2px 6px rgba(0,0,0,.4);
+  border:2px solid #fff;
+}
 .profile-info{display:flex;flex-direction:column;min-width:0}
-.profile-name{font-size:14px;font-weight:900;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.profile-name .pen{font-size:10px;opacity:.55;margin-left:4px}
-.profile-level{font-size:10px;color:#94a3b8}
+.profile-name{font-size:14px;font-weight:900;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+.profile-name .pen{font-size:10px;opacity:.7;margin-left:4px}
+.profile-level{font-size:10px;color:#ffe9a3;font-weight:800;text-shadow:0 1px 0 rgba(0,0,0,.4)}
+
+.top-right{display:flex;align-items:flex-start;gap:6px}
 .currencies{display:flex;gap:5px;flex-direction:column}
-.currency{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.7);padding:4px 8px;border-radius:8px;font-size:12px;font-weight:bold;border:1px solid rgba(255,255,255,.1)}
-.currency.trophy{color:#ffcc00;border-color:#ffcc00}
-.currency.coin{color:#ffd700}
-.currency.gem{color:#34c759}
-.currency.hist{color:#93c5fd;border-color:#3b82f6;cursor:pointer;justify-content:center}
-.currency.hist:active{background:rgba(59,130,246,.25)}
-#verTag{position:fixed;left:8px;bottom:74px;z-index:1300;font-size:10px;font-weight:900;color:#facc15;letter-spacing:.5px;background:#0f172a;border:1px solid #facc15;padding:3px 8px;border-radius:6px;pointer-events:none}
-.arena-container{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding:10px 20px}
-.arena-card{width:90vw;max-width:400px;background:linear-gradient(180deg,#1e293b,#0f172a);border-radius:20px;border:3px solid #475569;box-shadow:0 20px 50px rgba(0,0,0,.9),inset 0 0 40px rgba(0,0,0,.6);padding:18px;text-align:center;position:relative;overflow:hidden;cursor:pointer;transition:transform .12s}
-.arena-card:active{transform:scale(.985)}
-.arena-glow{position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at top,#3b82f6 0%,transparent 70%);opacity:.2;pointer-events:none;transition:background .4s}
-.arena-title{font-size:19px;font-weight:900;color:#ffcc00;margin-bottom:4px;text-shadow:0 2px 4px rgba(0,0,0,.8);position:relative;z-index:2}
-.arena-subtitle{font-size:11.5px;color:#94a3b8;margin-bottom:14px;line-height:1.4;position:relative;z-index:2;min-height:32px}
-.arena-image{width:100%;height:150px;border-radius:12px;border:2px solid #64748b;margin-bottom:14px;position:relative;z-index:2;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#334155,#0f172a);transition:background .4s;overflow:hidden}
+.currency{
+  display:flex;align-items:center;gap:5px;
+  background:linear-gradient(180deg,#12306b,#0a1c40);
+  padding:4px 9px;border-radius:9px;font-size:12px;font-weight:900;
+  border:2px solid rgba(255,255,255,.25);
+  box-shadow:0 2px 0 rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.2);
+  justify-content:center;min-width:64px;
+}
+.currency.trophy{color:#ffe36b;border-color:#ffd447}
+.currency.coin{color:#ffd700;border-color:#c9a227}
+.currency.gem{color:#5ef08a;border-color:#2fa85a}
+.currency.hist{color:#9fd0ff;border-color:#4a9ef0;cursor:pointer}
+.currency.hist:active{background:linear-gradient(180deg,#1b4f9e,#12306b)}
+
+.burger{
+  width:44px;height:44px;flex-shrink:0;border-radius:13px;cursor:pointer;
+  background:linear-gradient(180deg,#ffd447,#ff9f1c);
+  border:3px solid #fff;
+  box-shadow:0 4px 0 #b45309,0 8px 16px rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.7);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  padding:0;transition:transform .1s;
+}
+.burger:active{transform:translateY(3px);box-shadow:0 1px 0 #b45309}
+.burger span{display:block;width:20px;height:3px;border-radius:2px;background:#3b1f00;box-shadow:0 1px 0 rgba(255,255,255,.5)}
+
+/* ================= КАРТОЧКА АРЕНЫ ================= */
+#verTag{
+  position:fixed;left:8px;bottom:74px;z-index:1300;font-size:10px;font-weight:900;
+  color:#3b1f00;letter-spacing:.5px;background:#ffd447;border:2px solid #fff;
+  padding:3px 8px;border-radius:8px;pointer-events:none;
+  box-shadow:0 2px 0 #b45309;
+}
+
+.arena-container{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding:10px 20px;position:relative;z-index:5}
+
+.arena-card{
+  width:90vw;max-width:400px;
+  background:linear-gradient(180deg,#ffffff,#eef4ff);
+  border-radius:22px;
+  border:4px solid #ffd447;
+  box-shadow:0 10px 0 #b45309,0 22px 40px rgba(0,0,0,.4),inset 0 3px 0 rgba(255,255,255,.9);
+  padding:0 0 16px;text-align:center;position:relative;overflow:hidden;cursor:pointer;
+  transition:transform .12s;
+}
+.arena-card:active{transform:translateY(3px) scale(.99)}
+
+.arena-glow{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background:radial-gradient(circle at top,#3b82f6 0%,transparent 70%);
+  opacity:.16;pointer-events:none;z-index:0;
+}
+
+.arena-title{
+  font-size:19px;font-weight:900;color:#fff;margin:0 0 3px;
+  text-shadow:0 2px 0 rgba(0,0,0,.35);position:relative;z-index:2;
+}
+.arena-subtitle{
+  font-size:11.5px;color:#fff;margin:0 0 12px;line-height:1.4;
+  position:relative;z-index:2;min-height:32px;font-weight:600;opacity:.95;
+}
+
+.card-head{
+  background:linear-gradient(180deg,#3b8ef0,#1c56b8);
+  padding:13px 16px 11px;border-bottom:3px solid #ffd447;
+  position:relative;z-index:2;margin-bottom:12px;
+}
+
+.arena-image{
+  width:calc(100% - 26px);margin:0 13px 12px;height:150px;border-radius:14px;
+  border:3px solid #1c56b8;position:relative;z-index:2;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#334155,#0f172a);
+  transition:background .4s;overflow:hidden;
+  box-shadow:inset 0 0 20px rgba(0,0,0,.5);
+}
 .arena-image span{font-size:64px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.7))}
-#arenaVideo{display:none;width:100%;height:100%;object-fit:cover;border-radius:10px}
-.arena-progress-bg{width:100%;height:16px;background:#000;border-radius:10px;overflow:hidden;box-shadow:inset 0 4px 8px rgba(0,0,0,.9);position:relative;z-index:2}
-.arena-progress-fill{height:100%;width:0%;border-radius:10px;transition:width .5s;background:linear-gradient(90deg,#3b82f6,#00f2fe)}
-.arena-trophies{display:flex;justify-content:space-between;width:100%;font-size:11px;color:#ccc;margin-top:5px;font-weight:bold;position:relative;z-index:2}
-.arena-floor{font-size:10.5px;color:#64748b;margin-top:8px;position:relative;z-index:2}
-.arena-hint{font-size:10px;color:#475569;margin-top:10px;position:relative;z-index:2}
-#dbWarn{font-size:10.5px;color:#ef4444;margin-top:10px;position:relative;z-index:2;line-height:1.35;word-break:break-word}
-.bottom-actions{width:100%;padding:12px 20px 20px;display:flex;flex-direction:column;align-items:center;gap:10px}
-.btn-battle{width:90vw;max-width:400px;padding:18px;background:linear-gradient(180deg,#ffcc00,#ff9500);border:3px solid #fff;border-radius:16px;font-size:24px;font-weight:900;color:#000;text-transform:uppercase;letter-spacing:1px;box-shadow:0 8px 0 #b45309,0 15px 20px rgba(0,0,0,.6),inset 0 2px 4px rgba(255,255,255,.8);cursor:pointer;transition:transform .1s,box-shadow .1s;text-shadow:0 1px 0 rgba(255,255,255,.5);position:relative;overflow:hidden}
-.btn-battle:active{transform:translateY(4px);box-shadow:0 4px 0 #b45309,0 5px 10px rgba(0,0,0,.6),inset 0 2px 4px rgba(255,255,255,.8)}
-.btn-battle::after{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);animation:shine 3s infinite;transform:skewX(-20deg)}
-@keyframes shine{0%{left:-100%}20%{left:200%}100%{left:200%}}
-#arenaModal{position:fixed;inset:0;background:rgba(2,6,23,.97);z-index:1200;display:none;flex-direction:column}
+#arenaVideo{display:none;width:100%;height:100%;object-fit:cover;border-radius:11px}
+
+.arena-progress-bg{
+  width:calc(100% - 26px);margin:0 13px;
+  height:18px;background:#0f2a5c;border-radius:12px;overflow:hidden;
+  box-shadow:inset 0 4px 8px rgba(0,0,0,.7);position:relative;z-index:2;
+  border:2px solid #1c56b8;
+}
+.arena-progress-fill{
+  height:100%;width:0%;border-radius:10px;transition:width .5s;
+  background:linear-gradient(90deg,#43e97b,#ffd447);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.5);
+}
+
+.arena-trophies{
+  display:flex;justify-content:space-between;width:calc(100% - 26px);
+  margin:6px 13px 0;font-size:11px;color:#1c3f7d;font-weight:900;
+  position:relative;z-index:2;
+}
+.arena-floor{
+  font-size:10.5px;color:#5a7398;margin:8px 13px 0;position:relative;z-index:2;font-weight:700;
+}
+.arena-hint{
+  font-size:10px;color:#8aa3c4;margin-top:10px;position:relative;z-index:2;font-weight:800;
+}
+#dbWarn{
+  font-size:10.5px;color:#d32f2f;margin:8px 13px 0;position:relative;z-index:2;
+  line-height:1.35;word-break:break-word;font-weight:700;
+}
+
+/* ================= КНОПКА БОЙ ================= */
+.bottom-actions{
+  width:100%;padding:12px 20px 20px;display:flex;flex-direction:column;
+  align-items:center;gap:10px;position:relative;z-index:5;
+}
+.btn-battle{
+  width:90vw;max-width:400px;padding:18px;
+  background:linear-gradient(180deg,#ffe082 0%,#ffb300 55%,#ff9500 100%);
+  border:4px solid #fff;border-radius:18px;
+  font-size:25px;font-weight:900;color:#5a2d00;
+  text-transform:uppercase;letter-spacing:1.5px;
+  box-shadow:0 8px 0 #a35f00,0 16px 24px rgba(0,0,0,.45),inset 0 2px 4px rgba(255,255,255,.9);
+  cursor:pointer;transition:transform .1s,box-shadow .1s;
+  text-shadow:0 2px 0 rgba(255,255,255,.6);position:relative;overflow:hidden;
+}
+.btn-battle:active{
+  transform:translateY(5px);
+  box-shadow:0 3px 0 #a35f00,0 6px 10px rgba(0,0,0,.4),inset 0 2px 4px rgba(255,255,255,.9);
+}
+.btn-battle::after{
+  content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);
+  animation:shine 3s infinite;transform:skewX(-20deg);
+}
+@keyframes shine{0%{left:-100%}18%{left:200%}100%{left:200%}}
+
+/* ================= МОДАЛКА АРЕН ================= */
+#arenaModal{
+  position:fixed;inset:0;z-index:1200;display:none;flex-direction:column;
+  background:linear-gradient(180deg,#1f7ae0 0%,#0e2a5e 100%);
+}
 #arenaModal.open{display:flex}
-#arenaModalHead{display:flex;justify-content:space-between;align-items:center;width:100%;padding:14px 18px 8px;flex-shrink:0;background:linear-gradient(180deg,#0f172a,rgba(15,23,42,0))}
+#arenaModalHead{
+  display:flex;justify-content:space-between;align-items:center;width:100%;
+  padding:14px 18px 10px;flex-shrink:0;
+  background:linear-gradient(180deg,#16306e,rgba(22,48,110,0));
+  border-bottom:2px solid rgba(255,212,71,.4);
+}
 #arenaHeadLeft{display:flex;align-items:center;gap:9px}
-#arenaModalHead h3{margin:0;font-size:16px;color:#e2e8f0;letter-spacing:.5px}
-.verChip{font-size:11px;font-weight:900;color:#000;background:linear-gradient(145deg,#ffcc00,#ff9500);padding:2px 8px;border-radius:6px;letter-spacing:.5px}
-#arenaClose{background:#1e293b;border:1px solid #475569;color:#cbd5e1;width:34px;height:34px;border-radius:50%;font-size:15px;cursor:pointer;line-height:1}
-#arenaClose:active{background:#334155}
-#arenaMineBar{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 16px;margin:0 12px 10px;border-radius:10px;background:rgba(34,197,94,.12);border:1px solid #15803d;font-size:12.5px;font-weight:900;color:#4ade80;letter-spacing:.3px}
-#arenaMineBar span{color:#86efac;font-weight:700;font-size:11px}
-#arenaTopHint{flex-shrink:0;text-align:center;font-size:10.5px;color:#475569;padding:0 16px 8px;letter-spacing:.3px;line-height:1.4}
-#arenaScroll{flex:1;position:relative;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-snap-type:y mandatory;scrollbar-width:none;padding:10px 0 20px}
+#arenaModalHead h3{margin:0;font-size:17px;color:#fff;letter-spacing:.5px;font-weight:900;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.verChip{
+  font-size:11px;font-weight:900;color:#3b1f00;
+  background:linear-gradient(180deg,#ffe082,#ffb300);
+  padding:2px 9px;border-radius:7px;letter-spacing:.5px;
+  box-shadow:0 2px 0 #a35f00;
+}
+#arenaClose{
+  background:linear-gradient(180deg,#f4665e,#c62828);border:3px solid #fff;
+  color:#fff;width:36px;height:36px;border-radius:12px;font-size:15px;cursor:pointer;line-height:1;
+  box-shadow:0 3px 0 #7f1d1d;
+}
+#arenaClose:active{transform:translateY(2px);box-shadow:0 1px 0 #7f1d1d}
+#arenaMineBar{
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:10px 16px;margin:8px 12px 10px;border-radius:12px;
+  background:linear-gradient(180deg,#2fa85a,#15803d);
+  border:3px solid #fff;font-size:12.5px;font-weight:900;color:#fff;letter-spacing:.3px;
+  box-shadow:0 4px 0 #0b5426;
+}
+#arenaMineBar span{color:#d6ffe4;font-weight:800;font-size:11px}
+#arenaTopHint{
+  flex-shrink:0;text-align:center;font-size:10.5px;color:#b9d6ff;
+  padding:0 16px 8px;letter-spacing:.3px;line-height:1.4;font-weight:700;
+}
+#arenaScroll{
+  flex:1;position:relative;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;scroll-snap-type:y mandatory;
+  scrollbar-width:none;padding:10px 0 20px;
+}
 #arenaScroll::-webkit-scrollbar{display:none}
-.arena-slide{scroll-snap-align:center;width:86vw;max-width:360px;margin:0 auto 16px;background:linear-gradient(180deg,#1e293b,#0f172a);border:2px solid #334155;border-radius:16px;padding:14px;opacity:.45;transform:scale(.94);transition:opacity .22s,transform .22s,border-color .22s,box-shadow .22s;position:relative}
-.arena-slide.mine{opacity:.92;transform:scale(.97);border-color:#22c55e;box-shadow:0 0 22px rgba(34,197,94,.35)}
-.arena-slide.now{opacity:1;transform:scale(1);border-color:#94a3b8;box-shadow:0 0 22px rgba(148,163,184,.3)}
-.arena-slide.mine.now{border-color:#22c55e;box-shadow:0 0 30px rgba(34,197,94,.55)}
-.arena-slide-img{height:96px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;border:1px solid rgba(255,255,255,.08);overflow:hidden;position:relative;background-size:cover;background-position:center}
+
+.arena-slide{
+  scroll-snap-align:center;width:86vw;max-width:360px;margin:0 auto 16px;
+  background:linear-gradient(180deg,#243b6b,#152446);
+  border:3px solid #3b5f9e;border-radius:18px;padding:14px;
+  opacity:.55;transform:scale(.94);
+  transition:opacity .22s,transform .22s,border-color .22s,box-shadow .22s;
+  position:relative;box-shadow:0 6px 0 rgba(0,0,0,.35);
+}
+.arena-slide.mine{opacity:.95;transform:scale(.97);border-color:#43e97b;box-shadow:0 0 22px rgba(67,233,123,.4),0 6px 0 rgba(0,0,0,.35)}
+.arena-slide.now{opacity:1;transform:scale(1);border-color:#ffd447;box-shadow:0 0 22px rgba(255,212,71,.35),0 6px 0 rgba(0,0,0,.35)}
+.arena-slide.mine.now{border-color:#43e97b;box-shadow:0 0 30px rgba(67,233,123,.6),0 6px 0 rgba(0,0,0,.35)}
+.arena-slide-img{
+  height:96px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  margin-bottom:10px;border:2px solid rgba(255,255,255,.14);overflow:hidden;position:relative;
+  background-size:cover;background-position:center;
+}
 .arena-slide-img span{font-size:46px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.7))}
-.arena-slide-img video{display:none;width:100%;height:100%;object-fit:cover;border-radius:11px}
-.arena-slide-title{font-size:15px;font-weight:900;color:#ffcc00;margin-bottom:3px}
-.arena-slide-range{font-size:11px;color:#94a3b8;margin-bottom:8px;font-weight:700}
-.arena-slide-rule{font-size:11.5px;color:#cbd5e1;line-height:1.42}
-.arena-slide-badge{display:none;position:absolute;top:10px;right:10px;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-size:9.5px;font-weight:900;padding:4px 9px;border-radius:8px;letter-spacing:.5px;border:1px solid rgba(255,255,255,.35);box-shadow:0 2px 8px rgba(0,0,0,.6)}
+.arena-slide-img video{display:none;width:100%;height:100%;object-fit:cover;border-radius:10px}
+.arena-slide-title{font-size:15px;font-weight:900;color:#ffd447;margin-bottom:3px;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+.arena-slide-range{font-size:11px;color:#a8c4ea;margin-bottom:8px;font-weight:800}
+.arena-slide-rule{font-size:11.5px;color:#dde9ff;line-height:1.42;font-weight:600}
+.arena-slide-badge{
+  display:none;position:absolute;top:10px;right:10px;
+  background:linear-gradient(180deg,#5ef08a,#22a04a);color:#003b16;
+  font-size:9.5px;font-weight:900;padding:4px 9px;border-radius:8px;letter-spacing:.5px;
+  border:2px solid #fff;box-shadow:0 2px 0 #0b5426;
+}
 .arena-slide.mine .arena-slide-badge{display:block}
-#arenaDots{flex-shrink:0;display:flex;justify-content:center;gap:7px;padding:8px 16px 18px;flex-wrap:wrap;background:linear-gradient(0deg,#0f172a,rgba(15,23,42,0))}
-.arena-dot{width:8px;height:8px;border-radius:50%;background:#334155;border:0;padding:0;cursor:pointer;transition:.2s}
-.arena-dot.mine{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.9)}
-.arena-dot.on{background:#ffcc00;transform:scale(1.5)}
-.arena-dot.mine.on{background:#ffcc00;box-shadow:0 0 0 2px #22c55e}
-.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 15px rgba(0,0,0,.7)}
-.nav-btn{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;transition:.2s}
-.nav-btn .icon-wrap{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);box-shadow:0 3px 6px rgba(0,0,0,.5),inset 0 2px 3px rgba(255,255,255,.08),inset 0 -3px 6px rgba(0,0,0,.6);transition:all .3s}
+
+#arenaDots{
+  flex-shrink:0;display:flex;justify-content:center;gap:7px;padding:8px 16px 18px;
+  flex-wrap:wrap;background:linear-gradient(0deg,#0e2a5e,rgba(14,42,94,0));
+}
+.arena-dot{width:9px;height:9px;border-radius:50%;background:#3b5f9e;border:0;padding:0;cursor:pointer;transition:.2s}
+.arena-dot.mine{background:#43e97b;box-shadow:0 0 6px rgba(67,233,123,.9)}
+.arena-dot.on{background:#ffd447;transform:scale(1.5)}
+.arena-dot.mine.on{background:#ffd447;box-shadow:0 0 0 2px #43e97b}
+
+/* ================= НИЖНЕЕ МЕНЮ ================= */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;width:100%;height:68px;
+  background:linear-gradient(180deg,#2a4a9e 0%,#12285c 100%);
+  border-top:3px solid #ffd447;
+  display:flex;justify-content:space-around;align-items:center;z-index:999;
+  padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -4px 15px rgba(0,0,0,.5);
+}
+.nav-btn{
+  background:transparent;border:none;color:#a8c4ea;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:9px;font-weight:900;cursor:pointer;flex:1;height:100%;gap:3px;transition:.2s;
+}
+.nav-btn .icon-wrap{
+  width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#1c3f8a,#0e2352);
+  box-shadow:inset 0 2px 3px rgba(255,255,255,.12),inset 0 -3px 6px rgba(0,0,0,.5);
+  transition:all .3s;
+}
 .nav-btn .icon{font-size:20px;text-shadow:0 1px 2px rgba(0,0,0,.6);transition:transform .3s}
-.nav-btn.active{color:#ffcc00}
-.nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500);box-shadow:0 3px 10px rgba(255,204,0,.4),inset 0 2px 3px rgba(255,255,255,.4)}
+.nav-btn.active{color:#ffd447}
+.nav-btn.active .icon-wrap{
+  background:linear-gradient(180deg,#ffe082,#ffb300);
+  box-shadow:0 3px 10px rgba(255,183,0,.55),inset 0 2px 3px rgba(255,255,255,.6);
+}
 .nav-btn.active .icon{transform:scale(1.12)}
+
 .deck-stack{position:relative;width:24px;height:28px}
 .deck-stack .deck-card{position:absolute;width:16px;height:22px;border-radius:3px;border:1px solid rgba(255,255,255,.5);box-shadow:0 1px 3px rgba(0,0,0,.6)}
 .deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c)}
 .deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe)}
 .deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900}
-#nickPanel{position:fixed;inset:0;background:rgba(2,6,23,.95);display:none;align-items:center;justify-content:center;padding:20px;z-index:2200}
-#nickBox{width:100%;max-width:340px;background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #3b82f6;border-radius:16px;padding:20px;text-align:center;box-shadow:0 18px 46px rgba(0,0,0,.92)}
-#nickTitle{font-size:18px;font-weight:900;color:#e2e8f0;margin-bottom:6px}
-#nickSub{font-size:11.5px;color:#94a3b8;line-height:1.4;margin-bottom:14px}
-#nickInput{width:100%;padding:13px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:16px;font-weight:700;text-align:center;outline:none;margin-bottom:8px}
-#nickInput:focus{border-color:#3b82f6}
-#nickErr{font-size:11.5px;color:#f87171;min-height:16px;margin-bottom:8px;line-height:1.3}
-#nickOk{width:100%;padding:14px;border:0;border-radius:10px;font-size:15px;font-weight:900;cursor:pointer;color:#fff;background:linear-gradient(145deg,#22c55e,#15803d);box-shadow:0 6px 16px rgba(34,197,94,.3)}
-#nickOk:disabled{opacity:.5}
-#nickLater{width:100%;margin-top:8px;padding:12px;border-radius:10px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:13.5px;font-weight:800;cursor:pointer}
-#nickLater:active{background:#1e293b;color:#cbd5e1}
-#nickVer{font-size:9.5px;color:#475569;margin-top:10px;letter-spacing:.5px}
+
+/* ================= БОКОВОЕ МЕНЮ ================= */
+#drawerOverlay{
+  position:fixed;inset:0;background:rgba(4,14,36,.72);z-index:1500;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+#drawerOverlay.open{opacity:1;pointer-events:auto}
+
+#drawer{
+  position:fixed;top:0;right:0;height:100dvh;width:84%;max-width:360px;z-index:1600;
+  background:linear-gradient(180deg,#16306e,#0a1c40);
+  border-left:4px solid #ffd447;
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.2,.8,.3,1);
+  display:flex;flex-direction:column;box-shadow:-10px 0 40px rgba(0,0,0,.6);
+}
+#drawer.open{transform:translateX(0)}
+
+.drawer-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:16px 14px 14px;
+  background:linear-gradient(180deg,#3b8ef0,#1c56b8);
+  border-bottom:3px solid #ffd447;flex-shrink:0;
+}
+.drawer-title{font-size:17px;font-weight:900;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.drawer-close{
+  width:34px;height:34px;border-radius:11px;border:3px solid #fff;cursor:pointer;
+  background:linear-gradient(180deg,#f4665e,#c62828);color:#fff;font-size:14px;line-height:1;
+  box-shadow:0 3px 0 #7f1d1d;
+}
+.drawer-close:active{transform:translateY(2px);box-shadow:0 1px 0 #7f1d1d}
+
+.drawer-body{flex:1;overflow-y:auto;padding:14px 12px 24px}
+
+.m-item{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  background:linear-gradient(180deg,#ffffff,#e6eefc);
+  border:2px solid #b9cdea;border-radius:14px;
+  padding:11px 12px;margin-bottom:10px;cursor:pointer;
+  box-shadow:0 4px 0 #8fa8cc,0 6px 14px rgba(0,0,0,.25);
+  transition:transform .1s;
+}
+.m-item:active{transform:translateY(3px);box-shadow:0 1px 0 #8fa8cc}
+.m-ico{
+  width:46px;height:46px;flex-shrink:0;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+  background:linear-gradient(180deg,#3b8ef0,#1c56b8);
+  border:2px solid #ffd447;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.3);
+}
+.m-txt{flex:1;min-width:0}
+.m-name{font-size:13.5px;font-weight:900;color:#132a54;line-height:1.2;text-transform:uppercase;letter-spacing:.3px}
+.m-sub{font-size:11px;color:#7b8fae;margin-top:3px;font-weight:700;line-height:1.3}
+.m-arrow{font-size:20px;color:#3b8ef0;font-weight:900;flex-shrink:0}
+
+.drawer-foot{
+  padding:10px 14px 18px;font-size:10px;color:#7fa0d0;text-align:center;
+  border-top:1px solid rgba(255,255,255,.1);flex-shrink:0;font-weight:700;
+}
+
+/* ================= ОКНО ПРАВИЛ ================= */
+#infoModal{
+  position:fixed;inset:0;background:rgba(4,14,36,.85);z-index:1800;
+  display:none;align-items:center;justify-content:center;padding:18px;
+}
+#infoModal.open{display:flex}
+#infoBox{
+  width:100%;max-width:380px;max-height:80vh;overflow-y:auto;
+  background:linear-gradient(180deg,#ffffff,#eef4ff);
+  border:4px solid #ffd447;border-radius:18px;
+  box-shadow:0 10px 0 #b45309,0 20px 40px rgba(0,0,0,.6);
+}
+#infoHead{
+  background:linear-gradient(180deg,#3b8ef0,#1c56b8);padding:13px 16px;
+  border-bottom:3px solid #ffd447;display:flex;justify-content:space-between;align-items:center;
+}
+#infoHead h3{margin:0;font-size:16px;color:#fff;font-weight:900;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+#infoClose{
+  width:32px;height:32px;border-radius:10px;border:3px solid #fff;cursor:pointer;
+  background:linear-gradient(180deg,#f4665e,#c62828);color:#fff;font-size:13px;line-height:1;
+  box-shadow:0 3px 0 #7f1d1d;
+}
+#infoBody{padding:14px 16px 18px;color:#22335c;font-size:13px;line-height:1.55;font-weight:600}
+#infoBody h4{margin:14px 0 6px;color:#132a54;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.4px}
+#infoBody h4:first-child{margin-top:0}
+#infoBody p{margin:0 0 8px}
+#infoBody b{color:#0f4fa8}
+
+/* ================= ОКНО НИКА ================= */
+#nickPanel{
+  position:fixed;inset:0;background:rgba(4,14,36,.9);
+  display:none;align-items:center;justify-content:center;padding:20px;z-index:2200;
+}
+#nickBox{
+  width:100%;max-width:340px;
+  background:linear-gradient(180deg,#ffffff,#eef4ff);
+  border:4px solid #ffd447;border-radius:18px;padding:0 0 18px;text-align:center;
+  box-shadow:0 10px 0 #b45309,0 20px 46px rgba(0,0,0,.7);overflow:hidden;
+}
+#nickHead{
+  background:linear-gradient(180deg,#3b8ef0,#1c56b8);padding:14px;
+  border-bottom:3px solid #ffd447;
+}
+#nickTitle{font-size:17px;font-weight:900;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+#nickSub{font-size:11.5px;color:#dbe9ff;line-height:1.4;margin-top:4px;font-weight:700}
+#nickBody{padding:16px 18px 0}
+#nickInput{
+  width:100%;padding:13px;border-radius:11px;border:3px solid #b9cdea;
+  background:#fff;color:#132a54;font-size:16px;font-weight:900;text-align:center;
+  outline:none;margin-bottom:8px;
+}
+#nickInput:focus{border-color:#ffd447;box-shadow:0 0 0 3px rgba(255,212,71,.3)}
+#nickErr{font-size:11.5px;color:#d32f2f;min-height:16px;margin-bottom:8px;line-height:1.3;font-weight:800}
+#nickOk{
+  width:100%;padding:14px;border:3px solid #fff;border-radius:12px;
+  font-size:15px;font-weight:900;cursor:pointer;color:#fff;
+  background:linear-gradient(180deg,#5ef08a,#1f9e42);
+  box-shadow:0 5px 0 #0b5426;
+}
+#nickOk:active{transform:translateY(3px);box-shadow:0 2px 0 #0b5426}
+#nickOk:disabled{opacity:.55}
+#nickLater{
+  width:100%;margin-top:8px;padding:12px;border-radius:11px;border:3px solid #b9cdea;
+  background:#fff;color:#5a7398;font-size:13.5px;font-weight:900;cursor:pointer;
+  box-shadow:0 4px 0 #8fa8cc;
+}
+#nickLater:active{transform:translateY(2px);box-shadow:0 1px 0 #8fa8cc}
+#nickVer{font-size:9.5px;color:#9ab0cc;margin-top:10px;letter-spacing:.5px;font-weight:700}
 </style>
 </head>
 <body>
 
-<div id="verTag">v18</div>
+<div id="verTag">v19</div>
 
 <div class="top-bar">
   <div class="profile-badge" id="profileBadge">
@@ -115,19 +458,27 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
       <span class="profile-level" id="player-arena-label">Арена 1</span>
     </div>
   </div>
-  <div class="currencies">
-    <div class="currency trophy">🏆 <span id="trophies-count">0</span></div>
-    <div class="currency coin">🪙 <span id="coins-count">1250</span></div>
-    <div class="currency gem">💎 <span id="gems-count">50</span></div>
-    <div class="currency hist" onclick="location.href='chess-history.html'">📜</div>
+
+  <div class="top-right">
+    <div class="currencies">
+      <div class="currency trophy">🏆 <span id="trophies-count">0</span></div>
+      <div class="currency coin">🪙 <span id="coins-count">1250</span></div>
+      <div class="currency gem">💎 <span id="gems-count">50</span></div>
+      <div class="currency hist" onclick="location.href='chess-history.html'">📜</div>
+    </div>
+    <button class="burger" id="burger" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </div>
 
 <div class="arena-container">
   <div class="arena-card" id="arenaCard">
     <div class="arena-glow" id="arena-glow"></div>
-    <div class="arena-title" id="arena-title">Арена 1: Разминка</div>
-    <div class="arena-subtitle" id="arena-subtitle">Загрузка…</div>
+    <div class="card-head">
+      <div class="arena-title" id="arena-title">Арена 1: Разминка</div>
+      <div class="arena-subtitle" id="arena-subtitle">Загрузка…</div>
+    </div>
     <div class="arena-image" id="arena-image">
       <video id="arenaVideo" autoplay muted loop playsinline webkit-playsinline preload="auto"></video>
       <span id="arena-icon">🪤</span>
@@ -153,7 +504,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
   <div id="arenaModalHead">
     <div id="arenaHeadLeft">
       <h3>Все арены</h3>
-      <span class="verChip">v18</span>
+      <span class="verChip">v19</span>
     </div>
     <button id="arenaClose">✕</button>
   </div>
@@ -163,15 +514,113 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
   <div id="arenaDots"></div>
 </div>
 
+<!-- ============ БОКОВОЕ МЕНЮ ============ -->
+<div id="drawerOverlay"></div>
+<div id="drawer">
+  <div class="drawer-head">
+    <div class="drawer-title">Меню</div>
+    <button class="drawer-close" id="drawerClose">✕</button>
+  </div>
+  <div class="drawer-body">
+    <button class="m-item" data-act="profile">
+      <div class="m-ico">👑</div>
+      <div class="m-txt">
+        <div class="m-name">Учётная запись</div>
+        <div class="m-sub">Профиль, ник и аватар</div>
+      </div>
+      <div class="m-arrow">›</div>
+    </button>
+
+    <button class="m-item" data-act="history">
+      <div class="m-ico">📜</div>
+      <div class="m-txt">
+        <div class="m-name">История партий</div>
+        <div class="m-sub">Все бои, победы и звёзды</div>
+      </div>
+      <div class="m-arrow">›</div>
+    </button>
+
+    <button class="m-item" data-act="shop">
+      <div class="m-ico">🎁</div>
+      <div class="m-txt">
+        <div class="m-name">Покупки</div>
+        <div class="m-sub">Магазин, монеты и кристаллы</div>
+      </div>
+      <div class="m-arrow">›</div>
+    </button>
+
+    <button class="m-item" data-act="deck">
+      <div class="m-ico">🃏</div>
+      <div class="m-txt">
+        <div class="m-name">Колода</div>
+        <div class="m-sub">Собери свои фигуры</div>
+      </div>
+      <div class="m-arrow">›</div>
+    </button>
+
+    <button class="m-item" data-act="clan">
+      <div class="m-ico">🛡️</div>
+      <div class="m-txt">
+        <div class="m-name">Клан</div>
+        <div class="m-sub">Друзья и кланы</div>
+      </div>
+      <div class="m-arrow">›</div>
+    </button>
+
+    <button class="m-item" data-act="board">
+      <div class="m-ico">🏆</div>
+      <div class="m-txt">
+        <div class="m-name">Рейтинг</div>
+        <div class="m-sub">Лучшие игроки сезона</div>
+      </div>
+      <div class="m-arrow">›</div>
+    </button>
+
+    <button class="m-item" data-act="rules">
+      <div class="m-ico">📖</div>
+      <div class="m-txt">
+        <div class="m-name">Игровой процесс</div>
+        <div class="m-sub">Как играть и как считаются звёзды</div>
+      </div>
+      <div class="m-arrow">›</div>
+    </button>
+
+    <button class="m-item" data-act="fair">
+      <div class="m-ico">⚖️</div>
+      <div class="m-txt">
+        <div class="m-name">Правила честной игры</div>
+        <div class="m-sub">Уважай других игроков</div>
+      </div>
+      <div class="m-arrow">›</div>
+    </button>
+  </div>
+  <div class="drawer-foot">Chess Royale · версия 19</div>
+</div>
+
+<!-- ============ ОКНО ПРАВИЛ ============ -->
+<div id="infoModal">
+  <div id="infoBox">
+    <div id="infoHead">
+      <h3 id="infoTitle">Игровой процесс</h3>
+      <button id="infoClose">✕</button>
+    </div>
+    <div id="infoBody"></div>
+  </div>
+</div>
+
 <div id="nickPanel">
   <div id="nickBox">
-    <div id="nickTitle">Придумай себе ник</div>
-    <div id="nickSub">Ник может повторяться у разных игроков</div>
-    <input id="nickInput" maxlength="16" placeholder="Ник" autocomplete="off" spellcheck="false">
-    <div id="nickErr"></div>
-    <button id="nickOk">Сохранить</button>
-    <button id="nickLater">Не сейчас</button>
-    <div id="nickVer">окно v18</div>
+    <div id="nickHead">
+      <div id="nickTitle">Придумай себе ник</div>
+      <div id="nickSub">Ник может повторяться у разных игроков</div>
+    </div>
+    <div id="nickBody">
+      <input id="nickInput" maxlength="16" placeholder="Ник" autocomplete="off" spellcheck="false">
+      <div id="nickErr"></div>
+      <button id="nickOk">Сохранить</button>
+      <button id="nickLater">Не сейчас</button>
+      <div id="nickVer">окно v19</div>
+    </div>
   </div>
 </div>
 
@@ -307,7 +756,8 @@ function getGems(){
 function setGems(v){
   const n = Math.max(0, Math.floor(v));
   try { localStorage.setItem(GEMS_KEY, String(n)); } catch (e){}
-  $('gems-count').textContent = n;
+  const el = $('gems-count');
+  if (el) el.textContent = n;
 }
 
 /* ---------------- КЭШ ПЕРВЫХ КАДРОВ ---------------- */
@@ -423,7 +873,7 @@ function render(cups){
   $('arena-glow').style.background =
     'radial-gradient(circle at top,' + look.glow + ' 0%,transparent 70%)';
   $('arena-progress').style.background =
-    'linear-gradient(90deg,' + look.glow + ',#ffcc00)';
+    'linear-gradient(90deg,' + look.glow + ',#ffd447)';
 
   playArenaVideo(arena);
 
@@ -476,7 +926,6 @@ function closeNick(){
   $('nickPanel').style.display = 'none';
 }
 
-/* бейдж с ником открывает профиль, смена ника — из профиля */
 $('profileBadge').onclick = function (){
   if (window.Profile) Profile.open(Profile.self());
 };
@@ -861,6 +1310,114 @@ document.addEventListener('visibilitychange', function (){
 </script>
 
 <script>
+/* ================= БОКОВОЕ МЕНЮ ================= */
+
+var drawer      = document.getElementById('drawer');
+var drawerOv    = document.getElementById('drawerOverlay');
+var burgerBtn   = document.getElementById('burger');
+var drawerClose = document.getElementById('drawerClose');
+
+function openDrawer(){
+  drawer.classList.add('open');
+  drawerOv.classList.add('open');
+}
+function closeDrawer(){
+  drawer.classList.remove('open');
+  drawerOv.classList.remove('open');
+}
+
+if (burgerBtn)   burgerBtn.onclick   = openDrawer;
+if (drawerClose) drawerClose.onclick = closeDrawer;
+if (drawerOv)    drawerOv.onclick    = closeDrawer;
+
+/* ---- окно правил ---- */
+
+var infoModal = document.getElementById('infoModal');
+var infoTitle = document.getElementById('infoTitle');
+var infoBody  = document.getElementById('infoBody');
+var infoClose = document.getElementById('infoClose');
+
+var INFO = {
+  rules: {
+    title: 'Игровой процесс',
+    html:
+      '<h4>Как идёт бой</h4>' +
+      '<p>Каждая партия — это шахматная дуэль на арене. Побеждает тот, кто поставит мат или ' +
+      'у кого останется больше фигур, когда выйдет время.</p>' +
+      '<h4>Звёзды за партию</h4>' +
+      '<p>После победы игра считает, сколько твоих фигур осталось на доске от начального состава:</p>' +
+      '<p><b>★★★ три звезды</b> — победа и сохранено от 60% до 100% фигур.</p>' +
+      '<p><b>★★ две звезды</b> — победа и сохранено от 30% до 60% фигур.</p>' +
+      '<p><b>★ одна звезда</b> — победа и сохранено от 0% до 30% фигур.</p>' +
+      '<p>Если партия проиграна или закончилась ничьей, звёзды не начисляются — но партия ' +
+      'всё равно попадает в историю.</p>' +
+      '<h4>Кубки и арены</h4>' +
+      '<p>За победу ты получаешь кубки, за поражение часть кубков снимается, но ниже пола ' +
+      'текущей арены упасть нельзя. Каждые 1000 кубков открывают новую арену.</p>' +
+      '<h4>История партий</h4>' +
+      '<p>Все бои сохраняются в разделе «История партий» — с результатом, соперником, ' +
+      'ареной и заработанными звёздами.</p>'
+  },
+  fair: {
+    title: 'Правила честной игры',
+    html:
+      '<h4>Уважай других игроков</h4>' +
+      '<p>Оскорбления, угрозы и травля в чате клана запрещены. Фильтр нецензурных слов ' +
+      'работает автоматически — сообщение просто не отправится.</p>' +
+      '<h4>Без обмана</h4>' +
+      '<p>Запрещено использовать программы, которые играют за тебя, подменяют результат ' +
+      'партии или накручивают кубки. Такие аккаунты могут быть сброшены.</p>' +
+      '<h4>Один игрок — один аккаунт</h4>' +
+      '<p>Не создавай второй аккаунт, чтобы обходить ограничения клана или возвращать ' +
+      'потерянные кубки.</p>' +
+      '<h4>Дружеские партии</h4>' +
+      '<p>Вызовы друзьям — это тренировка. Кубки за них не начисляются и не снимаются, ' +
+      'поэтому договорные бои никому не выгодны.</p>'
+  }
+};
+
+function openInfo(key){
+  var d = INFO[key];
+  if (!d) return;
+  infoTitle.textContent = d.title;
+  infoBody.innerHTML = d.html;
+  infoModal.classList.add('open');
+}
+function closeInfo(){
+  infoModal.classList.remove('open');
+}
+
+if (infoClose) infoClose.onclick = closeInfo;
+if (infoModal) infoModal.onclick = function (e){
+  if (e.target === infoModal) closeInfo();
+};
+
+/* ---- пункты меню ---- */
+
+var items = document.querySelectorAll('.m-item');
+for (var i = 0; i < items.length; i++){
+  (function (btn){
+    btn.onclick = function (){
+      var act = btn.getAttribute('data-act');
+      closeDrawer();
+
+      if (act === 'profile'){
+        if (window.Profile) Profile.open(Profile.self());
+        return;
+      }
+      if (act === 'history'){ location.href = 'chess-history.html'; return; }
+      if (act === 'shop')   { location.href = 'chess-shop.html';    return; }
+      if (act === 'deck')   { location.href = 'chess-deck.html';    return; }
+      if (act === 'clan')   { location.href = 'chess-social.html';  return; }
+      if (act === 'board')  { location.href = 'leaderboard.html';   return; }
+      if (act === 'rules')  { openInfo('rules'); return; }
+      if (act === 'fair')   { openInfo('fair');  return; }
+    };
+  })(items[i]);
+}
+</script>
+
+<script>
 /* всплывающий вызов на дружескую партию */
 (function(){
   if (!window.Friends) return;
@@ -871,7 +1428,7 @@ document.addEventListener('visibilitychange', function (){
       'display:flex;align-items:center;justify-content:center;padding:24px;text-align:center';
     o.innerHTML =
       '<div style="max-width:330px;width:100%;background:linear-gradient(145deg,#1e293b,#0f172a);' +
-        'border:2px solid #22c55e;border-radius:16px;padding:20px">' +
+        'border:3px solid #ffd447;border-radius:16px;padding:20px">' +
         '<div style="font-size:40px;margin-bottom:8px">⚔️</div>' +
         '<div id="fnm" style="font-size:15px;font-weight:900;margin-bottom:6px"></div>' +
         '<div style="font-size:12px;color:#94a3b8;margin-bottom:14px">' +
