@@ -1,146 +1,298 @@
 /* Chess Royale — общая тема */
-:root{--g1:#ffe082;--g2:#ffb300;--g3:#ff9500;--d1:#2a4a9e;--d2:#16306e;--d3:#0b1b45}
+
+:root{
+  --gold1:#ffe082;
+  --gold2:#ffb300;
+  --deep1:#2a4a9e;
+  --deep2:#16306e;
+  --deep3:#0b1b45;
+}
 
 html{background:#1f7ae0}
 
-body:not(.male-theme){
-background:
-radial-gradient(ellipse 190px 58px at 11% 7%,rgba(255,255,255,.55),transparent 70%),
-radial-gradient(ellipse 140px 44px at 20% 10%,rgba(255,255,255,.45),transparent 70%),
-radial-gradient(ellipse 210px 62px at 79% 16%,rgba(255,255,255,.42),transparent 70%),
-radial-gradient(ellipse 150px 46px at 88% 19%,rgba(255,255,255,.34),transparent 70%),
-radial-gradient(ellipse 260px 90px at 50% 92%,rgba(255,255,255,.28),transparent 70%),
-linear-gradient(180deg,#1f7ae0 0%,#38a3f5 36%,#7dd0fb 70%,#c9ecff 100%)!important;
-background-attachment:fixed!important;color:#fff}
+/* ===== НЕБО ===== */
+body{
+  background:
+    radial-gradient(ellipse 190px 58px at 11% 8%, rgba(255,255,255,.55), transparent 70%),
+    radial-gradient(ellipse 140px 44px at 20% 11%, rgba(255,255,255,.45), transparent 70%),
+    radial-gradient(ellipse 210px 62px at 79% 18%, rgba(255,255,255,.42), transparent 70%),
+    radial-gradient(ellipse 150px 46px at 88% 21%, rgba(255,255,255,.34), transparent 70%),
+    radial-gradient(ellipse 260px 90px at 50% 95%, rgba(255,255,255,.25), transparent 70%),
+    linear-gradient(180deg,#1f7ae0 0%,#38a3f5 36%,#7dd0fb 70%,#c9ecff 100%) !important;
+  background-attachment:fixed !important;
+  color:#fff;
+}
 
-body:not(.male-theme)::after{content:'';position:fixed;top:0;left:0;right:0;height:4px;z-index:99999;
-pointer-events:none;background:linear-gradient(90deg,#ffe082,#ffb300,#ffe082,#ffb300,#ffe082);
-background-size:200% 100%;animation:crGold 5s linear infinite}
-@keyframes crGold{0%{background-position:0 0}100%{background-position:200% 0}}
+body::after{
+  content:'';
+  position:fixed;top:0;left:0;right:0;height:4px;
+  z-index:99999;pointer-events:none;
+  background:linear-gradient(90deg,#ffe082,#ffb300,#ffe082,#ffb300,#ffe082);
+  background-size:200% 100%;
+  animation:crGold 5s linear infinite;
+}
+@keyframes crGold{
+  0%{background-position:0 0}
+  100%{background-position:200% 0}
+}
 
-button{border-radius:13px!important;font-weight:900!important;border:2px solid rgba(255,255,255,.85)!important;
-box-shadow:0 4px 0 rgba(0,0,0,.38),0 8px 16px rgba(0,0,0,.28),inset 0 2px 0 rgba(255,255,255,.35)!important;
-transition:transform .08s ease,box-shadow .08s ease;text-shadow:0 1px 2px rgba(0,0,0,.35)}
-button:active{transform:translateY(3px);
-box-shadow:0 1px 0 rgba(0,0,0,.38),inset 0 2px 0 rgba(255,255,255,.3)!important}
-button:disabled{filter:grayscale(.55) brightness(.8);box-shadow:none!important}
+/* ===== КНОПКИ ===== */
+button{
+  border-radius:13px !important;
+  font-weight:900 !important;
+  border:2px solid rgba(255,255,255,.85) !important;
+  box-shadow:
+    0 4px 0 rgba(0,0,0,.38),
+    0 8px 16px rgba(0,0,0,.26),
+    inset 0 2px 0 rgba(255,255,255,.35) !important;
+  transition:transform .08s ease, box-shadow .08s ease;
+  text-shadow:0 1px 2px rgba(0,0,0,.35);
+}
+button:active{
+  transform:translateY(3px);
+  box-shadow:0 1px 0 rgba(0,0,0,.38), inset 0 2px 0 rgba(255,255,255,.3) !important;
+}
+button:disabled{
+  filter:grayscale(.55) brightness(.82);
+  box-shadow:none !important;
+}
 
-.nav-btn,.nb,.emr button,.arena-dot,.sp b,.deck-stack .deck-card,.promo-opt,.rk{
-border:0!important;box-shadow:none!important;border-radius:0!important;transform:none!important;text-shadow:none}
-.emr button,.rk{border-radius:9px!important}
+/* не трогаем нижнее меню, иконки и игровые элементы */
+.nav-btn,.nb,.emr button,.emopt,.sp b,.deck-stack .deck-card,
+.arena-dot,.promo-opt,.cell,.rk,.promo-opt{
+  border:0 !important;
+  box-shadow:none !important;
+  transform:none !important;
+  text-shadow:none !important;
+}
+.emr button,.emopt,.rk{border-radius:9px !important}
 
-.nav,.bottom-nav{background:linear-gradient(180deg,#2a4a9e 0%,#12285c 100%)!important;
-border-top:3px solid var(--g2)!important;box-shadow:0 -4px 16px rgba(0,0,0,.45)!important}
-.nb,.nav-btn{color:#a8c4ea!important}
-.nb i,.nav-btn .icon-wrap{background:linear-gradient(180deg,#1c3f8a,#0e2352)!important;
-box-shadow:inset 0 2px 3px rgba(255,255,255,.14),inset 0 -3px 6px rgba(0,0,0,.5)!important}
-.nb.on,.nav-btn.active{color:#ffd447!important}
-.nb.on i,.nav-btn.active .icon-wrap{background:linear-gradient(180deg,#ffe082,#ffb300)!important;
-box-shadow:0 3px 10px rgba(255,179,0,.55),inset 0 2px 3px rgba(255,255,255,.6)!important}
+/* ===== НИЖНЕЕ МЕНЮ ===== */
+.nav,.bottom-nav{
+  background:linear-gradient(180deg,#2a4a9e 0%,#12285c 100%) !important;
+  border-top:3px solid var(--gold2) !important;
+  box-shadow:0 -4px 16px rgba(0,0,0,.45) !important;
+}
+.nb,.nav-btn{color:#a8c4ea !important;background:transparent !important}
+.nb i,.nav-btn .icon-wrap{
+  background:linear-gradient(180deg,#1c3f8a,#0e2352) !important;
+  border-radius:50% !important;
+  box-shadow:inset 0 2px 3px rgba(255,255,255,.14), inset 0 -3px 6px rgba(0,0,0,.5) !important;
+}
+.nb.on,.nav-btn.active{color:#ffd447 !important}
+.nb.on i,.nav-btn.active .icon-wrap{
+  background:linear-gradient(180deg,#ffe082,#ffb300) !important;
+  box-shadow:0 3px 10px rgba(255,179,0,.55), inset 0 2px 3px rgba(255,255,255,.6) !important;
+}
 
-.cc,.mb,.leaderboard-item,.offer-card,.cbar,.cstat,.chat,.msg{
-border-radius:16px!important;border:3px solid var(--g2)!important;
-background:linear-gradient(180deg,#22437f,#122a5e)!important;
-box-shadow:0 5px 0 #0b1b45,0 9px 20px rgba(0,0,0,.3),inset 0 2px 0 rgba(255,255,255,.16)!important;color:#fff}
+/* ===== ПАНЕЛИ И КАРТОЧКИ ===== */
+.cc,.mb,.leaderboard-item,.offer-card,.chat,.msg,.cstat{
+  border-radius:16px !important;
+  border:3px solid var(--gold2) !important;
+  background:linear-gradient(180deg,#22437f,#122a5e) !important;
+  box-shadow:
+    0 5px 0 var(--deep3),
+    0 9px 20px rgba(0,0,0,.28),
+    inset 0 2px 0 rgba(255,255,255,.16) !important;
+  color:#fff;
+}
 .cc:active,.leaderboard-item:active{transform:translateY(2px)}
 
-.my-row{border-color:#ffe082!important;background:linear-gradient(180deg,#3c5aa8,#1b3a80)!important;
-box-shadow:0 5px 0 #0b1b45,0 0 22px rgba(255,224,130,.5)!important}
+.my-row{
+  border-color:#ffe082 !important;
+  background:linear-gradient(180deg,#3c5aa8,#1b3a80) !important;
+  box-shadow:0 5px 0 var(--deep3), 0 0 22px rgba(255,224,130,.5) !important;
+}
 
-.cbar{background:linear-gradient(180deg,#ffd447,#e08c00)!important;border-color:#fff!important;
-box-shadow:0 5px 0 #8a4f00,0 9px 20px rgba(0,0,0,.3)!important}
-.cbar .cn{color:#3b1f00!important}
-.cbar .cs{color:#5a2d00!important}
+.cbar{
+  border-radius:16px !important;
+  border:3px solid #fff !important;
+  background:linear-gradient(180deg,#ffd447,#e08c00) !important;
+  box-shadow:0 5px 0 #8a4f00, 0 9px 20px rgba(0,0,0,.28) !important;
+}
+.cbar .cn{color:#3b1f00 !important}
+.cbar .cs{color:#5a2d00 !important}
 
-.chat{background:linear-gradient(180deg,#16305e,#0a1c40)!important}
-.msg{background:linear-gradient(180deg,#22437f,#16305e)!important;border-width:2px!important}
-.msg.mine{background:linear-gradient(180deg,#1f7a45,#0f4a29)!important;border-color:#43e97b!important}
+.chat{background:linear-gradient(180deg,#16305e,#0a1c40) !important}
+.msg{background:linear-gradient(180deg,#22437f,#16305e) !important;border-width:2px !important}
+.msg.mine{background:linear-gradient(180deg,#1f7a45,#0f4a29) !important;border-color:#43e97b !important}
 
-h1,.tt,.hist-title{text-shadow:0 2px 0 rgba(0,0,0,.3),0 0 16px rgba(255,212,71,.35)}
-.rk{background:linear-gradient(180deg,#e2e8f0,#94a3b8)!important;color:#0f172a!important;
-border-radius:9px!important;display:flex;align-items:center;justify-content:center}
-.rk.r1{background:linear-gradient(180deg,#ffe680,#e0a200)!important}
-.rk.r2{background:linear-gradient(180deg,#eef2f7,#9aa7b8)!important}
-.rk.r3{background:linear-gradient(180deg,#f0b27a,#b06a2c)!important}
+h1,.tt{text-shadow:0 2px 0 rgba(0,0,0,.3), 0 0 16px rgba(255,212,71,.35)}
 
-.pill{background:linear-gradient(180deg,#ffe082,#ffb300)!important;color:#3b1f00!important;
-box-shadow:0 2px 0 #b45309}
+.rk{background:linear-gradient(180deg,#e2e8f0,#94a3b8) !important;color:#0f172a !important}
+.rk.r1{background:linear-gradient(180deg,#ffe680,#e0a200) !important}
+.rk.r2{background:linear-gradient(180deg,#eef2f7,#9aa7b8) !important}
+.rk.r3{background:linear-gradient(180deg,#f0b27a,#b06a2c) !important}
 
+.pill{
+  background:linear-gradient(180deg,#ffe082,#ffb300) !important;
+  color:#3b1f00 !important;
+  box-shadow:0 2px 0 #b45309;
+}
+
+/* ===== КНОПКИ-ДЕЙСТВИЯ ===== */
 .cj,.mi.pl,.bw,.mbtns button,#cOk,#bnBtn,.btn-buy{
-background:linear-gradient(180deg,#5ef08a,#1f9e42)!important;color:#fff!important;border-color:#fff!important;
-box-shadow:0 4px 0 #0b5426,0 8px 14px rgba(0,0,0,.28),inset 0 2px 0 rgba(255,255,255,.4)!important}
-.cj:disabled{background:linear-gradient(180deg,#5a7398,#33486b)!important}
+  background:linear-gradient(180deg,#5ef08a,#1f9e42) !important;
+  color:#fff !important;
+  border-color:#fff !important;
+  box-shadow:0 4px 0 #0b5426, 0 8px 14px rgba(0,0,0,.26), inset 0 2px 0 rgba(255,255,255,.4) !important;
+}
+.cj:disabled{background:linear-gradient(180deg,#5a7398,#33486b) !important;color:#c6d8ff !important}
 
-.mi.sh,.bw.bl,#pfShare{background:linear-gradient(180deg,#a98bff,#6533c9)!important;
-box-shadow:0 4px 0 #3d1a7a,0 8px 14px rgba(0,0,0,.28),inset 0 2px 0 rgba(255,255,255,.35)!important}
-.mi.ad,#pfAdd{background:linear-gradient(180deg,#5ea8ff,#1e63c8)!important;
-box-shadow:0 4px 0 #123b7a,0 8px 14px rgba(0,0,0,.28),inset 0 2px 0 rgba(255,255,255,.35)!important}
-.mi.kk,.clv,.bw.gy{background:linear-gradient(180deg,#f4665e,#c62828)!important;
-box-shadow:0 4px 0 #7f1d1d,0 8px 14px rgba(0,0,0,.28),inset 0 2px 0 rgba(255,255,255,.35)!important}
+.mi.sh,.bw.bl,#pfShare{
+  background:linear-gradient(180deg,#a98bff,#6533c9) !important;
+  box-shadow:0 4px 0 #3d1a7a, 0 8px 14px rgba(0,0,0,.26), inset 0 2px 0 rgba(255,255,255,.35) !important;
+}
+.mi.ad,#pfAdd{
+  background:linear-gradient(180deg,#5ea8ff,#1e63c8) !important;
+  box-shadow:0 4px 0 #123b7a, 0 8px 14px rgba(0,0,0,.26), inset 0 2px 0 rgba(255,255,255,.35) !important;
+}
+.mi.kk,.clv,.bw.gy{
+  background:linear-gradient(180deg,#f4665e,#c62828) !important;
+  box-shadow:0 4px 0 #7f1d1d, 0 8px 14px rgba(0,0,0,.26), inset 0 2px 0 rgba(255,255,255,.35) !important;
+}
 
-.cjbig{background:linear-gradient(180deg,#5ef08a,#1f9e42)!important;
-box-shadow:0 5px 0 #0b5426,0 10px 18px rgba(0,0,0,.3),inset 0 2px 0 rgba(255,255,255,.4)!important;
-border:3px solid #fff!important}
-.cjoined{background:rgba(255,255,255,.14)!important;border:3px solid #43e97b!important;color:#d6ffe4!important}
+.cjbig{
+  background:linear-gradient(180deg,#5ef08a,#1f9e42) !important;
+  box-shadow:0 5px 0 #0b5426, 0 10px 18px rgba(0,0,0,.3), inset 0 2px 0 rgba(255,255,255,.4) !important;
+  border:3px solid #fff !important;
+}
+.cjoined{
+  background:rgba(255,255,255,.14) !important;
+  border:3px solid #43e97b !important;
+  color:#d6ffe4 !important;
+}
 
-.mod{background:rgba(4,14,36,.88)!important}
-.mbox,.custom-modal-content{background:linear-gradient(180deg,#2a4a9e,#12285c)!important;
-border:3px solid var(--g2)!important;border-radius:18px!important;
-box-shadow:0 10px 0 #0b1b45,0 22px 44px rgba(0,0,0,.6)!important;color:#fff}
-.ctop{background:linear-gradient(180deg,#4ab3f8,#1b6fd6)!important;border-bottom:3px solid var(--g2)!important}
-.x,.custom-modal-close,#cClose,#sClose{background:linear-gradient(180deg,#f4665e,#c62828)!important;
-border:2px solid #fff!important;color:#fff!important;box-shadow:0 3px 0 #7f1d1d!important}
+/* ===== ОКНА ===== */
+.mod{background:rgba(4,14,36,.86) !important}
 
-input,textarea,select{background:#0e1730!important;color:#fff!important;
-border:2px solid #3b82f6!important;border-radius:12px!important;outline:none!important}
-input:focus,textarea:focus,select:focus{border-color:#ffd447!important;
-box-shadow:0 0 0 3px rgba(255,212,71,.28)!important}
+.mbox{
+  background:linear-gradient(180deg,#2a4a9e,#12285c) !important;
+  border:3px solid var(--gold2) !important;
+  border-radius:18px !important;
+  box-shadow:0 10px 0 var(--deep3), 0 22px 44px rgba(0,0,0,.6) !important;
+  color:#fff;
+}
 
-.banner-title{background:linear-gradient(180deg,#ffe082,#ffb300)!important;color:#3b1f00!important;
-border:3px solid #fff!important;border-radius:13px!important;
-box-shadow:0 5px 0 #b45309,0 10px 18px rgba(0,0,0,.3)!important;text-shadow:0 1px 0 rgba(255,255,255,.6)!important}
+.ctop{
+  background:linear-gradient(180deg,#4ab3f8,#1b6fd6) !important;
+  border-bottom:3px solid var(--gold2) !important;
+}
 
-.currency,.cu{background:linear-gradient(180deg,#12306b,#0a1c40)!important;
-border:2px solid rgba(255,255,255,.28)!important;
-box-shadow:0 2px 0 rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.2)!important}
-.currency.trophy,.cu{color:#ffe36b!important;border-color:#ffd447!important}
-.currency.coin{color:#ffd700!important;border-color:#c9a227!important}
-.currency.gem{color:#5ef08a!important;border-color:#2fa85a!important}
+.x,#cClose,#sClose{
+  background:linear-gradient(180deg,#f4665e,#c62828) !important;
+  border:2px solid #fff !important;
+  color:#fff !important;
+  box-shadow:0 3px 0 #7f1d1d !important;
+}
 
-.tab{background:linear-gradient(180deg,#1c3f8a,#0e2352)!important;
-border:2px solid #4a72c0!important;color:#a8c4ea!important}
-.tab.on{background:linear-gradient(180deg,#ffe082,#ffb300)!important;color:#3b1f00!important;
-border-color:#fff!important;box-shadow:0 4px 0 #b45309!important}
-.sub-tab-btn{background:linear-gradient(180deg,#1c3f8a,#0e2352)!important;
-color:#a8c4ea!important;border:2px solid #4a72c0!important}
-.sub-tab-btn.active{background:linear-gradient(180deg,#ffe082,#ffb300)!important;
-color:#3b1f00!important;border-color:#fff!important;box-shadow:0 4px 0 #b45309!important}
+/* ===== ПОЛЯ ВВОДА ===== */
+input,textarea,select{
+  background:#0e1730 !important;
+  color:#fff !important;
+  border:2px solid #3b82f6 !important;
+  border-radius:12px !important;
+  outline:none !important;
+}
+input:focus,textarea:focus,select:focus{
+  border-color:#ffd447 !important;
+  box-shadow:0 0 0 3px rgba(255,212,71,.28) !important;
+}
 
-.card{border-radius:13px!important;
-box-shadow:0 5px 0 rgba(0,0,0,.35),0 9px 16px rgba(0,0,0,.4),inset 0 2px 2px rgba(255,255,255,.1)!important}
-.card.picked{box-shadow:0 0 18px rgba(67,233,123,.6),0 5px 0 #0b5426!important}
+/* ===== ПЛАШКИ И ВАЛЮТА ===== */
+.banner-title{
+  background:linear-gradient(180deg,#ffe082,#ffb300) !important;
+  color:#3b1f00 !important;
+  border:3px solid #fff !important;
+  border-radius:13px !important;
+  box-shadow:0 5px 0 #b45309, 0 10px 18px rgba(0,0,0,.28) !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.6) !important;
+}
 
-#pfCard{border-left:3px solid var(--g2);border-right:3px solid var(--g2)}
-#pfTop{border-bottom:3px solid var(--g2)!important}
-.pf-sec{border:3px solid rgba(255,212,71,.55)!important;
-box-shadow:0 6px 0 rgba(0,0,0,.35),0 12px 24px rgba(0,0,0,.3)!important}
-.pf-cell{border:2px solid rgba(255,212,71,.5);box-shadow:0 3px 0 rgba(0,0,0,.15)!important}
-.pf-btns button{border:3px solid #fff!important;
-box-shadow:0 4px 0 rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.4)!important}
+.currency,.cu{
+  background:linear-gradient(180deg,#12306b,#0a1c40) !important;
+  border:2px solid rgba(255,255,255,.28) !important;
+  box-shadow:0 2px 0 rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.2) !important;
+}
+.currency.trophy,.cu{color:#ffe36b !important;border-color:#ffd447 !important}
+.currency.coin{color:#ffd700 !important;border-color:#c9a227 !important}
+.currency.gem{color:#5ef08a !important;border-color:#2fa85a !important}
+
+/* ===== ВКЛАДКИ ===== */
+.tab,.sub-tab-btn{
+  background:linear-gradient(180deg,#1c3f8a,#0e2352) !important;
+  border:2px solid #4a72c0 !important;
+  color:#a8c4ea !important;
+}
+.tab.on,.sub-tab-btn.active{
+  background:linear-gradient(180deg,#ffe082,#ffb300) !important;
+  color:#3b1f00 !important;
+  border-color:#fff !important;
+  box-shadow:0 4px 0 #b45309 !important;
+}
+
+.ltab{
+  background:linear-gradient(180deg,#1c3f8a,#0e2352) !important;
+  border:2px solid #4a72c0 !important;
+  color:#a8c4ea !important;
+}
+.ltab.on{
+  background:linear-gradient(180deg,#ffe082,#ffb300) !important;
+  color:#3b1f00 !important;
+  border-color:#fff !important;
+  box-shadow:0 4px 0 #b45309 !important;
+}
+
+/* ===== КАРТЫ КОЛОДЫ ===== */
+.card{
+  border-radius:13px !important;
+  box-shadow:
+    0 5px 0 rgba(0,0,0,.35),
+    0 9px 16px rgba(0,0,0,.4),
+    inset 0 2px 2px rgba(255,255,255,.1) !important;
+}
+.card.picked{
+  box-shadow:0 0 18px rgba(67,233,123,.6), 0 5px 0 #0b5426 !important;
+}
+
+/* ===== ПРОФИЛЬ ===== */
+#pfTop{border-bottom:3px solid var(--gold2) !important}
+.pf-sec{
+  border:3px solid rgba(255,212,71,.55) !important;
+  box-shadow:0 6px 0 rgba(0,0,0,.35), 0 12px 24px rgba(0,0,0,.3) !important;
+}
+.pf-cell{border:2px solid rgba(255,212,71,.5)}
+.pf-btns button{
+  border:3px solid #fff !important;
+  box-shadow:0 4px 0 rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.4) !important;
+}
 .pf-tag{box-shadow:0 3px 0 #b45309}
 
+/* ===== ПРОЧЕЕ ===== */
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-track{background:rgba(255,255,255,.08)}
-::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#ffe082,#ffb300);border-radius:8px}
+::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,#ffe082,#ffb300);
+  border-radius:8px;
+}
 
-.emp,.hist-empty,.state-msg,.pf-load{color:#eaf3ff!important;
-text-shadow:0 2px 0 rgba(0,0,0,.25);font-weight:700}
+.emp,.hist-empty,.state-msg,.pf-load{
+  color:#eaf3ff !important;
+  text-shadow:0 2px 0 rgba(0,0,0,.25);
+  font-weight:700;
+}
 
-.tst{background:linear-gradient(180deg,#22437f,#122a5e)!important;border:2px solid #ffd447!important;
-color:#ffe9a3!important;box-shadow:0 8px 20px rgba(0,0,0,.5)!important}
+.tst{
+  background:linear-gradient(180deg,#22437f,#122a5e) !important;
+  border:2px solid #ffd447 !important;
+  color:#ffe9a3 !important;
+  box-shadow:0 8px 20px rgba(0,0,0,.5) !important;
+}
 
-.back-btn,.hist-back,.rp-back{background:linear-gradient(180deg,#ffe082,#ffb300)!important;
-color:#3b1f00!important;border:3px solid #fff!important;box-shadow:0 4px 0 #b45309!important;
-border-radius:13px!important}
-
-#rpBoard{border:4px solid var(--g2)!important;box-shadow:0 10px 0 #b45309,0 16px 30px rgba(0,0,0,.7)!important}
+.back-btn,.hist-back{
+  background:linear-gradient(180deg,#ffe082,#ffb300) !important;
+  color:#3b1f00 !important;
+  border:3px solid #fff !important;
+  box-shadow:0 4px 0 #b45309 !important;
+  border-radius:13px !important;
+}
