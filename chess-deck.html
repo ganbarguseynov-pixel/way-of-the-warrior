@@ -5,93 +5,83 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Chess Royale - Колода</title>
+<link rel="stylesheet" href="royale.css?v=1">
 <style>
-body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;padding-bottom:80px;}
-.top-bar{width:100%;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,#1a1a2e,#0f0f1e);border-bottom:1px solid rgba(255,255,255,0.1);z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.5);}
-.currency-row{display:flex;justify-content:space-between;align-items:center;}
-.currency{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:10px;font-weight:bold;box-shadow:inset 0 2px 4px rgba(0,0,0,0.6),inset 0 -1px 0 rgba(255,255,255,0.1);}
-.currency.coins{color:#ffcc00;border:1px solid #ffcc00;text-shadow:0 0 8px rgba(255,204,0,0.5);}
-.currency.gems{color:#34c759;border:1px solid #34c759;text-shadow:0 0 8px rgba(52,199,89,0.5);}
-.sub-tabs{display:flex;gap:5px;margin-top:5px;}
-.sub-tab-btn{flex:1;background:linear-gradient(145deg,#1e293b,#0f172a);color:#8e8e93;border:1px solid #3a3a3c;padding:10px;border-radius:8px;font-weight:bold;cursor:pointer;transition:0.2s;font-size:12px;box-shadow:0 3px 6px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08);}
-.sub-tab-btn:active{transform:scale(0.97);}
-.sub-tab-btn.active{background:linear-gradient(145deg,#64748b,#334155);color:#fff;border-color:#94a3b8;box-shadow:0 4px 10px rgba(100,116,139,0.5),inset 0 1px 0 rgba(255,255,255,0.25);}
-.screen{display:none;flex-direction:column;width:100%;align-items:center;flex:1;overflow-y:auto;padding-bottom:90px;}
-.screen.active{display:flex;}
-.deck-area{width:95vw;max-width:400px;padding:10px;display:flex;flex-direction:column;gap:10px;}
-.deck-note{width:100%;text-align:center;font-size:11.5px;color:#94a3b8;line-height:1.45;padding:0 6px;}
-.deck-note b{color:#22c55e;}
-.deck-note.warn{color:#f59e0b;}
-.deck-picked{display:flex;gap:6px;justify-content:center;margin-top:2px;}
-.deck-slot{flex:1;height:34px;border-radius:9px;border:2px dashed #334155;display:flex;align-items:center;justify-content:center;font-size:17px;color:#475569;background:rgba(2,6,23,.4);}
-.deck-slot.filled{border-style:solid;border-color:#22c55e;color:#fff;background:linear-gradient(145deg,#064e3b,#022c22);}
-.deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px;}
-.card{background:linear-gradient(145deg,#1e293b,#0f172a);border-radius:10px;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:space-between;align-items:center;position:relative;padding:5px;border:2px solid #3a3a3c;box-shadow:0 6px 10px rgba(0,0,0,0.5),inset 0 2px 2px rgba(255,255,255,0.08),inset 0 -3px 5px rgba(0,0,0,0.5);}
-.card.common{border-color:#8e8e93;}
-.card.rare{border-color:#ff9500;background:linear-gradient(145deg,#1e293b,#2a1a00);box-shadow:0 6px 12px rgba(255,149,0,0.3),inset 0 2px 2px rgba(255,255,255,0.08),inset 0 -3px 5px rgba(0,0,0,0.5);}
-.card.epic{border-color:#af52de;background:linear-gradient(145deg,#1e293b,#1a0f2e);box-shadow:0 6px 12px rgba(175,82,222,0.3),inset 0 2px 2px rgba(255,255,255,0.08),inset 0 -3px 5px rgba(0,0,0,0.5);}
-.card.picked{border-color:#22c55e!important;box-shadow:0 0 16px rgba(34,197,94,0.55),inset 0 2px 2px rgba(255,255,255,0.08),inset 0 -3px 5px rgba(0,0,0,0.5);transform:translateY(-2px);}
-.card.soon{opacity:0.4;}
-.card-elixir{position:absolute;top:-6px;left:-6px;background:linear-gradient(145deg,#ff6b7a,#c0392b);color:#fff;font-weight:900;font-size:12px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:2;box-shadow:0 2px 5px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.5);}
-.pick-order{position:absolute;top:-6px;right:-6px;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-weight:900;font-size:12px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:3;box-shadow:0 2px 5px rgba(0,0,0,0.7);}
-.card-icon{font-size:30px;margin-top:15px;color:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,0.7));}
-.card-name{font-size:10px;color:#fff;text-align:center;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.8);}
-.card-level{font-size:9px;color:#ffcc00;background:rgba(0,0,0,0.8);padding:2px 5px;border-radius:4px;width:90%;text-align:center;margin-top:5px;box-shadow:inset 0 1px 2px rgba(0,0,0,0.5);}
-.setup-area{width:95vw;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:10px;}
-.setup-hint{text-align:center;color:#94a3b8;font-size:12px;margin:0;min-height:18px;padding:0 10px;line-height:1.45;}
-.setup-hint b{color:#22c55e;}
-.board-container{position:relative;width:100%;aspect-ratio:1/1;border:4px solid #475569;border-radius:14px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.95),0 8px 20px rgba(0,0,0,0.7),0 0 0 2px rgba(255,255,255,0.06),inset 0 0 40px rgba(0,0,0,0.6);background:linear-gradient(145deg,#1a1f2e,#0f1420);}
-.board{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:100%;height:100%;}
-.cell{position:relative;display:flex;justify-content:center;align-items:center;font-size:32px;cursor:default;transition:filter 0.15s;}
-.cell.white{background:linear-gradient(145deg,#b8c4d4 0%,#94a3b8 50%,#7a8ba0 100%);box-shadow:inset 1px 1px 2px rgba(255,255,255,0.5),inset -1px -1px 3px rgba(0,0,0,0.25);}
-.cell.black{background:linear-gradient(145deg,#4a5a6e 0%,#3a4a5e 50%,#2a3a4e 100%);box-shadow:inset 1px 1px 2px rgba(255,255,255,0.15),inset -1px -1px 3px rgba(0,0,0,0.5);}
-.cell.locked{filter:brightness(0.45) saturate(0.3);}
-.cell.setup-zone{background-color:rgba(255,204,0,0.15);}
-.board.edit-mode .cell.setup-zone{cursor:pointer;background-color:rgba(255,204,0,0.28);animation:zonePulse 2s infinite alternate;}
-@keyframes zonePulse{from{background-color:rgba(255,204,0,0.18);}to{background-color:rgba(255,204,0,0.35);}}
-.cell.selected{background:linear-gradient(145deg,#4ade80,#22c55e 60%,#15803d)!important;box-shadow:inset 0 0 12px rgba(255,255,255,0.7),0 0 15px rgba(74,222,128,0.8)!important;}
-.piece{position:relative;z-index:2;pointer-events:none;margin-bottom:8px;filter:drop-shadow(0 4px 5px rgba(0,0,0,0.8)) drop-shadow(0 1px 0 rgba(255,255,255,0.15));}
-.cell.locked .piece{opacity:0.25;}
-.top-cost-badge{position:absolute;top:-4px;left:50%;transform:translateX(-50%);background:linear-gradient(145deg,#c084fc,#7c3aed);color:#fff;border-radius:50%;width:15px;height:15px;font-size:9px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1.5px solid #fff;z-index:10;box-shadow:0 2px 5px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.5);}
-.bottom-hp-bar{position:absolute;bottom:12px;left:5%;width:90%;height:11px;border-radius:4px;display:flex;justify-content:center;align-items:center;z-index:10;border:1px solid #000;box-sizing:border-box;background:linear-gradient(180deg,#34c759,#34c75999);box-shadow:inset 0 2px 3px rgba(0,0,0,0.5),inset 0 -1px 2px rgba(255,255,255,0.3),0 1px 2px rgba(0,0,0,0.7);}
-.lvl-num{font-size:9px;font-weight:900;color:#000;line-height:11px;pointer-events:none;}
-.hp-text-below{position:absolute;bottom:1px;left:0;width:100%;text-align:center;font-size:8px;font-weight:bold;color:#fff;z-index:10;pointer-events:none;white-space:nowrap;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 1px 3px rgba(0,0,0,0.9);}
-.army-counts{width:100%;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;padding:0 8px;}
-.army-chip{background:rgba(2,6,23,.6);border:1px solid #334155;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700;color:#94a3b8;}
-.army-chip.ok{border-color:#15803d;color:#4ade80;}
-.army-chip.bad{border-color:#991b1b;color:#fca5a5;}
-.btn-action{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;box-shadow:0 6px 12px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.2);transition:transform 0.1s;border:none;}
-.btn-action:active{transform:scale(0.97);}
-.btn-edit{background:linear-gradient(145deg,#3b82f6,#1e40af);color:#fff;}
-.btn-save{background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;}
-.btn-cancel{background:linear-gradient(145deg,#475569,#1e293b);color:#fff;border:1px solid #64748b;}
-.btn-reset{background:linear-gradient(145deg,#b45309,#78350f);color:#fff;}
-.setup-buttons{width:100%;display:flex;flex-direction:column;gap:8px;padding:0 10px;}
-.setup-buttons-row{display:flex;gap:8px;width:100%;}
-.setup-buttons-row .btn-action{flex:1;}
-.lock-badge{display:inline-block;background:linear-gradient(145deg,#475569,#1e293b);color:#ffcc00;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:bold;margin-left:6px;box-shadow:0 2px 4px rgba(0,0,0,0.5);}
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120px);background:linear-gradient(135deg,#1e293b,#0f172a);color:#fff;padding:14px 24px;border-radius:12px;font-weight:bold;z-index:9999;border:2px solid #34c759;box-shadow:0 10px 30px rgba(0,0,0,0.8),0 0 20px rgba(52,199,89,0.4);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);font-size:14px;text-align:center;max-width:80vw;}
-.toast.show{transform:translateX(-50%) translateY(0);}
-.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 15px rgba(0,0,0,0.7);}
-.nav-btn{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;transition:0.2s;}
-.nav-btn .icon-wrap{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);box-shadow:0 3px 6px rgba(0,0,0,0.5),inset 0 2px 3px rgba(255,255,255,0.08),inset 0 -3px 6px rgba(0,0,0,0.6);transition:all 0.3s;}
-.nav-btn .icon{font-size:20px;text-shadow:0 1px 2px rgba(0,0,0,0.6);transition:transform 0.3s;}
-.nav-btn.active{color:#ffcc00;}
-.nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500);box-shadow:0 3px 10px rgba(255,204,0,0.4),inset 0 2px 3px rgba(255,255,255,0.4);}
-.nav-btn.active .icon{transform:scale(1.12);}
-.deck-stack{position:relative;width:24px;height:28px;}
-.deck-stack .deck-card{position:absolute;width:16px;height:22px;border-radius:3px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 1px 3px rgba(0,0,0,0.6);}
-.deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c);}
-.deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe);}
-.deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900;}
+body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;padding-bottom:88px}
+.top-bar{width:100%;padding:12px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;z-index:10}
+.currency-row{display:flex;justify-content:center;gap:8px}
+.currency{display:flex;align-items:center;gap:5px;padding:5px 14px;border-radius:10px;font-weight:900}
+.sub-tabs{display:flex;gap:6px;margin-top:4px}
+.sub-tab-btn{flex:1;padding:10px;border-radius:10px;font-weight:900;cursor:pointer;font-size:12.5px}
+.screen{display:none;flex-direction:column;width:100%;align-items:center;flex:1;overflow-y:auto;padding-bottom:90px}
+.screen.active{display:flex}
+.deck-area{width:95vw;max-width:400px;padding:10px;display:flex;flex-direction:column;gap:10px}
+.deck-note{width:100%;text-align:center;font-size:12px;color:#dbe9ff;font-weight:700;line-height:1.45;padding:0 6px}
+.deck-note b{color:#43e97b}
+.deck-note.warn{color:#ffd447}
+.deck-picked{display:flex;gap:6px;justify-content:center;margin-top:2px}
+.deck-slot{flex:1;height:36px;border-radius:9px;border:2px dashed rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:18px;color:#c6d8ff;background:rgba(2,6,23,.35)}
+.deck-slot.filled{border-style:solid;border-color:#43e97b;color:#fff;background:linear-gradient(145deg,#0f6b3a,#064e26)}
+.deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
+.card{border-radius:11px;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:space-between;align-items:center;position:relative;padding:5px}
+.card.common{border-color:#9aa7b8}
+.card.rare{border-color:#ffb300;background:linear-gradient(145deg,#2a2a48,#2a1a00)}
+.card.epic{border-color:#b06aff;background:linear-gradient(145deg,#2a2a48,#250f3e)}
+.card.picked{border-color:#43e97b!important}
+.card.soon{opacity:.45}
+.card-elixir{position:absolute;top:-6px;left:-6px;background:linear-gradient(145deg,#ff6b7a,#c0392b);color:#fff;font-weight:900;font-size:12px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:2}
+.pick-order{position:absolute;top:-6px;right:-6px;background:linear-gradient(145deg,#5ef08a,#1f9e42);color:#083b1c;font-weight:900;font-size:12px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:3}
+.card-icon{font-size:30px;margin-top:16px;color:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,.7))}
+.card-name{font-size:10px;color:#fff;text-align:center;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.card-level{font-size:9px;color:#ffd447;background:rgba(0,0,0,.75);padding:2px 5px;border-radius:4px;width:90%;text-align:center;margin-top:5px;font-weight:800}
+.setup-area{width:95vw;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:10px}
+.setup-hint{text-align:center;color:#dbe9ff;font-size:12px;margin:0;min-height:18px;padding:0 10px;line-height:1.45;font-weight:700}
+.board-container{position:relative;width:100%;aspect-ratio:1/1;border:4px solid #ffd447;border-radius:14px;overflow:hidden;box-shadow:0 10px 0 #b45309,0 18px 40px rgba(0,0,0,.6);background:linear-gradient(145deg,#1a1f2e,#0f1420)}
+.board{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:100%;height:100%}
+.cell{position:relative;display:flex;justify-content:center;align-items:center;font-size:32px}
+.cell.white{background:linear-gradient(145deg,#b8c4d4,#94a3b8 50%,#7a8ba0)}
+.cell.black{background:linear-gradient(145deg,#4a5a6e,#3a4a5e 50%,#2a3a4e)}
+.cell.locked{filter:brightness(.42) saturate(.3)}
+.cell.setup-zone{background-color:rgba(255,212,71,.15)}
+.board.edit-mode .cell.setup-zone{cursor:pointer;background-color:rgba(255,212,71,.3);animation:zonePulse 2s infinite alternate}
+@keyframes zonePulse{from{background-color:rgba(255,212,71,.2)}to{background-color:rgba(255,212,71,.42)}}
+.cell.selected{background:linear-gradient(145deg,#4ade80,#22c55e 60%,#15803d)!important;box-shadow:inset 0 0 12px rgba(255,255,255,.7),0 0 15px rgba(74,222,128,.8)!important}
+.piece{position:relative;z-index:2;pointer-events:none;margin-bottom:8px;filter:drop-shadow(0 4px 5px rgba(0,0,0,.8))}
+.top-cost-badge{position:absolute;top:-4px;left:50%;transform:translateX(-50%);background:linear-gradient(145deg,#c084fc,#7c3aed);color:#fff;border-radius:50%;width:15px;height:15px;font-size:9px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1.5px solid #fff;z-index:10}
+.bottom-hp-bar{position:absolute;bottom:12px;left:5%;width:90%;height:11px;border-radius:4px;display:flex;justify-content:center;align-items:center;z-index:10;border:1px solid #000;background:linear-gradient(180deg,#34c759,#34c75999)}
+.lvl-num{font-size:9px;font-weight:900;color:#000;line-height:11px}
+.hp-text-below{position:absolute;bottom:1px;left:0;width:100%;text-align:center;font-size:8px;font-weight:bold;color:#fff;z-index:10;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000}
+.army-counts{width:100%;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;padding:0 8px}
+.army-chip{border-radius:8px;padding:3px 8px;font-size:11px;font-weight:800;background:rgba(2,6,23,.6);border:2px solid #4a72c0;color:#c6d8ff}
+.army-chip.ok{border-color:#43e97b;color:#8cf0b0}
+.army-chip.bad{border-color:#f4665e;color:#ffc4c4}
+.btn-action{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer}
+.btn-edit{background:linear-gradient(180deg,#5ea8ff,#1e63c8);color:#fff}
+.btn-save{background:linear-gradient(180deg,#5ef08a,#1f9e42);color:#fff}
+.btn-cancel{background:linear-gradient(180deg,#8fa8cc,#33486b);color:#fff}
+.btn-reset{background:linear-gradient(180deg,#f0a35a,#a2560f);color:#fff}
+.setup-buttons{width:100%;display:flex;flex-direction:column;gap:8px;padding:0 10px}
+.setup-buttons-row{display:flex;gap:8px;width:100%}
+.setup-buttons-row .btn-action{flex:1}
+.lock-badge{display:inline-block;background:linear-gradient(180deg,#475569,#1e293b);color:#ffd447;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;margin-left:6px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120px);background:linear-gradient(135deg,#22437f,#122a5e);color:#fff;padding:14px 22px;border-radius:12px;font-weight:800;z-index:9999;border:3px solid #34c759;transition:transform .4s cubic-bezier(.4,0,.2,1);font-size:14px;text-align:center;max-width:80vw}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.nav{position:fixed;bottom:0;left:0;width:100%;height:68px;display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom)}
+.nb{background:transparent;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px}
+.nb i{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-style:normal}
+.sp{width:24px;height:28px;position:relative}
+.sp b{position:absolute;width:16px;height:22px;border-radius:3px;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff}
+.sp b:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c)}
+.sp b:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe)}
+.sp b:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7)}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
 <div class="currency-row">
-<div class="currency coins">🪙 <span id="deck-coins">1250</span></div>
-<div class="currency gems">💎 <span id="deck-gems">50</span></div>
+<div class="currency">🪙 <span id="deck-coins">1250</span></div>
+<div class="currency">💎 <span id="deck-gems">50</span></div>
 </div>
 <div class="sub-tabs">
 <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
@@ -116,7 +106,7 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </div>
 <div class="setup-buttons">
 <button id="btn-edit" class="btn-action btn-edit" onclick="enterEditMode()">✏️ Редактировать расстановку</button>
-<div id="edit-controls" class="setup-buttons-row" style="display:none;">
+<div id="edit-controls" class="setup-buttons-row" style="display:none">
 <button id="btn-reset" class="btn-action btn-reset" onclick="resetSetup()">↺ Сброс</button>
 <button id="btn-cancel" class="btn-action btn-cancel" onclick="cancelEdit()">✖ Отмена</button>
 <button id="btn-save" class="btn-action btn-save" onclick="saveSetup()">💾 Сохранить</button>
@@ -125,40 +115,19 @@ body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:
 </div>
 </div>
 
-<div class="bottom-nav">
-    <button class="nav-btn" onclick="window.location.href='chess-shop.html'">
-        <div class="icon-wrap"><span class="icon">🎁</span></div>
-        <span>Магазин</span>
-    </button>
-    <button class="nav-btn active" onclick="window.location.href='chess-deck.html'">
-        <div class="icon-wrap">
-            <div class="deck-stack">
-                <div class="deck-card"></div>
-                <div class="deck-card"></div>
-                <div class="deck-card">♠</div>
-            </div>
-        </div>
-        <span>Колода</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='chess-main.html'">
-        <div class="icon-wrap"><span class="icon">⚔️</span></div>
-        <span>Бой</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='chess-social.html'">
-        <div class="icon-wrap"><span class="icon">🛡️</span></div>
-        <span>Общение</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='leaderboard.html'">
-        <div class="icon-wrap"><span class="icon">🏆</span></div>
-        <span>Рейтинг</span>
-    </button>
+<div class="nav">
+<button class="nb" onclick="location.href='chess-shop.html'"><i>🎁</i><span>Магазин</span></button>
+<button class="nb on" onclick="location.href='chess-deck.html'"><i><span class="sp"><b></b><b></b><b>♠</b></span></i><span>Колода</span></button>
+<button class="nb" onclick="location.href='chess-main.html'"><i>⚔️</i><span>Бой</span></button>
+<button class="nb" onclick="location.href='chess-social.html'"><i>🛡️</i><span>Клан</span></button>
+<button class="nb" onclick="location.href='leaderboard.html'"><i>🏆</i><span>Рейтинг</span></button>
 </div>
 
 <script>
-let coins = parseInt(localStorage.getItem('cr_coins') || '1250');
-let gems = parseInt(localStorage.getItem('cr_gems') || '50');
-document.getElementById('deck-coins').innerText = coins;
-document.getElementById('deck-gems').innerText = gems;
+let coins=parseInt(localStorage.getItem('cr_coins')||'1250');
+let gems=parseInt(localStorage.getItem('cr_gems')||'50');
+document.getElementById('deck-coins').innerText=coins;
+document.getElementById('deck-gems').innerText=gems;
 
 function switchSubTab(tab){
 document.getElementById('screen-cards').classList.remove('active');
@@ -169,12 +138,10 @@ if(tab==='cards'){document.getElementById('screen-cards').classList.add('active'
 else{document.getElementById('screen-setup').classList.add('active');document.getElementById('sub-tab-setup-btn').classList.add('active');renderSetupBoard();}
 }
 
-/* ================= КАРТЫ ================= */
-
 const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
-const PIECE_TYPES = ['p','n','b','r','k','q'];
-const HAND_SIZE   = 4;
-const HOARD_KEY   = 'chessHand';
+const PIECE_TYPES=['p','n','b','r','k','q'];
+const HAND_SIZE=4;
+const HOARD_KEY='chessHand';
 
 const DECK_CARDS=[
 {name:'Пешка',icon:'♟',elixir:1,level:1,rarity:'common',type:'p'},
@@ -187,399 +154,238 @@ const DECK_CARDS=[
 {name:'Щит',icon:'🛡️',elixir:3,level:1,rarity:'common',soon:true}
 ];
 
-let chosenDeck = [];
+let chosenDeck=[];
 
 function loadDeck(){
-    let saved = null;
-    try {
-        const raw = JSON.parse(localStorage.getItem(HOARD_KEY) || 'null');
-        if (Array.isArray(raw)) saved = raw.filter(t => PIECE_TYPES.indexOf(t) >= 0);
-    } catch (e){}
-    if (!saved || !saved.length) saved = ['p','n','b','r'];
-    while (saved.length < HAND_SIZE) saved.push('p');
-    return saved.slice(0, HAND_SIZE);
+  let saved=null;
+  try{const raw=JSON.parse(localStorage.getItem(HOARD_KEY)||'null');if(Array.isArray(raw))saved=raw.filter(t=>PIECE_TYPES.indexOf(t)>=0);}catch(e){}
+  if(!saved||!saved.length)saved=['p','n','b','r'];
+  while(saved.length<HAND_SIZE)saved.push('p');
+  return saved.slice(0,HAND_SIZE);
 }
-
-function saveDeck(){
-    try { localStorage.setItem(HOARD_KEY, JSON.stringify(chosenDeck)); } catch (e){}
-}
+function saveDeck(){try{localStorage.setItem(HOARD_KEY,JSON.stringify(chosenDeck));}catch(e){}}
 
 function toggleCard(type){
-    const i = chosenDeck.indexOf(type);
-    if (i >= 0){
-        chosenDeck.splice(i, 1);
-    } else {
-        if (chosenDeck.length >= HAND_SIZE){
-            showToast('В колоде уже 4 карты — убери одну','#ff9500');
-            return;
-        }
-        chosenDeck.push(type);
-    }
-    saveDeck();
-    renderDeck();
+  const i=chosenDeck.indexOf(type);
+  if(i>=0)chosenDeck.splice(i,1);
+  else{
+    if(chosenDeck.length>=HAND_SIZE){showToast('В колоде уже 4 карты — убери одну','#ffb300');return;}
+    chosenDeck.push(type);
+  }
+  saveDeck();renderDeck();
 }
 
 function renderDeck(){
-    const grid = document.getElementById('deck-grid');
-    grid.innerHTML = '';
-
-    DECK_CARDS.forEach(function(card){
-        const cardDiv = document.createElement('div');
-        const picked = card.type ? chosenDeck.indexOf(card.type) : -1;
-        const isSoon = !!card.soon;
-
-        cardDiv.className = 'card ' + card.rarity +
-            (picked >= 0 ? ' picked' : '') +
-            (isSoon ? ' soon' : '');
-
-        let order = '';
-        if (picked >= 0){
-            order = '<div class="pick-order">' + (picked + 1) + '</div>';
-        }
-
-        cardDiv.innerHTML =
-            '<div class="card-elixir">' + card.elixir + '</div>' +
-            order +
-            '<div class="card-icon">' + card.icon + '</div>' +
-            '<div class="card-name">' + card.name + '</div>' +
-            '<div class="card-level">' + (isSoon ? 'скоро' : card.level + '-й ур.') + '</div>';
-
-        if (!isSoon && card.type){
-            cardDiv.onclick = function(){ toggleCard(card.type); };
-        }
-
-        grid.appendChild(cardDiv);
-    });
-
-    const picked = document.getElementById('deck-picked');
-    picked.innerHTML = '';
-    for (let i = 0; i < HAND_SIZE; i++){
-        const slot = document.createElement('div');
-        const t = chosenDeck[i];
-        if (t){
-            slot.className = 'deck-slot filled';
-            slot.textContent = PIECES[t] ? PIECES[t].icon : '';
-        } else {
-            slot.className = 'deck-slot';
-            slot.textContent = '—';
-        }
-        picked.appendChild(slot);
-    }
-
-    const note = document.getElementById('deck-note');
-    if (chosenDeck.length === HAND_SIZE){
-        const names = chosenDeck.map(function(t){ return PIECES[t].name; }).join(' · ');
-        note.className = 'deck-note';
-        note.innerHTML = 'Колода готова: <b>' + names + '</b>';
-    } else {
-        note.className = 'deck-note warn';
-        note.innerHTML = 'Выбрано ' + chosenDeck.length + ' из 4 — добери карты';
-    }
+  const grid=document.getElementById('deck-grid');
+  grid.innerHTML='';
+  DECK_CARDS.forEach(function(card){
+    const cardDiv=document.createElement('div');
+    const picked=card.type?chosenDeck.indexOf(card.type):-1;
+    const isSoon=!!card.soon;
+    cardDiv.className='card '+card.rarity+(picked>=0?' picked':'')+(isSoon?' soon':'');
+    let order='';
+    if(picked>=0)order='<div class="pick-order">'+(picked+1)+'</div>';
+    cardDiv.innerHTML='<div class="card-elixir">'+card.elixir+'</div>'+order+
+      '<div class="card-icon">'+card.icon+'</div>'+
+      '<div class="card-name">'+card.name+'</div>'+
+      '<div class="card-level">'+(isSoon?'скоро':card.level+'-й ур.')+'</div>';
+    if(!isSoon&&card.type)cardDiv.onclick=function(){toggleCard(card.type);};
+    grid.appendChild(cardDiv);
+  });
+  const picked=document.getElementById('deck-picked');
+  picked.innerHTML='';
+  for(let i=0;i<HAND_SIZE;i++){
+    const slot=document.createElement('div');
+    const t=chosenDeck[i];
+    if(t){slot.className='deck-slot filled';slot.textContent=PIECES[t]?PIECES[t].icon:'';}
+    else{slot.className='deck-slot';slot.textContent='—';}
+    picked.appendChild(slot);
+  }
+  const note=document.getElementById('deck-note');
+  if(chosenDeck.length===HAND_SIZE){
+    const names=chosenDeck.map(function(t){return PIECES[t].name;}).join(' · ');
+    note.className='deck-note';
+    note.innerHTML='Колода готова: <b>'+names+'</b>';
+  }else{
+    note.className='deck-note warn';
+    note.innerHTML='Выбрано '+chosenDeck.length+' из 4 — добери карты';
+  }
 }
 
-/* ================= РАССТАНОВКА =================
-   Только два нижних ряда (6 и 7).
-   Состав строго шахматный: 8 пешек, 2 ладьи, 2 коня,
-   2 слона, 1 ферзь, 1 король. Всего 16 фигур.
-   ================================================ */
-
-const SETUP_KEY = 'chessSetup';
-const SETUP_ROWS = [6, 7];
-const ARMY_MAX = { p:8, r:2, n:2, b:2, q:1, k:1 };
-const ARMY_ORDER = ['p','n','b','r','q','k'];
+const SETUP_KEY='chessSetup';
+const SETUP_ROWS=[6,7];
+const ARMY_MAX={p:8,r:2,n:2,b:2,q:1,k:1};
+const ARMY_ORDER=['p','n','b','r','q','k'];
 
 function defaultArmed(){
-    const empty = [null,null,null,null,null,null,null,null];
-    return [
-        empty.slice(), empty.slice(), empty.slice(),
-        empty.slice(), empty.slice(), empty.slice(),
-        ['P','P','P','P','P','P','P','P'],
-        ['R','N','B','Q','K','B','N','R']
-    ];
+  const empty=[null,null,null,null,null,null,null,null];
+  return [empty.slice(),empty.slice(),empty.slice(),empty.slice(),empty.slice(),empty.slice(),
+    ['P','P','P','P','P','P','P','P'],
+    ['R','N','B','Q','K','B','N','R']];
 }
 
-let setupBoard = [];
-let selectedSetupCell = null;
-let editMode = false;
-let snapshotBeforeEdit = null;
+let setupBoard=[];
+let selectedSetupCell=null;
+let editMode=false;
+let snapshotBeforeEdit=null;
 
-function formatNum(n){if(Number.isInteger(n))return n.toString();return Number(n.toFixed(2)).toString();}
-
-function blankBoard(){
-    return Array.from({length:8}, function(){ return Array(8).fill(null); });
-}
+function blankBoard(){return Array.from({length:8},function(){return Array(8).fill(null);});}
 
 function armyCounts(board){
-    const cnt = { p:0, r:0, n:0, b:0, q:0, k:0 };
-    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++){
-        const v = board[r][c];
-        if (!v) continue;
-        const s = String(v);
-        if (s !== s.toUpperCase()) continue;
-        const t = s.toLowerCase();
-        if (cnt[t] !== undefined) cnt[t]++;
-    }
-    return cnt;
+  const cnt={p:0,r:0,n:0,b:0,q:0,k:0};
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const v=board[r][c];if(!v)continue;
+    const s=String(v);if(s!==s.toUpperCase())continue;
+    const t=s.toLowerCase();if(cnt[t]!==undefined)cnt[t]++;
+  }
+  return cnt;
 }
-
 function armyExact(board){
-    const cnt = armyCounts(board);
-    for (let i = 0; i < ARMY_ORDER.length; i++){
-        const t = ARMY_ORDER[i];
-        if (cnt[t] !== ARMY_MAX[t]) return false;
-    }
-    return true;
+  const cnt=armyCounts(board);
+  for(let i=0;i<ARMY_ORDER.length;i++){const t=ARMY_ORDER[i];if(cnt[t]!==ARMY_MAX[t])return false;}
+  return true;
 }
-
-/* из сохранения берём только два нижних ряда и только белые фигуры */
 function normalize(raw){
-    if (!Array.isArray(raw) || raw.length !== 8) return null;
-
-    const out = blankBoard();
-
-    for (let k = 0; k < SETUP_ROWS.length; k++){
-        const r = SETUP_ROWS[k];
-        if (!Array.isArray(raw[r]) || raw[r].length !== 8) return null;
-
-        for (let c = 0; c < 8; c++){
-            const v = raw[r][c];
-            if (!v) continue;
-            const s = String(v);
-            if (!/^[prnbqk]$/i.test(s)) return null;
-            out[r][c] = s.toUpperCase();
-        }
+  if(!Array.isArray(raw)||raw.length!==8)return null;
+  const out=blankBoard();
+  for(let k=0;k<SETUP_ROWS.length;k++){
+    const r=SETUP_ROWS[k];
+    if(!Array.isArray(raw[r])||raw[r].length!==8)return null;
+    for(let c=0;c<8;c++){
+      const v=raw[r][c];if(!v)continue;
+      const s=String(v);if(!/^[prnbqk]$/i.test(s))return null;
+      out[r][c]=s.toUpperCase();
     }
-
-    return armyExact(out) ? out : null;
+  }
+  return armyExact(out)?out:null;
 }
 
 function initSetup(){
-    let data = null;
-    try {
-        const raw = JSON.parse(localStorage.getItem(SETUP_KEY) || 'null');
-        data = normalize(raw);
-    } catch (e){}
-
-    setupBoard = data || defaultArmed();
-    selectedSetupCell = null;
-    editMode = false;
-    updateSetupUI();
-    renderSetupBoard();
-    renderArmyCounts();
+  let data=null;
+  try{data=normalize(JSON.parse(localStorage.getItem(SETUP_KEY)||'null'));}catch(e){}
+  setupBoard=data||defaultArmed();
+  selectedSetupCell=null;editMode=false;
+  updateSetupUI();renderSetupBoard();renderArmyCounts();
 }
 
 function renderArmyCounts(){
-    const box = document.getElementById('army-counts');
-    if (!box) return;
-
-    const cnt = armyCounts(setupBoard);
-    box.innerHTML = '';
-
-    for (let i = 0; i < ARMY_ORDER.length; i++){
-        const t = ARMY_ORDER[i];
-        const chip = document.createElement('div');
-        const ok = (cnt[t] === ARMY_MAX[t]);
-        chip.className = 'army-chip ' + (ok ? 'ok' : 'bad');
-        chip.textContent = PIECES[t].icon + ' ' + cnt[t] + '/' + ARMY_MAX[t];
-        box.appendChild(chip);
-    }
+  const box=document.getElementById('army-counts');if(!box)return;
+  const cnt=armyCounts(setupBoard);box.innerHTML='';
+  for(let i=0;i<ARMY_ORDER.length;i++){
+    const t=ARMY_ORDER[i];const chip=document.createElement('div');
+    const ok=(cnt[t]===ARMY_MAX[t]);
+    chip.className='army-chip '+(ok?'ok':'bad');
+    chip.textContent=PIECES[t].icon+' '+cnt[t]+'/'+ARMY_MAX[t];
+    box.appendChild(chip);
+  }
 }
 
 function updateSetupUI(){
-    const hint = document.getElementById('setup-hint');
-    const btnEdit = document.getElementById('btn-edit');
-    const editControls = document.getElementById('edit-controls');
-    const boardEl = document.getElementById('setup-board');
-
-    if (editMode){
-        btnEdit.style.display = 'none';
-        editControls.style.display = 'flex';
-        boardEl.classList.remove('view-mode');
-        boardEl.classList.add('edit-mode');
-        hint.innerHTML = '✏️ Тапни фигуру, потом другую — они поменяются местами. Только два нижних ряда.';
-    } else {
-        btnEdit.style.display = 'block';
-        editControls.style.display = 'none';
-        boardEl.classList.remove('edit-mode');
-        boardEl.classList.add('view-mode');
-        hint.innerHTML = 'Эта расстановка пойдёт с тобой в бой <span class="lock-badge">🔒 Закреплено</span>';
-    }
+  const hint=document.getElementById('setup-hint');
+  const btnEdit=document.getElementById('btn-edit');
+  const editControls=document.getElementById('edit-controls');
+  const boardEl=document.getElementById('setup-board');
+  if(editMode){
+    btnEdit.style.display='none';editControls.style.display='flex';
+    boardEl.classList.remove('view-mode');boardEl.classList.add('edit-mode');
+    hint.innerHTML='✏️ Тапни фигуру, потом другую — они поменяются местами. Только два нижних ряда.';
+  }else{
+    btnEdit.style.display='block';editControls.style.display='none';
+    boardEl.classList.remove('edit-mode');boardEl.classList.add('view-mode');
+    hint.innerHTML='Эта расстановка пойдёт с тобой в бой <span class="lock-badge">🔒 Закреплено</span>';
+  }
 }
 
 function renderSetupBoard(){
-    const boardEl = document.getElementById('setup-board');
-    if (!boardEl) return;
-    boardEl.innerHTML = '';
-
-    for (let r = 0; r < 8; r++){
-        for (let c = 0; c < 8; c++){
-            const cell = document.createElement('div');
-            cell.className = 'cell ' + ((r + c) % 2 === 0 ? 'white' : 'black');
-
-            const inZone = (r === 6 || r === 7);
-
-            if (inZone) cell.classList.add('setup-zone');
-            else cell.classList.add('locked');
-
-            if (selectedSetupCell && selectedSetupCell.r === r && selectedSetupCell.c === c){
-                cell.classList.add('selected');
-            }
-
-            cell.onclick = (function(rr, cc){ return function(){ handleSetupClick(rr, cc); }; })(r, c);
-
-            const v = setupBoard[r][c];
-            if (v){
-                const t = String(v).toLowerCase();
-                const p = PIECES[t];
-
-                const pieceEl = document.createElement('div');
-                pieceEl.className = 'piece';
-                pieceEl.innerText = p.icon;
-                pieceEl.style.color = '#fff';
-                pieceEl.style.textShadow = '0 1px 0 #666,0 2px 0 #444,0 3px 4px rgba(0,0,0,0.9)';
-
-                const costBadge = document.createElement('div');
-                costBadge.className = 'top-cost-badge';
-                costBadge.innerText = p.cost;
-
-                const hpBar = document.createElement('div');
-                hpBar.className = 'bottom-hp-bar';
-                hpBar.innerHTML = '<span class="lvl-num">1</span>';
-
-                const hpText = document.createElement('div');
-                hpText.className = 'hp-text-below';
-                hpText.innerText = '1/1';
-
-                cell.appendChild(pieceEl);
-                cell.appendChild(costBadge);
-                cell.appendChild(hpBar);
-                cell.appendChild(hpText);
-            }
-
-            boardEl.appendChild(cell);
-        }
+  const boardEl=document.getElementById('setup-board');if(!boardEl)return;
+  boardEl.innerHTML='';
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const cell=document.createElement('div');
+    cell.className='cell '+((r+c)%2===0?'white':'black');
+    const inZone=(r===6||r===7);
+    if(inZone)cell.classList.add('setup-zone');else cell.classList.add('locked');
+    if(selectedSetupCell&&selectedSetupCell.r===r&&selectedSetupCell.c===c)cell.classList.add('selected');
+    cell.onclick=(function(rr,cc){return function(){handleSetupClick(rr,cc);};})(r,c);
+    const v=setupBoard[r][c];
+    if(v){
+      const t=String(v).toLowerCase();const p=PIECES[t];
+      const pieceEl=document.createElement('div');
+      pieceEl.className='piece';pieceEl.innerText=p.icon;pieceEl.style.color='#fff';
+      pieceEl.style.textShadow='0 1px 0 #666,0 2px 0 #444,0 3px 4px rgba(0,0,0,.9)';
+      const costBadge=document.createElement('div');
+      costBadge.className='top-cost-badge';costBadge.innerText=p.cost;
+      const hpBar=document.createElement('div');
+      hpBar.className='bottom-hp-bar';hpBar.innerHTML='<span class="lvl-num">1</span>';
+      const hpText=document.createElement('div');
+      hpText.className='hp-text-below';hpText.innerText='1/1';
+      cell.appendChild(pieceEl);cell.appendChild(costBadge);cell.appendChild(hpBar);cell.appendChild(hpText);
     }
+    boardEl.appendChild(cell);
+  }
 }
 
-function handleSetupClick(r, c){
-    if (!editMode) return;
-    if (r !== 6 && r !== 7){
-        showToast('Только два нижних ряда','#ff9500');
-        return;
-    }
-
-    if (!selectedSetupCell){
-        if (!setupBoard[r][c]){
-            showToast('Тут пусто — выбери фигуру','#ff9500');
-            return;
-        }
-        selectedSetupCell = { r:r, c:c };
-        renderSetupBoard();
-        return;
-    }
-
-    if (selectedSetupCell.r === r && selectedSetupCell.c === c){
-        selectedSetupCell = null;
-        renderSetupBoard();
-        return;
-    }
-
-    const a = setupBoard[selectedSetupCell.r][selectedSetupCell.c];
-    const b = setupBoard[r][c];
-
-    setupBoard[r][c] = a;
-    setupBoard[selectedSetupCell.r][selectedSetupCell.c] = b;
-
-    selectedSetupCell = null;
-    renderSetupBoard();
-    renderArmyCounts();
+function handleSetupClick(r,c){
+  if(!editMode)return;
+  if(r!==6&&r!==7){showToast('Только два нижних ряда','#ffb300');return;}
+  if(!selectedSetupCell){
+    if(!setupBoard[r][c]){showToast('Тут пусто — выбери фигуру','#ffb300');return;}
+    selectedSetupCell={r:r,c:c};renderSetupBoard();return;
+  }
+  if(selectedSetupCell.r===r&&selectedSetupCell.c===c){selectedSetupCell=null;renderSetupBoard();return;}
+  const a=setupBoard[selectedSetupCell.r][selectedSetupCell.c];
+  const b=setupBoard[r][c];
+  setupBoard[r][c]=a;setupBoard[selectedSetupCell.r][selectedSetupCell.c]=b;
+  selectedSetupCell=null;renderSetupBoard();renderArmyCounts();
 }
 
 function enterEditMode(){
-    snapshotBeforeEdit = setupBoard.map(function(row){ return row.slice(); });
-    editMode = true;
-    selectedSetupCell = null;
-    updateSetupUI();
-    renderSetupBoard();
+  snapshotBeforeEdit=setupBoard.map(function(row){return row.slice();});
+  editMode=true;selectedSetupCell=null;updateSetupUI();renderSetupBoard();
 }
-
 function cancelEdit(){
-    if (snapshotBeforeEdit){
-        setupBoard = snapshotBeforeEdit.map(function(row){ return row.slice(); });
-    }
-    editMode = false;
-    selectedSetupCell = null;
-    snapshotBeforeEdit = null;
-    updateSetupUI();
-    renderSetupBoard();
-    renderArmyCounts();
-    showToast('Изменения отменены','#ff9500');
+  if(snapshotBeforeEdit)setupBoard=snapshotBeforeEdit.map(function(row){return row.slice();});
+  editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null;
+  updateSetupUI();renderSetupBoard();renderArmyCounts();
+  showToast('Изменения отменены','#ffb300');
 }
-
 function resetSetup(){
-    if (!editMode) return;
-    setupBoard = defaultArmed();
-    selectedSetupCell = null;
-    renderSetupBoard();
-    renderArmyCounts();
-    showToast('Стандартная расстановка','#3b82f6');
+  if(!editMode)return;
+  setupBoard=defaultArmed();selectedSetupCell=null;
+  renderSetupBoard();renderArmyCounts();
+  showToast('Стандартная расстановка','#5ea8ff');
 }
-
 function saveSetup(){
-    if (!armyExact(setupBoard)){
-        showToast('Состав должен быть как в шахматах: 8 пешек, 2 ладьи, 2 коня, 2 слона, ферзь, король','#ff3b30');
-        return;
-    }
-
-    /* сохраняем 8x8: свои два ряда + зеркальная копия соперника сверху,
-       чтобы тренировка с ботом получила полную доску */
-    const save = blankBoard();
-
-    for (let c = 0; c < 8; c++){
-        save[7][c] = setupBoard[7][c];
-        save[6][c] = setupBoard[6][c];
-    }
-
-    for (let c = 0; c < 8; c++){
-        const top = save[7][c];
-        const bot = save[6][c];
-        save[0][c] = top ? String(top).toLowerCase() : null;
-        save[1][c] = bot ? String(bot).toLowerCase() : null;
-    }
-
-    try {
-        localStorage.setItem(SETUP_KEY, JSON.stringify(save));
-    } catch (e){
-        showToast('Не удалось сохранить','#ff3b30');
-        return;
-    }
-
-    setupBoard = save;
-    editMode = false;
-    selectedSetupCell = null;
-    snapshotBeforeEdit = null;
-    updateSetupUI();
-    renderSetupBoard();
-    renderArmyCounts();
-    showToast('✅ Расстановка сохранена!','#34c759');
+  if(!armyExact(setupBoard)){
+    showToast('Состав как в шахматах: 8 пешек, 2 ладьи, 2 коня, 2 слона, ферзь, король','#f4665e');
+    return;
+  }
+  const save=blankBoard();
+  for(let c=0;c<8;c++){save[7][c]=setupBoard[7][c];save[6][c]=setupBoard[6][c];}
+  for(let c=0;c<8;c++){
+    const top=save[7][c],bot=save[6][c];
+    save[0][c]=top?String(top).toLowerCase():null;
+    save[1][c]=bot?String(bot).toLowerCase():null;
+  }
+  try{localStorage.setItem(SETUP_KEY,JSON.stringify(save));}
+  catch(e){showToast('Не удалось сохранить','#f4665e');return;}
+  setupBoard=save;editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null;
+  updateSetupUI();renderSetupBoard();renderArmyCounts();
+  showToast('✅ Расстановка сохранена!','#43e97b');
 }
 
 function showToast(msg,color){
-    const toast=document.createElement('div');
-    toast.className='toast';
-    toast.style.borderColor=color;
-    toast.style.boxShadow=`0 10px 30px rgba(0,0,0,0.8),0 0 20px ${color}66`;
-    toast.innerText=msg;
-    document.body.appendChild(toast);
-    setTimeout(()=>toast.classList.add('show'),50);
-    setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),400);},2400);
+  const toast=document.createElement('div');
+  toast.className='toast';toast.style.borderColor=color;
+  toast.style.boxShadow='0 10px 30px rgba(0,0,0,.8),0 0 20px '+color+'66';
+  toast.innerText=msg;document.body.appendChild(toast);
+  setTimeout(()=>toast.classList.add('show'),50);
+  setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),400);},2400);
 }
 
-chosenDeck = loadDeck();
+chosenDeck=loadDeck();
 renderDeck();
 initSetup();
-
-setTimeout(function(){ switchSubTab('cards'); }, 0);
+setTimeout(function(){switchSubTab('cards');},0);
 </script>
 </body>
 </html>
