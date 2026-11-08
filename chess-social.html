@@ -25,7 +25,7 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .banner-btn{background:#fff;color:#4c1d95;border:0;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap}
 #app{padding:0 12px 20px}
 .search-box{margin:0 0 10px}
-.search-box input{width:100%;padding:12px 14px;border-radius:11px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none}
+.search-box input{width:100%;padding:11px 14px;border-radius:11px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none}
 .search-box input:focus{border-color:#3b82f6}
 .chips{display:flex;gap:6px;margin-top:8px}
 .chip{flex:1;padding:9px;border-radius:9px;border:1px solid #334155;background:#0f172a;color:#94a3b8;font-size:12px;font-weight:900;cursor:pointer}
@@ -37,7 +37,6 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .clan-emblem{width:46px;height:46px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.25)}
 .clan-info{flex:1;min-width:0}
 .clan-name{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.clan-tag{color:#fbbf24;font-size:12px}
 .clan-sub{font-size:11px;color:#94a3b8;margin-top:2px}
 .clan-join{border:0;border-radius:10px;padding:9px 13px;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap}
 .clan-join:disabled{background:#334155;color:#64748b;opacity:.7}
@@ -45,13 +44,14 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .btn-wide.grey{background:linear-gradient(145deg,#475569,#1e293b);box-shadow:none}
 .btn-wide.red{background:linear-gradient(145deg,#ef4444,#991b1b);box-shadow:0 6px 16px rgba(239,68,68,.3)}
 .btn-wide.blue{background:linear-gradient(145deg,#3b82f6,#1d4ed8);box-shadow:0 6px 16px rgba(59,130,246,.3)}
-.my-head{display:flex;align-items:center;gap:14px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 10px 26px rgba(245,158,11,.28)}
-.my-emblem{width:62px;height:62px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:32px;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.6)}
-.my-name{font-size:18px;font-weight:900;color:#fff;line-height:1.2}
-.my-desc{font-size:11.5px;color:#fff3d6;margin-top:4px;line-height:1.35}
-.my-cap{font-size:11.5px;color:#fff8e0;margin-top:6px;font-weight:700}
-.cap-bar{height:8px;background:rgba(0,0,0,.35);border-radius:5px;overflow:hidden;margin-top:8px}
-.cap-fill{height:100%;background:#fff;border-radius:5px;transition:width .3s}
+.clan-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;margin-bottom:10px;cursor:pointer;box-shadow:0 8px 20px rgba(245,158,11,.25)}
+.clan-bar:active{transform:scale(.99)}
+.cb-emblem{width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.6)}
+.cb-info{flex:1;min-width:0}
+.cb-name{font-size:14.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cb-sub{font-size:10.5px;color:#fff3d6;margin-top:2px;font-weight:700}
+.cb-trophy{font-size:12.5px;font-weight:900;color:#fff;white-space:nowrap}
+.cb-chev{font-size:22px;color:#fff;opacity:.85;line-height:1;margin-left:2px}
 .member{display:flex;align-items:center;gap:8px;background:linear-gradient(145deg,#1e293b,#131c2e);border:1px solid #334155;border-radius:12px;padding:10px 12px;margin-bottom:8px}
 .member.me{border-color:#22c55e;box-shadow:0 0 14px rgba(34,197,94,.25)}
 .m-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(0,0,0,.4);border:1px solid #475569}
@@ -64,13 +64,14 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .mini.add{background:linear-gradient(145deg,#3b82f6,#1d4ed8)}
 .mini.share{background:linear-gradient(145deg,#8b5cf6,#6d28d9)}
 .mini.kick{background:linear-gradient(145deg,#ef4444,#991b1b)}
-.chat-box{background:linear-gradient(145deg,#131c2e,#0f172a);border:1px solid #334155;border-radius:12px;padding:10px;height:calc(100dvh - 360px);min-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.chat-box{background:linear-gradient(145deg,#131c2e,#0f172a);border:1px solid #334155;border-radius:12px;padding:10px;height:calc(100dvh - 470px);min-height:170px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
 .msg{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:8px 10px;max-width:92%}
 .msg.mine{align-self:flex-end;background:#14532d;border-color:#166534}
 .msg-head{font-size:10px;color:#94a3b8;font-weight:800;margin-bottom:3px}
 .msg-text{font-size:13.5px;line-height:1.4;word-break:break-word}
 .msg-replay{font-size:11.5px;color:#cbd5e1;margin-bottom:6px}
 .msg-btn{width:100%;padding:8px;border:0;border-radius:8px;background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000;font-size:11.5px;font-weight:900;cursor:pointer}
+.msg-sys{align-self:center;background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;font-size:11.5px;font-weight:800;padding:7px 14px;border-radius:10px;text-align:center;max-width:96%}
 .emoji-row{display:flex;gap:4px;overflow-x:auto;padding:8px 0 0;scrollbar-width:none}
 .emoji-row::-webkit-scrollbar{display:none}
 .emoji-row button{flex:0 0 auto;width:36px;height:36px;border-radius:9px;border:1px solid #334155;background:#0f172a;font-size:18px;cursor:pointer;line-height:1;padding:0}
@@ -81,6 +82,18 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .modal{position:fixed;inset:0;background:rgba(2,6,23,.94);display:flex;align-items:center;justify-content:center;padding:18px;z-index:1000;overflow-y:auto}
 .modal-box{width:100%;max-width:380px;background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #334155;border-radius:16px;padding:18px;max-height:86vh;overflow-y:auto}
 .modal-title{font-size:17px;font-weight:900;margin-bottom:12px;text-align:center}
+.ci-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.ci-emblem{width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;box-shadow:0 0 20px rgba(245,158,11,.4)}
+.ci-name{font-size:16px;font-weight:900;line-height:1.25}
+.ci-sub{font-size:11px;color:#94a3b8;margin-top:3px}
+.ci-close{width:32px;height:32px;border-radius:50%;border:1px solid #475569;background:#1e293b;color:#cbd5e1;font-size:14px;cursor:pointer;flex-shrink:0}
+.ci-desc{font-size:12px;color:#cbd5e1;line-height:1.45;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.ci-stats{display:flex;gap:8px;margin-bottom:12px}
+.ci-stat{flex:1;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:9px 6px;text-align:center}
+.ci-stat b{display:block;font-size:14px;color:#ffcc00;font-weight:900}
+.ci-stat span{font-size:9.5px;color:#64748b;font-weight:700;letter-spacing:.3px}
+.ci-bar{height:8px;background:#020617;border-radius:5px;overflow:hidden;margin-bottom:12px}
+.ci-bar div{height:100%;background:linear-gradient(90deg,#f59e0b,#ffcc00);transition:width .3s}
 .emblem-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px}
 .emblem-opt{width:42px;height:42px;border-radius:12px;border:2px solid #334155;background:#0f172a;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .emblem-opt.on{border-color:#22c55e;background:#064e3b}
@@ -122,7 +135,6 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 <div class="tabs">
   <button class="tab on" data-tab="clan">Клан</button>
   <button class="tab" data-tab="friends">Друзья</button>
-  <button class="tab" data-tab="chat">Чат</button>
 </div>
 
 <div class="banner" id="banner">
@@ -132,6 +144,30 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 
 <div id="errBox" class="errbox hidden"></div>
 <div id="app"></div>
+
+<div id="clanInfoModal" class="modal hidden">
+  <div class="modal-box" style="max-width:400px">
+    <div class="ci-head">
+      <div class="ci-emblem" id="ciEmblem">🛡️</div>
+      <div style="flex:1;min-width:0">
+        <div class="ci-name" id="ciName">Клан</div>
+        <div class="ci-sub" id="ciSub">—</div>
+      </div>
+      <button class="ci-close" id="ciClose">✕</button>
+    </div>
+    <div class="ci-desc" id="ciDesc">—</div>
+    <div class="ci-stats">
+      <div class="ci-stat"><b id="ciMem">0</b><span>УЧАСТНИКИ</span></div>
+      <div class="ci-stat"><b id="ciCups">0</b><span>КУБКИ</span></div>
+      <div class="ci-stat"><b id="ciFree">0</b><span>СВОБОДНО</span></div>
+    </div>
+    <div class="ci-bar"><div id="ciBarFill" style="width:0%"></div></div>
+    <button class="btn-wide blue" id="ciShare">📤 Пригласить в клан</button>
+    <div class="section-title">Состав</div>
+    <div id="ciMembers"></div>
+    <button class="btn-wide red" id="ciLeave">Выйти из клана</button>
+  </div>
+</div>
 
 <div id="createModal" class="modal hidden">
   <div class="modal-box">
@@ -210,7 +246,7 @@ let activeTab = 'clan';
 let pickedEmblem = '🛡️';
 
 let searchQ = '';
-let searchMode = 'players';
+let searchMode = 'clans';
 
 let chatTimer = null;
 let chatMsgs = [];
@@ -263,7 +299,7 @@ function tagPill(code){
   return '<span class="tagpill">#' + esc(code) + '</span>';
 }
 
-/* ================= ССЫЛКИ И ПОДЕЛИТЬСЯ ================= */
+/* ================= ССЫЛКИ ================= */
 
 function baseUrl(){
   return location.origin + location.pathname;
@@ -302,7 +338,7 @@ function share(url, phrase){
   }
 
   if (!copyText(phrase + '\n' + url)){
-    showToast('Скопируй ссылку вручную: ' + url);
+    showToast('Скопируй ссылку: ' + url);
   }
 }
 
@@ -474,6 +510,13 @@ function membersOf(clanId){
   return out;
 }
 
+function cupsOf(clanId){
+  const mem = membersOf(clanId);
+  let sum = 0;
+  for (let i = 0; i < mem.length; i++) sum += (mem[i].cups || 0);
+  return sum;
+}
+
 /* ================= ВКЛАДКИ ================= */
 
 function setTab(t){
@@ -505,11 +548,10 @@ function render(){
   $('banner').classList.toggle('hidden', !showBanner);
 
   if (activeTab === 'clan') renderClanTab(app);
-  else if (activeTab === 'friends') renderFriendsTab(app);
-  else renderChatTab(app);
+  else renderFriendsTab(app);
 }
 
-/* ================= КЛАН + ПОИСК ================= */
+/* ================= КЛАН: ПОИСК + ЧАТ ================= */
 
 function renderClanTab(app){
   let html = '';
@@ -517,12 +559,17 @@ function renderClanTab(app){
   html += '<div class="search-box">';
   html += '<input id="searchInput" type="text" placeholder="Поиск: #тег или имя" value="' + esc(searchQ) + '" autocomplete="off" spellcheck="false">';
   html += '<div class="chips">';
-  html += '<button class="chip' + (searchMode === 'players' ? ' on' : '') + '" data-mode="players">Игроки</button>';
   html += '<button class="chip' + (searchMode === 'clans' ? ' on' : '') + '" data-mode="clans">Кланы</button>';
+  html += '<button class="chip' + (searchMode === 'players' ? ' on' : '') + '" data-mode="players">Игроки</button>';
   html += '</div></div>';
 
   html += '<div id="searchOut"></div>';
-  html += '<div id="clanBody">' + ((myMember && myClan) ? myClanHtml() : clanListHtml()) + '</div>';
+
+  if (myMember && myClan){
+    html += '<div id="clanBody">' + clanBodyHtml() + '</div>';
+  } else {
+    html += '<div id="clanBody">' + clanListHtml() + '</div>';
+  }
 
   app.innerHTML = html;
 
@@ -548,7 +595,101 @@ function renderClanTab(app){
   }
 
   bindActions(app);
+
+  if (myMember && myClan){
+    const bar = $('clanBar');
+    if (bar) bar.onclick = openClanModal;
+
+    const row = $('emojiRow');
+    if (row){
+      for (let i = 0; i < EMOJI.length; i++){
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = EMOJI[i];
+        (function (ch){
+          b.onclick = function (){
+            const ip = $('chatInput');
+            if (!ip) return;
+            ip.value = (ip.value + ch).slice(0, 200);
+            ip.focus();
+          };
+        })(EMOJI[i]);
+        row.appendChild(b);
+      }
+    }
+
+    const sbtn = $('chatSend');
+    if (sbtn) sbtn.onclick = sendChat;
+
+    const cin = $('chatInput');
+    if (cin){
+      cin.addEventListener('keydown', function (e){
+        if (e.key === 'Enter') sendChat();
+      });
+    }
+
+    const rbtn = $('shareReplayBtn');
+    if (rbtn) rbtn.onclick = openShare;
+  }
+
   applySearch();
+
+  if (myMember && myClan && searchQ.trim() === ''){
+    loadChat();
+    chatTimer = setInterval(loadChat, 4000);
+  }
+}
+
+function clanBodyHtml(){
+  let html = '';
+
+  html += '<div class="clan-bar" id="clanBar">';
+  html += '<div class="cb-emblem">' + (myClan.emblem || '🛡️') + '</div>';
+  html += '<div class="cb-info">';
+  html += '<div class="cb-name">' + esc(myClan.name) + ' #' + esc(myClan.tag || '—') + '</div>';
+  html += '<div class="cb-sub">' + membersOf(myClan.id).length + ' / ' + MAX_MEMBERS + ' участников</div>';
+  html += '</div>';
+  html += '<div class="cb-trophy">🏆 ' + cupsOf(myClan.id) + '</div>';
+  html += '<div class="cb-chev">›</div>';
+  html += '</div>';
+
+  html += '<div class="chat-box" id="chatBox"></div>';
+  html += '<div class="emoji-row" id="emojiRow"></div>';
+  html += '<div class="chat-row">';
+  html += '<input id="chatInput" maxlength="200" placeholder="Сообщение в клан…">';
+  html += '<button id="chatSend">➤</button>';
+  html += '</div>';
+  html += '<button class="btn-wide grey" id="shareReplayBtn">📤 Отправить повтор в чат</button>';
+
+  return html;
+}
+
+function clanListHtml(){
+  if (!allClans.length){
+    return '<div class="empty">Кланов пока нет.<br>Стань первым — нажми «Создать».</div>';
+  }
+
+  let html = '<div class="section-title">Список кланов</div>';
+
+  for (let i = 0; i < allClans.length; i++){
+    const c = allClans[i];
+    const mem = membersOf(c.id);
+    const full = mem.length >= MAX_MEMBERS;
+
+    html += '<div class="clan-card">';
+    html += '<div class="clan-emblem">' + (c.emblem || '🛡️') + '</div>';
+    html += '<div class="clan-info">';
+    html += '<div class="clan-name">' + esc(c.name) + tagPill(c.tag) + '</div>';
+    html += '<div class="clan-sub">' + mem.length + ' / ' + MAX_MEMBERS + ' участников</div>';
+    html += '</div>';
+    html += '<button class="mini share" data-shareclan="' + esc(c.tag || '') +
+            '" data-shareclanname="' + esc(c.name) + '">📤</button>';
+    html += '<button class="clan-join" data-join="' + c.id + '"' +
+            (full ? ' disabled' : '') + '>' + (full ? 'Полон' : 'Вступить') + '</button>';
+    html += '</div>';
+  }
+
+  return html;
 }
 
 async function applySearch(){
@@ -567,8 +708,48 @@ async function applySearch(){
   if (body) body.style.display = 'none';
   out.innerHTML = '<div class="empty">Ищем…</div>';
 
-  if (searchMode === 'players') await renderPlayerResults(out, q);
-  else await renderClanResults(out, q);
+  if (searchMode === 'clans') await renderClanResults(out, q);
+  else await renderPlayerResults(out, q);
+}
+
+async function renderClanResults(out, q){
+  let list = [];
+
+  try {
+    const r = await sb.rpc('search_clans', { p_q: q, p_limit: 25 });
+    if (!r.error) list = r.data || [];
+  } catch (e){}
+
+  if (!list.length){
+    out.innerHTML = '<div class="empty">Кланы не найдены по «' + esc(q) + '»</div>';
+    return;
+  }
+
+  let html = '<div class="section-title">Кланы</div>';
+
+  for (let i = 0; i < list.length; i++){
+    const c = list[i];
+    const full = (Number(c.member_count) || 0) >= MAX_MEMBERS;
+    const mine = (myClan && myClan.id === c.id);
+
+    html += '<div class="clan-card">';
+    html += '<div class="clan-emblem">' + (c.emblem || '🛡️') + '</div>';
+    html += '<div class="clan-info">';
+    html += '<div class="clan-name">' + esc(c.name) + tagPill(c.code) + '</div>';
+    html += '<div class="clan-sub">' + (Number(c.member_count) || 0) + ' / ' + MAX_MEMBERS +
+            ' · 🏆 ' + (Number(c.total_cups) || 0) + '</div>';
+    html += '</div>';
+    html += '<button class="mini share" data-shareclan="' + esc(c.code || '') +
+            '" data-shareclanname="' + esc(c.name) + '">📤</button>';
+    if (!mine){
+      html += '<button class="clan-join" data-join="' + c.id + '"' +
+              (full ? ' disabled' : '') + '>' + (full ? 'Полон' : 'Вступить') + '</button>';
+    }
+    html += '</div>';
+  }
+
+  out.innerHTML = html;
+  bindActions(out);
 }
 
 async function renderPlayerResults(out, q){
@@ -612,77 +793,49 @@ async function renderPlayerResults(out, q){
   bindActions(out);
 }
 
-async function renderClanResults(out, q){
-  let list = [];
+/* ================= ОКНО КЛАНА ================= */
 
-  try {
-    const r = await sb.rpc('search_clans', { p_q: q, p_limit: 25 });
-    if (!r.error) list = r.data || [];
-  } catch (e){}
-
-  if (!list.length){
-    out.innerHTML = '<div class="empty">Кланы не найдены по «' + esc(q) + '»</div>';
-    return;
-  }
-
-  let html = '<div class="section-title">Кланы</div>';
-
-  for (let i = 0; i < list.length; i++){
-    const c = list[i];
-    const full = (Number(c.member_count) || 0) >= MAX_MEMBERS;
-    const mine = (myClan && myClan.id === c.id);
-
-    html += '<div class="clan-card">';
-    html += '<div class="clan-emblem">' + (c.emblem || '🛡️') + '</div>';
-    html += '<div class="clan-info">';
-    html += '<div class="clan-name">' + esc(c.name) + tagPill(c.code) + '</div>';
-    html += '<div class="clan-sub">' + (Number(c.member_count) || 0) + ' / ' + MAX_MEMBERS +
-            ' · 🏆 ' + (Number(c.total_cups) || 0) + '</div>';
-    html += '</div>';
-    html += '<button class="mini share" data-shareclan="' + esc(c.code || '') +
-            '" data-shareclanname="' + esc(c.name) + '">📤</button>';
-    if (!mine){
-      html += '<button class="clan-join" data-join="' + c.id + '"' +
-              (full ? ' disabled' : '') + '>' + (full ? 'Полон' : 'Вступить') + '</button>';
-    }
-    html += '</div>';
-  }
-
-  out.innerHTML = html;
-  bindActions(out);
+function openClanModal(){
+  if (!myClan) return;
+  renderClanModal();
+  $('clanInfoModal').classList.remove('hidden');
 }
 
-function myClanHtml(){
+function closeClanModal(){
+  $('clanInfoModal').classList.add('hidden');
+}
+
+function renderClanModal(){
   const mem = membersOf(myClan.id);
-  const full = mem.length >= MAX_MEMBERS;
   const isOwner = (myClan.owner_key === meKey);
 
+  let chief = '—';
+  for (let i = 0; i < mem.length; i++){
+    if (mem[i].role === 'owner'){ chief = mem[i].name || 'Игрок'; break; }
+  }
+
+  $('ciEmblem').textContent = myClan.emblem || '🛡️';
+  $('ciName').innerHTML = esc(myClan.name) + tagPill(myClan.tag);
+  $('ciSub').textContent = 'Глава: ' + chief;
+  $('ciDesc').textContent = myClan.description || 'Без описания';
+
+  $('ciMem').textContent  = mem.length + '/' + MAX_MEMBERS;
+  $('ciCups').textContent = cupsOf(myClan.id);
+  $('ciFree').textContent = Math.max(0, MAX_MEMBERS - mem.length);
+
+  $('ciBarFill').style.width = Math.min(100, mem.length / MAX_MEMBERS * 100) + '%';
+
   let html = '';
-
-  html += '<div class="my-head">';
-  html += '<div class="my-emblem">' + (myClan.emblem || '🛡️') + '</div>';
-  html += '<div style="flex:1;min-width:0">';
-  html += '<div class="my-name">' + esc(myClan.name) + tagPill(myClan.tag) + '</div>';
-  html += '<div class="my-desc">' + esc(myClan.description || 'Без описания') + '</div>';
-  html += '<div class="my-cap">Участники: ' + mem.length + ' / ' + MAX_MEMBERS + '</div>';
-  html += '<div class="cap-bar"><div class="cap-fill" style="width:' +
-          Math.min(100, mem.length / MAX_MEMBERS * 100) + '%"></div></div>';
-  html += '</div></div>';
-
-  html += '<button class="btn-wide blue" id="shareClanBtn">📤 Пригласить в клан</button>';
-
-  html += '<div class="section-title">Состав</div>';
 
   for (let i = 0; i < mem.length; i++){
     const m = mem[i];
     const isMe = (m.player_key === meKey);
     const isChief = (m.role === 'owner');
-    const mtag = tagMap[m.player_key];
 
     html += '<div class="member' + (isMe ? ' me' : '') + '">';
     html += '<div class="m-avatar">' + (isChief ? '👑' : '🎮') + '</div>';
     html += '<div class="m-info">';
-    html += '<div class="m-name">' + esc(m.name || 'Игрок') + (isMe ? ' (ты)' : '') + tagPill(mtag) + '</div>';
+    html += '<div class="m-name">' + esc(m.name || 'Игрок') + (isMe ? ' (ты)' : '') + tagPill(tagMap[m.player_key]) + '</div>';
     html += '<div class="m-role">' + (isChief ? 'Глава клана' : 'Участник') + '</div>';
     html += '</div>';
     html += '<div class="m-cups">🏆 ' + (m.cups || 0) + '</div>';
@@ -702,47 +855,11 @@ function myClanHtml(){
     html += '</div>';
   }
 
-  if (full) html += '<div class="empty">Клан заполнен — 30 из 30</div>';
+  $('ciMembers').innerHTML = html;
+  bindActions($('ciMembers'));
 
-  html += '<button class="btn-wide red" id="leaveBtn">Выйти из клана</button>';
-
-  setTimeout(function (){
-    const sb1 = $('shareClanBtn');
-    if (sb1) sb1.onclick = function (){ shareClan(myClan.name, myClan.tag); };
-
-    const lb = $('leaveBtn');
-    if (lb) lb.onclick = leaveClan;
-  }, 0);
-
-  return html;
-}
-
-function clanListHtml(){
-  if (!allClans.length){
-    return '<div class="empty">Кланов пока нет.<br>Стань первым — нажми «Создать».</div>';
-  }
-
-  let html = '<div class="section-title">Список кланов</div>';
-
-  for (let i = 0; i < allClans.length; i++){
-    const c = allClans[i];
-    const mem = membersOf(c.id);
-    const full = mem.length >= MAX_MEMBERS;
-
-    html += '<div class="clan-card">';
-    html += '<div class="clan-emblem">' + (c.emblem || '🛡️') + '</div>';
-    html += '<div class="clan-info">';
-    html += '<div class="clan-name">' + esc(c.name) + tagPill(c.tag) + '</div>';
-    html += '<div class="clan-sub">' + mem.length + ' / ' + MAX_MEMBERS + ' участников</div>';
-    html += '</div>';
-    html += '<button class="mini share" data-shareclan="' + esc(c.tag || '') +
-            '" data-shareclanname="' + esc(c.name) + '">📤</button>';
-    html += '<button class="clan-join" data-join="' + c.id + '"' +
-            (full ? ' disabled' : '') + '>' + (full ? 'Полон' : 'Вступить') + '</button>';
-    html += '</div>';
-  }
-
-  return html;
+  $('ciShare').onclick = function (){ shareClan(myClan.name, myClan.tag); };
+  $('ciLeave').onclick = leaveClan;
 }
 
 /* ================= ДРУЗЬЯ ================= */
@@ -810,50 +927,6 @@ function renderFriendsTab(app){
 
 /* ================= ЧАТ ================= */
 
-function renderChatTab(app){
-  if (!myClan){
-    app.innerHTML = '<div class="empty">Чат доступен только участникам клана.<br>' +
-                    'Вступи в клан на вкладке «Клан».</div>';
-    return;
-  }
-
-  let html = '<div class="section-title">Чат клана</div>';
-  html += '<div class="chat-box" id="chatBox"></div>';
-  html += '<div class="emoji-row" id="emojiRow"></div>';
-  html += '<div class="chat-row">';
-  html += '<input id="chatInput" maxlength="200" placeholder="Сообщение…">';
-  html += '<button id="chatSend">➤</button>';
-  html += '</div>';
-  html += '<button class="btn-wide grey" id="shareBtn">📤 Отправить повтор в чат</button>';
-
-  app.innerHTML = html;
-
-  const row = $('emojiRow');
-  for (let i = 0; i < EMOJI.length; i++){
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = EMOJI[i];
-    (function (ch){
-      b.onclick = function (){
-        const inp = $('chatInput');
-        if (!inp) return;
-        inp.value = (inp.value + ch).slice(0, 200);
-        inp.focus();
-      };
-    })(EMOJI[i]);
-    row.appendChild(b);
-  }
-
-  $('chatSend').onclick = sendChat;
-  $('chatInput').addEventListener('keydown', function (e){
-    if (e.key === 'Enter') sendChat();
-  });
-  $('shareBtn').onclick = openShare;
-
-  loadChat();
-  chatTimer = setInterval(loadChat, 4000);
-}
-
 async function loadChat(){
   if (!myClan) return;
 
@@ -874,7 +947,7 @@ function renderChatMessages(){
   if (!box) return;
 
   if (!chatMsgs.length){
-    box.innerHTML = '<div class="empty">Сообщений пока нет</div>';
+    box.innerHTML = '<div class="empty">Сообщений пока нет.<br>Напиши первым.</div>';
     return;
   }
 
@@ -883,6 +956,11 @@ function renderChatMessages(){
   for (let i = 0; i < chatMsgs.length; i++){
     const m = chatMsgs[i];
     const mine = (m.player_key === meKey);
+
+    if (m.kind === 'system'){
+      html += '<div class="msg-sys">' + esc(m.text || '') + '</div>';
+      continue;
+    }
 
     html += '<div class="msg' + (mine ? ' mine' : '') + '">';
     html += '<div class="msg-head">' + esc(m.name || 'Игрок') + '</div>';
@@ -1119,6 +1197,8 @@ async function leaveClan(){
 
   if (!confirm('Выйти из клана?')) return;
 
+  closeClanModal();
+
   await sb.from('clan_members').delete().eq('player_key', meKey);
 
   if (isOwner && myClan){
@@ -1136,11 +1216,11 @@ async function kickMember(key){
   await sb.from('clan_members').delete().eq('player_key', key);
   showToast('Участник выгнан');
   await loadAll();
+  if (!$('clanInfoModal').classList.contains('hidden')) renderClanModal();
 }
 
 async function createClan(){
   const name = $('inName').value.trim();
-  const tag  = $('inTag').value.trim();
   const desc = $('inDesc').value.trim();
 
   if (name.length < 3){ showToast('Название минимум 3 символа'); return; }
@@ -1198,12 +1278,16 @@ $('bannerBtn').onclick = function (){
 };
 
 $('shareMeBtn').onclick = shareMe;
+$('ciClose').onclick = closeClanModal;
+
+$('clanInfoModal').onclick = function (e){
+  if (e.target === $('clanInfoModal')) closeClanModal();
+};
 
 $('createCancel').onclick = function (){ $('createModal').classList.add('hidden'); };
 $('createOk').onclick = createClan;
 
 $('addCancel').onclick = function (){ $('addModal').classList.add('hidden'); };
-
 $('shareCancel').onclick = function (){ $('shareModal').classList.add('hidden'); };
 
 $('addSearch').onclick = async function (){
@@ -1264,7 +1348,7 @@ $('addSearch').onclick = async function (){
   }
 };
 
-/* ================= ВЫЗОВЫ НА ЭТОЙ СТРАНИЦЕ ================= */
+/* ================= ВЫЗОВЫ ================= */
 
 function watchChallenges(){
   if (!window.Friends) return;
@@ -1325,7 +1409,7 @@ function watchChallenges(){
   });
 }
 
-/* ================= ПЕРЕХОД ПО ССЫЛКЕ ================= */
+/* ================= ССЫЛКИ ================= */
 
 function handleDeepLink(){
   const p = new URLSearchParams(location.search);
