@@ -18,333 +18,236 @@
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 body{margin:0;background:radial-gradient(circle at center,#1e293b,#0f172a);color:#fff;min-height:100dvh;padding-bottom:80px;user-select:none}
-.hidden{display:none!important}
-.top-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 10px}
-.page-title{font-size:20px;font-weight:900}
-.currency{display:flex;gap:5px;background:rgba(0,0,0,.6);padding:5px 12px;border-radius:10px;font-size:13px;font-weight:bold;color:#ffcc00;border:1px solid #ffcc00}
+.hide{display:none!important}
+.tb{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 10px}
+.tt{font-size:20px;font-weight:900}
+.cu{display:flex;gap:5px;background:rgba(0,0,0,.6);padding:5px 12px;border-radius:10px;font-size:13px;font-weight:bold;color:#ffcc00;border:1px solid #ffcc00}
 .tabs{display:flex;gap:6px;padding:6px 12px 10px}
 .tab{flex:1;padding:10px 4px;border-radius:10px;border:1px solid #334155;background:#1e293b;color:#94a3b8;font-size:12.5px;font-weight:900;cursor:pointer}
 .tab.on{background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000;border-color:#fff}
-.banner{margin:0 12px 12px;padding:12px 14px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#5b21b6);display:flex;align-items:center;justify-content:space-between;gap:10px}
-.banner-text{font-size:13px;font-weight:900;line-height:1.3}
-.banner-btn{background:#fff;color:#4c1d95;border:0;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap}
+.bn{margin:0 12px 12px;padding:12px 14px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#5b21b6);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.bn span{font-size:13px;font-weight:900;line-height:1.3}
+.bn button{background:#fff;color:#4c1d95;border:0;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap}
 #app{padding:0 12px 20px}
-.search-wide{width:100%;padding:13px;border-radius:12px;border:2px solid #334155;background:#1e293b;color:#ffcc00;font-size:13.5px;font-weight:900;cursor:pointer;margin-bottom:12px}
-.search-box input{width:100%;padding:12px 14px;border-radius:11px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none}
-.chips{display:flex;gap:6px;margin-top:8px}
-.chip{flex:1;padding:9px;border-radius:9px;border:1px solid #334155;background:#0f172a;color:#94a3b8;font-size:12px;font-weight:900;cursor:pointer}
-.chip.on{background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000;border-color:#fff}
-.section-title{text-align:center;font-size:12.5px;font-weight:900;color:#cbd5e1;margin:14px 0 12px;display:flex;align-items:center;gap:10px}
-.section-title::before,.section-title::after{content:'';flex:1;height:1px;background:#334155}
-.tagpill{font-size:10px;font-weight:900;color:#000;background:linear-gradient(145deg,#ffcc00,#ff9500);padding:1px 6px;border-radius:6px;margin-left:5px;white-space:nowrap;cursor:pointer;display:inline-block}
-.clan-card{display:flex;align-items:center;gap:10px;background:#1e293b;border:2px solid #334155;border-radius:14px;padding:12px;margin-bottom:10px;cursor:pointer}
-.clan-card:active{border-color:#64748b}
-.clan-emblem{width:46px;height:46px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.25)}
-.clan-info{flex:1;min-width:0}
-.clan-name{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.clan-sub{font-size:11px;color:#94a3b8;margin-top:2px}
-.clan-join{border:0;border-radius:10px;padding:9px 13px;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap}
-.clan-join:disabled{background:#334155;color:#64748b;opacity:.75}
-.btn-wide{width:100%;padding:14px;border:0;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;color:#fff;background:linear-gradient(145deg,#22c55e,#15803d);margin-top:8px}
-.btn-wide.grey{background:linear-gradient(145deg,#475569,#1e293b)}
-.btn-wide.blue{background:linear-gradient(145deg,#3b82f6,#1d4ed8)}
-.clan-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;cursor:pointer;margin-bottom:10px}
-.cb-emblem{width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.6)}
-.cb-info{flex:1;min-width:0}
-.cb-name{font-size:14.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cb-sub{font-size:10.5px;color:#fff3d6;margin-top:2px;font-weight:700}
-.cb-chev{font-size:22px;color:#fff;opacity:.85}
-.member{display:flex;align-items:center;gap:8px;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:10px 12px;margin-bottom:8px}
-.member.me{border-color:#22c55e}
-.m-rank{width:26px;height:26px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#0f172a;background:linear-gradient(180deg,#e2e8f0,#94a3b8)}
-.m-rank.r1{background:linear-gradient(180deg,#ffe680,#e0a200)}
-.m-rank.r2{background:linear-gradient(180deg,#e2e8f0,#9aa7b8)}
-.m-rank.r3{background:linear-gradient(180deg,#f0b27a,#b06a2c)}
-.m-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(0,0,0,.4);border:1px solid #475569}
-.m-info{flex:1;min-width:0;cursor:pointer}
-.m-name{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.m-role{font-size:10.5px;color:#fbbf24;font-weight:800;margin-top:1px}
-.m-cups{font-size:11.5px;color:#ffcc00;font-weight:900;white-space:nowrap}
-.mini{border:0;border-radius:8px;color:#fff;font-size:11px;font-weight:900;padding:7px 9px;cursor:pointer;white-space:nowrap}
-.mini.play{background:linear-gradient(145deg,#22c55e,#15803d)}
-.mini.add{background:linear-gradient(145deg,#3b82f6,#1d4ed8)}
-.mini.share{background:linear-gradient(145deg,#8b5cf6,#6d28d9)}
-.mini.kick{background:linear-gradient(145deg,#ef4444,#991b1b)}
-.chat-box{background:#131c2e;border:1px solid #334155;border-radius:12px;padding:10px;height:calc(100dvh - 400px);min-height:170px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.sw{width:100%;padding:13px;border-radius:12px;border:2px solid #334155;background:#1e293b;color:#ffcc00;font-size:13.5px;font-weight:900;cursor:pointer;margin-bottom:12px}
+.st{text-align:center;font-size:12.5px;font-weight:900;color:#cbd5e1;margin:14px 0 12px;display:flex;align-items:center;gap:10px}
+.st:before,.st:after{content:'';flex:1;height:1px;background:#334155}
+.pill{font-size:10px;font-weight:900;color:#000;background:linear-gradient(145deg,#ffcc00,#ff9500);padding:1px 6px;border-radius:6px;margin-left:5px;display:inline-block}
+.cc{display:flex;align-items:center;gap:10px;background:#1e293b;border:2px solid #334155;border-radius:14px;padding:12px;margin-bottom:10px;cursor:pointer}
+.cc:active{border-color:#64748b}
+.ce{width:46px;height:46px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.25)}
+.ci{flex:1;min-width:0}
+.cn{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs{font-size:11px;color:#94a3b8;margin-top:2px}
+.cj{border:0;border-radius:10px;padding:9px 13px;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap}
+.cj:disabled{background:#334155;color:#64748b}
+.mi{border:0;border-radius:8px;color:#fff;font-size:11px;font-weight:900;padding:7px 9px;cursor:pointer;white-space:nowrap}
+.mi.sh{background:linear-gradient(145deg,#8b5cf6,#6d28d9)}
+.mi.pl{background:linear-gradient(145deg,#22c55e,#15803d)}
+.mi.ad{background:linear-gradient(145deg,#3b82f6,#1d4ed8)}
+.mi.kk{background:linear-gradient(145deg,#ef4444,#991b1b)}
+.bw{width:100%;padding:14px;border:0;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;color:#fff;background:linear-gradient(145deg,#22c55e,#15803d);margin-top:8px}
+.bw.gy{background:linear-gradient(145deg,#475569,#1e293b)}
+.bw.bl{background:linear-gradient(145deg,#3b82f6,#1d4ed8)}
+.cbar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;cursor:pointer;margin-bottom:10px}
+.cbar .ce{background:rgba(0,0,0,.28);border-color:rgba(255,255,255,.6)}
+.mb{display:flex;align-items:center;gap:8px;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.mb.me{border-color:#22c55e}
+.rk{width:26px;height:26px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#0f172a;background:linear-gradient(180deg,#e2e8f0,#94a3b8)}
+.rk.r1{background:linear-gradient(180deg,#ffe680,#e0a200)}
+.rk.r2{background:linear-gradient(180deg,#e2e8f0,#9aa7b8)}
+.rk.r3{background:linear-gradient(180deg,#f0b27a,#b06a2c)}
+.av{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(0,0,0,.4);border:1px solid #475569}
+.mn{flex:1;min-width:0;cursor:pointer}
+.mname{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mrole{font-size:10.5px;color:#fbbf24;font-weight:800;margin-top:1px}
+.mcup{font-size:11.5px;color:#ffcc00;font-weight:900;white-space:nowrap}
+.chat{background:#131c2e;border:1px solid #334155;border-radius:12px;padding:10px;height:calc(100dvh - 400px);min-height:170px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
 .msg{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:8px 10px;max-width:92%}
 .msg.mine{align-self:flex-end;background:#14532d;border-color:#166534}
-.msg-head{font-size:10px;color:#94a3b8;font-weight:800;margin-bottom:3px;cursor:pointer}
-.msg-text{font-size:13.5px;line-height:1.4;word-break:break-word}
-.msg-replay{font-size:11.5px;color:#cbd5e1;margin-bottom:6px}
-.msg-btn{width:100%;padding:8px;border:0;border-radius:8px;background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000;font-size:11.5px;font-weight:900;cursor:pointer}
-.msg-sys{align-self:center;background:linear-gradient(135deg,#22c55e,#15803d);font-size:11.5px;font-weight:800;padding:7px 14px;border-radius:10px;text-align:center;max-width:96%}
-.emoji-row{display:flex;gap:4px;overflow-x:auto;padding:8px 0 0;scrollbar-width:none}
-.emoji-row::-webkit-scrollbar{display:none}
-.emoji-row button{flex:0 0 auto;width:36px;height:36px;border-radius:9px;border:1px solid #334155;background:#0f172a;font-size:18px;cursor:pointer;padding:0}
-.chat-row{display:flex;gap:6px;margin-top:8px}
-.chat-row input{flex:1;padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none}
-.chat-row button{padding:0 16px;border:0;border-radius:10px;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-size:16px;font-weight:900;cursor:pointer}
-.modal{position:fixed;inset:0;background:rgba(2,6,23,.94);display:flex;align-items:center;justify-content:center;padding:14px;z-index:1000;overflow-y:auto}
-.modal-box{width:100%;max-width:390px;background:linear-gradient(180deg,#243b6b,#1a2745);border:2px solid #64748b;border-radius:16px;padding:14px;max-height:88vh;overflow-y:auto}
-.modal-title{font-size:17px;font-weight:900;margin-bottom:12px;text-align:center}
-#clanInfoModal .modal-box{padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:90vh}
-.cr-top{display:flex;align-items:center;justify-content:center;position:relative;padding:10px 14px;background:linear-gradient(180deg,#4ab3f8,#1b6fd6);border-bottom:3px solid #f7c948;flex-shrink:0}
-.cr-top h3{margin:0;font-size:16px;font-weight:900}
-.ci-close{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:9px;border:2px solid #fff;background:linear-gradient(180deg,#f4665e,#c62828);color:#fff;font-size:14px;cursor:pointer;line-height:1}
-.cr-scroll{flex:1;overflow-y:auto;padding:12px}
-.cr-head{display:flex;align-items:center;gap:11px;margin-bottom:10px}
-.cr-emblem{width:58px;height:58px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24}
-.cr-name{font-size:16px;font-weight:900;line-height:1.2}
-.cr-sub{font-size:11px;color:#c6d8ff;margin-top:3px}
-.cr-cups{margin-left:auto;text-align:right;flex-shrink:0}
-.cr-cups b{display:block;font-size:16px;font-weight:900;color:#ffcc00;line-height:1.1}
-.cr-cups span{font-size:9px;color:#c6d8ff;font-weight:800}
-.cr-desc{font-size:12.5px;line-height:1.45;color:#e2e8f0;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:9px 11px;white-space:pre-wrap;word-break:break-word;margin-bottom:10px}
-.cr-desc.empty{color:#8fa3c8;font-style:italic}
-.cr-desc-edit{width:100%;height:74px;resize:none;padding:9px 11px;border-radius:10px;border:1px solid #64748b;background:#0f172a;color:#fff;font-size:12.5px;outline:none;font-family:inherit;margin-bottom:6px}
-.cr-desc-count{font-size:10px;color:#8fa3c8;text-align:right;margin-bottom:6px}
-.cr-desc-row{display:flex;gap:7px;margin-bottom:10px}
-.cr-desc-row button{flex:1;padding:10px;border:0;border-radius:9px;font-size:12px;font-weight:900;color:#fff;cursor:pointer}
-#descCancel{background:linear-gradient(180deg,#64748b,#334155)}
-#descSave{background:linear-gradient(180deg,#5ddc7a,#1f9e42)}
-.cr-desc-err{font-size:11px;color:#fca5a5;margin:-4px 0 10px;line-height:1.35}
-.cr-edit{font-size:11px;font-weight:900;color:#ffcc00;background:rgba(0,0,0,.3);border:1px solid #f7c948;border-radius:8px;padding:4px 9px;cursor:pointer;float:right;margin:-2px 0 8px 8px}
-.cr-stats{display:flex;background:linear-gradient(180deg,#2f74d8,#1a4c9e);border-radius:10px;overflow:hidden;margin-bottom:10px;border:1px solid #3b82f6}
-.cr-stat{flex:1;padding:8px 4px;text-align:center;border-right:1px solid rgba(255,255,255,.18)}
-.cr-stat:last-child{border-right:0}
-.cr-stat span{display:block;font-size:8.5px;color:#c6d8ff;font-weight:800;line-height:1.2}
-.cr-stat b{display:block;font-size:14px;color:#fff;font-weight:900;margin-top:3px}
-.cr-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-.cr-bar-l{font-size:9.5px;font-weight:900;color:#8fa3c8;line-height:1.2}
-.cr-bar-l b{display:block;font-size:15px;color:#fff;margin-top:2px}
-.cr-btns{display:flex;align-items:center;gap:7px}
-.cr-leave{padding:11px 14px;border:2px solid #fff;border-radius:10px;background:linear-gradient(180deg,#f4665e,#c62828);color:#fff;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #7f1d1d;white-space:nowrap}
-.cr-join-big{width:100%;padding:14px;border:0;border-radius:11px;background:linear-gradient(180deg,#5ddc7a,#1f9e42);color:#fff;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #10592a;margin-bottom:10px}
-.cr-joined{width:100%;padding:13px;border-radius:11px;background:rgba(255,255,255,.12);border:2px solid #22c55e;color:#86efac;font-size:13px;font-weight:900;text-align:center;margin-bottom:10px}
-.cr-search{width:42px;height:42px;border:2px solid #fff;border-radius:10px;background:linear-gradient(180deg,#5ea8ff,#1e63c8);color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 #123b7a}
-.emblem-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px}
-.emblem-opt{width:42px;height:42px;border-radius:12px;border:2px solid #334155;background:#0f172a;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.emblem-opt.on{border-color:#22c55e;background:#064e3b}
-.modal-box input,.modal-box textarea{width:100%;margin-bottom:10px;padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none;font-family:inherit}
-.modal-box textarea{resize:none;height:70px}
-.modal-btns{display:flex;gap:8px;margin-top:6px}
-.modal-btns button{flex:1;padding:13px;border:0;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;color:#fff}
-#createCancel,#addCancel,#shareCancel{background:linear-gradient(145deg,#475569,#1e293b)}
-#createOk,#addSearch{background:linear-gradient(145deg,#22c55e,#15803d)}
-.empty{text-align:center;color:#64748b;font-size:13px;padding:22px 10px;line-height:1.5}
-.errbox{margin:0 12px 12px;padding:12px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid #7f1d1d;color:#fecaca;font-size:11.5px;word-break:break-word}
-.toast{position:fixed;bottom:150px;left:50%;transform:translateX(-50%) translateY(10px);background:#1e293b;border:1px solid #475569;color:#ffcc00;padding:10px 16px;border-radius:8px;font-size:12.5px;opacity:0;transition:.2s;pointer-events:none;z-index:2300;max-width:80vw;text-align:center}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e,#0f0f1e);border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom)}
-.nav-btn{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px}
-.nav-btn .icon-wrap{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f)}
-.nav-btn .icon{font-size:20px}
-.nav-btn.active{color:#ffcc00}
-.nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500)}
-.deck-stack{position:relative;width:24px;height:28px}
-.deck-stack .deck-card{position:absolute;width:16px;height:22px;border-radius:3px;border:1px solid rgba(255,255,255,.5)}
-.deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c)}
-.deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe)}
-.deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900}
+.mh{font-size:10px;color:#94a3b8;font-weight:800;margin-bottom:3px}
+.mt{font-size:13.5px;line-height:1.4;word-break:break-word}
+.emr{display:flex;gap:4px;overflow-x:auto;padding:8px 0 0;scrollbar-width:none}
+.emr::-webkit-scrollbar{display:none}
+.emr button{flex:0 0 auto;width:36px;height:36px;border-radius:9px;border:1px solid #334155;background:#0f172a;font-size:18px;cursor:pointer;padding:0}
+.crow{display:flex;gap:6px;margin-top:8px}
+.crow input{flex:1;padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none}
+.crow button{padding:0 16px;border:0;border-radius:10px;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-size:16px;font-weight:900;cursor:pointer}
+.mod{position:fixed;inset:0;background:rgba(2,6,23,.94);display:flex;align-items:center;justify-content:center;padding:14px;z-index:1000;overflow-y:auto}
+.mbox{width:100%;max-width:390px;background:linear-gradient(180deg,#243b6b,#1a2745);border:2px solid #64748b;border-radius:16px;padding:14px;max-height:88vh;overflow-y:auto}
+.mt2{font-size:17px;font-weight:900;margin-bottom:12px;text-align:center}
+#clanModal .mbox{padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:90vh}
+.ctop{display:flex;align-items:center;justify-content:center;position:relative;padding:10px 14px;background:linear-gradient(180deg,#4ab3f8,#1b6fd6);border-bottom:3px solid #f7c948;flex-shrink:0}
+.ctop h3{margin:0;font-size:16px;font-weight:900}
+.x{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:9px;border:2px solid #fff;background:linear-gradient(180deg,#f4665e,#c62828);color:#fff;font-size:14px;cursor:pointer;line-height:1}
+.csc{flex:1;overflow-y:auto;padding:12px}
+.ch{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+.cemb{width:58px;height:58px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24}
+.cnm{font-size:16px;font-weight:900;line-height:1.2}
+.csub{font-size:11px;color:#c6d8ff;margin-top:3px}
+.ccups{margin-left:auto;text-align:right;flex-shrink:0}
+.ccups b{display:block;font-size:16px;font-weight:900;color:#ffcc00;line-height:1.1}
+.ccups span{font-size:9px;color:#c6d8ff;font-weight:800}
+.cd{font-size:12.5px;line-height:1.45;color:#e2e8f0;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:9px 11px;white-space:pre-wrap;word-break:break-word;margin-bottom:10px}
+.cd.em{color:#8fa3c8;font-style:italic}
+.cdta{width:100%;height:74px;resize:none;padding:9px 11px;border-radius:10px;border:1px solid #64748b;background:#0f172a;color:#fff;font-size:12.5px;outline:none;font-family:inherit;margin-bottom:6px}
+.cdc{font-size:10px;color:#8fa3c8;text-align:right;margin-bottom:6px}
+.cdr{display:flex;gap:7px;margin-bottom:10px}
+.cdr button{flex:1;padding:10px;border:0;border-radius:9px;font-size:12px;font-weight:900;color:#fff;cursor:pointer}
+#dCan{background:linear-gradient(180deg,#64748b,#334155)}
+#dSav{background:linear-gradient(180deg,#5ddc7a,#1f9e42)}
+.cded{font-size:11px;font-weight:900;color:#ffcc00;background:rgba(0,0,0,.3);border:1px solid #f7c948;border-radius:8px;padding:4px 9px;cursor:pointer;float:right;margin:-2px 0 8px 8px}
+.cstat{display:flex;background:linear-gradient(180deg,#2f74d8,#1a4c9e);border-radius:10px;overflow:hidden;margin-bottom:10px;border:1px solid #3b82f6}
+.cstat div{flex:1;padding:8px 4px;text-align:center;border-right:1px solid rgba(255,255,255,.18)}
+.cstat div:last-child{border-right:0}
+.cstat span{display:block;font-size:8.5px;color:#c6d8ff;font-weight:800;line-height:1.2}
+.cstat b{display:block;font-size:14px;color:#fff;font-weight:900;margin-top:3px}
+.cbr{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.cbrl{font-size:9.5px;font-weight:900;color:#8fa3c8;line-height:1.2}
+.cbrl b{display:block;font-size:15px;color:#fff;margin-top:2px}
+.cbtn{display:flex;align-items:center;gap:7px}
+.clv{padding:11px 14px;border:2px solid #fff;border-radius:10px;background:linear-gradient(180deg,#f4665e,#c62828);color:#fff;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #7f1d1d;white-space:nowrap}
+.cjbig{width:100%;padding:14px;border:0;border-radius:11px;background:linear-gradient(180deg,#5ddc7a,#1f9e42);color:#fff;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #10592a;margin-bottom:10px}
+.cjoined{width:100%;padding:13px;border-radius:11px;background:rgba(255,255,255,.12);border:2px solid #22c55e;color:#86efac;font-size:13px;font-weight:900;text-align:center;margin-bottom:10px}
+.csr{width:42px;height:42px;border:2px solid #fff;border-radius:10px;background:linear-gradient(180deg,#5ea8ff,#1e63c8);color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 #123b7a}
+.emrow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px}
+.emopt{width:42px;height:42px;border-radius:12px;border:2px solid #334155;background:#0f172a;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.emopt.on{border-color:#22c55e;background:#064e3b}
+.mbox input,.mbox textarea{width:100%;margin-bottom:10px;padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none;font-family:inherit}
+.mbox textarea{resize:none;height:70px}
+.mbtns{display:flex;gap:8px;margin-top:6px}
+.mbtns button{flex:1;padding:13px;border:0;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;color:#fff;background:linear-gradient(145deg,#22c55e,#15803d)}
+.mbtns button.off{background:linear-gradient(145deg,#475569,#1e293b)}
+.emp{text-align:center;color:#64748b;font-size:13px;padding:22px 10px;line-height:1.5}
+.eb{margin:0 12px 12px;padding:12px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid #7f1d1d;color:#fecaca;font-size:11.5px;word-break:break-word}
+.tst{position:fixed;bottom:150px;left:50%;transform:translateX(-50%) translateY(10px);background:#1e293b;border:1px solid #475569;color:#ffcc00;padding:10px 16px;border-radius:8px;font-size:12.5px;opacity:0;transition:.2s;pointer-events:none;z-index:2300;max-width:80vw;text-align:center}
+.tst.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e,#0f0f1e);border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom)}
+.nb{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px}
+.nb i{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);font-size:20px;font-style:normal}
+.nb.on{color:#ffcc00}
+.nb.on i{background:linear-gradient(145deg,#ffcc00,#ff9500)}
+.sp{width:24px;height:28px;position:relative}
+.sp b{position:absolute;width:16px;height:22px;border-radius:3px;border:1px solid rgba(255,255,255,.5);font-size:12px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff}
+.sp b:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c)}
+.sp b:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe)}
+.sp b:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7)}
 </style>
 </head>
 <body>
 
-<div class="top-bar"><div class="page-title">Клан</div><div class="currency">🏆 <span id="cupsTop">0</span></div></div>
-
-<div class="tabs">
-  <button class="tab on" data-tab="clan">Клан</button>
-  <button class="tab" data-tab="friends">Друзья</button>
-</div>
-
-<div class="banner hidden" id="banner">
-  <div class="banner-text">Вступи в клан или создай новый!</div>
-  <button class="banner-btn" id="bannerBtn">Создать</button>
-</div>
-
-<div id="errBox" class="errbox hidden"></div>
+<div class="tb"><div class="tt">Клан</div><div class="cu">🏆 <span id="cups">0</span></div></div>
+<div class="tabs"><button class="tab on" data-t="clan">Клан</button><button class="tab" data-t="friends">Друзья</button></div>
+<div class="bn hide" id="bn"><span>Вступи в клан или создай новый!</span><button id="bnBtn">Создать</button></div>
+<div id="eb" class="eb hide"></div>
 <div id="app"></div>
 
-<div id="searchModal" class="modal hidden">
-  <div class="modal-box" style="max-width:420px">
-    <div class="cr-top" style="margin:-14px -14px 12px;border-radius:14px 14px 0 0"><h3>Поиск</h3><button class="ci-close" id="searchClose">✕</button></div>
-    <div class="search-box">
-      <input id="searchInput" type="text" placeholder="#тег или имя" autocomplete="off" spellcheck="false">
-      <div class="chips">
-        <button class="chip on" data-mode="clans">Кланы</button>
-        <button class="chip" data-mode="players">Игроки</button>
-      </div>
-    </div>
-    <div id="searchOut"></div>
-  </div>
+<div id="searchModal" class="mod hide"><div class="mbox">
+<div class="ctop" style="margin:-14px -14px 12px;border-radius:14px 14px 0 0"><h3>Поиск</h3><button class="x" id="sClose">✕</button></div>
+<input id="sInput" type="text" placeholder="#тег или имя" autocomplete="off" spellcheck="false">
+<div style="display:flex;gap:6px">
+<button class="cj" style="flex:1" data-m="clans" id="mC">Кланы</button>
+<button class="cj" style="flex:1;background:#334155" data-m="players" id="mP">Игроки</button>
 </div>
+<div id="sOut"></div>
+</div></div>
 
-<div id="clanInfoModal" class="modal hidden">
-  <div class="modal-box">
-    <div class="cr-top"><h3 id="ciTitle">Клан</h3><button class="ci-close" id="ciClose">✕</button></div>
-    <div class="cr-scroll" id="ciScroll"></div>
-  </div>
-</div>
+<div id="clanModal" class="mod hide"><div class="mbox">
+<div class="ctop"><h3 id="cTitle">Клан</h3><button class="x" id="cClose">✕</button></div>
+<div class="csc" id="cBody"></div>
+</div></div>
 
-<div id="createModal" class="modal hidden">
-  <div class="modal-box">
-    <div class="modal-title">Новый клан</div>
-    <div class="emblem-row" id="emblemRow"></div>
-    <input id="inName" type="text" maxlength="20" placeholder="Название клана">
-    <textarea id="inDesc" maxlength="120" placeholder="Описание (необязательно)"></textarea>
-    <div class="modal-btns"><button id="createCancel">Отмена</button><button id="createOk">Создать</button></div>
-  </div>
-</div>
+<div id="createModal" class="mod hide"><div class="mbox">
+<div class="mt2">Новый клан</div>
+<div class="emrow" id="emrow"></div>
+<input id="cName" type="text" maxlength="20" placeholder="Название клана">
+<textarea id="cDesc" maxlength="120" placeholder="Описание (необязательно)"></textarea>
+<div class="mbtns"><button class="off" id="cCancel">Отмена</button><button id="cOk">Создать</button></div>
+</div></div>
 
-<div id="addModal" class="modal hidden">
-  <div class="modal-box">
-    <div class="modal-title">Добавить друга</div>
-    <input id="inNick" type="text" maxlength="16" placeholder="Ник или #тег">
-    <div class="modal-btns"><button id="addCancel">Отмена</button><button id="addSearch">Найти</button></div>
-    <div id="addResults"></div>
-  </div>
-</div>
+<div id="addModal" class="mod hide"><div class="mbox">
+<div class="mt2">Добавить друга</div>
+<input id="aNick" type="text" maxlength="16" placeholder="Ник или #тег">
+<div class="mbtns"><button class="off" id="aCancel">Отмена</button><button id="aFind">Найти</button></div>
+<div id="aOut"></div>
+</div></div>
 
-<div id="shareModal" class="modal hidden">
-  <div class="modal-box">
-    <div class="modal-title">Отправить повтор в чат</div>
-    <div id="shareList"></div>
-    <div class="modal-btns"><button id="shareCancel">Закрыть</button></div>
-  </div>
-</div>
+<div class="tst" id="tst"></div>
 
-<div class="toast" id="toast"></div>
-
-<div class="bottom-nav">
-  <button class="nav-btn" onclick="location.href='chess-shop.html'"><div class="icon-wrap"><span class="icon">🎁</span></div><span>Магазин</span></button>
-  <button class="nav-btn" onclick="location.href='chess-deck.html'"><div class="icon-wrap"><div class="deck-stack"><div class="deck-card"></div><div class="deck-card"></div><div class="deck-card">♠</div></div></div><span>Колода</span></button>
-  <button class="nav-btn" onclick="location.href='chess-main.html'"><div class="icon-wrap"><span class="icon">⚔️</span></div><span>Бой</span></button>
-  <button class="nav-btn active" onclick="location.href='chess-social.html'"><div class="icon-wrap"><span class="icon">🛡️</span></div><span>Клан</span></button>
-  <button class="nav-btn" onclick="location.href='leaderboard.html'"><div class="icon-wrap"><span class="icon">🏆</span></div><span>Рейтинг</span></button>
+<div class="nav">
+<button class="nb" onclick="location.href='chess-shop.html'"><i>🎁</i><span>Магазин</span></button>
+<button class="nb" onclick="location.href='chess-deck.html'"><i><span class="sp"><b></b><b></b><b>♠</b></span></i><span>Колода</span></button>
+<button class="nb" onclick="location.href='chess-main.html'"><i>⚔️</i><span>Бой</span></button>
+<button class="nb on" onclick="location.href='chess-social.html'"><i>🛡️</i><span>Клан</span></button>
+<button class="nb" onclick="location.href='leaderboard.html'"><i>🏆</i><span>Рейтинг</span></button>
 </div>
 
 <script src="friends.js?v=3"></script>
 <script src="profile.js?v=3"></script>
 <script>
-var sb=supabase.createClient('https://qnpriwfxzuoymoumdtrl.supabase.co','sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF');
-var $=function(i){return document.getElementById(i);};
-var MAX=30;
+var SB=supabase.createClient('https://qnpriwfxzuoymoumdtrl.supabase.co','sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF');
+function $(i){return document.getElementById(i);}
+var MAXM=30;
 var EMB=['🛡️','👑','⚔️','🐺','🦅','🔥','💀','🐉','⭐','🦁','⚡','♟️'];
 var EMO=['😀','😂','😍','🔥','⚔️','🏆','🤝','👑','💀','🛡️','⚡','😭','👍','🎯','♟️','🙌','😎','🤔','💪','🎉'];
 var BAD=['хуй','хуя','хую','хуё','хуе','пизд','ебал','ебан','ебат','ебуч','ебло','бля','мудак','мудо','пидор','пидар','пидр','педик','залуп','дроч','манда','шлюх','гандон','сука','суки','сучк','гнида','уёб','уеб','нахуй','похуй','жоп','срак','говн','дерьм','твар','мраз','fuck','shit','bitch','cunt','asshole','bastard','slut','whore','pussy','nigg','retard'];
-
 function norm(t){t=String(t||'').toLowerCase();var m={'0':'o','1':'i','3':'e','4':'a','5':'s','7':'t','@':'a','$':'s'};var o='';for(var i=0;i<t.length;i++){var c=t.charAt(i);o+=(m[c]!==undefined)?m[c]:c;}return o.replace(/ё/g,'е').replace(/[^a-zа-я]/g,'');}
-function badw(t){var s=norm(t);if(!s)return false;for(var i=0;i<BAD.length;i++)if(s.indexOf(BAD[i])>=0)return true;return false;}
+function badw(t){var s=norm(t);if(!s)return false;for(var i=0;i<BAD.length;i++){if(s.indexOf(BAD[i])>=0)return true;}return false;}
 
-var meKey='',meName='Игрок',meCups=0;
-var myMember=null,myClan=null,allClans=[],allMembers=[],tagMap={};
-var friendsList=[],shareRows=[],activeTab='clan',pickEm='🛡️';
-var searchQ='',searchMode='clans',descEdit=false,joining=false;
-var chatTimer=null,chatMsgs=[],toastT=null;
-var previewClan=null,loadedOnce=false;
+var MEK='',MEN='Игрок',MEC=0;
+var MEMBERS=[],CLANS=[],FRIENDS=[],TAGS={};
+var MYMEM=null,MYCLAN=null,PREV=null,LOADED=false;
+var TAB='clan',SEARCHQ='',SEARCHM='clans',DESCED=false,JOINING=false;
+var CHATT=null,MSGS=[],TOASTT=null,PICKEM='🛡️';
 
-function toast(t){var e=$('toast');if(!e)return;e.textContent=t;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('show');},2400);}
-function err(t){var b=$('errBox');if(!b)return;if(!t){b.classList.add('hidden');b.textContent='';return;}b.textContent=t;b.classList.remove('hidden');}
-function ckGet(n){try{var p=('; '+document.cookie).split('; '+n+'=');if(p.length===2)return decodeURIComponent(p[1].split(';')[0]);}catch(e){}return null;}
-function ckSet(n,v){try{document.cookie=n+'='+encodeURIComponent(v)+'; max-age=31536000; path=/; SameSite=Lax';}catch(e){}}
+function toast(t){var e=$('tst');e.textContent=t;e.className='tst show';clearTimeout(TOASTT);TOASTT=setTimeout(function(){e.className='tst';},2400);}
+function showErr(t){var b=$('eb');if(!t){b.className='eb hide';b.textContent='';return;}b.textContent=t;b.className='eb';}
 function ls(n){try{return localStorage.getItem(n);}catch(e){return null;}}
-function lsSet(n,v){try{localStorage.setItem(n,v);}catch(e){}}
+function lss(n,v){try{localStorage.setItem(n,v);}catch(e){}}
+function ck(n){try{var p=('; '+document.cookie).split('; '+n+'=');if(p.length===2)return decodeURIComponent(p[1].split(';')[0]);}catch(e){}return null;}
+function cks(n,v){try{document.cookie=n+'='+encodeURIComponent(v)+'; max-age=31536000; path=/; SameSite=Lax';}catch(e){}}
 
-function playerKey(){
-  var t=ls('tgId'); if(t) return 'tg:'+t;
-  var e=ls('currentEmail')||ls('linkedEmail'); if(e) return 'email:'+e.toLowerCase();
-  var a=ls('arenaAnonId'); if(a) return a;
-  var c=ckGet('arenaAnonId'); if(c){lsSet('arenaAnonId',c);return c;}
-  a='anon:'+Math.random().toString(36).slice(2,10);
-  lsSet('arenaAnonId',a); ckSet('arenaAnonId',a); return a;
+function myKey(){
+  var t=ls('tgId');if(t)return 'tg:'+t;
+  var e=ls('currentEmail')||ls('linkedEmail');if(e)return 'email:'+e.toLowerCase();
+  var a=ls('arenaAnonId');if(a)return a;
+  var c=ck('arenaAnonId');if(c){lss('arenaAnonId',c);return c;}
+  a='anon:'+Math.random().toString(36).slice(2,10);lss('arenaAnonId',a);cks('arenaAnonId',a);return a;
 }
-function playerName(){
-  var n=ls('userName'); if(n) return n;
+function myName(){
+  var n=ls('userName');if(n)return n;
   try{var w=window.Telegram&&window.Telegram.WebApp;var u=w&&w.initDataUnsafe&&w.initDataUnsafe.user;
-    if(u){var m=[u.first_name,u.last_name].filter(Boolean).join(' ')||u.username;if(m)return m;}}catch(e){}
+  if(u){var m=[u.first_name,u.last_name].filter(Boolean).join(' ')||u.username;if(m)return m;}}catch(e){}
   return 'Игрок';
 }
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function pill(c,k,n){if(!c)return '';return '<span class="tagpill" data-copytag="'+esc(c)+'" data-copykind="'+esc(k||'player')+'" data-copyname="'+esc(n||'')+'">#'+esc(c)+'</span>';}
-function base(){return location.origin+location.pathname;}
+function pill(c,k,n){if(!c)return '';return '<span class="pill" data-tag="'+esc(c)+'" data-kind="'+esc(k||'player')+'" data-nm="'+esc(n||'')+'">#'+esc(c)+'</span>';}
+function baseUrl(){return location.origin+location.pathname;}
 
-function share(url,ph){
+function shareLink(url,ph){
   var t=encodeURIComponent(ph||''),u=encodeURIComponent(url||'');
-  try{var w=window.Telegram&&window.Telegram.WebApp;if(w&&w.openTelegramLink){w.openTelegramLink('https://t.me/share/url?url='+u+'&text='+t);return;}}catch(e){}
+  try{var w=window.Telegram&&window.Telegram.WebApp;
+  if(w&&w.openTelegramLink){w.openTelegramLink('https://t.me/share/url?url='+u+'&text='+t);return;}}catch(e){}
   if(navigator.share){navigator.share({title:'Chess Royale',text:ph||'',url:url||''}).catch(function(){});return;}
   if(window.CopyShare&&window.CopyShare.shareLink){CopyShare.shareLink(url,ph);return;}
   window.open('https://t.me/share/url?url='+u+'&text='+t,'_blank');
 }
 function shareClan(name,code){
   if(!code){toast('У клана ещё нет тега');return;}
-  var u=base()+'?clan='+encodeURIComponent(code);
-  share(u,'Клан «'+name+'» набирает своих. Тег #'+code+' — вступай, побеждаем вместе!');
+  shareLink(baseUrl()+'?clan='+encodeURIComponent(code),'Клан «'+name+'» набирает своих. Тег #'+code+' — вступай!');
 }
-function copyTag(el){
-  var c=el.getAttribute('data-copytag'),k=el.getAttribute('data-copykind')||'player',n=el.getAttribute('data-copyname')||'';
+function shareTag(el){
+  var c=el.getAttribute('data-tag'),k=el.getAttribute('data-kind')||'player',n=el.getAttribute('data-nm')||'';
   if(!c)return;
-  var u=base()+(k==='clan'?'?clan=':'?player=')+encodeURIComponent(c);
-  share(u,(k==='clan')?'Клан «'+n+'» — тег #'+c+'. Вступай!':'Мой тег в Chess Royale — #'+c+'. Добавляйся!');
+  var u=baseUrl()+(k==='clan'?'?clan=':'?player=')+encodeURIComponent(c);
+  shareLink(u,k==='clan'?('Клан «'+n+'» — тег #'+c+'. Вступай!'):('Мой тег в Chess Royale — #'+c+'. Добавляйся!'));
 }
 function openProfile(k){if(window.Profile&&k)Profile.open(k);}
 
-async function boot(){
-  try{
-    meKey=playerKey(); meName=playerName();
-    meCups=parseInt(ls('cr_trophies')||'0',10)||0;
-    $('cupsTop').textContent=meCups;
-    try{var r=await sb.rpc('arena_ensure_player',{p_key:meKey,p_name:meName,p_seed:0});
-      if(!r.error&&r.data){meCups=r.data.cups||0;if(r.data.display_name)meName=r.data.display_name;}}catch(e){}
-    $('cupsTop').textContent=meCups; lsSet('cr_trophies',String(meCups));
-    try{var t=await sb.rpc('ensure_player_tag',{p_key:meKey});if(!t.error&&t.data)lsSet('cr_tag',String(t.data));}catch(e){}
-    await loadAll();
-    try{await loadFriends();}catch(e){}
-    await deepLink();
-  }catch(e){err('Ошибка: '+(e&&e.message?e.message:'неизвестно'));drawSafe();}
-}
-
-async function loadAll(){
-  err('');
-  try{var m=await sb.from('clan_members').select('*');allMembers=m.error?[]:(m.data||[]);}catch(e){allMembers=[];}
-  try{var c=await sb.from('clans').select('*').order('created_at',{ascending:false});allClans=c.error?[]:(c.data||[]);}catch(e){allClans=[];}
-  try{await loadTags();}catch(e){}
-  myMember=null;
-  for(var i=0;i<allMembers.length;i++){if(allMembers[i].player_key===meKey){myMember=allMembers[i];break;}}
-  myClan=null;
-  if(myMember){for(var j=0;j<allClans.length;j++){if(allClans[j].id===myMember.clan_id){myClan=allClans[j];break;}}}
-  loadedOnce=true;
-  drawSafe();
-  if(!$('clanInfoModal').classList.contains('hidden')){
-    if(previewClan)drawPreview(); else if(myClan)drawMine();
-  }
-}
-
-async function loadTags(){
-  tagMap={}; var k=[];
-  for(var i=0;i<allMembers.length;i++){if(k.indexOf(allMembers[i].player_key)<0)k.push(allMembers[i].player_key);}
-  if(!k.length)return;
-  var r=await sb.from('arena_players').select('player_key,tag').in('player_key',k);
-  if(r.error)return;
-  for(var j=0;j<(r.data||[]).length;j++){var p=r.data[j];if(p.tag)tagMap[p.player_key]=p.tag;}
-}
-
-async function loadFriends(){
-  if(!window.Friends){friendsList=[];return;}
-  var l=await Friends.list(),k=[];
-  for(var i=0;i<l.length;i++)k.push(l[i].friend_key);
-  var info={};
-  if(k.length){var r=await sb.from('arena_players').select('player_key,display_name,cups,tag').in('player_key',k);
-    if(!r.error)for(var j=0;j<(r.data||[]).length;j++){var p=r.data[j];info[p.player_key]=p;}}
-  friendsList=[];
-  for(var n=0;n<l.length;n++){var f=l[n],q=info[f.friend_key];
-    friendsList.push({key:f.friend_key,name:(q&&q.display_name)||f.friend_name||'Игрок',cups:(q&&q.cups)||0,tag:(q&&q.tag)||''});}
-  drawSafe();
-}
-
 function memOf(id){
   var o=[],s={};
-  for(var i=0;i<allMembers.length;i++){var m=allMembers[i];
-    if(m.clan_id!==id)continue; if(s[m.player_key])continue; s[m.player_key]=1; o.push(m);}
+  for(var i=0;i<MEMBERS.length;i++){var m=MEMBERS[i];
+  if(m.clan_id!==id)continue;if(s[m.player_key])continue;s[m.player_key]=1;o.push(m);}
   o.sort(function(a,b){
     if(a.role==='owner'&&b.role!=='owner')return -1;
     if(b.role==='owner'&&a.role!=='owner')return 1;
@@ -352,404 +255,374 @@ function memOf(id){
   return o;
 }
 function cupsOf(id){var m=memOf(id),s=0;for(var i=0;i<m.length;i++)s+=(m[i].cups||0);return s;}
-function isOwner(){return !!(myClan&&myClan.owner_key===meKey);}
+function isOwner(){return !!(MYCLAN&&MYCLAN.owner_key===MEK);}
+function findClan(id){for(var i=0;i<CLANS.length;i++){if(String(CLANS[i].id)===String(id))return CLANS[i];}return null;}
 
-function setTab(t){
-  activeTab=t;descEdit=false;previewClan=null;
-  var b=document.querySelectorAll('.tab');
-  for(var i=0;i<b.length;i++)b[i].classList.toggle('on',b[i].getAttribute('data-tab')===t);
-  drawSafe();
+async function boot(){
+  try{
+    MEK=myKey();MEN=myName();
+    MEC=parseInt(ls('cr_trophies')||'0',10)||0;
+    $('cups').textContent=MEC;
+    try{var r=await SB.rpc('arena_ensure_player',{p_key:MEK,p_name:MEN,p_seed:0});
+      if(!r.error&&r.data){MEC=r.data.cups||0;if(r.data.display_name)MEN=r.data.display_name;}}catch(e){}
+    $('cups').textContent=MEC;lss('cr_trophies',String(MEC));
+    try{var t=await SB.rpc('ensure_player_tag',{p_key:MEK});
+      if(!t.error&&t.data)lss('cr_tag',String(t.data));}catch(e){}
+    await loadAll();
+    try{await loadFriends();}catch(e){}
+    await deepLink();
+  }catch(e){showErr('Ошибка: '+(e&&e.message?e.message:'неизвестно'));}
 }
-var tabB=document.querySelectorAll('.tab');
-for(var ti=0;ti<tabB.length;ti++){(function(el){el.onclick=function(){setTab(el.getAttribute('data-tab'));};})(tabB[ti]);}
 
-function drawSafe(){
-  try{draw();}catch(e){
-    var a=$('app'); if(!a)return;
-    a.innerHTML='<button class="search-wide" id="searchWide">🔍 Поиск кланов и игроков</button><div class="empty">Нажми на поиск, чтобы найти клан.</div>';
-    var s=$('searchWide'); if(s)s.onclick=function(){openSearch('clans','');};
+async function loadAll(){
+  showErr('');
+  try{var m=await SB.from('clan_members').select('*');
+    if(m.error){MEMBERS=[];showErr('Участники не загрузились: '+m.error.message);}
+    else MEMBERS=m.data||[];}catch(e){MEMBERS=[];}
+  try{var c=await SB.from('clans').select('*').order('created_at',{ascending:false});
+    if(c.error){CLANS=[];showErr('Кланы не загрузились: '+c.error.message);}
+    else CLANS=c.data||[];}catch(e){CLANS=[];}
+  try{
+    TAGS={};var k=[];
+    for(var i=0;i<MEMBERS.length;i++){if(k.indexOf(MEMBERS[i].player_key)<0)k.push(MEMBERS[i].player_key);}
+    if(k.length){var tr=await SB.from('arena_players').select('player_key,tag').in('player_key',k);
+      if(!tr.error){for(var j=0;j<(tr.data||[]).length;j++){var p=tr.data[j];if(p.tag)TAGS[p.player_key]=p.tag;}}}
+  }catch(e){}
+  MYMEM=null;
+  for(var n=0;n<MEMBERS.length;n++){if(MEMBERS[n].player_key===MEK){MYMEM=MEMBERS[n];break;}}
+  MYCLAN=MYMEM?findClan(MYMEM.clan_id):null;
+  LOADED=true;
+  draw();
+  if(!$('clanModal').classList.contains('hide')){
+    if(PREV)drawPreview();else if(MYCLAN)drawMine();
   }
+}
+
+async function loadFriends(){
+  if(!window.Friends){FRIENDS=[];return;}
+  var l=await Friends.list(),keys=[],info={};
+  for(var i=0;i<l.length;i++)keys.push(l[i].friend_key);
+  if(keys.length){var r=await SB.from('arena_players').select('player_key,display_name,cups,tag').in('player_key',keys);
+    if(!r.error){for(var j=0;j<(r.data||[]).length;j++){var p=r.data[j];info[p.player_key]=p;}}}
+  FRIENDS=[];
+  for(var n=0;n<l.length;n++){var f=l[n],q=info[f.friend_key];
+    FRIENDS.push({key:f.friend_key,name:(q&&q.display_name)||f.friend_name||'Игрок',cups:(q&&q.cups)||0,tag:(q&&q.tag)||''});}
+  draw();
 }
 
 function draw(){
-  var a=$('app'); if(!a)return;
-  if(chatTimer){clearInterval(chatTimer);chatTimer=null;}
-  var b=$('banner'); if(b)b.classList.toggle('hidden',!(activeTab==='clan'&&!myMember&&loadedOnce));
-  if(activeTab==='clan')tabClan(a); else tabFriends(a);
+  var a=$('app');if(!a)return;
+  if(CHATT){clearInterval(CHATT);CHATT=null;}
+  var b=$('bn');
+  b.className=(TAB==='clan'&&!MYMEM&&LOADED)?'bn':'bn hide';
+  if(TAB==='clan')drawClan(a);else drawFriends(a);
 }
 
-function tabClan(a){
+function drawClan(a){
   var h='';
-  if(myMember&&myClan){
-    h+='<div class="clan-bar" id="clanBar"><div class="cb-emblem">'+(myClan.emblem||'🛡️')+'</div>';
-    h+='<div class="cb-info"><div class="cb-name">'+esc(myClan.name)+' #'+esc(myClan.tag||'—')+'</div>';
-    h+='<div class="cb-sub">'+memOf(myClan.id).length+' / '+MAX+' · 🏆 '+cupsOf(myClan.id)+'</div></div>';
-    h+='<div class="cb-chev">›</div></div>';
-    h+='<div class="chat-box" id="chatBox"></div><div class="emoji-row" id="emojiRow"></div>';
-    h+='<div class="chat-row"><input id="chatInput" maxlength="200" placeholder="Сообщение в клан…"><button id="chatSend">➤</button></div>';
-    h+='<button class="btn-wide grey" id="shareReplayBtn">📤 Отправить повтор в чат</button>';
+  if(MYMEM&&MYCLAN){
+    h+='<div class="cbar" id="cbar"><div class="ce">'+(MYCLAN.emblem||'🛡️')+'</div>';
+    h+='<div class="ci"><div class="cn">'+esc(MYCLAN.name)+' #'+esc(MYCLAN.tag||'—')+'</div>';
+    h+='<div class="cs">'+memOf(MYCLAN.id).length+' / '+MAXM+' · 🏆 '+cupsOf(MYCLAN.id)+'</div></div>';
+    h+='<div style="font-size:22px;opacity:.85">›</div></div>';
+    h+='<div class="chat" id="chatBox"></div>';
+    h+='<div class="emr" id="emr"></div>';
+    h+='<div class="crow"><input id="chatIn" maxlength="200" placeholder="Сообщение в клан…"><button id="chatGo">➤</button></div>';
   } else {
-    h+='<button class="search-wide" id="searchWide">🔍 Поиск кланов и игроков</button>'+listHtml();
+    h+='<button class="sw" id="swBtn">🔍 Поиск кланов и игроков</button>'+clanList();
   }
   a.innerHTML=h;
-  var sw=$('searchWide'); if(sw)sw.onclick=function(){openSearch('clans','');};
-  if(myMember&&myClan){
-    var bar=$('clanBar'); if(bar)bar.onclick=function(){previewClan=null;openMine();};
-    var row=$('emojiRow');
-    if(row){for(var i=0;i<EMO.length;i++){(function(ch){var bt=document.createElement('button');bt.type='button';bt.textContent=ch;
-      bt.onclick=function(){var ip=$('chatInput');if(!ip)return;ip.value=(ip.value+ch).slice(0,200);ip.focus();};row.appendChild(bt);})(EMO[i]);}}
-    var s2=$('chatSend'); if(s2)s2.onclick=sendChat;
-    var ci=$('chatInput'); if(ci)ci.addEventListener('keydown',function(e){if(e.key==='Enter')sendChat();});
-    var rb=$('shareReplayBtn'); if(rb)rb.onclick=openShare;
-    loadChat(); chatTimer=setInterval(loadChat,4000);
+  var sw=$('swBtn');if(sw)sw.onclick=function(){openSearch('clans','');};
+  if(MYMEM&&MYCLAN){
+    $('cbar').onclick=function(){PREV=null;openMine();};
+    var emr=$('emr');
+    for(var i=0;i<EMO.length;i++){(function(ch){
+      var bt=document.createElement('button');bt.type='button';bt.textContent=ch;
+      bt.onclick=function(){var ip=$('chatIn');if(!ip)return;ip.value=(ip.value+ch).slice(0,200);ip.focus();};
+      emr.appendChild(bt);})(EMO[i]);}
+    $('chatGo').onclick=sendChat;
+    $('chatIn').addEventListener('keydown',function(e){if(e.key==='Enter')sendChat();});
+    loadChat();CHATT=setInterval(loadChat,4000);
   }
   bind(a);
 }
 
-function listHtml(){
-  if(!allClans.length){
-    if(!loadedOnce)return '<div class="empty">Загружаем кланы…</div>';
-    return '<div class="empty">Кланов пока нет.<br>Стань первым — нажми «Создать».</div>';
+function clanList(){
+  if(!CLANS.length){
+    if(!LOADED)return '<div class="emp">Загружаем кланы…</div>';
+    return '<div class="emp">Кланов пока нет.<br>Нажми «Создать» сверху.</div>';
   }
-  var h='<div class="section-title">Список кланов</div>';
-  for(var i=0;i<allClans.length;i++){
-    var c=allClans[i],m=memOf(c.id),full=m.length>=MAX;
-    var mine=!!(myMember&&myMember.clan_id===c.id);
-    h+='<div class="clan-card" data-preview="'+esc(c.id)+'"><div class="clan-emblem">'+(c.emblem||'🛡️')+'</div>';
-    h+='<div class="clan-info"><div class="clan-name">'+esc(c.name)+pill(c.tag,'clan',c.name)+'</div>';
-    h+='<div class="clan-sub">'+m.length+' / '+MAX+' участников · 🏆 '+cupsOf(c.id)+'</div></div>';
-    h+='<button class="mini share" data-shareclan="'+esc(c.tag||'')+'" data-shareclanname="'+esc(c.name)+'">📤</button>';
-    if(mine)h+='<button class="clan-join" data-previewbtn="'+esc(c.id)+'">Мой</button>';
-    else if(myMember)h+='<button class="clan-join" disabled>Уже в клане</button>';
-    else if(full)h+='<button class="clan-join" data-previewbtn="'+esc(c.id)+'">Полон</button>';
-    else h+='<button class="clan-join" data-join="'+esc(c.id)+'">Вступить</button>';
+  var h='<div class="st">Список кланов</div>';
+  for(var i=0;i<CLANS.length;i++){
+    var c=CLANS[i],m=memOf(c.id),full=m.length>=MAXM,mine=!!(MYMEM&&MYMEM.clan_id===c.id);
+    h+='<div class="cc" data-prev="'+esc(c.id)+'"><div class="ce">'+(c.emblem||'🛡️')+'</div>';
+    h+='<div class="ci"><div class="cn">'+esc(c.name)+pill(c.tag,'clan',c.name)+'</div>';
+    h+='<div class="cs">'+m.length+' / '+MAXM+' участников · 🏆 '+cupsOf(c.id)+'</div></div>';
+    h+='<button class="mi sh" data-share="'+esc(c.tag||'')+'" data-sname="'+esc(c.name)+'">📤</button>';
+    if(mine)h+='<button class="cj" data-pbtn="'+esc(c.id)+'">Мой</button>';
+    else if(MYMEM)h+='<button class="cj" disabled>В клане</button>';
+    else if(full)h+='<button class="cj" data-pbtn="'+esc(c.id)+'">Полон</button>';
+    else h+='<button class="cj" data-join="'+esc(c.id)+'">Вступить</button>';
     h+='</div>';
   }
   return h;
 }
 
 function openSearch(m,q){
-  searchMode=m||'clans'; searchQ=q||'';
-  $('searchInput').value=searchQ;
-  var ch=$('searchModal').querySelectorAll('.chip');
-  for(var i=0;i<ch.length;i++)ch[i].classList.toggle('on',ch[i].getAttribute('data-mode')===searchMode);
-  $('searchModal').classList.remove('hidden');
+  SEARCHM=m||'clans';SEARCHQ=q||'';
+  $('sInput').value=SEARCHQ;
+  $('mC').style.background=SEARCHM==='clans'?'linear-gradient(145deg,#22c55e,#15803d)':'#334155';
+  $('mP').style.background=SEARCHM==='players'?'linear-gradient(145deg,#22c55e,#15803d)':'#334155';
+  $('searchModal').classList.remove('hide');
   doSearch();
 }
-function closeSearch(){$('searchModal').classList.add('hidden');}
+function closeSearch(){$('searchModal').classList.add('hide');}
 
 async function doSearch(){
-  var o=$('searchOut'); if(!o)return;
-  var q=searchQ.trim();
-  if(!q){o.innerHTML='<div class="empty">Введи тег или имя.<br>Например: #A7K2M</div>';return;}
-  o.innerHTML='<div class="empty">Ищем…</div>';
-  if(searchMode==='clans')await resClans(o,q); else await resPlayers(o,q);
+  var o=$('sOut');var q=SEARCHQ.trim();
+  if(!q){o.innerHTML='<div class="emp">Введи тег или имя.<br>Например: #A7K2M</div>';return;}
+  o.innerHTML='<div class="emp">Ищем…</div>';
+  if(SEARCHM==='clans')await searchClans(o,q);else await searchPlayers(o,q);
 }
 
-async function findClan(q){
-  try{var r=await sb.rpc('search_clans',{p_q:q,p_limit:25});
-    if(r.error)return null;
-    var l=r.data||[]; if(!l.length)return null;
-    for(var i=0;i<l.length;i++){if(String(l[i].code||'').toUpperCase()===String(q||'').toUpperCase())return l[i];}
-    return l[0];
-  }catch(e){return null;}
-}
-
-async function resClans(o,q){
+async function searchClans(o,q){
   var l=[];
-  try{var r=await sb.rpc('search_clans',{p_q:q,p_limit:25});if(!r.error)l=r.data||[];}catch(e){}
-  if(!l.length){o.innerHTML='<div class="empty">Кланы не найдены по «'+esc(q)+'»</div>';return;}
+  try{var r=await SB.rpc('search_clans',{p_q:q,p_limit:25});
+    if(!r.error)l=r.data||[];}catch(e){}
+  if(!l.length){o.innerHTML='<div class="emp">Кланы не найдены по «'+esc(q)+'»</div>';return;}
   var h='';
   for(var i=0;i<l.length;i++){
-    var c=l[i],full=(Number(c.member_count)||0)>=MAX;
-    var mine=!!(myMember&&myMember.clan_id===c.id);
-    h+='<div class="clan-card" data-preview="'+esc(c.id)+'"><div class="clan-emblem">'+(c.emblem||'🛡️')+'</div>';
-    h+='<div class="clan-info"><div class="clan-name">'+esc(c.name)+pill(c.code,'clan',c.name)+'</div>';
-    h+='<div class="clan-sub">'+(Number(c.member_count)||0)+' / '+MAX+' · 🏆 '+(Number(c.total_cups)||0)+'</div></div>';
-    h+='<button class="mini share" data-shareclan="'+esc(c.code||'')+'" data-shareclanname="'+esc(c.name)+'">📤</button>';
-    if(mine)h+='<button class="clan-join" data-previewbtn="'+esc(c.id)+'">Мой</button>';
-    else if(myMember)h+='<button class="clan-join" disabled>Уже в клане</button>';
-    else if(full)h+='<button class="clan-join" data-previewbtn="'+esc(c.id)+'">Полон</button>';
-    else h+='<button class="clan-join" data-join="'+esc(c.id)+'">Вступить</button>';
+    var c=l[i],full=(Number(c.member_count)||0)>=MAXM,mine=!!(MYMEM&&MYMEM.clan_id===c.id);
+    h+='<div class="cc" data-prev="'+esc(c.id)+'"><div class="ce">'+(c.emblem||'🛡️')+'</div>';
+    h+='<div class="ci"><div class="cn">'+esc(c.name)+pill(c.code,'clan',c.name)+'</div>';
+    h+='<div class="cs">'+(Number(c.member_count)||0)+' / '+MAXM+' · 🏆 '+(Number(c.total_cups)||0)+'</div></div>';
+    h+='<button class="mi sh" data-share="'+esc(c.code||'')+'" data-sname="'+esc(c.name)+'">📤</button>';
+    if(mine)h+='<button class="cj" data-pbtn="'+esc(c.id)+'">Мой</button>';
+    else if(MYMEM)h+='<button class="cj" disabled>В клане</button>';
+    else if(full)h+='<button class="cj" data-pbtn="'+esc(c.id)+'">Полон</button>';
+    else h+='<button class="cj" data-join="'+esc(c.id)+'">Вступить</button>';
     h+='</div>';
   }
-  o.innerHTML=h; bind(o);
+  o.innerHTML=h;bind(o);
 }
 
-async function resPlayers(o,q){
+async function searchPlayers(o,q){
   var l=[];
-  try{var r=await sb.rpc('search_players',{p_q:q,p_limit:25});if(!r.error)l=r.data||[];}catch(e){}
-  if(!l.length){o.innerHTML='<div class="empty">Никого не нашли по «'+esc(q)+'»</div>';return;}
+  try{var r=await SB.rpc('search_players',{p_q:q,p_limit:25});
+    if(!r.error)l=r.data||[];}catch(e){}
+  if(!l.length){o.innerHTML='<div class="emp">Никого не нашли по «'+esc(q)+'»</div>';return;}
   var h='',n=0;
   for(var i=0;i<l.length;i++){
-    var p=l[i]; if(p.player_key===meKey)continue; n++;
-    h+='<div class="member"><div class="m-avatar" data-profile="'+esc(p.player_key)+'">🎮</div>';
-    h+='<div class="m-info" data-profile="'+esc(p.player_key)+'">';
-    h+='<div class="m-name">'+esc(p.display_name||'Игрок')+pill(p.tag,'player',p.display_name)+'</div>';
-    h+='<div class="m-role" style="color:#94a3b8">🏆 '+(p.cups||0)+'</div></div>';
-    h+='<button class="mini add" data-addfriend="'+esc(p.player_key)+'" data-addname="'+esc(p.display_name||'Игрок')+'">+</button>';
-    h+='<button class="mini play" data-invite="'+esc(p.player_key)+'" data-invname="'+esc(p.display_name||'Игрок')+'" data-invcups="'+(p.cups||0)+'">⚔️</button></div>';
+    var p=l[i];if(p.player_key===MEK)continue;n++;
+    h+='<div class="mb"><div class="av" data-prof="'+esc(p.player_key)+'">🎮</div>';
+    h+='<div class="mn" data-prof="'+esc(p.player_key)+'"><div class="mname">'+esc(p.display_name||'Игрок')+pill(p.tag,'player',p.display_name)+'</div>';
+    h+='<div class="mrole" style="color:#94a3b8">🏆 '+(p.cups||0)+'</div></div>';
+    h+='<button class="mi ad" data-add="'+esc(p.player_key)+'" data-aname="'+esc(p.display_name||'Игрок')+'">+</button>';
+    h+='<button class="mi pl" data-inv="'+esc(p.player_key)+'" data-iname="'+esc(p.display_name||'Игрок')+'" data-icups="'+(p.cups||0)+'">⚔️</button></div>';
   }
-  if(!n){o.innerHTML='<div class="empty">Это ты. Введи другой тег.</div>';return;}
-  o.innerHTML=h; bind(o);
+  if(!n){o.innerHTML='<div class="emp">Это ты. Введи другой тег.</div>';return;}
+  o.innerHTML=h;bind(o);
 }
 
 function openMine(){
-  if(!myClan)return;
-  previewClan=null; descEdit=false;
-  $('ciTitle').textContent='Клан';
+  if(!MYCLAN)return;
+  PREV=null;DESCED=false;
+  $('cTitle').textContent='Клан';
   drawMine();
-  $('clanInfoModal').classList.remove('hidden');
+  $('clanModal').classList.remove('hide');
 }
 function closeClan(){
-  descEdit=false; previewClan=null;
-  $('clanInfoModal').classList.add('hidden');
+  DESCED=false;PREV=null;
+  $('clanModal').classList.add('hide');
 }
-function findLocal(id){for(var i=0;i<allClans.length;i++)if(String(allClans[i].id)===String(id))return allClans[i];return null;}
-
 function openPreview(id){
-  var c=findLocal(id);
+  var c=findClan(id);
   if(!c){toast('Клан не найден');return;}
-  if(myMember&&myMember.clan_id===c.id){openMine();return;}
-  previewClan=c; descEdit=false;
-  $('ciTitle').textContent='О клане';
+  if(MYMEM&&MYMEM.clan_id===c.id){openMine();return;}
+  PREV=c;DESCED=false;
+  $('cTitle').textContent='О клане';
   drawPreview();
-  $('clanInfoModal').classList.remove('hidden');
+  $('clanModal').classList.remove('hide');
+}
+
+function memberRows(m,ownerActions){
+  if(!m.length)return '<div class="emp">В клане пока нет участников</div>';
+  var h='';
+  for(var k=0;k<m.length;k++){
+    var mm=m[k],isMe=(mm.player_key===MEK),chief=(mm.role==='owner');
+    h+='<div class="mb'+(isMe?' me':'')+'"><div class="rk'+(k<3?' r'+(k+1):'')+'">'+(k+1)+'</div>';
+    h+='<div class="av" data-prof="'+esc(mm.player_key)+'">'+(chief?'👑':'🎮')+'</div>';
+    h+='<div class="mn" data-prof="'+esc(mm.player_key)+'"><div class="mname">'+esc(mm.name||'Игрок')+(isMe?' (ты)':'')+pill(TAGS[mm.player_key],'player',mm.name)+'</div>';
+    h+='<div class="mrole">'+(chief?'Глава клана':'Участник')+'</div></div>';
+    h+='<div class="mcup">🏆 '+(mm.cups||0)+'</div>';
+    if(!isMe){
+      h+='<button class="mi pl" data-inv="'+esc(mm.player_key)+'" data-iname="'+esc(mm.name||'Игрок')+'" data-icups="'+(mm.cups||0)+'">⚔️</button>';
+      h+='<button class="mi ad" data-add="'+esc(mm.player_key)+'" data-aname="'+esc(mm.name||'Игрок')+'">+</button>';
+    }
+    if(ownerActions&&!isMe)h+='<button class="mi kk" data-kick="'+esc(mm.player_key)+'">✕</button>';
+    h+='</div>';
+  }
+  return h;
 }
 
 function drawPreview(){
-  var c=previewClan; if(!c){closeClan();return;}
-  var m=memOf(c.id),n=m.length,full=n>=MAX,d=(c.description||'').trim();
+  var c=PREV;if(!c){closeClan();return;}
+  var m=memOf(c.id),n=m.length,full=n>=MAXM,d=(c.description||'').trim();
   var chief='—';
   for(var i=0;i<m.length;i++){if(m[i].role==='owner'){chief=m[i].name||'Игрок';break;}}
-  var h='';
-  h+='<div class="cr-head"><div class="cr-emblem">'+(c.emblem||'🛡️')+'</div>';
-  h+='<div style="min-width:0"><div class="cr-name">'+esc(c.name)+'</div>';
-  h+='<div class="cr-sub">'+pill(c.tag,'clan',c.name)+' Глава: '+esc(chief)+'</div></div>';
-  h+='<div class="cr-cups"><b>'+cupsOf(c.id)+'</b><span>КУБКИ</span></div></div>';
-  h+='<div class="cr-desc'+(d?'':' empty')+'">'+(d?esc(d):'Описание пока не задано')+'</div>';
-  h+='<div class="cr-stats"><div class="cr-stat"><span>УЧАСТНИКИ</span><b>'+n+'/'+MAX+'</b></div>';
-  h+='<div class="cr-stat"><span>КУБКИ</span><b>'+cupsOf(c.id)+'</b></div>';
-  h+='<div class="cr-stat"><span>СВОБОДНО</span><b>'+Math.max(0,MAX-n)+'</b></div></div>';
-  if(myMember){
-    h+='<div class="cr-joined">Ты уже в клане «'+esc(myClan?myClan.name:c.name)+'»</div>';
-  } else if(full){
-    h+='<div class="cr-joined" style="border-color:#f59e0b;color:#fcd34d">Клан заполнен</div>';
-  } else {
-    h+='<button class="cr-join-big" data-join="'+esc(c.id)+'">Вступить в клан</button>';
-  }
-  h+='<div class="cr-bar"><div class="cr-bar-l">УЧАСТНИКИ<b>'+n+'/'+MAX+'</b></div>';
-  h+='<div class="cr-btns"><button class="cr-search" id="pvShare">📤</button></div></div>';
-  if(!m.length){h+='<div class="empty">В клане пока нет участников</div>';}
-  else{
-    for(var k=0;k<m.length;k++){
-      var mm=m[k],ch=(mm.role==='owner');
-      h+='<div class="member"><div class="m-rank'+(k<3?' r'+(k+1):'')+'">'+(k+1)+'</div>';
-      h+='<div class="m-avatar" data-profile="'+esc(mm.player_key)+'">'+(ch?'👑':'🎮')+'</div>';
-      h+='<div class="m-info" data-profile="'+esc(mm.player_key)+'">';
-      h+='<div class="m-name">'+esc(mm.name||'Игрок')+pill(tagMap[mm.player_key],'player',mm.name)+'</div>';
-      h+='<div class="m-role">'+(ch?'Глава клана':'Участник')+'</div></div>';
-      h+='<div class="m-cups">🏆 '+(mm.cups||0)+'</div></div>';
-    }
-  }
-  $('ciScroll').innerHTML=h; bind($('ciScroll'));
-  var ps=$('pvShare'); if(ps)ps.onclick=function(){shareClan(c.name,c.tag);};
+  var h='<div class="ch"><div class="cemb">'+(c.emblem||'🛡️')+'</div>';
+  h+='<div style="min-width:0"><div class="cnm">'+esc(c.name)+'</div>';
+  h+='<div class="csub">'+pill(c.tag,'clan',c.name)+' Глава: '+esc(chief)+'</div></div>';
+  h+='<div class="ccups"><b>'+cupsOf(c.id)+'</b><span>КУБКИ</span></div></div>';
+  h+='<div class="cd'+(d?'':' em')+'">'+(d?esc(d):'Описание пока не задано')+'</div>';
+  h+='<div class="cstat"><div><span>УЧАСТНИКИ</span><b>'+n+'/'+MAXM+'</b></div>';
+  h+='<div><span>КУБКИ</span><b>'+cupsOf(c.id)+'</b></div>';
+  h+='<div><span>СВОБОДНО</span><b>'+Math.max(0,MAXM-n)+'</b></div></div>';
+  if(MYMEM)h+='<div class="cjoined">Ты уже в клане «'+esc(MYCLAN?MYCLAN.name:c.name)+'»</div>';
+  else if(full)h+='<div class="cjoined" style="border-color:#f59e0b;color:#fcd34d">Клан заполнен</div>';
+  else h+='<button class="cjbig" data-join="'+esc(c.id)+'">Вступить в клан</button>';
+  h+='<div class="cbr"><div class="cbrl">УЧАСТНИКИ<b>'+n+'/'+MAXM+'</b></div>';
+  h+='<div class="cbtn"><button class="csr" id="pvShare">📤</button></div></div>';
+  h+=memberRows(m,false);
+  $('cBody').innerHTML=h;bind($('cBody'));
+  $('pvShare').onclick=function(){shareClan(c.name,c.tag);};
 }
 
 function drawMine(){
-  if(!myClan)return;
-  var m=memOf(myClan.id),owner=isOwner(),n=m.length,d=(myClan.description||'').trim();
+  if(!MYCLAN)return;
+  var m=memOf(MYCLAN.id),owner=isOwner(),n=m.length,d=(MYCLAN.description||'').trim();
   var chief='—';
   for(var i=0;i<m.length;i++){if(m[i].role==='owner'){chief=m[i].name||'Игрок';break;}}
-  var h='';
-  h+='<div class="cr-head"><div class="cr-emblem">'+(myClan.emblem||'🛡️')+'</div>';
-  h+='<div style="min-width:0"><div class="cr-name">'+esc(myClan.name)+'</div>';
-  h+='<div class="cr-sub">'+pill(myClan.tag,'clan',myClan.name)+' Глава: '+esc(chief)+'</div></div>';
-  h+='<div class="cr-cups"><b>'+cupsOf(myClan.id)+'</b><span>КУБКИ</span></div></div>';
-  if(descEdit&&owner){
-    h+='<textarea class="cr-desc-edit" id="descInput" maxlength="120" placeholder="Расскажи, какой у вас клан">'+esc(d)+'</textarea>';
-    h+='<div class="cr-desc-count"><span id="descLeft">'+(120-d.length)+'</span>/120</div>';
-    h+='<div class="cr-desc-row"><button id="descCancel">Отмена</button><button id="descSave">Сохранить</button></div>';
-    h+='<div class="cr-desc-err hidden" id="descErr"></div>';
+  var h='<div class="ch"><div class="cemb">'+(MYCLAN.emblem||'🛡️')+'</div>';
+  h+='<div style="min-width:0"><div class="cnm">'+esc(MYCLAN.name)+'</div>';
+  h+='<div class="csub">'+pill(MYCLAN.tag,'clan',MYCLAN.name)+' Глава: '+esc(chief)+'</div></div>';
+  h+='<div class="ccups"><b>'+cupsOf(MYCLAN.id)+'</b><span>КУБКИ</span></div></div>';
+  if(DESCED&&owner){
+    h+='<textarea class="cdta" id="dIn" maxlength="120" placeholder="Расскажи, какой у вас клан">'+esc(d)+'</textarea>';
+    h+='<div class="cdc"><span id="dLeft">'+(120-d.length)+'</span>/120</div>';
+    h+='<div class="cdr"><button id="dCan">Отмена</button><button id="dSav">Сохранить</button></div>';
   } else {
-    if(owner)h+='<button class="cr-edit" id="descEditBtn">✏️ Описание</button>';
-    h+='<div class="cr-desc'+(d?'':' empty')+'">'+(d?esc(d):'Описание пока не задано')+'</div>';
+    if(owner)h+='<button class="cded" id="dEd">✏️ Описание</button>';
+    h+='<div class="cd'+(d?'':' em')+'">'+(d?esc(d):'Описание пока не задано')+'</div>';
   }
-  h+='<div class="cr-stats"><div class="cr-stat"><span>УЧАСТНИКИ</span><b>'+n+'/'+MAX+'</b></div>';
-  h+='<div class="cr-stat"><span>КУБКИ</span><b>'+cupsOf(myClan.id)+'</b></div>';
-  h+='<div class="cr-stat"><span>СВОБОДНО</span><b>'+Math.max(0,MAX-n)+'</b></div></div>';
-  h+='<div class="cr-bar"><div class="cr-bar-l">УЧАСТНИКИ<b>'+n+'/'+MAX+'</b></div>';
-  h+='<div class="cr-btns"><button class="cr-leave" id="ciLeave">🚪 Покинуть</button>';
-  h+='<button class="cr-search" id="ciSearch">🔍</button></div></div>';
-  for(var k=0;k<m.length;k++){
-    var mm=m[k],isMe=(mm.player_key===meKey),ch=(mm.role==='owner');
-    h+='<div class="member'+(isMe?' me':'')+'"><div class="m-rank'+(k<3?' r'+(k+1):'')+'">'+(k+1)+'</div>';
-    h+='<div class="m-avatar" data-profile="'+esc(mm.player_key)+'">'+(ch?'👑':'🎮')+'</div>';
-    h+='<div class="m-info" data-profile="'+esc(mm.player_key)+'">';
-    h+='<div class="m-name">'+esc(mm.name||'Игрок')+(isMe?' (ты)':'')+pill(tagMap[mm.player_key],'player',mm.name)+'</div>';
-    h+='<div class="m-role">'+(ch?'Глава клана':'Участник')+'</div></div>';
-    h+='<div class="m-cups">🏆 '+(mm.cups||0)+'</div>';
-    if(!isMe){
-      h+='<button class="mini play" data-invite="'+esc(mm.player_key)+'" data-invname="'+esc(mm.name||'Игрок')+'" data-invcups="'+(mm.cups||0)+'">⚔️</button>';
-      h+='<button class="mini add" data-addfriend="'+esc(mm.player_key)+'" data-addname="'+esc(mm.name||'Игрок')+'">+</button>';
-    }
-    if(owner&&!isMe)h+='<button class="mini kick" data-kick="'+esc(mm.player_key)+'">✕</button>';
-    h+='</div>';
-  }
-  h+='<button class="btn-wide blue" id="ciShare">📤 Позвать в клан</button>';
-  $('ciScroll').innerHTML=h; bind($('ciScroll'));
-  var ta=$('descInput'),lf=$('descLeft');
-  if(ta&&lf){ta.addEventListener('input',function(){lf.textContent=120-ta.value.length;});
-    setTimeout(function(){try{ta.focus();}catch(e){}},80);}
-  var dc=$('descCancel'); if(dc)dc.onclick=function(){descEdit=false;drawMine();};
-  var ds=$('descSave'); if(ds)ds.onclick=saveDesc;
-  var de=$('descEditBtn'); if(de)de.onclick=function(){descEdit=true;drawMine();};
-  var lv=$('ciLeave'); if(lv)lv.onclick=leaveClan;
-  var sr=$('ciSearch'); if(sr)sr.onclick=function(){closeClan();openSearch('players','');};
-  var sh=$('ciShare'); if(sh)sh.onclick=function(){shareClan(myClan.name,myClan.tag);};
+  h+='<div class="cstat"><div><span>УЧАСТНИКИ</span><b>'+n+'/'+MAXM+'</b></div>';
+  h+='<div><span>КУБКИ</span><b>'+cupsOf(MYCLAN.id)+'</b></div>';
+  h+='<div><span>СВОБОДНО</span><b>'+Math.max(0,MAXM-n)+'</b></div></div>';
+  h+='<div class="cbr"><div class="cbrl">УЧАСТНИКИ<b>'+n+'/'+MAXM+'</b></div>';
+  h+='<div class="cbtn"><button class="clv" id="cLeave">🚪 Покинуть</button>';
+  h+='<button class="csr" id="cFind">🔍</button></div></div>';
+  h+=memberRows(m,owner);
+  h+='<button class="bw bl" id="cShare" style="margin-bottom:10px">📤 Позвать в клан</button>';
+  $('cBody').innerHTML=h;bind($('cBody'));
+  var ta=$('dIn');
+  if(ta){ta.addEventListener('input',function(){$('dLeft').textContent=120-ta.value.length;});
+    setTimeout(function(){try{ta.focus();}catch(e){}},80);
+    $('dCan').onclick=function(){DESCED=false;drawMine();};
+    $('dSav').onclick=saveDesc;}
+  var de=$('dEd');if(de)de.onclick=function(){DESCED=true;drawMine();};
+  $('cLeave').onclick=leaveClan;
+  $('cFind').onclick=function(){closeClan();openSearch('players','');};
+  $('cShare').onclick=function(){shareClan(MYCLAN.name,MYCLAN.tag);};
 }
 
 async function saveDesc(){
-  var ta=$('descInput'); if(!ta||!myClan)return;
+  var ta=$('dIn');if(!ta||!MYCLAN)return;
   var d=ta.value.trim().slice(0,120);
-  var btn=$('descSave'); if(btn){btn.disabled=true;btn.textContent='…';}
-  var ok=false,why='';
-  try{var r=await sb.rpc('clan_set_description',{p_clan:myClan.id,p_key:meKey,p_desc:d});
-    if(r.error)why=r.error.message||''; else if(r.data&&r.data.ok===false)why=r.data.error||''; else ok=true;}catch(e){why='сеть';}
-  if(!ok){try{var u=await sb.from('clans').update({description:d}).eq('id',myClan.id);if(!u.error)ok=true;else if(!why)why=u.error.message;}catch(e){}}
-  if(btn){btn.disabled=false;btn.textContent='Сохранить';}
-  if(!ok){var e=$('descErr');if(e){e.textContent='Не сохранилось: '+(why||'?');e.classList.remove('hidden');}else toast('Не удалось сохранить');return;}
-  myClan.description=d; descEdit=false;
-  for(var i=0;i<allClans.length;i++)if(allClans[i].id===myClan.id)allClans[i].description=d;
-  toast('Описание обновлено'); drawMine(); drawSafe();
+  var btn=$('dSav');btn.disabled=true;btn.textContent='…';
+  var ok=false;
+  try{var r=await SB.rpc('clan_set_description',{p_clan:MYCLAN.id,p_key:MEK,p_desc:d});
+    if(!r.error&&(!r.data||r.data.ok!==false))ok=true;}catch(e){}
+  if(!ok){try{var u=await SB.from('clans').update({description:d}).eq('id',MYCLAN.id);if(!u.error)ok=true;}catch(e){}}
+  btn.disabled=false;btn.textContent='Сохранить';
+  if(!ok){toast('Не удалось сохранить');return;}
+  MYCLAN.description=d;DESCED=false;
+  for(var i=0;i<CLANS.length;i++){if(CLANS[i].id===MYCLAN.id)CLANS[i].description=d;}
+  toast('Описание обновлено');drawMine();draw();
 }
 
-function tabFriends(a){
-  var h='<div class="section-title">Мои друзья</div>';
-  if(!friendsList.length)h+='<div class="empty">Пока нет друзей.<br>Найди по тегу через поиск.</div>';
+function drawFriends(a){
+  var h='<div class="st">Мои друзья</div>';
+  if(!FRIENDS.length)h+='<div class="emp">Пока нет друзей.<br>Найди по тегу через поиск.</div>';
   else{
-    for(var i=0;i<friendsList.length;i++){
-      var f=friendsList[i];
-      h+='<div class="member"><div class="m-avatar" data-profile="'+esc(f.key)+'">🎮</div>';
-      h+='<div class="m-info" data-profile="'+esc(f.key)+'">';
-      h+='<div class="m-name">'+esc(f.name)+pill(f.tag,'player',f.name)+'</div>';
-      h+='<div class="m-role" style="color:#94a3b8">🏆 '+f.cups+'</div></div>';
-      h+='<button class="mini play" data-finvite="'+esc(f.key)+'">⚔️</button>';
-      h+='<button class="mini kick" data-fremove="'+esc(f.key)+'">✕</button></div>';
+    for(var i=0;i<FRIENDS.length;i++){
+      var f=FRIENDS[i];
+      h+='<div class="mb"><div class="av" data-prof="'+esc(f.key)+'">🎮</div>';
+      h+='<div class="mn" data-prof="'+esc(f.key)+'"><div class="mname">'+esc(f.name)+pill(f.tag,'player',f.name)+'</div>';
+      h+='<div class="mrole" style="color:#94a3b8">🏆 '+f.cups+'</div></div>';
+      h+='<button class="mi pl" data-finv="'+esc(f.key)+'">⚔️</button>';
+      h+='<button class="mi kk" data-fdel="'+esc(f.key)+'">✕</button></div>';
     }
   }
-  h+='<button class="btn-wide blue" id="addFriendBtn">+ Найти по тегу</button>';
+  h+='<button class="bw bl" id="addFBtn">+ Найти по тегу</button>';
   a.innerHTML=h;
-  var af=$('addFriendBtn'); if(af)af.onclick=function(){openSearch('players','');setTimeout(function(){try{$('searchInput').focus();}catch(e){}},100);};
-  var inv=a.querySelectorAll('[data-finvite]');
+  $('addFBtn').onclick=function(){openSearch('players','');};
+  var inv=a.querySelectorAll('[data-finv]');
   for(var k=0;k<inv.length;k++){(function(b){b.onclick=function(){
-    var key=b.getAttribute('data-finvite');
-    for(var j=0;j<friendsList.length;j++)if(friendsList[j].key===key){invite(friendsList[j].key,friendsList[j].name,friendsList[j].cups);return;}};})(inv[k]);}
-  var rm=a.querySelectorAll('[data-fremove]');
-  for(var n=0;n<rm.length;n++){(function(b){b.onclick=async function(){
+    var key=b.getAttribute('data-finv');
+    for(var j=0;j<FRIENDS.length;j++){if(FRIENDS[j].key===key){invite(FRIENDS[j].key,FRIENDS[j].name,FRIENDS[j].cups);return;}}};})(inv[k]);}
+  var del=a.querySelectorAll('[data-fdel]');
+  for(var n=0;n<del.length;n++){(function(b){b.onclick=async function(){
     if(!confirm('Убрать из друзей?'))return;
-    if(window.Friends)await Friends.remove(b.getAttribute('data-fremove'));
-    toast('Удалён'); await loadFriends();};})(rm[n]);}
+    if(window.Friends)await Friends.remove(b.getAttribute('data-fdel'));
+    toast('Удалён');await loadFriends();};})(del[n]);}
   bind(a);
 }
 
 async function loadChat(){
-  if(!myClan)return;
-  var r=await sb.from('clan_messages').select('*').eq('clan_id',myClan.id).order('id',{ascending:false}).limit(60);
+  if(!MYCLAN)return;
+  var r=await SB.from('clan_messages').select('*').eq('clan_id',MYCLAN.id).order('id',{ascending:false}).limit(60);
   if(r.error)return;
-  chatMsgs=(r.data||[]).slice().reverse();
-  drawChat();
-}
-function drawChat(){
-  var b=$('chatBox'); if(!b)return;
-  if(!chatMsgs.length){b.innerHTML='<div class="empty">Сообщений пока нет.<br>Напиши первым.</div>';return;}
+  MSGS=(r.data||[]).slice().reverse();
+  var b=$('chatBox');if(!b)return;
+  if(!MSGS.length){b.innerHTML='<div class="emp">Сообщений пока нет.<br>Напиши первым.</div>';return;}
   var h='';
-  for(var i=0;i<chatMsgs.length;i++){
-    var m=chatMsgs[i],mine=(m.player_key===meKey);
-    if(m.kind==='system'){h+='<div class="msg-sys">'+esc(m.text||'')+'</div>';continue;}
-    h+='<div class="msg'+(mine?' mine':'')+'">';
-    h+='<div class="msg-head" data-profile="'+esc(m.player_key)+'">'+esc(m.name||'Игрок')+'</div>';
-    if(m.kind==='replay'){h+='<div class="msg-replay">'+esc(m.text||'Повтор')+'</div>';
-      if(m.match_id)h+='<button class="msg-btn" data-watch="'+m.match_id+'">▶ Смотреть повтор</button>';}
-    else h+='<div class="msg-text">'+esc(m.text||'')+'</div>';
-    h+='</div>';
+  for(var i=0;i<MSGS.length;i++){
+    var m=MSGS[i],mine=(m.player_key===MEK);
+    if(m.kind==='system'){h+='<div style="align-self:center;background:linear-gradient(135deg,#22c55e,#15803d);font-size:11.5px;font-weight:800;padding:7px 14px;border-radius:10px;text-align:center">'+esc(m.text||'')+'</div>';continue;}
+    h+='<div class="msg'+(mine?' mine':'')+'"><div class="mh">'+esc(m.name||'Игрок')+'</div>';
+    h+='<div class="mt">'+esc(m.text||'')+'</div></div>';
   }
-  b.innerHTML=h; b.scrollTop=b.scrollHeight;
-  var w=b.querySelectorAll('[data-watch]');
-  for(var k=0;k<w.length;k++){(function(x){x.onclick=function(){location.href='chess-history.html?m='+x.getAttribute('data-watch');};})(w[k]);}
-  var p=b.querySelectorAll('[data-profile]');
-  for(var n=0;n<p.length;n++){(function(el){el.onclick=function(){openProfile(el.getAttribute('data-profile'));};})(p[n]);}
+  b.innerHTML=h;b.scrollTop=b.scrollHeight;
 }
 
 async function sendChat(){
-  var ip=$('chatInput'); if(!ip||!myClan)return;
-  var t=ip.value.trim(); if(!t)return;
+  var ip=$('chatIn');if(!ip||!MYCLAN)return;
+  var t=ip.value.trim();if(!t)return;
   if(badw(t)){ip.value='';toast('Ненормативная лексика — не отправлено');return;}
   ip.value='';
-  var r=await sb.rpc('clan_post',{p_clan:myClan.id,p_key:meKey,p_name:meName,p_kind:'text',p_text:t,p_match:null});
+  var r=await SB.rpc('clan_post',{p_clan:MYCLAN.id,p_key:MEK,p_name:MEN,p_kind:'text',p_text:t,p_match:null});
   if(r.error){toast('Не отправлено');ip.value=t;return;}
   if(r.data&&r.data.bad){toast('Ненормативная лексика');ip.value=t;return;}
   await loadChat();
 }
 
-async function openShare(){
-  var r=await sb.from('arena_replays').select('match_id,opponent_name,winner,my_side,arena,created_at').eq('player_key',meKey).order('created_at',{ascending:false}).limit(12);
-  shareRows=r.error?[]:(r.data||[]);
-  var box=$('shareList');
-  if(!shareRows.length){box.innerHTML='<div class="empty">Нет записанных партий.<br>Сыграй бой.</div>';$('shareModal').classList.remove('hidden');return;}
-  var h='';
-  for(var i=0;i<shareRows.length;i++){
-    var x=shareRows[i],t='ничья';
-    if(x.winner==='a'||x.winner==='b')t=(x.winner===x.my_side)?'победа':'поражение';
-    h+='<div class="member"><div class="m-info"><div class="m-name">'+esc(x.opponent_name||'Соперник')+'</div>';
-    h+='<div class="m-role" style="color:#94a3b8">'+t+' · арена '+(x.arena||1)+'</div></div>';
-    h+='<button class="mini add" data-share="'+x.match_id+'">Отправить</button></div>';
-  }
-  box.innerHTML=h;
-  var b=box.querySelectorAll('[data-share]');
-  for(var k=0;k<b.length;k++){(function(y){y.onclick=function(){shareReplay(y.getAttribute('data-share'));};})(b[k]);}
-  $('shareModal').classList.remove('hidden');
-}
-
-async function shareReplay(id){
-  var row=null;
-  for(var i=0;i<shareRows.length;i++)if(shareRows[i].match_id===id){row=shareRows[i];break;}
-  if(!row||!myClan)return;
-  var t='Ничья';
-  if(row.winner==='a'||row.winner==='b')t=(row.winner===row.my_side)?'Победа':'Поражение';
-  var lb='Повтор партии против '+(row.opponent_name||'соперника')+' · '+t+' · арена '+(row.arena||1);
-  var r=await sb.rpc('clan_post',{p_clan:myClan.id,p_key:meKey,p_name:meName,p_kind:'replay',p_text:lb,p_match:id});
-  if(r.error){toast('Не отправлено');return;}
-  $('shareModal').classList.add('hidden'); toast('Повтор отправлен'); await loadChat();
-}
-
 function bind(s){
   if(!s)return;
-  var pv=s.querySelectorAll('[data-preview]');
+  var pv=s.querySelectorAll('[data-prev]');
   for(var i=0;i<pv.length;i++){(function(el){el.onclick=function(e){
-    if(e.target&&e.target.closest&&(e.target.closest('[data-join]')||e.target.closest('[data-shareclan]')))return;
-    openPreview(el.getAttribute('data-preview'));};})(pv[i]);}
-  var pb=s.querySelectorAll('[data-previewbtn]');
-  for(var p=0;p<pb.length;p++){(function(el){el.onclick=function(e){e.stopPropagation();openPreview(el.getAttribute('data-previewbtn'));};})(pb[p]);}
-  var inv=s.querySelectorAll('[data-invite]');
+    if(e.target.closest&&(e.target.closest('[data-join]')||e.target.closest('[data-share]')))return;
+    openPreview(el.getAttribute('data-prev'));};})(pv[i]);}
+  var pb=s.querySelectorAll('[data-pbtn]');
+  for(var p=0;p<pb.length;p++){(function(el){el.onclick=function(e){e.stopPropagation();openPreview(el.getAttribute('data-pbtn'));};})(pb[p]);}
+  var inv=s.querySelectorAll('[data-inv]');
   for(var a=0;a<inv.length;a++){(function(b){b.onclick=function(e){e.stopPropagation();
-    invite(b.getAttribute('data-invite'),b.getAttribute('data-invname'),parseInt(b.getAttribute('data-invcups')||'0',10)||0);};})(inv[a]);}
-  var ad=s.querySelectorAll('[data-addfriend]');
+    invite(b.getAttribute('data-inv'),b.getAttribute('data-iname'),parseInt(b.getAttribute('data-icups')||'0',10)||0);};})(inv[a]);}
+  var ad=s.querySelectorAll('[data-add]');
   for(var c=0;c<ad.length;c++){(function(b){b.onclick=async function(e){e.stopPropagation();
     if(!window.Friends)return;
-    var ok=await Friends.add(b.getAttribute('data-addfriend'),b.getAttribute('data-addname'));
-    toast(ok?'Добавлен в друзья':'Не удалось'); if(ok)await loadFriends();};})(ad[c]);}
+    var ok=await Friends.add(b.getAttribute('data-add'),b.getAttribute('data-aname'));
+    toast(ok?'Добавлен в друзья':'Не удалось');if(ok)await loadFriends();};})(ad[c]);}
   var kk=s.querySelectorAll('[data-kick]');
   for(var k=0;k<kk.length;k++){(function(b){b.onclick=function(e){e.stopPropagation();kick(b.getAttribute('data-kick'));};})(kk[k]);}
   var jn=s.querySelectorAll('[data-join]');
   for(var j=0;j<jn.length;j++){(function(b){b.onclick=function(e){e.stopPropagation();joinClan(b.getAttribute('data-join'),b);};})(jn[j]);}
-  var sc=s.querySelectorAll('[data-shareclan]');
+  var sc=s.querySelectorAll('[data-share]');
   for(var x=0;x<sc.length;x++){(function(b){b.onclick=function(e){e.stopPropagation();
-    shareClan(b.getAttribute('data-shareclanname')||'Клан',b.getAttribute('data-shareclan')||'');};})(sc[x]);}
-  var pf=s.querySelectorAll('[data-profile]');
-  for(var f=0;f<pf.length;f++){(function(el){el.onclick=function(e){e.stopPropagation();openProfile(el.getAttribute('data-profile'));};})(pf[f]);}
-  var tg=s.querySelectorAll('[data-copytag]');
-  for(var t=0;t<tg.length;t++){(function(el){el.onclick=function(e){e.stopPropagation();copyTag(el);};})(tg[t]);}
+    shareClan(b.getAttribute('data-sname')||'Клан',b.getAttribute('data-share')||'');};})(sc[x]);}
+  var pf=s.querySelectorAll('[data-prof]');
+  for(var f=0;f<pf.length;f++){(function(el){el.onclick=function(e){e.stopPropagation();openProfile(el.getAttribute('data-prof'));};})(pf[f]);}
+  var tg=s.querySelectorAll('[data-tag]');
+  for(var t=0;t<tg.length;t++){(function(el){el.onclick=function(e){e.stopPropagation();shareTag(el);};})(tg[t]);}
 }
 
 async function invite(key,name,cups){
@@ -762,199 +635,168 @@ async function invite(key,name,cups){
 }
 
 async function joinClan(id,btn){
-  if(!id||joining)return;
-  if(myMember){
-    if(myMember.clan_id===id){toast('Ты уже в этом клане');openMine();}
+  if(!id||JOINING)return;
+  if(MYMEM){
+    if(MYMEM.clan_id===id){toast('Ты уже в этом клане');openMine();}
     else{toast('Ты уже в другом клане — сначала выйди');closeSearch();}
     return;
   }
-  joining=true;
+  JOINING=true;
   if(btn){btn.disabled=true;btn.textContent='…';}
   var ok=false,msg='';
-  try{
-    var r=await sb.rpc('clan_join',{p_clan:id,p_key:meKey,p_name:meName,p_cups:meCups});
+  try{var r=await SB.rpc('clan_join',{p_clan:id,p_key:MEK,p_name:MEN,p_cups:MEC});
     if(r.error)msg=r.error.message||'';
     else{var d=r.data||{};
       if(d.ok===false)msg=d.error||'не удалось';
-      else{ok=true;if(d.already)msg='Ты уже в этом клане';}}
-  }catch(e){msg='сеть';}
+      else{ok=true;if(d.already)msg='Ты уже в этом клане';}}}catch(e){msg='сеть';}
   if(!ok){
-    var ch=await sb.from('clan_members').select('clan_id').eq('player_key',meKey).limit(1);
+    var ch=await SB.from('clan_members').select('clan_id').eq('player_key',MEK).limit(1);
     if(!ch.error&&ch.data&&ch.data.length){ok=true;msg=(ch.data[0].clan_id===id)?'Ты уже в этом клане':'Ты уже в другом клане';}
   }
-  joining=false;
+  JOINING=false;
   if(!ok){if(btn){btn.disabled=false;btn.textContent='Вступить';}toast(msg||'Не удалось вступить');return;}
   toast(msg||'Ты в клане!');
-  closeSearch(); $('clanInfoModal').classList.add('hidden'); previewClan=null;
+  closeSearch();closeClan();
   await loadAll();
 }
 
 async function leaveClan(){
-  if(!myMember)return;
-  var owner=isOwner(),m=myClan?memOf(myClan.id):[];
+  if(!MYMEM)return;
+  var owner=isOwner(),m=MYCLAN?memOf(MYCLAN.id):[];
   if(owner&&m.length>1){toast('Сначала передай главу или выгони всех');return;}
   if(!confirm('Покинуть клан?'))return;
   closeClan();
-  await sb.from('clan_members').delete().eq('player_key',meKey);
-  if(owner&&myClan)await sb.from('clans').delete().eq('id',myClan.id);
-  descEdit=false; toast('Ты покинул клан'); await loadAll();
+  await SB.from('clan_members').delete().eq('player_key',MEK);
+  if(owner&&MYCLAN)await SB.from('clans').delete().eq('id',MYCLAN.id);
+  DESCED=false;toast('Ты покинул клан');await loadAll();
 }
 
 async function kick(key){
   if(!isOwner())return;
   if(!confirm('Выгнать участника?'))return;
-  await sb.from('clan_members').delete().eq('player_key',key);
-  toast('Участник выгнан'); await loadAll();
-  if(!$('clanInfoModal').classList.contains('hidden'))drawMine();
+  await SB.from('clan_members').delete().eq('player_key',key);
+  toast('Участник выгнан');await loadAll();
+  if(!$('clanModal').classList.contains('hide'))drawMine();
 }
 
 async function createClan(){
-  var n=$('inName').value.trim(),d=$('inDesc').value.trim().slice(0,120);
+  var n=$('cName').value.trim(),d=$('cDesc').value.trim().slice(0,120);
   if(n.length<3){toast('Название минимум 3 символа');return;}
-  if(myMember){toast('Ты уже в клане');return;}
-  var r=await sb.from('clans').insert({name:n,tag:null,emblem:pickEm,description:d,owner_key:meKey}).select().single();
+  if(MYMEM){toast('Ты уже в клане');return;}
+  var r=await SB.from('clans').insert({name:n,tag:null,emblem:PICKEM,description:d,owner_key:MEK}).select().single();
   if(r.error){toast('Не удалось создать клан');return;}
-  var m=await sb.from('clan_members').insert({clan_id:r.data.id,player_key:meKey,name:meName,cups:meCups,role:'owner'});
+  var m=await SB.from('clan_members').insert({clan_id:r.data.id,player_key:MEK,name:MEN,cups:MEC,role:'owner'});
   toast(m.error?'Клан создан, но вступление не удалось':'Клан создан!');
-  try{await sb.rpc('ensure_clan_code',{p_clan:r.data.id});}catch(e){}
-  $('createModal').classList.add('hidden'); $('inName').value=''; $('inDesc').value='';
+  try{await SB.rpc('ensure_clan_code',{p_clan:r.data.id});}catch(e){}
+  $('createModal').classList.add('hide');$('cName').value='';$('cDesc').value='';
   await loadAll();
 }
 
 function buildEmb(){
-  var r=$('emblemRow'); if(!r)return;
-  r.innerHTML='';
+  var r=$('emrow');r.innerHTML='';
   for(var i=0;i<EMB.length;i++){
     var b=document.createElement('button');
-    b.className='emblem-opt'+(EMB[i]===pickEm?' on':'');
+    b.className='emopt'+(EMB[i]===PICKEM?' on':'');
     b.textContent=EMB[i];
-    (function(em){b.onclick=function(){pickEm=em;buildEmb();};})(EMB[i]);
+    (function(em){b.onclick=function(){PICKEM=em;buildEmb();};})(EMB[i]);
     r.appendChild(b);
   }
 }
 
-var bb=$('bannerBtn'); if(bb)bb.onclick=function(){
-  if(myMember){toast('Ты уже в клане');return;}
-  pickEm='🛡️'; buildEmb(); $('createModal').classList.remove('hidden');};
-var c1=$('ciClose'); if(c1)c1.onclick=closeClan;
-var c2=$('searchClose'); if(c2)c2.onclick=closeSearch;
-var cm=$('clanInfoModal'); if(cm)cm.onclick=function(e){if(e.target===cm)closeClan();};
-var sm2=$('searchModal'); if(sm2)sm2.onclick=function(e){if(e.target===sm2)closeSearch();};
-var c3=$('createCancel'); if(c3)c3.onclick=function(){$('createModal').classList.add('hidden');};
-var c4=$('createOk'); if(c4)c4.onclick=createClan;
-var c5=$('addCancel'); if(c5)c5.onclick=function(){$('addModal').classList.add('hidden');};
-var c6=$('shareCancel'); if(c6)c6.onclick=function(){$('shareModal').classList.add('hidden');};
-
-var si=$('searchInput');
-if(si)si.addEventListener('input',function(){searchQ=this.value;clearTimeout(window.__sqT);window.__sqT=setTimeout(doSearch,350);});
-
-var mc=$('searchModal').querySelectorAll('.chip');
-for(var mi=0;mi<mc.length;mi++){(function(c){c.onclick=function(){
-  searchMode=c.getAttribute('data-mode');
-  for(var k=0;k<mc.length;k++)mc[k].classList.toggle('on',mc[k]===c);
-  doSearch();};})(mc[mi]);}
-
-var asb=$('addSearch');
-if(asb)asb.onclick=async function(){
-  if(!window.Friends){toast('friends.js не подключён');return;}
-  var nk=$('inNick').value.trim();
-  if(nk.replace('#','').length<2){toast('Минимум 2 символа');return;}
-  var box=$('addResults'); box.innerHTML='<div class="empty">Ищем…</div>';
-  var l=[];
-  try{var r=await sb.rpc('search_players',{p_q:nk,p_limit:15});if(!r.error)l=r.data||[];}catch(e){}
-  if(!l.length){box.innerHTML='<div class="empty">Никого не нашли</div>';return;}
-  var h='';
-  for(var i=0;i<l.length;i++){
-    var p=l[i]; if(p.player_key===meKey)continue;
-    h+='<div class="member"><div class="m-avatar">🎮</div><div class="m-info">';
-    h+='<div class="m-name">'+esc(p.display_name||'Игрок')+pill(p.tag,'player',p.display_name)+'</div>';
-    h+='<div class="m-role" style="color:#94a3b8">🏆 '+(p.cups||0)+'</div></div>';
-    h+='<button class="mini add" data-pick="'+esc(p.player_key)+'" data-pickname="'+esc(p.display_name||'Игрок')+'">Добавить</button></div>';
-  }
-  box.innerHTML=h||'<div class="empty">Никого не нашли</div>'; bind(box);
-  var pk=box.querySelectorAll('[data-pick]');
-  for(var k=0;k<pk.length;k++){(function(b){b.onclick=async function(){
-    var ok=await Friends.add(b.getAttribute('data-pick'),b.getAttribute('data-pickname'));
-    toast(ok?'Добавлен':'Не удалось'); if(ok){$('addModal').classList.add('hidden');await loadFriends();}};})(pk[k]);}
-};
-
-function watchCh(){
-  if(!window.Friends||!Friends.watch)return;
-  Friends.watch(function(c){
-    var o=document.createElement('div');
-    o.style.cssText='position:fixed;inset:0;background:rgba(2,6,23,.95);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center';
-    o.innerHTML='<div style="max-width:330px;width:100%;background:#1e293b;border:2px solid #22c55e;border-radius:16px;padding:20px">'+
-      '<div style="font-size:40px;margin-bottom:8px">⚔️</div>'+
-      '<div id="cnm" style="font-size:15px;font-weight:900;margin-bottom:6px"></div>'+
-      '<div style="font-size:12px;color:#94a3b8;margin-bottom:14px">Вызывает тебя на дружескую партию</div>'+
-      '<div style="display:flex;gap:8px">'+
-      '<button id="cNo" style="flex:1;padding:12px;border:0;border-radius:10px;background:#991b1b;color:#fff;font-weight:900;font-size:13px">Отклонить</button>'+
-      '<button id="cYes" style="flex:1;padding:12px;border:0;border-radius:10px;background:#15803d;color:#fff;font-weight:900;font-size:13px">Играть</button>'+
-      '</div></div>';
-    document.body.appendChild(o);
-    o.querySelector('#cnm').textContent=c.from_name||'Игрок';
-    var closed=false;
-    var chk=setInterval(async function(){
-      if(closed)return;
-      var st=await Friends.status(c.id);
-      if(!st||st.status!=='pending'){closed=true;clearInterval(chk);o.remove();}},3000);
-    function cl(){closed=true;clearInterval(chk);o.remove();}
-    o.querySelector('#cNo').onclick=async function(){cl();await Friends.answer(c.id,'declined');};
-    o.querySelector('#cYes').onclick=async function(){
-      cl(); var r=await Friends.answer(c.id,'accepted');
-      if(!r||!r.accepted)return;
-      Friends.play(c.id,'guest',c.from_key,c.from_name,c.from_cups,c.arena);};
-  });
-}
-
-function findCode(code){
-  var up=String(code||'').toUpperCase();
-  for(var i=0;i<allClans.length;i++){
-    if(String(allClans[i].tag||'').toUpperCase()===up)return allClans[i];
-    if(String(allClans[i].id)===String(code))return allClans[i];
-  }
-  return null;
-}
-
 async function deepLink(){
   var p=new URLSearchParams(location.search);
-  var clan=p.get('clan'), player=p.get('player');
+  var clan=p.get('clan'),player=p.get('player');
   if(!clan&&!player)return;
   var q=String(clan||player||'').replace(/^#/,'');
   history.replaceState(null,'',location.pathname);
-
   if(clan){
-    setTab('clan');
-    if(myMember&&myClan&&(String(myClan.tag||'').toUpperCase()===q.toUpperCase()||String(myClan.id)===q)){
-      previewClan=null; $('ciTitle').textContent='Клан';
-      drawMine(); $('clanInfoModal').classList.remove('hidden');
-      toast('Ты уже в этом клане'); return;
+    TAB='clan';
+    document.querySelectorAll('.tab')[0].classList.add('on');
+    document.querySelectorAll('.tab')[1].classList.remove('on');
+    if(MYMEM&&MYCLAN&&(String(MYCLAN.tag||'').toUpperCase()===q.toUpperCase()||String(MYCLAN.id)===q)){
+      PREV=null;$('cTitle').textContent='Клан';drawMine();
+      $('clanModal').classList.remove('hide');
+      toast('Ты уже в этом клане');return;
     }
-    var f=findCode(q);
-    if(f){openPreview(f.id); toast('Ты пока не в этом клане'); return;}
-    var r=await findClan(q);
-    if(r){
-      var c={id:r.id,name:r.name,tag:r.code,emblem:r.emblem,description:r.description,owner_key:r.owner_key};
-      var inL=false;
-      for(var i=0;i<allClans.length;i++)if(String(allClans[i].id)===String(c.id))inL=true;
-      if(!inL)allClans.push(c);
-      openPreview(c.id); toast('Ты пока не в этом клане'); return;
+    var f=null;
+    for(var i=0;i<CLANS.length;i++){
+      if(String(CLANS[i].tag||'').toUpperCase()===q.toUpperCase()||String(CLANS[i].id)===q){f=CLANS[i];break;}
     }
+    if(f){openPreview(f.id);toast('Ты пока не в этом клане');return;}
+    try{
+      var r=await SB.rpc('search_clans',{p_q:q,p_limit:25});
+      if(!r.error&&r.data&&r.data.length){
+        var c=r.data[0];
+        var exists=false;
+        for(var j=0;j<CLANS.length;j++){if(String(CLANS[j].id)===String(c.id))exists=true;}
+        if(!exists)CLANS.push({id:c.id,name:c.name,tag:c.code,emblem:c.emblem,description:c.description,owner_key:c.owner_key});
+        openPreview(c.id);toast('Ты пока не в этом клане');return;
+      }
+    }catch(e){}
     toast('Клан не найден');
   } else {
-    setTab('clan');
+    TAB='clan';draw();
     openSearch('players',q);
     setTimeout(function(){openProfile(q);},600);
   }
 }
 
-buildEmb();
-drawSafe();
-boot();
-setTimeout(watchCh,1500);
-document.addEventListener('visibilitychange',function(){
-  if(!document.hidden){try{loadAll();loadFriends();}catch(e){}}
+document.querySelectorAll('.tab').forEach(function(el){
+  el.onclick=function(){
+    TAB=el.getAttribute('data-t');
+    DESCED=false;PREV=null;
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');});
+    el.classList.add('on');
+    draw();
+  };
 });
+
+$('bnBtn').onclick=function(){
+  if(MYMEM){toast('Ты уже в клане');return;}
+  PICKEM='🛡️';buildEmb();$('createModal').classList.remove('hide');
+};
+$('cClose').onclick=closeClan;
+$('sClose').onclick=closeSearch;
+$('clanModal').onclick=function(e){if(e.target===$('clanModal'))closeClan();};
+$('searchModal').onclick=function(e){if(e.target===$('searchModal'))closeSearch();};
+$('cCancel').onclick=function(){$('createModal').classList.add('hide');};
+$('cOk').onclick=createClan;
+$('aCancel').onclick=function(){$('addModal').classList.add('hide');};
+$('mC').onclick=function(){SEARCHM='clans';openSearch('clans',SEARCHQ);};
+$('mP').onclick=function(){SEARCHM='players';openSearch('players',SEARCHQ);};
+
+$('sInput').addEventListener('input',function(){
+  SEARCHQ=this.value;
+  clearTimeout(window.__sq);
+  window.__sq=setTimeout(doSearch,350);
+});
+
+$('aFind').onclick=async function(){
+  if(!window.Friends){toast('friends.js не подключён');return;}
+  var nk=$('aNick').value.trim();
+  if(nk.replace('#','').length<2){toast('Минимум 2 символа');return;}
+  var box=$('aOut');box.innerHTML='<div class="emp">Ищем…</div>';
+  var l=[];
+  try{var r=await SB.rpc('search_players',{p_q:nk,p_limit:15});
+    if(!r.error)l=r.data||[];}catch(e){}
+  if(!l.length){box.innerHTML='<div class="emp">Никого не нашли</div>';return;}
+  var h='';
+  for(var i=0;i<l.length;i++){
+    var p=l[i];if(p.player_key===MEK)continue;
+    h+='<div class="mb"><div class="av">🎮</div><div class="mn"><div class="mname">'+esc(p.display_name||'Игрок')+pill(p.tag,'player',p.display_name)+'</div>';
+    h+='<div class="mrole" style="color:#94a3b8">🏆 '+(p.cups||0)+'</div></div>';
+    h+='<button class="mi ad" data-pick="'+esc(p.player_key)+'" data-pn="'+esc(p.display_name||'Игрок')+'">Добавить</button></div>';
+  }
+  box.innerHTML=h||'<div class="emp">Никого не нашли</div>';
+  var pk=box.querySelectorAll('[data-pick]');
+  for(var k=0;k<pk.length;k++){(function(b){b.onclick=async function(){
+    var ok=await Friends.add(b.getAttribute('data-pick'),b.getAttribute('data-pn'));
+    toast(ok?'Добавлен':'Не удалось');
+    if(ok){$('addModal').classList.add('hide');await loadFriends();}};})(pk[k]);}
+};
+
+buildEmb();
+boot();
 </script>
 </body>
 </html>
