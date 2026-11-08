@@ -24,10 +24,6 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .banner-text{font-size:13px;font-weight:900;line-height:1.3}
 .banner-btn{background:#fff;color:#4c1d95;border:0;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap}
 #app{padding:0 12px 20px}
-.row-top{display:flex;gap:8px;align-items:stretch;margin-bottom:10px}
-.row-top .clan-bar{flex:1;min-width:0}
-.search-fab{width:52px;flex:0 0 52px;border-radius:14px;border:2px solid #334155;background:linear-gradient(145deg,#1e293b,#0f172a);color:#ffcc00;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.search-fab:active{background:#1e293b;border-color:#ffcc00}
 .search-wide{width:100%;padding:13px;border-radius:12px;border:2px solid #334155;background:linear-gradient(145deg,#1e293b,#0f172a);color:#ffcc00;font-size:13.5px;font-weight:900;cursor:pointer;margin-bottom:12px;letter-spacing:.3px}
 .search-wide:active{background:#1e293b;border-color:#ffcc00}
 .search-box{margin-bottom:8px}
@@ -48,9 +44,8 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .clan-join:disabled{background:#334155;color:#64748b;opacity:.7}
 .btn-wide{width:100%;padding:14px;border:0;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;color:#fff;background:linear-gradient(145deg,#22c55e,#15803d);box-shadow:0 6px 16px rgba(34,197,94,.3);margin-top:8px}
 .btn-wide.grey{background:linear-gradient(145deg,#475569,#1e293b);box-shadow:none}
-.btn-wide.red{background:linear-gradient(145deg,#ef4444,#991b1b);box-shadow:0 6px 16px rgba(239,68,68,.3)}
 .btn-wide.blue{background:linear-gradient(145deg,#3b82f6,#1d4ed8);box-shadow:0 6px 16px rgba(59,130,246,.3)}
-.clan-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;cursor:pointer;box-shadow:0 8px 20px rgba(245,158,11,.25)}
+.clan-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;cursor:pointer;box-shadow:0 8px 20px rgba(245,158,11,.25);margin-bottom:10px}
 .clan-bar:active{transform:scale(.99)}
 .cb-emblem{width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.6)}
 .cb-info{flex:1;min-width:0}
@@ -69,10 +64,10 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .mini.add{background:linear-gradient(145deg,#3b82f6,#1d4ed8)}
 .mini.share{background:linear-gradient(145deg,#8b5cf6,#6d28d9)}
 .mini.kick{background:linear-gradient(145deg,#ef4444,#991b1b)}
-.chat-box{background:linear-gradient(145deg,#131c2e,#0f172a);border:1px solid #334155;border-radius:12px;padding:10px;height:calc(100dvh - 470px);min-height:170px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.chat-box{background:linear-gradient(145deg,#131c2e,#0f172a);border:1px solid #334155;border-radius:12px;padding:10px;height:calc(100dvh - 450px);min-height:170px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
 .msg{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:8px 10px;max-width:92%}
 .msg.mine{align-self:flex-end;background:#14532d;border-color:#166534}
-.msg-head{font-size:10px;color:#94a3b8;font-weight:800;margin-bottom:3px}
+.msg-head{font-size:10px;color:#94a3b8;font-weight:800;margin-bottom:3px;cursor:pointer}
 .msg-text{font-size:13.5px;line-height:1.4;word-break:break-word}
 .msg-replay{font-size:11.5px;color:#cbd5e1;margin-bottom:6px}
 .msg-btn{width:100%;padding:8px;border:0;border-radius:8px;background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000;font-size:11.5px;font-weight:900;cursor:pointer}
@@ -92,6 +87,10 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .ci-name{font-size:16px;font-weight:900;line-height:1.25}
 .ci-sub{font-size:11px;color:#94a3b8;margin-top:3px}
 .ci-close{width:32px;height:32px;border-radius:50%;border:1px solid #475569;background:#1e293b;color:#cbd5e1;font-size:14px;cursor:pointer;flex-shrink:0}
+.ci-actions{display:flex;gap:8px;margin-bottom:12px}
+.ci-act{flex:1;padding:12px 6px;border-radius:11px;border:2px solid rgba(255,255,255,.22);font-size:12.5px;font-weight:900;color:#fff;cursor:pointer;letter-spacing:.2px}
+.ci-act-red{background:linear-gradient(180deg,#f4665e,#c62828)}
+.ci-act-gold{background:linear-gradient(180deg,#ffd24d,#e09b00);color:#3a2400;border-color:rgba(255,255,255,.4)}
 .ci-desc{font-size:12px;color:#cbd5e1;line-height:1.45;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:10px 12px;margin-bottom:10px}
 .ci-stats{display:flex;gap:8px;margin-bottom:12px}
 .ci-stat{flex:1;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:9px 6px;text-align:center}
@@ -183,6 +182,11 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
       <button class="ci-close" id="ciClose">✕</button>
     </div>
 
+    <div class="ci-actions">
+      <button id="ciLeave" class="ci-act ci-act-red">🚪 Покинуть</button>
+      <button id="ciSearch" class="ci-act ci-act-gold">🔍 Поиск</button>
+    </div>
+
     <div class="ci-desc" id="ciDesc">—</div>
 
     <div class="ci-stats">
@@ -194,14 +198,11 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
     <div class="ci-bar"><div id="ciBarFill" style="width:0%"></div></div>
 
     <div class="modal-btns" style="margin-bottom:8px">
-      <button id="ciSearch" style="background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000">🔍 Поиск</button>
-      <button id="ciShare" style="background:linear-gradient(145deg,#8b5cf6,#6d28d9)">📤 Позвать</button>
+      <button id="ciShare" style="background:linear-gradient(145deg,#8b5cf6,#6d28d9)">📤 Позвать в клан</button>
     </div>
 
     <div class="section-title">Состав</div>
     <div id="ciMembers"></div>
-
-    <button class="btn-wide red" id="ciLeave">Покинуть клан</button>
   </div>
 </div>
 
@@ -251,7 +252,7 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 </div>
 
 <script src="friends.js?v=3"></script>
-<script src="profile.js?v=1"></script>
+<script src="profile.js?v=2"></script>
 <script>
 const sb = supabase.createClient(
   'https://qnpriwfxzuoymoumdtrl.supabase.co',
@@ -382,10 +383,6 @@ function esc(s){
 function tagPill(code){
   if (!code) return '';
   return '<span class="tagpill">#' + esc(code) + '</span>';
-}
-
-function openProfile(key){
-  if (window.Profile && key) Profile.open(key);
 }
 
 /* ================= ССЫЛКИ ================= */
@@ -643,7 +640,6 @@ function renderClanTab(app){
   let html = '';
 
   if (myMember && myClan){
-    html += '<div class="row-top">';
     html += '<div class="clan-bar" id="clanBar">';
     html += '<div class="cb-emblem">' + (myClan.emblem || '🛡️') + '</div>';
     html += '<div class="cb-info">';
@@ -651,8 +647,6 @@ function renderClanTab(app){
     html += '<div class="cb-sub">' + membersOf(myClan.id).length + ' / ' + MAX_MEMBERS + ' · 🏆 ' + cupsOf(myClan.id) + '</div>';
     html += '</div>';
     html += '<div class="cb-chev">›</div>';
-    html += '</div>';
-    html += '<button class="search-fab" id="searchFab">🔍</button>';
     html += '</div>';
 
     html += '<div class="chat-box" id="chatBox"></div>';
@@ -663,14 +657,14 @@ function renderClanTab(app){
     html += '</div>';
     html += '<button class="btn-wide grey" id="shareReplayBtn">📤 Отправить повтор в чат</button>';
   } else {
-    html += '<button class="search-wide" id="searchFab">🔍 Поиск кланов и игроков</button>';
+    html += '<button class="search-wide" id="searchWide">🔍 Поиск кланов и игроков</button>';
     html += clanListHtml();
   }
 
   app.innerHTML = html;
 
-  const fab = $('searchFab');
-  if (fab) fab.onclick = function (){ openSearch('clans', ''); };
+  const sw = $('searchWide');
+  if (sw) sw.onclick = function (){ openSearch('clans', ''); };
 
   if (myMember && myClan){
     const bar = $('clanBar');
@@ -1061,13 +1055,6 @@ function renderChatMessages(){
       };
     })(watch[i]);
   }
-
-  const pr = box.querySelectorAll('[data-profile]');
-  for (let i = 0; i < pr.length; i++){
-    (function (el){
-      el.onclick = function (){ openProfile(el.getAttribute('data-profile')); };
-    })(pr[i]);
-  }
 }
 
 async function sendChat(){
@@ -1245,13 +1232,6 @@ function bindActions(scope){
       };
     })(shc[i]);
   }
-
-  const pf = scope.querySelectorAll('[data-profile]');
-  for (let i = 0; i < pf.length; i++){
-    (function (el){
-      el.onclick = function (){ openProfile(el.getAttribute('data-profile')); };
-    })(pf[i]);
-  }
 }
 
 async function invitePlayer(key, name, cups){
@@ -1380,7 +1360,7 @@ $('bannerBtn').onclick = function (){
 };
 
 $('shareMeBtn').onclick = shareMe;
-$('myTagBox').onclick = function (){ openProfile(meKey); };
+$('myTagBox').onclick = function (){ if (window.Profile) Profile.open(meKey); };
 $('ciClose').onclick = closeClanModal;
 $('searchClose').onclick = closeSearch;
 
@@ -1536,6 +1516,19 @@ function watchChallenges(){
   });
 }
 
+/* ================= ТАП ПО ИГРОКУ ================= */
+
+document.addEventListener('click', function (e){
+  if (e.target.closest('button')) return;
+  if (!window.Profile) return;
+
+  const el = e.target.closest('[data-profile]');
+  if (!el) return;
+
+  const k = el.getAttribute('data-profile');
+  if (k) Profile.open(k);
+});
+
 /* ================= ССЫЛКИ ================= */
 
 function handleDeepLink(){
@@ -1552,7 +1545,7 @@ function handleDeepLink(){
   if (clan) openSearch('clans', q);
   else {
     openSearch('players', q);
-    setTimeout(function (){ openProfile(q); }, 600);
+    setTimeout(function (){ if (window.Profile) Profile.open(q); }, 700);
   }
 
   history.replaceState(null, '', location.pathname);
