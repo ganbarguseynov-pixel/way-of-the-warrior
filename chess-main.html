@@ -11,7 +11,6 @@
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 
-/* ================= ФОН: НЕБО CLASH ROYALE ================= */
 body{
   margin:0;padding:0;color:#fff;
   display:flex;flex-direction:column;align-items:center;
@@ -32,7 +31,6 @@ body::before{
 }
 @keyframes clouds{0%{transform:translateX(0)}50%{transform:translateX(-30px)}100%{transform:translateX(0)}}
 
-/* золотая линия сверху */
 body::after{
   content:'';position:fixed;top:0;left:0;right:0;height:4px;z-index:1200;pointer-events:none;
   background:linear-gradient(90deg,#ffe082,#ffb300,#ffe082,#ffb300,#ffe082);
@@ -40,7 +38,6 @@ body::after{
 }
 @keyframes goldmove{0%{background-position:0 0}100%{background-position:200% 0}}
 
-/* ================= ВЕРХНЯЯ ПАНЕЛЬ ================= */
 .top-bar{
   width:100%;padding:12px 10px 10px;display:flex;justify-content:space-between;
   align-items:flex-start;position:relative;z-index:10;
@@ -80,8 +77,6 @@ body::after{
 .currency.trophy{color:#ffe36b;border-color:#ffd447}
 .currency.coin{color:#ffd700;border-color:#c9a227}
 .currency.gem{color:#5ef08a;border-color:#2fa85a}
-.currency.hist{color:#9fd0ff;border-color:#4a9ef0;cursor:pointer}
-.currency.hist:active{background:linear-gradient(180deg,#1b4f9e,#12306b)}
 
 .burger{
   width:44px;height:44px;flex-shrink:0;border-radius:13px;cursor:pointer;
@@ -94,7 +89,6 @@ body::after{
 .burger:active{transform:translateY(3px);box-shadow:0 1px 0 #b45309}
 .burger span{display:block;width:20px;height:3px;border-radius:2px;background:#3b1f00;box-shadow:0 1px 0 rgba(255,255,255,.5)}
 
-/* ================= КАРТОЧКА АРЕНЫ ================= */
 #verTag{
   position:fixed;left:8px;bottom:74px;z-index:1300;font-size:10px;font-weight:900;
   color:#3b1f00;letter-spacing:.5px;background:#ffd447;border:2px solid #fff;
@@ -175,7 +169,6 @@ body::after{
   line-height:1.35;word-break:break-word;font-weight:700;
 }
 
-/* ================= КНОПКА БОЙ ================= */
 .bottom-actions{
   width:100%;padding:12px 20px 20px;display:flex;flex-direction:column;
   align-items:center;gap:10px;position:relative;z-index:5;
@@ -201,7 +194,6 @@ body::after{
 }
 @keyframes shine{0%{left:-100%}18%{left:200%}100%{left:200%}}
 
-/* ================= МОДАЛКА АРЕН ================= */
 #arenaModal{
   position:fixed;inset:0;z-index:1200;display:none;flex-direction:column;
   background:linear-gradient(180deg,#1f7ae0 0%,#0e2a5e 100%);
@@ -284,7 +276,6 @@ body::after{
 .arena-dot.on{background:#ffd447;transform:scale(1.5)}
 .arena-dot.mine.on{background:#ffd447;box-shadow:0 0 0 2px #43e97b}
 
-/* ================= НИЖНЕЕ МЕНЮ ================= */
 .bottom-nav{
   position:fixed;bottom:0;left:0;width:100%;height:68px;
   background:linear-gradient(180deg,#2a4a9e 0%,#12285c 100%);
@@ -318,7 +309,6 @@ body::after{
 .deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe)}
 .deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900}
 
-/* ================= БОКОВОЕ МЕНЮ ================= */
 #drawerOverlay{
   position:fixed;inset:0;background:rgba(4,14,36,.72);z-index:1500;
   opacity:0;pointer-events:none;transition:opacity .25s;
@@ -376,7 +366,6 @@ body::after{
   border-top:1px solid rgba(255,255,255,.1);flex-shrink:0;font-weight:700;
 }
 
-/* ================= ОКНО ПРАВИЛ ================= */
 #infoModal{
   position:fixed;inset:0;background:rgba(4,14,36,.85);z-index:1800;
   display:none;align-items:center;justify-content:center;padding:18px;
@@ -404,7 +393,6 @@ body::after{
 #infoBody p{margin:0 0 8px}
 #infoBody b{color:#0f4fa8}
 
-/* ================= ОКНО НИКА ================= */
 #nickPanel{
   position:fixed;inset:0;background:rgba(4,14,36,.9);
   display:none;align-items:center;justify-content:center;padding:20px;z-index:2200;
@@ -448,7 +436,7 @@ body::after{
 </head>
 <body>
 
-<div id="verTag">v19</div>
+<div id="verTag">v20</div>
 
 <div class="top-bar">
   <div class="profile-badge" id="profileBadge">
@@ -464,7 +452,6 @@ body::after{
       <div class="currency trophy">🏆 <span id="trophies-count">0</span></div>
       <div class="currency coin">🪙 <span id="coins-count">1250</span></div>
       <div class="currency gem">💎 <span id="gems-count">50</span></div>
-      <div class="currency hist" onclick="location.href='chess-history.html'">📜</div>
     </div>
     <button class="burger" id="burger" aria-label="Меню">
       <span></span><span></span><span></span>
@@ -504,7 +491,7 @@ body::after{
   <div id="arenaModalHead">
     <div id="arenaHeadLeft">
       <h3>Все арены</h3>
-      <span class="verChip">v19</span>
+      <span class="verChip">v20</span>
     </div>
     <button id="arenaClose">✕</button>
   </div>
@@ -514,7 +501,6 @@ body::after{
   <div id="arenaDots"></div>
 </div>
 
-<!-- ============ БОКОВОЕ МЕНЮ ============ -->
 <div id="drawerOverlay"></div>
 <div id="drawer">
   <div class="drawer-head">
@@ -571,7 +557,7 @@ body::after{
       <div class="m-ico">🏆</div>
       <div class="m-txt">
         <div class="m-name">Рейтинг</div>
-        <div class="m-sub">Лучшие игроки сезона</div>
+        <div class="m-sub">Лучшие игроки и кланы</div>
       </div>
       <div class="m-arrow">›</div>
     </button>
@@ -594,10 +580,9 @@ body::after{
       <div class="m-arrow">›</div>
     </button>
   </div>
-  <div class="drawer-foot">Chess Royale · версия 19</div>
+  <div class="drawer-foot">Chess Royale · версия 20</div>
 </div>
 
-<!-- ============ ОКНО ПРАВИЛ ============ -->
 <div id="infoModal">
   <div id="infoBox">
     <div id="infoHead">
@@ -619,7 +604,7 @@ body::after{
       <div id="nickErr"></div>
       <button id="nickOk">Сохранить</button>
       <button id="nickLater">Не сейчас</button>
-      <div id="nickVer">окно v19</div>
+      <div id="nickVer">окно v20</div>
     </div>
   </div>
 </div>
@@ -760,8 +745,6 @@ function setGems(v){
   if (el) el.textContent = n;
 }
 
-/* ---------------- КЭШ ПЕРВЫХ КАДРОВ ---------------- */
-
 const POSTER_KEY = 'cr_arena_poster_';
 
 function getPoster(n){
@@ -788,8 +771,6 @@ function grabPoster(v, n){
     v.poster = url;
   } catch (e){}
 }
-
-/* ---------------- видео арены ---------------- */
 
 function videoPath(n){
   const name = ARENA_VIDEO[n - 1];
@@ -847,8 +828,6 @@ function playArenaVideo(n){
   });
 })();
 
-/* ---------------- отрисовка ---------------- */
-
 function render(cups){
   lastCups = cups;
 
@@ -895,8 +874,6 @@ function render(cups){
 
   markMine(arena);
 }
-
-/* ---------------- ник ---------------- */
 
 function openNick(mode){
   nickMode = mode;
@@ -1008,8 +985,6 @@ $('nickOk').onclick = async function (){
       'Ник сохранён на устройстве, но в базу не записан: ' + dbMsg;
   }
 };
-
-/* ---------------- список арен ---------------- */
 
 function buildArenaBrowser(){
   if (slidesBuilt) return;
@@ -1251,8 +1226,6 @@ $('arenaClose').onclick = function (){
   }
 };
 
-/* ---------------- загрузка профиля ---------------- */
-
 async function boot(){
   try {
     const res = await sb.rpc('arena_ensure_player', {
@@ -1310,8 +1283,6 @@ document.addEventListener('visibilitychange', function (){
 </script>
 
 <script>
-/* ================= БОКОВОЕ МЕНЮ ================= */
-
 var drawer      = document.getElementById('drawer');
 var drawerOv    = document.getElementById('drawerOverlay');
 var burgerBtn   = document.getElementById('burger');
@@ -1330,8 +1301,6 @@ if (burgerBtn)   burgerBtn.onclick   = openDrawer;
 if (drawerClose) drawerClose.onclick = closeDrawer;
 if (drawerOv)    drawerOv.onclick    = closeDrawer;
 
-/* ---- окно правил ---- */
-
 var infoModal = document.getElementById('infoModal');
 var infoTitle = document.getElementById('infoTitle');
 var infoBody  = document.getElementById('infoBody');
@@ -1342,8 +1311,7 @@ var INFO = {
     title: 'Игровой процесс',
     html:
       '<h4>Как идёт бой</h4>' +
-      '<p>Каждая партия — это шахматная дуэль на арене. Побеждает тот, кто поставит мат или ' +
-      'у кого останется больше фигур, когда выйдет время.</p>' +
+      '<p>Побеждает тот, кто поставит мат или у кого короля больше хп.</p>' +
       '<h4>Звёзды за партию</h4>' +
       '<p>После победы игра считает, сколько твоих фигур осталось на доске от начального состава:</p>' +
       '<p><b>★★★ три звезды</b> — победа и сохранено от 60% до 100% фигур.</p>' +
@@ -1353,7 +1321,7 @@ var INFO = {
       'всё равно попадает в историю.</p>' +
       '<h4>Кубки и арены</h4>' +
       '<p>За победу ты получаешь кубки, за поражение часть кубков снимается, но ниже пола ' +
-      'текущей арены упасть нельзя. Каждые 1000 кубков открывают новую арену.</p>' +
+      'текущей арены упасть нельзя.</p>' +
       '<h4>История партий</h4>' +
       '<p>Все бои сохраняются в разделе «История партий» — с результатом, соперником, ' +
       'ареной и заработанными звёздами.</p>'
@@ -1366,10 +1334,7 @@ var INFO = {
       'работает автоматически — сообщение просто не отправится.</p>' +
       '<h4>Без обмана</h4>' +
       '<p>Запрещено использовать программы, которые играют за тебя, подменяют результат ' +
-      'партии или накручивают кубки. Такие аккаунты могут быть сброшены.</p>' +
-      '<h4>Один игрок — один аккаунт</h4>' +
-      '<p>Не создавай второй аккаунт, чтобы обходить ограничения клана или возвращать ' +
-      'потерянные кубки.</p>' +
+      'партии или накручивают кубки. Такие аккаунты могут быть заблокированы.</p>' +
       '<h4>Дружеские партии</h4>' +
       '<p>Вызовы друзьям — это тренировка. Кубки за них не начисляются и не снимаются, ' +
       'поэтому договорные бои никому не выгодны.</p>'
@@ -1391,8 +1356,6 @@ if (infoClose) infoClose.onclick = closeInfo;
 if (infoModal) infoModal.onclick = function (e){
   if (e.target === infoModal) closeInfo();
 };
-
-/* ---- пункты меню ---- */
 
 var items = document.querySelectorAll('.m-item');
 for (var i = 0; i < items.length; i++){
@@ -1418,7 +1381,6 @@ for (var i = 0; i < items.length; i++){
 </script>
 
 <script>
-/* всплывающий вызов на дружескую партию */
 (function(){
   if (!window.Friends) return;
 
