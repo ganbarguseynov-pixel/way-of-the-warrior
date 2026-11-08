@@ -4,103 +4,69 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Chess Royale - Магазин</title>
+<link rel="stylesheet" href="royale.css?v=1">
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-body{background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;overflow-x:hidden;padding-bottom:80px;}
-.top-bar{width:100%;padding:10px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(180deg,rgba(0,0,0,0.8),transparent);position:absolute;top:0;z-index:10;}
-.currency{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.6);padding:4px 8px;border-radius:8px;font-size:12px;font-weight:bold;border:1px solid rgba(255,255,255,0.1);}
-.currency.trophy{color:#ffcc00;border-color:#ffcc00;}
-.currency.coin{color:#ffd700;}
-.currency.gem{color:#34c759;}
-
-.shop-container{width:100%;max-width:400px;padding:70px 15px 20px;display:flex;flex-direction:column;gap:15px;}
-.banner-title{background:linear-gradient(180deg,#ffcc00,#d97706);color:#000;text-align:center;padding:8px;border-radius:10px;font-weight:900;font-size:18px;border:2px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,0.5);text-transform:uppercase;letter-spacing:1px;}
-.offer-card{background:linear-gradient(180deg,#1e293b,#0f172a);border:3px solid #475569;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.8);position:relative;}
-.offer-image{width:100%;height:250px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;}
-.chest-icon{font-size:100px;filter:drop-shadow(0 10px 20px rgba(0,0,0,0.6));animation:float 2s infinite ease-in-out;}
-@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
-.offer-stars{font-size:24px;color:#ffcc00;margin-top:10px;text-shadow:0 0 10px #ffcc00;}
-.offer-info{padding:15px;text-align:center;}
-.offer-title{font-size:18px;font-weight:900;color:#fff;margin:0 0 10px;text-shadow:0 2px 4px rgba(0,0,0,0.8);}
-.offer-price{background:#000;color:#fff;font-size:20px;font-weight:bold;padding:10px;border-radius:10px;display:inline-block;box-shadow:inset 0 2px 5px rgba(255,255,255,0.2);}
-.btn-buy{width:100%;padding:15px;background:linear-gradient(180deg,#22c55e,#15803d);color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:900;margin-top:10px;cursor:pointer;box-shadow:0 4px 0 #064e3b,0 6px 10px rgba(0,0,0,0.5);}
-.btn-buy:active{transform:translateY(4px);box-shadow:0 0 0 #064e3b;}
-
-.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 15px rgba(0,0,0,0.7);}
-.nav-btn{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px;transition:0.2s;}
-.nav-btn .icon-wrap{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f);box-shadow:0 3px 6px rgba(0,0,0,0.5),inset 0 2px 3px rgba(255,255,255,0.08),inset 0 -3px 6px rgba(0,0,0,0.6);transition:all 0.3s;}
-.nav-btn .icon{font-size:20px;text-shadow:0 1px 2px rgba(0,0,0,0.6);transition:transform 0.3s;}
-.nav-btn.active{color:#ffcc00;}
-.nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500);box-shadow:0 3px 10px rgba(255,204,0,0.4),inset 0 2px 3px rgba(255,255,255,0.4);}
-.nav-btn.active .icon{transform:scale(1.12);}
-.deck-stack{position:relative;width:24px;height:28px;}
-.deck-stack .deck-card{position:absolute;width:16px;height:22px;border-radius:3px;border:1px solid rgba(255,255,255,0.5);box-shadow:0 1px 3px rgba(0,0,0,0.6);}
-.deck-stack .deck-card:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c);}
-.deck-stack .deck-card:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe);}
-.deck-stack .deck-card:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{margin:0;color:#fff;min-height:100vh;user-select:none;overflow-x:hidden;padding-bottom:88px;display:flex;flex-direction:column;align-items:center}
+.top-bar{width:100%;padding:14px 12px 6px;display:flex;justify-content:center;gap:6px;z-index:10}
+.currency{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:10px;font-size:13px;font-weight:900}
+.shop-container{width:100%;max-width:400px;padding:8px 15px 20px;display:flex;flex-direction:column;gap:15px}
+.banner-title{text-align:center;padding:9px;font-weight:900;font-size:18px;text-transform:uppercase;letter-spacing:1px}
+.offer-card{border-radius:16px;overflow:hidden;position:relative}
+.offer-image{width:100%;height:250px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative}
+.chest-icon{font-size:100px;filter:drop-shadow(0 10px 20px rgba(0,0,0,.6));animation:float 2s infinite ease-in-out}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.offer-stars{font-size:24px;color:#ffd447;margin-top:10px;text-shadow:0 0 10px #ffd447}
+.offer-info{padding:15px;text-align:center}
+.offer-title{font-size:18px;font-weight:900;color:#fff;margin:0 0 10px;text-shadow:0 2px 4px rgba(0,0,0,.8)}
+.offer-price{background:#000;color:#fff;font-size:20px;font-weight:900;padding:10px;border-radius:10px;display:inline-block;box-shadow:inset 0 2px 5px rgba(255,255,255,.2)}
+.btn-buy{width:100%;padding:15px;border-radius:12px;font-size:18px;font-weight:900;margin-top:10px;cursor:pointer}
+.nav{position:fixed;bottom:0;left:0;width:100%;height:68px;display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom)}
+.nb{background:transparent;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px}
+.nb i{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-style:normal}
+.sp{width:24px;height:28px;position:relative}
+.sp b{position:absolute;width:16px;height:22px;border-radius:3px;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff}
+.sp b:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c)}
+.sp b:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe)}
+.sp b:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7)}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <div style="display:flex;gap:5px;">
-        <div class="currency coin">🪙 <span id="shop-coins">1250</span></div>
-        <div class="currency gem">💎 <span id="shop-gems">50</span></div>
-    </div>
+<div class="currency coin">🪙 <span id="shop-coins">1250</span></div>
+<div class="currency gem">💎 <span id="shop-gems">50</span></div>
 </div>
 
 <div class="shop-container">
-    <div class="banner-title">🎉 Акции</div>
-    
-    <div class="offer-card">
-        <div class="offer-image">
-            <div class="chest-icon">🎁</div>
-            <div class="offer-stars">⭐⭐⭐⭐⭐</div>
-        </div>
-        <div class="offer-info">
-            <h2 class="offer-title">Разблокируй более 90 наград!</h2>
-            <div class="offer-price">1 090,00 ₽</div>
-            <button class="btn-buy" onclick="alert('Покупки скоро появятся!')">Купить</button>
-        </div>
-    </div>
-
-    <div class="banner-title" style="margin-top: 10px;">Акция Royale</div>
+<div class="banner-title">🎉 Акции</div>
+<div class="offer-card">
+<div class="offer-image">
+<div class="chest-icon">🎁</div>
+<div class="offer-stars">⭐⭐⭐⭐⭐</div>
+</div>
+<div class="offer-info">
+<h2 class="offer-title">Разблокируй более 90 наград!</h2>
+<div class="offer-price">1 090,00 ₽</div>
+<button class="btn-buy" onclick="alert('Покупки скоро появятся!')">Купить</button>
+</div>
+</div>
+<div class="banner-title" style="margin-top:10px">Акция Royale</div>
 </div>
 
-<div class="bottom-nav">
-    <button class="nav-btn active" onclick="window.location.href='chess-shop.html'">
-        <div class="icon-wrap"><span class="icon">🎁</span></div>
-        <span>Магазин</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='chess-deck.html'">
-        <div class="icon-wrap">
-            <div class="deck-stack">
-                <div class="deck-card"></div>
-                <div class="deck-card"></div>
-                <div class="deck-card">♠</div>
-            </div>
-        </div>
-        <span>Колода</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='chess-main.html'">
-        <div class="icon-wrap"><span class="icon">⚔️</span></div>
-        <span>Бой</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='chess-social.html'">
-        <div class="icon-wrap"><span class="icon">🛡️</span></div>
-        <span>Общение</span>
-    </button>
-    <button class="nav-btn" onclick="window.location.href='leaderboard.html'">
-        <div class="icon-wrap"><span class="icon">🏆</span></div>
-        <span>Рейтинг</span>
-    </button>
+<div class="nav">
+<button class="nb on" onclick="location.href='chess-shop.html'"><i>🎁</i><span>Магазин</span></button>
+<button class="nb" onclick="location.href='chess-deck.html'"><i><span class="sp"><b></b><b></b><b>♠</b></span></i><span>Колода</span></button>
+<button class="nb" onclick="location.href='chess-main.html'"><i>⚔️</i><span>Бой</span></button>
+<button class="nb" onclick="location.href='chess-social.html'"><i>🛡️</i><span>Клан</span></button>
+<button class="nb" onclick="location.href='leaderboard.html'"><i>🏆</i><span>Рейтинг</span></button>
 </div>
 
 <script>
-let coins = parseInt(localStorage.getItem('cr_coins') || '1250');
-let gems = parseInt(localStorage.getItem('cr_gems') || '50');
-document.getElementById('shop-coins').innerText = coins;
-document.getElementById('shop-gems').innerText = gems;
+let coins=parseInt(localStorage.getItem('cr_coins')||'1250');
+let gems=parseInt(localStorage.getItem('cr_gems')||'50');
+document.getElementById('shop-coins').innerText=coins;
+document.getElementById('shop-gems').innerText=gems;
 </script>
 </body>
 </html>
