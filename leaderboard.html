@@ -11,12 +11,18 @@
 body{margin:0;color:#fff;padding-bottom:88px;min-height:100vh}
 .inner-screen{padding:16px;max-width:400px;margin:0 auto}
 h1{margin:8px 0 4px;font-size:23px;text-align:center}
-.subtitle{text-align:center;font-size:12px;color:#dbe9ff;font-weight:700;margin:0 0 16px}
+.subtitle{text-align:center;font-size:12px;color:#dbe9ff;font-weight:700;margin:0 0 14px}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.ltab{flex:1;padding:11px 4px;border-radius:12px;font-size:12.5px;font-weight:900;cursor:pointer;background:linear-gradient(180deg,#1c3f8a,#0e2352);border:2px solid #4a72c0;color:#a8c4ea}
+.ltab.on{background:linear-gradient(180deg,#ffe082,#ffb300);border-color:#fff;color:#3b1f00;box-shadow:0 4px 0 #b45309}
 .leaderboard-item{display:flex;align-items:center;padding:11px 12px;border-radius:12px;margin-bottom:9px}
+.clan-row{cursor:pointer}
 .rank{font-size:17px;font-weight:900;width:34px;text-align:center;color:#ffd447;flex-shrink:0}
 .avatar-cell{width:34px;height:34px;border-radius:50%;flex-shrink:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:17px;border:2px solid rgba(255,255,255,.5);margin-left:4px}
+.clan-emb{width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(0,0,0,.35);border:2px solid #ffd447;margin-left:4px}
 .user-info{flex:1;margin-left:10px;min-width:0}
 .user-name{font-weight:900;font-size:15px;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-name i{font-style:normal;color:#ffd447;font-size:11.5px;font-weight:900;margin-left:4px}
 .user-meta{margin:2px 0 0;font-size:10.5px;color:#c6d8ff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cups-cell{display:flex;align-items:center;gap:4px;font-weight:900;font-size:15px;color:#ffd447;flex-shrink:0}
 .state-msg{text-align:center;font-size:13px;padding:34px 14px;line-height:1.5;font-weight:800}
@@ -34,10 +40,14 @@ h1{margin:8px 0 4px;font-size:23px;text-align:center}
 <body>
 
 <div class="inner-screen">
-  <h1>🏆 Мировой рейтинг</h1>
-  <p class="subtitle">Топ игроков по кубкам</p>
-  <div id="leaderboard-list"><p class="state-msg">Загрузка…</p></div>
-  <div class="refresh-note">Обновляется каждые 15 секунд</div>
+  <h1>🏆 Рейтинг</h1>
+  <p class="subtitle" id="subtitle">Лучшие игроки по кубкам</p>
+  <div class="tabs">
+    <button class="ltab on" id="tabPlayers" onclick="setTab('players')">🏆 Игроки</button>
+    <button class="ltab" id="tabClans" onclick="setTab('clans')">🛡️ Кланы</button>
+  </div>
+  <div id="list"><p class="state-msg">Загрузка…</p></div>
+  <div class="refresh-note" id="note">Обновляется каждые 15 секунд</div>
 </div>
 
 <div class="nav">
@@ -52,44 +62,49 @@ h1{margin:8px 0 4px;font-size:23px;text-align:center}
 <script>
 const sb=supabase.createClient('https://qnpriwfxzuoymoumdtrl.supabase.co','sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF');
 const $=function(id){return document.getElementById(id);};
-const STEP=1000,MAX_ARENA=10;
+const STEP=1000, MAX_ARENA=10, MAXM=30;
 const NAMES=(window.Arena&&Arena.ARENAS)?Arena.ARENAS.map(function(a){return a.name;}):
 ['Капкан','Псарня','Мясорубка','Кошмар на улице Вязов','Техасская резня','Хостел','Восставший из ада','Судная ночь','Зловещие мертвецы','Бессмертная партия'];
 const AVATARS=['👑','😎','😈','🤠','🤖','🐺','🦊','🐻','🐯','🦁','👽','🎃','💀','🧙','🥷'];
 
 function playerKey(){
-  const t=localStorage.getItem('tgId');if(t)return 'tg:'+t;
-  const e=localStorage.getItem('currentEmail')||localStorage.getItem('linkedEmail');if(e)return 'email:'+e.toLowerCase();
+  const t=localStorage.getItem('tgId'); if(t) return 'tg:'+t;
+  const e=localStorage.getItem('currentEmail')||localStorage.getItem('linkedEmail');
+  if(e) return 'email:'+e.toLowerCase();
   let a=localStorage.getItem('arenaAnonId');
   if(!a){a='anon:'+Math.random().toString(36).slice(2,10);localStorage.setItem('arenaAnonId',a);}
   return a;
 }
+
+const MYKEY=playerKey();
+let MYCLAN='';
+
+function escapeHtml(s){
+  return String(s===null||s===undefined?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 function avatarFor(name){
-  let h=0;const s=String(name||'');
-  for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))&0xffff;
+  let h=0; const s=String(name||'');
+  for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))&0xffff;
   return AVATARS[h%AVATARS.length];
 }
-function medalFor(i){if(i===0)return '🥇';if(i===1)return '🥈';if(i===2)return '🥉';return String(i+1);}
-function escapeHtml(s){
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function medalFor(i){ if(i===0) return '🥇'; if(i===1) return '🥈'; if(i===2) return '🥉'; return String(i+1); }
 
-function render(rows){
-  const box=$('leaderboard-list');
+let TAB='players', loadingP=false, loadingC=false, clansLoaded=false;
+
+function renderPlayers(rows){
+  const box=$('list');
   if(!rows||!rows.length){box.innerHTML='<p class="state-msg">Пока нет игроков. Стань первым!</p>';return;}
-  const myKey=playerKey();
   let html='';
   for(let i=0;i<rows.length;i++){
     const r=rows[i];
-    const isMe=(r.player_key===myKey);
-    const arenaNum=Math.min(MAX_ARENA,Math.floor(Math.max(0,r.cups||0)/STEP)+1);
-    const arenaName=NAMES[arenaNum-1]||'';
+    const isMe=(r.player_key===MYKEY);
+    const a=Math.min(MAX_ARENA,Math.floor(Math.max(0,r.cups||0)/STEP)+1);
     html+='<div class="leaderboard-item'+(isMe?' my-row':'')+'">';
     html+='<div class="rank">'+medalFor(i)+'</div>';
     html+='<div class="avatar-cell">'+avatarFor(r.display_name)+'</div>';
     html+='<div class="user-info">';
     html+='<p class="user-name">'+escapeHtml(r.display_name||'Игрок')+(isMe?' · ты':'')+'</p>';
-    html+='<p class="user-meta">Арена '+arenaNum+' · '+escapeHtml(arenaName)+' · '+(r.wins||0)+'П / '+(r.losses||0)+'Пр</p>';
+    html+='<p class="user-meta">Арена '+a+' · '+escapeHtml(NAMES[a-1]||'')+' · '+(r.wins||0)+'П / '+(r.losses||0)+'Пр</p>';
     html+='</div>';
     html+='<div class="cups-cell">🏆 '+(r.cups||0)+'</div>';
     html+='</div>';
@@ -97,23 +112,112 @@ function render(rows){
   box.innerHTML=html;
 }
 
-let loading=false;
-async function load(){
-  if(loading)return;
-  loading=true;
+async function loadPlayers(){
+  if(loadingP) return;
+  loadingP=true;
   try{
     const res=await sb.rpc('arena_top',{p_limit:50});
-    if(res.error)throw res.error;
-    render(res.data||[]);
+    if(res.error) throw res.error;
+    if(TAB==='players') renderPlayers(res.data||[]);
   }catch(e){
-    console.error(e);
-    $('leaderboard-list').innerHTML='<p class="state-msg">Не удалось загрузить рейтинг.<br>Проверь, что функция arena_top существует в Supabase.</p>';
-  }finally{loading=false;}
+    if(TAB==='players') $('list').innerHTML='<p class="state-msg">Не удалось загрузить рейтинг игроков.</p>';
+  }finally{loadingP=false;}
 }
 
-load();
-setInterval(load,15000);
-document.addEventListener('visibilitychange',function(){if(!document.hidden)load();});
+function renderClans(list){
+  const box=$('list');
+  if(!list.length){box.innerHTML='<p class="state-msg">Кланов пока нет.<br>Создай первый в разделе «Клан».</p>';return;}
+  let html='';
+  for(let i=0;i<list.length;i++){
+    const c=list[i];
+    const isMine=(c.id===MYCLAN);
+    html+='<div class="leaderboard-item clan-row'+(isMine?' my-row':'')+'" data-tag="'+escapeHtml(c.tag||'')+'" data-id="'+escapeHtml(c.id)+'">';
+    html+='<div class="rank">'+medalFor(i)+'</div>';
+    html+='<div class="clan-emb">'+escapeHtml(c.emblem||'🛡️')+'</div>';
+    html+='<div class="user-info">';
+    html+='<p class="user-name">'+escapeHtml(c.name)+(c.tag?' <i>#'+escapeHtml(c.tag)+'</i>':'')+(isMine?' · мой':'')+'</p>';
+    html+='<p class="user-meta">'+c.members+' / '+MAXM+' участников</p>';
+    html+='</div>';
+    html+='<div class="cups-cell">🏆 '+c.cups+'</div>';
+    html+='</div>';
+  }
+  box.innerHTML=html;
+
+  const rows=box.querySelectorAll('.clan-row');
+  for(let i=0;i<rows.length;i++){
+    (function(el){
+      el.onclick=function(){
+        const q=el.getAttribute('data-tag')||el.getAttribute('data-id');
+        location.href='chess-social.html?clan='+encodeURIComponent(q);
+      };
+    })(rows[i]);
+  }
+}
+
+async function loadClans(force){
+  if(loadingC) return;
+  if(clansLoaded && !force) return;
+  loadingC=true;
+  try{
+    const res=await Promise.all([
+      sb.from('clans').select('id,name,tag,emblem,owner_key'),
+      sb.from('clan_members').select('clan_id,player_key,cups,role')
+    ]);
+    if(res[0].error) throw res[0].error;
+    if(res[1].error) throw res[1].error;
+
+    const map={};
+    (res[0].data||[]).forEach(function(c){
+      map[String(c.id)]={id:String(c.id),name:c.name,tag:c.tag,emblem:c.emblem,owner_key:c.owner_key,cups:0,members:0,seen:{}};
+    });
+
+    (res[1].data||[]).forEach(function(m){
+      const o=map[String(m.clan_id)];
+      if(!o) return;
+      if(o.seen[m.player_key]) return;
+      o.seen[m.player_key]=1;
+      o.members++;
+      o.cups+=(m.cups||0);
+      if(m.player_key===MYKEY) MYCLAN=o.id;
+    });
+
+    const list=Object.keys(map).map(function(k){return map[k];})
+      .filter(function(o){return o.members>0;})
+      .sort(function(a,b){ if(b.cups!==a.cups) return b.cups-a.cups; return b.members-a.members; });
+
+    clansLoaded=true;
+    if(TAB==='clans') renderClans(list.slice(0,50));
+  }catch(e){
+    if(TAB==='clans') $('list').innerHTML='<p class="state-msg">Не удалось загрузить рейтинг кланов.</p>';
+  }finally{loadingC=false;}
+}
+
+function setTab(t){
+  TAB=t;
+  $('tabPlayers').classList.toggle('on',t==='players');
+  $('tabClans').classList.toggle('on',t==='clans');
+  if(t==='players'){
+    $('subtitle').textContent='Лучшие игроки по кубкам';
+    $('note').textContent='Обновляется каждые 15 секунд';
+    $('list').innerHTML='<p class="state-msg">Загрузка…</p>';
+    loadPlayers();
+  }else{
+    $('subtitle').textContent='Лучшие кланы по кубкам';
+    $('note').textContent='Кубки клана — сумма кубков всех участников';
+    $('list').innerHTML='<p class="state-msg">Загрузка…</p>';
+    loadClans(false);
+  }
+}
+
+setTab('players');
+loadClans(true);
+setInterval(function(){ if(TAB==='players') loadPlayers(); },15000);
+
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden) return;
+  if(TAB==='players') loadPlayers();
+  else loadClans(true);
+});
 </script>
 </body>
 </html>
