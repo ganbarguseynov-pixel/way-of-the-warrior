@@ -2,10 +2,8 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Chess Royale — Клан</title>
-
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Chess Royale">
 <meta property="og:title" content="Chess Royale">
@@ -15,37 +13,32 @@
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:url" content="https://ganbarguseynov-pixel.github.io/way-of-the-warrior/chess-social.html">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Chess Royale">
-<meta name="twitter:description" content="Шахматы на аренах. Вступай в клан, вызывай друзей на партию.">
 <meta name="twitter:image" content="https://ganbarguseynov-pixel.github.io/way-of-the-warrior/IMG_20261108_042932_946.jpg">
-<link rel="image_src" href="https://ganbarguseynov-pixel.github.io/way-of-the-warrior/IMG_20261108_042932_946.jpg">
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff;min-height:100dvh;padding-bottom:80px;user-select:none}
+body{margin:0;background:radial-gradient(circle at center,#1e293b,#0f172a);color:#fff;min-height:100dvh;padding-bottom:80px;user-select:none}
 .hidden{display:none!important}
 .top-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 10px}
-.page-title{font-size:20px;font-weight:900;letter-spacing:.5px}
-.currency{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.6);padding:5px 12px;border-radius:10px;font-size:13px;font-weight:bold;color:#ffcc00;border:1px solid #ffcc00}
+.page-title{font-size:20px;font-weight:900}
+.currency{display:flex;gap:5px;background:rgba(0,0,0,.6);padding:5px 12px;border-radius:10px;font-size:13px;font-weight:bold;color:#ffcc00;border:1px solid #ffcc00}
 .tabs{display:flex;gap:6px;padding:6px 12px 10px}
-.tab{flex:1;padding:10px 4px;border-radius:10px;border:1px solid #334155;background:linear-gradient(145deg,#1e293b,#0f172a);color:#94a3b8;font-size:12.5px;font-weight:900;cursor:pointer}
+.tab{flex:1;padding:10px 4px;border-radius:10px;border:1px solid #334155;background:#1e293b;color:#94a3b8;font-size:12.5px;font-weight:900;cursor:pointer}
 .tab.on{background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000;border-color:#fff}
 .banner{margin:0 12px 12px;padding:12px 14px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#5b21b6);display:flex;align-items:center;justify-content:space-between;gap:10px}
 .banner-text{font-size:13px;font-weight:900;line-height:1.3}
 .banner-btn{background:#fff;color:#4c1d95;border:0;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap}
 #app{padding:0 12px 20px}
-.search-wide{width:100%;padding:13px;border-radius:12px;border:2px solid #334155;background:linear-gradient(145deg,#1e293b,#0f172a);color:#ffcc00;font-size:13.5px;font-weight:900;cursor:pointer;margin-bottom:12px}
-.search-box{margin-bottom:8px}
-.search-box input{width:100%;padding:12px 14px;border-radius:11px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none;user-select:text;-webkit-user-select:text}
+.search-wide{width:100%;padding:13px;border-radius:12px;border:2px solid #334155;background:#1e293b;color:#ffcc00;font-size:13.5px;font-weight:900;cursor:pointer;margin-bottom:12px}
+.search-box input{width:100%;padding:12px 14px;border-radius:11px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none}
 .chips{display:flex;gap:6px;margin-top:8px}
 .chip{flex:1;padding:9px;border-radius:9px;border:1px solid #334155;background:#0f172a;color:#94a3b8;font-size:12px;font-weight:900;cursor:pointer}
 .chip.on{background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000;border-color:#fff}
-.section-title{text-align:center;font-size:12.5px;font-weight:900;letter-spacing:1px;color:#cbd5e1;margin:14px 0 12px;display:flex;align-items:center;gap:10px}
+.section-title{text-align:center;font-size:12.5px;font-weight:900;color:#cbd5e1;margin:14px 0 12px;display:flex;align-items:center;gap:10px}
 .section-title::before,.section-title::after{content:'';flex:1;height:1px;background:#334155}
 .tagpill{font-size:10px;font-weight:900;color:#000;background:linear-gradient(145deg,#ffcc00,#ff9500);padding:1px 6px;border-radius:6px;margin-left:5px;white-space:nowrap;cursor:pointer;display:inline-block}
-.clan-card{display:flex;align-items:center;gap:10px;background:linear-gradient(145deg,#1e293b,#131c2e);border:2px solid #334155;border-radius:14px;padding:12px;margin-bottom:10px}
+.clan-card{display:flex;align-items:center;gap:10px;background:#1e293b;border:2px solid #334155;border-radius:14px;padding:12px;margin-bottom:10px;cursor:pointer}
+.clan-card:active{border-color:#64748b}
 .clan-emblem{width:46px;height:46px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.25)}
 .clan-info{flex:1;min-width:0}
 .clan-name{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -56,13 +49,12 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .btn-wide.grey{background:linear-gradient(145deg,#475569,#1e293b)}
 .btn-wide.blue{background:linear-gradient(145deg,#3b82f6,#1d4ed8)}
 .clan-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;cursor:pointer;margin-bottom:10px}
-.clan-bar:active{transform:scale(.99)}
 .cb-emblem{width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.6)}
 .cb-info{flex:1;min-width:0}
 .cb-name{font-size:14.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cb-sub{font-size:10.5px;color:#fff3d6;margin-top:2px;font-weight:700}
-.cb-chev{font-size:22px;color:#fff;opacity:.85;line-height:1;margin-left:2px}
-.member{display:flex;align-items:center;gap:8px;background:linear-gradient(145deg,#1e293b,#131c2e);border:1px solid #334155;border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.cb-chev{font-size:22px;color:#fff;opacity:.85}
+.member{display:flex;align-items:center;gap:8px;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:10px 12px;margin-bottom:8px}
 .member.me{border-color:#22c55e}
 .m-rank{width:26px;height:26px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#0f172a;background:linear-gradient(180deg,#e2e8f0,#94a3b8)}
 .m-rank.r1{background:linear-gradient(180deg,#ffe680,#e0a200)}
@@ -78,38 +70,38 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .mini.add{background:linear-gradient(145deg,#3b82f6,#1d4ed8)}
 .mini.share{background:linear-gradient(145deg,#8b5cf6,#6d28d9)}
 .mini.kick{background:linear-gradient(145deg,#ef4444,#991b1b)}
-.chat-box{background:linear-gradient(145deg,#131c2e,#0f172a);border:1px solid #334155;border-radius:12px;padding:10px;height:calc(100dvh - 400px);min-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.chat-box{background:#131c2e;border:1px solid #334155;border-radius:12px;padding:10px;height:calc(100dvh - 400px);min-height:170px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
 .msg{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:8px 10px;max-width:92%}
 .msg.mine{align-self:flex-end;background:#14532d;border-color:#166534}
 .msg-head{font-size:10px;color:#94a3b8;font-weight:800;margin-bottom:3px;cursor:pointer}
 .msg-text{font-size:13.5px;line-height:1.4;word-break:break-word}
 .msg-replay{font-size:11.5px;color:#cbd5e1;margin-bottom:6px}
 .msg-btn{width:100%;padding:8px;border:0;border-radius:8px;background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000;font-size:11.5px;font-weight:900;cursor:pointer}
-.msg-sys{align-self:center;background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;font-size:11.5px;font-weight:800;padding:7px 14px;border-radius:10px;text-align:center;max-width:96%}
+.msg-sys{align-self:center;background:linear-gradient(135deg,#22c55e,#15803d);font-size:11.5px;font-weight:800;padding:7px 14px;border-radius:10px;text-align:center;max-width:96%}
 .emoji-row{display:flex;gap:4px;overflow-x:auto;padding:8px 0 0;scrollbar-width:none}
 .emoji-row::-webkit-scrollbar{display:none}
-.emoji-row button{flex:0 0 auto;width:36px;height:36px;border-radius:9px;border:1px solid #334155;background:#0f172a;font-size:18px;cursor:pointer;line-height:1;padding:0}
+.emoji-row button{flex:0 0 auto;width:36px;height:36px;border-radius:9px;border:1px solid #334155;background:#0f172a;font-size:18px;cursor:pointer;padding:0}
 .chat-row{display:flex;gap:6px;margin-top:8px}
-.chat-row input{flex:1;padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none;user-select:text;-webkit-user-select:text}
+.chat-row input{flex:1;padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none}
 .chat-row button{padding:0 16px;border:0;border-radius:10px;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-size:16px;font-weight:900;cursor:pointer}
 .modal{position:fixed;inset:0;background:rgba(2,6,23,.94);display:flex;align-items:center;justify-content:center;padding:14px;z-index:1000;overflow-y:auto}
 .modal-box{width:100%;max-width:390px;background:linear-gradient(180deg,#243b6b,#1a2745);border:2px solid #64748b;border-radius:16px;padding:14px;max-height:88vh;overflow-y:auto}
 .modal-title{font-size:17px;font-weight:900;margin-bottom:12px;text-align:center}
 #clanInfoModal .modal-box{padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:90vh}
 .cr-top{display:flex;align-items:center;justify-content:center;position:relative;padding:10px 14px;background:linear-gradient(180deg,#4ab3f8,#1b6fd6);border-bottom:3px solid #f7c948;flex-shrink:0}
-.cr-top h3{margin:0;font-size:16px;font-weight:900;letter-spacing:.5px}
+.cr-top h3{margin:0;font-size:16px;font-weight:900}
 .ci-close{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:9px;border:2px solid #fff;background:linear-gradient(180deg,#f4665e,#c62828);color:#fff;font-size:14px;cursor:pointer;line-height:1}
-.cr-scroll{flex:1;overflow-y:auto;padding:12px 12px 14px}
+.cr-scroll{flex:1;overflow-y:auto;padding:12px}
 .cr-head{display:flex;align-items:center;gap:11px;margin-bottom:10px}
-.cr-emblem{width:58px;height:58px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;box-shadow:0 6px 14px rgba(0,0,0,.4)}
+.cr-emblem{width:58px;height:58px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24}
 .cr-name{font-size:16px;font-weight:900;line-height:1.2}
 .cr-sub{font-size:11px;color:#c6d8ff;margin-top:3px}
 .cr-cups{margin-left:auto;text-align:right;flex-shrink:0}
 .cr-cups b{display:block;font-size:16px;font-weight:900;color:#ffcc00;line-height:1.1}
-.cr-cups span{font-size:9px;color:#c6d8ff;font-weight:800;letter-spacing:.3px}
+.cr-cups span{font-size:9px;color:#c6d8ff;font-weight:800}
 .cr-desc{font-size:12.5px;line-height:1.45;color:#e2e8f0;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:9px 11px;white-space:pre-wrap;word-break:break-word;margin-bottom:10px}
 .cr-desc.empty{color:#8fa3c8;font-style:italic}
-.cr-desc-edit{width:100%;height:74px;resize:none;padding:9px 11px;border-radius:10px;border:1px solid #64748b;background:#0f172a;color:#fff;font-size:12.5px;line-height:1.45;outline:none;user-select:text;-webkit-user-select:text;font-family:inherit;margin-bottom:6px}
+.cr-desc-edit{width:100%;height:74px;resize:none;padding:9px 11px;border-radius:10px;border:1px solid #64748b;background:#0f172a;color:#fff;font-size:12.5px;outline:none;font-family:inherit;margin-bottom:6px}
 .cr-desc-count{font-size:10px;color:#8fa3c8;text-align:right;margin-bottom:6px}
 .cr-desc-row{display:flex;gap:7px;margin-bottom:10px}
 .cr-desc-row button{flex:1;padding:10px;border:0;border-radius:9px;font-size:12px;font-weight:900;color:#fff;cursor:pointer}
@@ -120,30 +112,30 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .cr-stats{display:flex;background:linear-gradient(180deg,#2f74d8,#1a4c9e);border-radius:10px;overflow:hidden;margin-bottom:10px;border:1px solid #3b82f6}
 .cr-stat{flex:1;padding:8px 4px;text-align:center;border-right:1px solid rgba(255,255,255,.18)}
 .cr-stat:last-child{border-right:0}
-.cr-stat span{display:block;font-size:8.5px;color:#c6d8ff;font-weight:800;letter-spacing:.3px;line-height:1.2}
+.cr-stat span{display:block;font-size:8.5px;color:#c6d8ff;font-weight:800;line-height:1.2}
 .cr-stat b{display:block;font-size:14px;color:#fff;font-weight:900;margin-top:3px}
 .cr-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-.cr-bar-l{font-size:9.5px;font-weight:900;color:#8fa3c8;letter-spacing:.5px;line-height:1.2}
+.cr-bar-l{font-size:9.5px;font-weight:900;color:#8fa3c8;line-height:1.2}
 .cr-bar-l b{display:block;font-size:15px;color:#fff;margin-top:2px}
 .cr-btns{display:flex;align-items:center;gap:7px}
 .cr-leave{padding:11px 14px;border:2px solid #fff;border-radius:10px;background:linear-gradient(180deg,#f4665e,#c62828);color:#fff;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #7f1d1d;white-space:nowrap}
-.cr-leave:active{transform:translateY(2px);box-shadow:0 1px 0 #7f1d1d}
-.cr-search{width:42px;height:42px;border:2px solid #fff;border-radius:10px;background:linear-gradient(180deg,#5ea8ff,#1e63c8);color:#fff;font-size:17px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 #123b7a}
-.cr-search:active{transform:translateY(2px);box-shadow:0 1px 0 #123b7a}
+.cr-join-big{width:100%;padding:14px;border:0;border-radius:11px;background:linear-gradient(180deg,#5ddc7a,#1f9e42);color:#fff;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #10592a;margin-bottom:10px}
+.cr-joined{width:100%;padding:13px;border-radius:11px;background:rgba(255,255,255,.12);border:2px solid #22c55e;color:#86efac;font-size:13px;font-weight:900;text-align:center;margin-bottom:10px}
+.cr-search{width:42px;height:42px;border:2px solid #fff;border-radius:10px;background:linear-gradient(180deg,#5ea8ff,#1e63c8);color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 #123b7a}
 .emblem-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px}
 .emblem-opt{width:42px;height:42px;border-radius:12px;border:2px solid #334155;background:#0f172a;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .emblem-opt.on{border-color:#22c55e;background:#064e3b}
-.modal-box input,.modal-box textarea{width:100%;margin-bottom:10px;padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none;user-select:text;-webkit-user-select:text;font-family:inherit}
+.modal-box input,.modal-box textarea{width:100%;margin-bottom:10px;padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none;font-family:inherit}
 .modal-box textarea{resize:none;height:70px}
 .modal-btns{display:flex;gap:8px;margin-top:6px}
 .modal-btns button{flex:1;padding:13px;border:0;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;color:#fff}
 #createCancel,#addCancel,#shareCancel{background:linear-gradient(145deg,#475569,#1e293b)}
 #createOk,#addSearch{background:linear-gradient(145deg,#22c55e,#15803d)}
 .empty{text-align:center;color:#64748b;font-size:13px;padding:22px 10px;line-height:1.5}
-.errbox{margin:0 12px 12px;padding:12px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid #7f1d1d;color:#fecaca;font-size:11.5px;line-height:1.45;word-break:break-word}
+.errbox{margin:0 12px 12px;padding:12px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid #7f1d1d;color:#fecaca;font-size:11.5px;word-break:break-word}
 .toast{position:fixed;bottom:150px;left:50%;transform:translateX(-50%) translateY(10px);background:#1e293b;border:1px solid #475569;color:#ffcc00;padding:10px 16px;border-radius:8px;font-size:12.5px;opacity:0;transition:.2s;pointer-events:none;z-index:2300;max-width:80vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%);border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom)}
+.bottom-nav{position:fixed;bottom:0;left:0;width:100%;height:68px;background:linear-gradient(180deg,#1a1a2e,#0f0f1e);border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom)}
 .nav-btn{background:transparent;border:none;color:#94a3b8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px}
 .nav-btn .icon-wrap{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f)}
 .nav-btn .icon{font-size:20px}
@@ -158,17 +150,14 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 </head>
 <body>
 
-<div class="top-bar">
-  <div class="page-title">Клан</div>
-  <div class="currency">🏆 <span id="cupsTop">0</span></div>
-</div>
+<div class="top-bar"><div class="page-title">Клан</div><div class="currency">🏆 <span id="cupsTop">0</span></div></div>
 
 <div class="tabs">
   <button class="tab on" data-tab="clan">Клан</button>
   <button class="tab" data-tab="friends">Друзья</button>
 </div>
 
-<div class="banner" id="banner">
+<div class="banner hidden" id="banner">
   <div class="banner-text">Вступи в клан или создай новый!</div>
   <button class="banner-btn" id="bannerBtn">Создать</button>
 </div>
@@ -178,13 +167,7 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 
 <div id="searchModal" class="modal hidden">
   <div class="modal-box" style="max-width:420px">
-    <div class="ci-head">
-      <div style="flex:1;min-width:0">
-        <div class="ci-name">Поиск</div>
-        <div class="ci-sub">По тегу #ABC12 или по имени</div>
-      </div>
-      <button class="ci-close" id="searchClose" style="position:static;transform:none">✕</button>
-    </div>
+    <div class="cr-top" style="margin:-14px -14px 12px;border-radius:14px 14px 0 0"><h3>Поиск</h3><button class="ci-close" id="searchClose">✕</button></div>
     <div class="search-box">
       <input id="searchInput" type="text" placeholder="#тег или имя" autocomplete="off" spellcheck="false">
       <div class="chips">
@@ -198,10 +181,7 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 
 <div id="clanInfoModal" class="modal hidden">
   <div class="modal-box">
-    <div class="cr-top">
-      <h3>Клан</h3>
-      <button class="ci-close" id="ciClose">✕</button>
-    </div>
+    <div class="cr-top"><h3 id="ciTitle">Клан</h3><button class="ci-close" id="ciClose">✕</button></div>
     <div class="cr-scroll" id="ciScroll"></div>
   </div>
 </div>
@@ -212,10 +192,7 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
     <div class="emblem-row" id="emblemRow"></div>
     <input id="inName" type="text" maxlength="20" placeholder="Название клана">
     <textarea id="inDesc" maxlength="120" placeholder="Описание (необязательно)"></textarea>
-    <div class="modal-btns">
-      <button id="createCancel">Отмена</button>
-      <button id="createOk">Создать</button>
-    </div>
+    <div class="modal-btns"><button id="createCancel">Отмена</button><button id="createOk">Создать</button></div>
   </div>
 </div>
 
@@ -223,10 +200,7 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
   <div class="modal-box">
     <div class="modal-title">Добавить друга</div>
     <input id="inNick" type="text" maxlength="16" placeholder="Ник или #тег">
-    <div class="modal-btns">
-      <button id="addCancel">Отмена</button>
-      <button id="addSearch">Найти</button>
-    </div>
+    <div class="modal-btns"><button id="addCancel">Отмена</button><button id="addSearch">Найти</button></div>
     <div id="addResults"></div>
   </div>
 </div>
@@ -235,988 +209,751 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
   <div class="modal-box">
     <div class="modal-title">Отправить повтор в чат</div>
     <div id="shareList"></div>
-    <div class="modal-btns">
-      <button id="shareCancel">Закрыть</button>
-    </div>
+    <div class="modal-btns"><button id="shareCancel">Закрыть</button></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <div class="bottom-nav">
-  <button class="nav-btn" onclick="window.location.href='chess-shop.html'"><div class="icon-wrap"><span class="icon">🎁</span></div><span>Магазин</span></button>
-  <button class="nav-btn" onclick="window.location.href='chess-deck.html'"><div class="icon-wrap"><div class="deck-stack"><div class="deck-card"></div><div class="deck-card"></div><div class="deck-card">♠</div></div></div><span>Колода</span></button>
-  <button class="nav-btn" onclick="window.location.href='chess-main.html'"><div class="icon-wrap"><span class="icon">⚔️</span></div><span>Бой</span></button>
-  <button class="nav-btn active" onclick="window.location.href='chess-social.html'"><div class="icon-wrap"><span class="icon">🛡️</span></div><span>Клан</span></button>
-  <button class="nav-btn" onclick="window.location.href='leaderboard.html'"><div class="icon-wrap"><span class="icon">🏆</span></div><span>Рейтинг</span></button>
+  <button class="nav-btn" onclick="location.href='chess-shop.html'"><div class="icon-wrap"><span class="icon">🎁</span></div><span>Магазин</span></button>
+  <button class="nav-btn" onclick="location.href='chess-deck.html'"><div class="icon-wrap"><div class="deck-stack"><div class="deck-card"></div><div class="deck-card"></div><div class="deck-card">♠</div></div></div><span>Колода</span></button>
+  <button class="nav-btn" onclick="location.href='chess-main.html'"><div class="icon-wrap"><span class="icon">⚔️</span></div><span>Бой</span></button>
+  <button class="nav-btn active" onclick="location.href='chess-social.html'"><div class="icon-wrap"><span class="icon">🛡️</span></div><span>Клан</span></button>
+  <button class="nav-btn" onclick="location.href='leaderboard.html'"><div class="icon-wrap"><span class="icon">🏆</span></div><span>Рейтинг</span></button>
 </div>
 
-<script src="friends.js?v=4"></script>
-<script src="profile.js?v=4"></script>
+<script src="friends.js?v=3"></script>
+<script src="profile.js?v=3"></script>
 <script>
-const sb = supabase.createClient(
-  'https://qnpriwfxzuoymoumdtrl.supabase.co',
-  'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF'
-);
-const $ = function (id){ return document.getElementById(id); };
-const MAX_MEMBERS = 30;
-const EMBLEMS = ['🛡️','👑','⚔️','🐺','🦅','🔥','💀','🐉','⭐','🦁','⚡','♟️'];
-const EMOJI = ['😀','😂','😍','🔥','⚔️','🏆','🤝','👑','💀','🛡️','⚡','😭','👍','🎯','♟️','🙌','😎','🤔','💪','🎉'];
-const BAD_ROOTS = ['хуй','хуя','хую','хуё','хуе','пизд','ебал','ебан','ебат','ебуч','ебло','ебли','бля',
-'мудак','мудо','мудил','пидор','пидар','пидр','педик','залуп','дроч','манда','шлюх','гандон','гондо',
-'сука','суки','суке','суку','сучк','гнида','уёб','уеб','нахуй','нахуя','похуй','похую','жоп','срак',
-'срат','говн','дерьм','твар','мраз','долбоёб','долбоеб','выеб','въеб','заёб','заеб','наёб','наеб',
-'отъеб','подъеб','разъеб','съеб','fuck','phuck','shit','bitch','cunt','asshole','arsehole','bastard',
-'slut','whore','pussy','nigg','retard','dumbass','dipshit','wanker','douche','bollock','puta','puto',
-'mierda','joder','cabron','pendejo','scheiss','fick','hurensohn','wichser','arschloch','kurwa','chuj',
-'pierdol','jebac'];
+var sb=supabase.createClient('https://qnpriwfxzuoymoumdtrl.supabase.co','sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF');
+var $=function(i){return document.getElementById(i);};
+var MAX=30;
+var EMB=['🛡️','👑','⚔️','🐺','🦅','🔥','💀','🐉','⭐','🦁','⚡','♟️'];
+var EMO=['😀','😂','😍','🔥','⚔️','🏆','🤝','👑','💀','🛡️','⚡','😭','👍','🎯','♟️','🙌','😎','🤔','💪','🎉'];
+var BAD=['хуй','хуя','хую','хуё','хуе','пизд','ебал','ебан','ебат','ебуч','ебло','бля','мудак','мудо','пидор','пидар','пидр','педик','залуп','дроч','манда','шлюх','гандон','сука','суки','сучк','гнида','уёб','уеб','нахуй','похуй','жоп','срак','говн','дерьм','твар','мраз','fuck','shit','bitch','cunt','asshole','bastard','slut','whore','pussy','nigg','retard'];
 
-function chatNorm(t){
-  t = String(t||'').toLowerCase();
-  const m = {'0':'o','1':'i','3':'e','4':'a','5':'s','7':'t','@':'a','$':'s','!':'i'};
-  let o = '';
-  for (let i=0;i<t.length;i++){ const c=t.charAt(i); o += (m[c]!==undefined)?m[c]:c; }
-  return o.replace(/ё/g,'е').replace(/[^a-zа-я]/g,'');
-}
-function hasBadWord(t){
-  const s = chatNorm(t);
-  if (!s) return false;
-  for (let i=0;i<BAD_ROOTS.length;i++) if (s.indexOf(BAD_ROOTS[i])>=0) return true;
-  return false;
-}
+function norm(t){t=String(t||'').toLowerCase();var m={'0':'o','1':'i','3':'e','4':'a','5':'s','7':'t','@':'a','$':'s'};var o='';for(var i=0;i<t.length;i++){var c=t.charAt(i);o+=(m[c]!==undefined)?m[c]:c;}return o.replace(/ё/g,'е').replace(/[^a-zа-я]/g,'');}
+function badw(t){var s=norm(t);if(!s)return false;for(var i=0;i<BAD.length;i++)if(s.indexOf(BAD[i])>=0)return true;return false;}
 
-let meKey='', meName='Игрок', meCups=0, myTag='';
-let myMember=null, myClan=null, allClans=[], allMembers=[], tagMap={};
-let friendsList=[], shareRows=[], activeTab='clan', pickedEmblem='🛡️';
-let searchQ='', searchMode='clans', descEditing=false, joining=false;
-let chatTimer=null, chatMsgs=[], toastTimer=null;
+var meKey='',meName='Игрок',meCups=0;
+var myMember=null,myClan=null,allClans=[],allMembers=[],tagMap={};
+var friendsList=[],shareRows=[],activeTab='clan',pickEm='🛡️';
+var searchQ='',searchMode='clans',descEdit=false,joining=false;
+var chatTimer=null,chatMsgs=[],toastT=null;
+var previewClan=null,loadedOnce=false;
 
-function tgUser(){
-  try{
-    const wa = window.Telegram && window.Telegram.WebApp;
-    if(wa && wa.initDataUnsafe && wa.initDataUnsafe.user && wa.initDataUnsafe.user.id) return wa.initDataUnsafe.user;
-  }catch(e){}
-  return null;
-}
-
-function cookieGet(n){
-  try{
-    const p=('; '+document.cookie).split('; '+n+'=');
-    if(p.length===2) return decodeURIComponent(p[1].split(';')[0]);
-  }catch(e){}
-  return null;
-}
-function cookieSet(n,v){
-  try{ document.cookie=n+'='+encodeURIComponent(v)+'; max-age=31536000; path=/; SameSite=Lax'; }catch(e){}
-}
+function toast(t){var e=$('toast');if(!e)return;e.textContent=t;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('show');},2400);}
+function err(t){var b=$('errBox');if(!b)return;if(!t){b.classList.add('hidden');b.textContent='';return;}b.textContent=t;b.classList.remove('hidden');}
+function ckGet(n){try{var p=('; '+document.cookie).split('; '+n+'=');if(p.length===2)return decodeURIComponent(p[1].split(';')[0]);}catch(e){}return null;}
+function ckSet(n,v){try{document.cookie=n+'='+encodeURIComponent(v)+'; max-age=31536000; path=/; SameSite=Lax';}catch(e){}}
+function ls(n){try{return localStorage.getItem(n);}catch(e){return null;}}
+function lsSet(n,v){try{localStorage.setItem(n,v);}catch(e){}}
 
 function playerKey(){
-  const u = tgUser();
-  if(u && u.id) return 'tg:' + u.id;
-  const tg = localStorage.getItem('tgId');
-  if(tg) return 'tg:' + tg;
-  const em = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
-  if(em) return 'email:' + em.toLowerCase();
-  let a = localStorage.getItem('arenaAnonId') || cookieGet('arenaAnonId');
-  if(!a){
-    a = 'anon:' + Math.random().toString(36).slice(2,10);
-  }
-  localStorage.setItem('arenaAnonId', a);
-  cookieSet('arenaAnonId', a);
-  return a;
+  var t=ls('tgId'); if(t) return 'tg:'+t;
+  var e=ls('currentEmail')||ls('linkedEmail'); if(e) return 'email:'+e.toLowerCase();
+  var a=ls('arenaAnonId'); if(a) return a;
+  var c=ckGet('arenaAnonId'); if(c){lsSet('arenaAnonId',c);return c;}
+  a='anon:'+Math.random().toString(36).slice(2,10);
+  lsSet('arenaAnonId',a); ckSet('arenaAnonId',a); return a;
 }
 function playerName(){
-  const u = tgUser();
-  if(u){
-    const n = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username;
-    if(n) return n;
-  }
-  return localStorage.getItem('userName') || 'Игрок';
+  var n=ls('userName'); if(n) return n;
+  try{var w=window.Telegram&&window.Telegram.WebApp;var u=w&&w.initDataUnsafe&&w.initDataUnsafe.user;
+    if(u){var m=[u.first_name,u.last_name].filter(Boolean).join(' ')||u.username;if(m)return m;}}catch(e){}
+  return 'Игрок';
 }
-function esc(s){
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function tagPill(code,kind,name){
-  if(!code) return '';
-  return '<span class="tagpill" data-copytag="'+esc(code)+'" data-copykind="'+esc(kind||'player')+
-         '" data-copyname="'+esc(name||'')+'">#'+esc(code)+'</span>';
-}
-function baseUrl(){ return location.origin + location.pathname; }
-function share(url,phrase){
-  if(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink){
-    const t = encodeURIComponent(phrase || '');
-    const u = encodeURIComponent(url || '');
-    try{ window.Telegram.WebApp.openTelegramLink('https://t.me/share/url?url='+u+'&text='+t); return; }catch(e){}
-  }
-  if(navigator.share){
-    navigator.share({title:'Chess Royale', text:phrase||'', url:url||''}).catch(function(){});
-    return;
-  }
-  if(window.CopyShare && window.CopyShare.shareLink){ CopyShare.shareLink(url,phrase); return; }
-  try{
-    const full = (phrase||'') + ' ' + (url||'');
-    navigator.clipboard.writeText(full).then(function(){ showToast('Ссылка скопирована'); });
-  }catch(e){
-    window.open('https://t.me/share/url?url='+encodeURIComponent(url||'')+'&text='+encodeURIComponent(phrase||''), '_blank');
-  }
-}
-function shareMe(){
-  if(!myTag){ showToast('Тег ещё не готов'); return; }
-  const u = baseUrl() + '?player=' + encodeURIComponent(myTag);
-  const p = ['Сыграем? Мой тег в Chess Royale — #'+myTag+'. Добавляйся в друзья!',
-  'Вызываю тебя на партию ⚔️ Мой тег — #'+myTag+'. Заходи в игру.',
-  'Есть доска, есть время. Мой тег — #'+myTag+', добавляйся и сыграем.'];
-  share(u, p[Math.floor(Math.random()*p.length)]);
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function pill(c,k,n){if(!c)return '';return '<span class="tagpill" data-copytag="'+esc(c)+'" data-copykind="'+esc(k||'player')+'" data-copyname="'+esc(n||'')+'">#'+esc(c)+'</span>';}
+function base(){return location.origin+location.pathname;}
+
+function share(url,ph){
+  var t=encodeURIComponent(ph||''),u=encodeURIComponent(url||'');
+  try{var w=window.Telegram&&window.Telegram.WebApp;if(w&&w.openTelegramLink){w.openTelegramLink('https://t.me/share/url?url='+u+'&text='+t);return;}}catch(e){}
+  if(navigator.share){navigator.share({title:'Chess Royale',text:ph||'',url:url||''}).catch(function(){});return;}
+  if(window.CopyShare&&window.CopyShare.shareLink){CopyShare.shareLink(url,ph);return;}
+  window.open('https://t.me/share/url?url='+u+'&text='+t,'_blank');
 }
 function shareClan(name,code){
-  if(!code){ showToast('У клана ещё нет тега'); return; }
-  const u = baseUrl() + '?clan=' + encodeURIComponent(code);
-  const p = ['Клан «'+name+'» набирает своих. Вступай по тегу #'+code+' — побеждаем вместе!',
-  'В «'+name+'» не бросают в партии. Заходи по ссылке и вступай ⚔️',
-  'Ищешь своих? «'+name+'» ждёт. Тег #'+code+' — вступай.'];
-  share(u, p[Math.floor(Math.random()*p.length)]);
+  if(!code){toast('У клана ещё нет тега');return;}
+  var u=base()+'?clan='+encodeURIComponent(code);
+  share(u,'Клан «'+name+'» набирает своих. Тег #'+code+' — вступай, побеждаем вместе!');
 }
 function copyTag(el){
-  const code = el.getAttribute('data-copytag');
-  const kind = el.getAttribute('data-copykind') || 'player';
-  const name = el.getAttribute('data-copyname') || '';
-  if(!code) return;
-  const u = baseUrl() + (kind==='clan' ? '?clan=' : '?player=') + encodeURIComponent(code);
-  const ph = (kind==='clan')
-    ? 'Клан «'+name+'» — тег #'+code+'. Вступай, побеждаем вместе!'
-    : 'Мой тег в Chess Royale — #'+code+'. Добавляйся и сыграем!';
-  share(u, ph);
+  var c=el.getAttribute('data-copytag'),k=el.getAttribute('data-copykind')||'player',n=el.getAttribute('data-copyname')||'';
+  if(!c)return;
+  var u=base()+(k==='clan'?'?clan=':'?player=')+encodeURIComponent(c);
+  share(u,(k==='clan')?'Клан «'+n+'» — тег #'+c+'. Вступай!':'Мой тег в Chess Royale — #'+c+'. Добавляйся!');
 }
-function openProfile(k){ if(window.Profile && k) Profile.open(k); }
+function openProfile(k){if(window.Profile&&k)Profile.open(k);}
 
 async function boot(){
-  meKey = playerKey();
-  meName = playerName();
-  meCups = parseInt(localStorage.getItem('cr_trophies')||'0',10) || 0;
-  $('cupsTop').textContent = meCups;
   try{
-    const r = await sb.rpc('arena_ensure_player',{p_key:meKey,p_name:meName,p_seed:0});
-    if(!r.error && r.data){ meCups = r.data.cups||0; if(r.data.display_name) meName = r.data.display_name; }
-  }catch(e){}
-  $('cupsTop').textContent = meCups;
-  localStorage.setItem('cr_trophies', String(meCups));
-  try{
-    const t = await sb.rpc('ensure_player_tag',{p_key:meKey});
-    if(!t.error && t.data) myTag = String(t.data);
-  }catch(e){}
-  if(!myTag) myTag = localStorage.getItem('cr_tag') || '';
-  if(myTag) localStorage.setItem('cr_tag', myTag);
-  await loadAll();
-  await loadFriends();
-  handleDeepLink();
+    meKey=playerKey(); meName=playerName();
+    meCups=parseInt(ls('cr_trophies')||'0',10)||0;
+    $('cupsTop').textContent=meCups;
+    try{var r=await sb.rpc('arena_ensure_player',{p_key:meKey,p_name:meName,p_seed:0});
+      if(!r.error&&r.data){meCups=r.data.cups||0;if(r.data.display_name)meName=r.data.display_name;}}catch(e){}
+    $('cupsTop').textContent=meCups; lsSet('cr_trophies',String(meCups));
+    try{var t=await sb.rpc('ensure_player_tag',{p_key:meKey});if(!t.error&&t.data)lsSet('cr_tag',String(t.data));}catch(e){}
+    await loadAll();
+    try{await loadFriends();}catch(e){}
+    await deepLink();
+  }catch(e){err('Ошибка: '+(e&&e.message?e.message:'неизвестно'));drawSafe();}
 }
 
 async function loadAll(){
-  showErr('');
-  const mr = await sb.from('clan_members').select('*');
-  if(mr.error){ showErr('Таблицы кланов не созданы.\n'+mr.error.message); allMembers=[]; }
-  else allMembers = mr.data||[];
-  const cr = await sb.from('clans').select('*').order('created_at',{ascending:false});
-  allClans = cr.error ? [] : (cr.data||[]);
-  await loadTagMap();
-  myMember = null;
-  for(let i=0;i<allMembers.length;i++){ if(allMembers[i].player_key===meKey){ myMember=allMembers[i]; break; } }
-  myClan = null;
-  if(myMember){ for(let i=0;i<allClans.length;i++){ if(allClans[i].id===myMember.clan_id){ myClan=allClans[i]; break; } } }
-  render();
-  if(!$('clanInfoModal').classList.contains('hidden') && myClan) renderClanModal();
+  err('');
+  try{var m=await sb.from('clan_members').select('*');allMembers=m.error?[]:(m.data||[]);}catch(e){allMembers=[];}
+  try{var c=await sb.from('clans').select('*').order('created_at',{ascending:false});allClans=c.error?[]:(c.data||[]);}catch(e){allClans=[];}
+  try{await loadTags();}catch(e){}
+  myMember=null;
+  for(var i=0;i<allMembers.length;i++){if(allMembers[i].player_key===meKey){myMember=allMembers[i];break;}}
+  myClan=null;
+  if(myMember){for(var j=0;j<allClans.length;j++){if(allClans[j].id===myMember.clan_id){myClan=allClans[j];break;}}}
+  loadedOnce=true;
+  drawSafe();
+  if(!$('clanInfoModal').classList.contains('hidden')){
+    if(previewClan)drawPreview(); else if(myClan)drawMine();
+  }
 }
 
-async function loadTagMap(){
-  tagMap = {};
-  const keys = [];
-  for(let i=0;i<allMembers.length;i++) if(keys.indexOf(allMembers[i].player_key)<0) keys.push(allMembers[i].player_key);
-  if(!keys.length) return;
-  const r = await sb.from('arena_players').select('player_key,tag').in('player_key',keys);
-  if(r.error) return;
-  for(let i=0;i<(r.data||[]).length;i++){ const p=r.data[i]; if(p.tag) tagMap[p.player_key]=p.tag; }
+async function loadTags(){
+  tagMap={}; var k=[];
+  for(var i=0;i<allMembers.length;i++){if(k.indexOf(allMembers[i].player_key)<0)k.push(allMembers[i].player_key);}
+  if(!k.length)return;
+  var r=await sb.from('arena_players').select('player_key,tag').in('player_key',k);
+  if(r.error)return;
+  for(var j=0;j<(r.data||[]).length;j++){var p=r.data[j];if(p.tag)tagMap[p.player_key]=p.tag;}
 }
 
 async function loadFriends(){
-  if(!window.Friends){ friendsList=[]; return; }
-  const list = await Friends.list();
-  const keys = [];
-  for(let i=0;i<list.length;i++) keys.push(list[i].friend_key);
-  const info = {};
-  if(keys.length){
-    const r = await sb.from('arena_players').select('player_key,display_name,cups,tag').in('player_key',keys);
-    if(!r.error) for(let i=0;i<(r.data||[]).length;i++){ const p=r.data[i]; info[p.player_key]=p; }
-  }
-  friendsList = [];
-  for(let i=0;i<list.length;i++){
-    const f = list[i], p = info[f.friend_key];
-    friendsList.push({
-      key: f.friend_key,
-      name: (p&&p.display_name) || f.friend_name || 'Игрок',
-      cups: (p&&p.cups) || 0,
-      tag: (p&&p.tag) || ''
-    });
-  }
-  render();
+  if(!window.Friends){friendsList=[];return;}
+  var l=await Friends.list(),k=[];
+  for(var i=0;i<l.length;i++)k.push(l[i].friend_key);
+  var info={};
+  if(k.length){var r=await sb.from('arena_players').select('player_key,display_name,cups,tag').in('player_key',k);
+    if(!r.error)for(var j=0;j<(r.data||[]).length;j++){var p=r.data[j];info[p.player_key]=p;}}
+  friendsList=[];
+  for(var n=0;n<l.length;n++){var f=l[n],q=info[f.friend_key];
+    friendsList.push({key:f.friend_key,name:(q&&q.display_name)||f.friend_name||'Игрок',cups:(q&&q.cups)||0,tag:(q&&q.tag)||''});}
+  drawSafe();
 }
 
-function membersOf(clanId){
-  const out = [], seen = {};
-  for(let i=0;i<allMembers.length;i++){
-    const m = allMembers[i];
-    if(m.clan_id!==clanId) continue;
-    if(seen[m.player_key]) continue;
-    seen[m.player_key]=1; out.push(m);
-  }
-  out.sort(function(a,b){
-    if(a.role==='owner'&&b.role!=='owner') return -1;
-    if(b.role==='owner'&&a.role!=='owner') return 1;
-    return (b.cups||0)-(a.cups||0);
-  });
-  return out;
+function memOf(id){
+  var o=[],s={};
+  for(var i=0;i<allMembers.length;i++){var m=allMembers[i];
+    if(m.clan_id!==id)continue; if(s[m.player_key])continue; s[m.player_key]=1; o.push(m);}
+  o.sort(function(a,b){
+    if(a.role==='owner'&&b.role!=='owner')return -1;
+    if(b.role==='owner'&&a.role!=='owner')return 1;
+    return (b.cups||0)-(a.cups||0);});
+  return o;
 }
-function cupsOf(id){ const m=membersOf(id); let s=0; for(let i=0;i<m.length;i++) s+=(m[i].cups||0); return s; }
-function isOwnerOfMyClan(){ return !!(myClan && myClan.owner_key===meKey); }
+function cupsOf(id){var m=memOf(id),s=0;for(var i=0;i<m.length;i++)s+=(m[i].cups||0);return s;}
+function isOwner(){return !!(myClan&&myClan.owner_key===meKey);}
 
 function setTab(t){
-  activeTab = t; descEditing = false;
-  const tabs = document.querySelectorAll('.tab');
-  for(let i=0;i<tabs.length;i++) tabs[i].classList.toggle('on', tabs[i].getAttribute('data-tab')===t);
-  render();
+  activeTab=t;descEdit=false;previewClan=null;
+  var b=document.querySelectorAll('.tab');
+  for(var i=0;i<b.length;i++)b[i].classList.toggle('on',b[i].getAttribute('data-tab')===t);
+  drawSafe();
 }
-const tabBtns = document.querySelectorAll('.tab');
-for(let i=0;i<tabBtns.length;i++){
-  (function(el){ el.onclick=function(){ setTab(el.getAttribute('data-tab')); }; })(tabBtns[i]);
+var tabB=document.querySelectorAll('.tab');
+for(var ti=0;ti<tabB.length;ti++){(function(el){el.onclick=function(){setTab(el.getAttribute('data-tab'));};})(tabB[ti]);}
+
+function drawSafe(){
+  try{draw();}catch(e){
+    var a=$('app'); if(!a)return;
+    a.innerHTML='<button class="search-wide" id="searchWide">🔍 Поиск кланов и игроков</button><div class="empty">Нажми на поиск, чтобы найти клан.</div>';
+    var s=$('searchWide'); if(s)s.onclick=function(){openSearch('clans','');};
+  }
 }
 
-function render(){
-  const app = $('app');
-  if(chatTimer){ clearInterval(chatTimer); chatTimer=null; }
-  $('banner').classList.toggle('hidden', !(activeTab==='clan' && !myMember));
-  if(activeTab==='clan') renderClanTab(app); else renderFriendsTab(app);
+function draw(){
+  var a=$('app'); if(!a)return;
+  if(chatTimer){clearInterval(chatTimer);chatTimer=null;}
+  var b=$('banner'); if(b)b.classList.toggle('hidden',!(activeTab==='clan'&&!myMember&&loadedOnce));
+  if(activeTab==='clan')tabClan(a); else tabFriends(a);
 }
 
-function renderClanTab(app){
-  let h = '';
-  if(myMember && myClan){
-    h+='<div class="clan-bar" id="clanBar">';
-    h+='<div class="cb-emblem">'+(myClan.emblem||'🛡️')+'</div>';
+function tabClan(a){
+  var h='';
+  if(myMember&&myClan){
+    h+='<div class="clan-bar" id="clanBar"><div class="cb-emblem">'+(myClan.emblem||'🛡️')+'</div>';
     h+='<div class="cb-info"><div class="cb-name">'+esc(myClan.name)+' #'+esc(myClan.tag||'—')+'</div>';
-    h+='<div class="cb-sub">'+membersOf(myClan.id).length+' / '+MAX_MEMBERS+' · 🏆 '+cupsOf(myClan.id)+'</div></div>';
+    h+='<div class="cb-sub">'+memOf(myClan.id).length+' / '+MAX+' · 🏆 '+cupsOf(myClan.id)+'</div></div>';
     h+='<div class="cb-chev">›</div></div>';
-    h+='<div class="chat-box" id="chatBox"></div>';
-    h+='<div class="emoji-row" id="emojiRow"></div>';
+    h+='<div class="chat-box" id="chatBox"></div><div class="emoji-row" id="emojiRow"></div>';
     h+='<div class="chat-row"><input id="chatInput" maxlength="200" placeholder="Сообщение в клан…"><button id="chatSend">➤</button></div>';
     h+='<button class="btn-wide grey" id="shareReplayBtn">📤 Отправить повтор в чат</button>';
   } else {
-    h+='<button class="search-wide" id="searchWide">🔍 Поиск кланов и игроков</button>';
-    h+=clanListHtml();
+    h+='<button class="search-wide" id="searchWide">🔍 Поиск кланов и игроков</button>'+listHtml();
   }
-  app.innerHTML = h;
-
-  const sw = $('searchWide');
-  if(sw) sw.onclick = function(){ openSearch('clans',''); };
-
-  if(myMember && myClan){
-    const bar = $('clanBar'); if(bar) bar.onclick = openClanModal;
-    const row = $('emojiRow');
-    if(row){
-      for(let i=0;i<EMOJI.length;i++){
-        const b = document.createElement('button');
-        b.type='button'; b.textContent = EMOJI[i];
-        (function(ch){
-          b.onclick = function(){
-            const ip = $('chatInput'); if(!ip) return;
-            ip.value = (ip.value+ch).slice(0,200); ip.focus();
-          };
-        })(EMOJI[i]);
-        row.appendChild(b);
-      }
-    }
-    const sbtn = $('chatSend'); if(sbtn) sbtn.onclick = sendChat;
-    const cin = $('chatInput');
-    if(cin) cin.addEventListener('keydown', function(e){ if(e.key==='Enter') sendChat(); });
-    const rbtn = $('shareReplayBtn'); if(rbtn) rbtn.onclick = openShare;
-    loadChat();
-    chatTimer = setInterval(loadChat, 4000);
+  a.innerHTML=h;
+  var sw=$('searchWide'); if(sw)sw.onclick=function(){openSearch('clans','');};
+  if(myMember&&myClan){
+    var bar=$('clanBar'); if(bar)bar.onclick=function(){previewClan=null;openMine();};
+    var row=$('emojiRow');
+    if(row){for(var i=0;i<EMO.length;i++){(function(ch){var bt=document.createElement('button');bt.type='button';bt.textContent=ch;
+      bt.onclick=function(){var ip=$('chatInput');if(!ip)return;ip.value=(ip.value+ch).slice(0,200);ip.focus();};row.appendChild(bt);})(EMO[i]);}}
+    var s2=$('chatSend'); if(s2)s2.onclick=sendChat;
+    var ci=$('chatInput'); if(ci)ci.addEventListener('keydown',function(e){if(e.key==='Enter')sendChat();});
+    var rb=$('shareReplayBtn'); if(rb)rb.onclick=openShare;
+    loadChat(); chatTimer=setInterval(loadChat,4000);
   }
-  bindActions(app);
+  bind(a);
 }
 
-function clanListHtml(){
-  if(!allClans.length) return '<div class="empty">Кланов пока нет.<br>Стань первым — нажми «Создать».</div>';
-  let h = '<div class="section-title">Список кланов</div>';
-  for(let i=0;i<allClans.length;i++){
-    const c = allClans[i], mem = membersOf(c.id), full = mem.length>=MAX_MEMBERS;
-    const mine = !!(myMember && myMember.clan_id===c.id);
-    h+='<div class="clan-card"><div class="clan-emblem">'+(c.emblem||'🛡️')+'</div>';
-    h+='<div class="clan-info"><div class="clan-name">'+esc(c.name)+tagPill(c.tag,'clan',c.name)+'</div>';
-    h+='<div class="clan-sub">'+mem.length+' / '+MAX_MEMBERS+' участников</div></div>';
+function listHtml(){
+  if(!allClans.length){
+    if(!loadedOnce)return '<div class="empty">Загружаем кланы…</div>';
+    return '<div class="empty">Кланов пока нет.<br>Стань первым — нажми «Создать».</div>';
+  }
+  var h='<div class="section-title">Список кланов</div>';
+  for(var i=0;i<allClans.length;i++){
+    var c=allClans[i],m=memOf(c.id),full=m.length>=MAX;
+    var mine=!!(myMember&&myMember.clan_id===c.id);
+    h+='<div class="clan-card" data-preview="'+esc(c.id)+'"><div class="clan-emblem">'+(c.emblem||'🛡️')+'</div>';
+    h+='<div class="clan-info"><div class="clan-name">'+esc(c.name)+pill(c.tag,'clan',c.name)+'</div>';
+    h+='<div class="clan-sub">'+m.length+' / '+MAX+' участников · 🏆 '+cupsOf(c.id)+'</div></div>';
     h+='<button class="mini share" data-shareclan="'+esc(c.tag||'')+'" data-shareclanname="'+esc(c.name)+'">📤</button>';
-    if(mine) h+='<button class="clan-join" disabled>Твой клан</button>';
-    else if(myMember) h+='<button class="clan-join" disabled>Уже в клане</button>';
-    else if(full) h+='<button class="clan-join" disabled>Полон</button>';
-    else h+='<button class="clan-join" data-join="'+c.id+'">Вступить</button>';
+    if(mine)h+='<button class="clan-join" data-previewbtn="'+esc(c.id)+'">Мой</button>';
+    else if(myMember)h+='<button class="clan-join" disabled>Уже в клане</button>';
+    else if(full)h+='<button class="clan-join" data-previewbtn="'+esc(c.id)+'">Полон</button>';
+    else h+='<button class="clan-join" data-join="'+esc(c.id)+'">Вступить</button>';
     h+='</div>';
   }
   return h;
 }
 
-function openSearch(mode,q){
-  searchMode = mode||'clans'; searchQ = q||'';
-  $('searchInput').value = searchQ;
-  const chips = $('searchModal').querySelectorAll('.chip');
-  for(let i=0;i<chips.length;i++) chips[i].classList.toggle('on', chips[i].getAttribute('data-mode')===searchMode);
+function openSearch(m,q){
+  searchMode=m||'clans'; searchQ=q||'';
+  $('searchInput').value=searchQ;
+  var ch=$('searchModal').querySelectorAll('.chip');
+  for(var i=0;i<ch.length;i++)ch[i].classList.toggle('on',ch[i].getAttribute('data-mode')===searchMode);
   $('searchModal').classList.remove('hidden');
-  applySearch();
+  doSearch();
 }
-function closeSearch(){ $('searchModal').classList.add('hidden'); }
+function closeSearch(){$('searchModal').classList.add('hidden');}
 
-async function applySearch(){
-  const out = $('searchOut'); if(!out) return;
-  const q = searchQ.trim();
-  if(q===''){ out.innerHTML='<div class="empty">Введи тег или имя.<br>Например: #A7K2M</div>'; return; }
-  out.innerHTML = '<div class="empty">Ищем…</div>';
-  if(searchMode==='clans') await renderClanResults(out,q); else await renderPlayerResults(out,q);
+async function doSearch(){
+  var o=$('searchOut'); if(!o)return;
+  var q=searchQ.trim();
+  if(!q){o.innerHTML='<div class="empty">Введи тег или имя.<br>Например: #A7K2M</div>';return;}
+  o.innerHTML='<div class="empty">Ищем…</div>';
+  if(searchMode==='clans')await resClans(o,q); else await resPlayers(o,q);
 }
 
-async function renderClanResults(out,q){
-  let list = [];
-  try{
-    const r = await sb.rpc('search_clans',{p_q:q,p_limit:25});
-    if(!r.error) list = r.data||[];
-  }catch(e){}
-  if(!list.length){ out.innerHTML='<div class="empty">Кланы не найдены по «'+esc(q)+'»</div>'; return; }
+async function findClan(q){
+  try{var r=await sb.rpc('search_clans',{p_q:q,p_limit:25});
+    if(r.error)return null;
+    var l=r.data||[]; if(!l.length)return null;
+    for(var i=0;i<l.length;i++){if(String(l[i].code||'').toUpperCase()===String(q||'').toUpperCase())return l[i];}
+    return l[0];
+  }catch(e){return null;}
+}
 
-  let h = '';
-  for(let i=0;i<list.length;i++){
-    const c = list[i], full = (Number(c.member_count)||0)>=MAX_MEMBERS;
-    const mine = !!(myMember && myMember.clan_id===c.id);
-    h+='<div class="clan-card"><div class="clan-emblem">'+(c.emblem||'🛡️')+'</div>';
-    h+='<div class="clan-info"><div class="clan-name">'+esc(c.name)+tagPill(c.code,'clan',c.name)+'</div>';
-    h+='<div class="clan-sub">'+(Number(c.member_count)||0)+' / '+MAX_MEMBERS+' · 🏆 '+(Number(c.total_cups)||0)+'</div></div>';
+async function resClans(o,q){
+  var l=[];
+  try{var r=await sb.rpc('search_clans',{p_q:q,p_limit:25});if(!r.error)l=r.data||[];}catch(e){}
+  if(!l.length){o.innerHTML='<div class="empty">Кланы не найдены по «'+esc(q)+'»</div>';return;}
+  var h='';
+  for(var i=0;i<l.length;i++){
+    var c=l[i],full=(Number(c.member_count)||0)>=MAX;
+    var mine=!!(myMember&&myMember.clan_id===c.id);
+    h+='<div class="clan-card" data-preview="'+esc(c.id)+'"><div class="clan-emblem">'+(c.emblem||'🛡️')+'</div>';
+    h+='<div class="clan-info"><div class="clan-name">'+esc(c.name)+pill(c.code,'clan',c.name)+'</div>';
+    h+='<div class="clan-sub">'+(Number(c.member_count)||0)+' / '+MAX+' · 🏆 '+(Number(c.total_cups)||0)+'</div></div>';
     h+='<button class="mini share" data-shareclan="'+esc(c.code||'')+'" data-shareclanname="'+esc(c.name)+'">📤</button>';
-    if(mine) h+='<button class="clan-join" disabled>Твой клан</button>';
-    else if(myMember) h+='<button class="clan-join" disabled>Уже в клане</button>';
-    else if(full) h+='<button class="clan-join" disabled>Полон</button>';
-    else h+='<button class="clan-join" data-join="'+c.id+'">Вступить</button>';
+    if(mine)h+='<button class="clan-join" data-previewbtn="'+esc(c.id)+'">Мой</button>';
+    else if(myMember)h+='<button class="clan-join" disabled>Уже в клане</button>';
+    else if(full)h+='<button class="clan-join" data-previewbtn="'+esc(c.id)+'">Полон</button>';
+    else h+='<button class="clan-join" data-join="'+esc(c.id)+'">Вступить</button>';
     h+='</div>';
   }
-  out.innerHTML = h;
-  bindActions(out);
+  o.innerHTML=h; bind(o);
 }
 
-async function renderPlayerResults(out,q){
-  let list = [];
-  try{
-    const r = await sb.rpc('search_players',{p_q:q,p_limit:25});
-    if(!r.error) list = r.data||[];
-  }catch(e){}
-  if(!list.length){ out.innerHTML='<div class="empty">Никого не нашли по «'+esc(q)+'»</div>'; return; }
-
-  let h='', shown=0;
-  for(let i=0;i<list.length;i++){
-    const p = list[i];
-    if(p.player_key===meKey) continue;
-    shown++;
+async function resPlayers(o,q){
+  var l=[];
+  try{var r=await sb.rpc('search_players',{p_q:q,p_limit:25});if(!r.error)l=r.data||[];}catch(e){}
+  if(!l.length){o.innerHTML='<div class="empty">Никого не нашли по «'+esc(q)+'»</div>';return;}
+  var h='',n=0;
+  for(var i=0;i<l.length;i++){
+    var p=l[i]; if(p.player_key===meKey)continue; n++;
     h+='<div class="member"><div class="m-avatar" data-profile="'+esc(p.player_key)+'">🎮</div>';
     h+='<div class="m-info" data-profile="'+esc(p.player_key)+'">';
-    h+='<div class="m-name">'+esc(p.display_name||'Игрок')+tagPill(p.tag,'player',p.display_name)+'</div>';
+    h+='<div class="m-name">'+esc(p.display_name||'Игрок')+pill(p.tag,'player',p.display_name)+'</div>';
     h+='<div class="m-role" style="color:#94a3b8">🏆 '+(p.cups||0)+'</div></div>';
     h+='<button class="mini add" data-addfriend="'+esc(p.player_key)+'" data-addname="'+esc(p.display_name||'Игрок')+'">+</button>';
-    h+='<button class="mini play" data-invite="'+esc(p.player_key)+'" data-invname="'+esc(p.display_name||'Игрок')+'" data-invcups="'+(p.cups||0)+'">⚔️</button>';
-    h+='</div>';
+    h+='<button class="mini play" data-invite="'+esc(p.player_key)+'" data-invname="'+esc(p.display_name||'Игрок')+'" data-invcups="'+(p.cups||0)+'">⚔️</button></div>';
   }
-  if(!shown){ out.innerHTML='<div class="empty">Это ты. Введи другой тег.</div>'; return; }
-  out.innerHTML = h;
-  bindActions(out);
+  if(!n){o.innerHTML='<div class="empty">Это ты. Введи другой тег.</div>';return;}
+  o.innerHTML=h; bind(o);
 }
 
-function openClanModal(){
-  if(!myClan) return;
-  descEditing = false;
-  renderClanModal();
+function openMine(){
+  if(!myClan)return;
+  previewClan=null; descEdit=false;
+  $('ciTitle').textContent='Клан';
+  drawMine();
   $('clanInfoModal').classList.remove('hidden');
 }
-function closeClanModal(){
-  descEditing = false;
+function closeClan(){
+  descEdit=false; previewClan=null;
   $('clanInfoModal').classList.add('hidden');
 }
+function findLocal(id){for(var i=0;i<allClans.length;i++)if(String(allClans[i].id)===String(id))return allClans[i];return null;}
 
-function renderClanModal(){
-  if(!myClan) return;
-  const mem = membersOf(myClan.id);
-  const owner = isOwnerOfMyClan();
-  const cnt = mem.length;
-  const d = (myClan.description||'').trim();
+function openPreview(id){
+  var c=findLocal(id);
+  if(!c){toast('Клан не найден');return;}
+  if(myMember&&myMember.clan_id===c.id){openMine();return;}
+  previewClan=c; descEdit=false;
+  $('ciTitle').textContent='О клане';
+  drawPreview();
+  $('clanInfoModal').classList.remove('hidden');
+}
 
-  let chief = '—';
-  for(let i=0;i<mem.length;i++){ if(mem[i].role==='owner'){ chief = mem[i].name||'Игрок'; break; } }
+function drawPreview(){
+  var c=previewClan; if(!c){closeClan();return;}
+  var m=memOf(c.id),n=m.length,full=n>=MAX,d=(c.description||'').trim();
+  var chief='—';
+  for(var i=0;i<m.length;i++){if(m[i].role==='owner'){chief=m[i].name||'Игрок';break;}}
+  var h='';
+  h+='<div class="cr-head"><div class="cr-emblem">'+(c.emblem||'🛡️')+'</div>';
+  h+='<div style="min-width:0"><div class="cr-name">'+esc(c.name)+'</div>';
+  h+='<div class="cr-sub">'+pill(c.tag,'clan',c.name)+' Глава: '+esc(chief)+'</div></div>';
+  h+='<div class="cr-cups"><b>'+cupsOf(c.id)+'</b><span>КУБКИ</span></div></div>';
+  h+='<div class="cr-desc'+(d?'':' empty')+'">'+(d?esc(d):'Описание пока не задано')+'</div>';
+  h+='<div class="cr-stats"><div class="cr-stat"><span>УЧАСТНИКИ</span><b>'+n+'/'+MAX+'</b></div>';
+  h+='<div class="cr-stat"><span>КУБКИ</span><b>'+cupsOf(c.id)+'</b></div>';
+  h+='<div class="cr-stat"><span>СВОБОДНО</span><b>'+Math.max(0,MAX-n)+'</b></div></div>';
+  if(myMember){
+    h+='<div class="cr-joined">Ты уже в клане «'+esc(myClan?myClan.name:c.name)+'»</div>';
+  } else if(full){
+    h+='<div class="cr-joined" style="border-color:#f59e0b;color:#fcd34d">Клан заполнен</div>';
+  } else {
+    h+='<button class="cr-join-big" data-join="'+esc(c.id)+'">Вступить в клан</button>';
+  }
+  h+='<div class="cr-bar"><div class="cr-bar-l">УЧАСТНИКИ<b>'+n+'/'+MAX+'</b></div>';
+  h+='<div class="cr-btns"><button class="cr-search" id="pvShare">📤</button></div></div>';
+  if(!m.length){h+='<div class="empty">В клане пока нет участников</div>';}
+  else{
+    for(var k=0;k<m.length;k++){
+      var mm=m[k],ch=(mm.role==='owner');
+      h+='<div class="member"><div class="m-rank'+(k<3?' r'+(k+1):'')+'">'+(k+1)+'</div>';
+      h+='<div class="m-avatar" data-profile="'+esc(mm.player_key)+'">'+(ch?'👑':'🎮')+'</div>';
+      h+='<div class="m-info" data-profile="'+esc(mm.player_key)+'">';
+      h+='<div class="m-name">'+esc(mm.name||'Игрок')+pill(tagMap[mm.player_key],'player',mm.name)+'</div>';
+      h+='<div class="m-role">'+(ch?'Глава клана':'Участник')+'</div></div>';
+      h+='<div class="m-cups">🏆 '+(mm.cups||0)+'</div></div>';
+    }
+  }
+  $('ciScroll').innerHTML=h; bind($('ciScroll'));
+  var ps=$('pvShare'); if(ps)ps.onclick=function(){shareClan(c.name,c.tag);};
+}
 
-  let h = '';
-
-  h+='<div class="cr-head">';
-  h+='<div class="cr-emblem">'+(myClan.emblem||'🛡️')+'</div>';
+function drawMine(){
+  if(!myClan)return;
+  var m=memOf(myClan.id),owner=isOwner(),n=m.length,d=(myClan.description||'').trim();
+  var chief='—';
+  for(var i=0;i<m.length;i++){if(m[i].role==='owner'){chief=m[i].name||'Игрок';break;}}
+  var h='';
+  h+='<div class="cr-head"><div class="cr-emblem">'+(myClan.emblem||'🛡️')+'</div>';
   h+='<div style="min-width:0"><div class="cr-name">'+esc(myClan.name)+'</div>';
-  h+='<div class="cr-sub">'+tagPill(myClan.tag,'clan',myClan.name)+' Глава: '+esc(chief)+'</div></div>';
-  h+='<div class="cr-cups"><b>'+cupsOf(myClan.id)+'</b><span>КУБКИ</span></div>';
-  h+='</div>';
-
-  if(descEditing && owner){
-    h+='<textarea class="cr-desc-edit" id="descInput" maxlength="120" placeholder="Расскажи, какой у вас клан — это видят все">'+esc(d)+'</textarea>';
+  h+='<div class="cr-sub">'+pill(myClan.tag,'clan',myClan.name)+' Глава: '+esc(chief)+'</div></div>';
+  h+='<div class="cr-cups"><b>'+cupsOf(myClan.id)+'</b><span>КУБКИ</span></div></div>';
+  if(descEdit&&owner){
+    h+='<textarea class="cr-desc-edit" id="descInput" maxlength="120" placeholder="Расскажи, какой у вас клан">'+esc(d)+'</textarea>';
     h+='<div class="cr-desc-count"><span id="descLeft">'+(120-d.length)+'</span>/120</div>';
     h+='<div class="cr-desc-row"><button id="descCancel">Отмена</button><button id="descSave">Сохранить</button></div>';
     h+='<div class="cr-desc-err hidden" id="descErr"></div>';
   } else {
-    if(owner) h+='<button class="cr-edit" id="descEditBtn">✏️ Описание</button>';
+    if(owner)h+='<button class="cr-edit" id="descEditBtn">✏️ Описание</button>';
     h+='<div class="cr-desc'+(d?'':' empty')+'">'+(d?esc(d):'Описание пока не задано')+'</div>';
   }
-
-  h+='<div class="cr-stats">';
-  h+='<div class="cr-stat"><span>УЧАСТНИКИ</span><b>'+cnt+'/'+MAX_MEMBERS+'</b></div>';
+  h+='<div class="cr-stats"><div class="cr-stat"><span>УЧАСТНИКИ</span><b>'+n+'/'+MAX+'</b></div>';
   h+='<div class="cr-stat"><span>КУБКИ</span><b>'+cupsOf(myClan.id)+'</b></div>';
-  h+='<div class="cr-stat"><span>СВОБОДНО</span><b>'+Math.max(0,MAX_MEMBERS-cnt)+'</b></div>';
-  h+='</div>';
-
-  h+='<div class="cr-bar">';
-  h+='<div class="cr-bar-l">УЧАСТНИКИ<b>'+cnt+'/'+MAX_MEMBERS+'</b></div>';
-  h+='<div class="cr-btns">';
-  h+='<button class="cr-leave" id="ciLeave">🚪 Покинуть</button>';
-  h+='<button class="cr-search" id="ciSearch">🔍</button>';
-  h+='</div></div>';
-
-  for(let i=0;i<mem.length;i++){
-    const m = mem[i], isMe = (m.player_key===meKey), isChief = (m.role==='owner');
-    h+='<div class="member'+(isMe?' me':'')+'">';
-    h+='<div class="m-rank'+(i<3?' r'+(i+1):'')+'">'+(i+1)+'</div>';
-    h+='<div class="m-avatar" data-profile="'+esc(m.player_key)+'">'+(isChief?'👑':'🎮')+'</div>';
-    h+='<div class="m-info" data-profile="'+esc(m.player_key)+'">';
-    h+='<div class="m-name">'+esc(m.name||'Игрок')+(isMe?' (ты)':'')+tagPill(tagMap[m.player_key],'player',m.name)+'</div>';
-    h+='<div class="m-role">'+(isChief?'Глава клана':'Участник')+'</div></div>';
-    h+='<div class="m-cups">🏆 '+(m.cups||0)+'</div>';
+  h+='<div class="cr-stat"><span>СВОБОДНО</span><b>'+Math.max(0,MAX-n)+'</b></div></div>';
+  h+='<div class="cr-bar"><div class="cr-bar-l">УЧАСТНИКИ<b>'+n+'/'+MAX+'</b></div>';
+  h+='<div class="cr-btns"><button class="cr-leave" id="ciLeave">🚪 Покинуть</button>';
+  h+='<button class="cr-search" id="ciSearch">🔍</button></div></div>';
+  for(var k=0;k<m.length;k++){
+    var mm=m[k],isMe=(mm.player_key===meKey),ch=(mm.role==='owner');
+    h+='<div class="member'+(isMe?' me':'')+'"><div class="m-rank'+(k<3?' r'+(k+1):'')+'">'+(k+1)+'</div>';
+    h+='<div class="m-avatar" data-profile="'+esc(mm.player_key)+'">'+(ch?'👑':'🎮')+'</div>';
+    h+='<div class="m-info" data-profile="'+esc(mm.player_key)+'">';
+    h+='<div class="m-name">'+esc(mm.name||'Игрок')+(isMe?' (ты)':'')+pill(tagMap[mm.player_key],'player',mm.name)+'</div>';
+    h+='<div class="m-role">'+(ch?'Глава клана':'Участник')+'</div></div>';
+    h+='<div class="m-cups">🏆 '+(mm.cups||0)+'</div>';
     if(!isMe){
-      h+='<button class="mini play" data-invite="'+esc(m.player_key)+'" data-invname="'+esc(m.name||'Игрок')+'" data-invcups="'+(m.cups||0)+'">⚔️</button>';
-      h+='<button class="mini add" data-addfriend="'+esc(m.player_key)+'" data-addname="'+esc(m.name||'Игрок')+'">+</button>';
+      h+='<button class="mini play" data-invite="'+esc(mm.player_key)+'" data-invname="'+esc(mm.name||'Игрок')+'" data-invcups="'+(mm.cups||0)+'">⚔️</button>';
+      h+='<button class="mini add" data-addfriend="'+esc(mm.player_key)+'" data-addname="'+esc(mm.name||'Игрок')+'">+</button>';
     }
-    if(owner && !isMe) h+='<button class="mini kick" data-kick="'+esc(m.player_key)+'">✕</button>';
+    if(owner&&!isMe)h+='<button class="mini kick" data-kick="'+esc(mm.player_key)+'">✕</button>';
     h+='</div>';
   }
-
   h+='<button class="btn-wide blue" id="ciShare">📤 Позвать в клан</button>';
-
-  $('ciScroll').innerHTML = h;
-  bindActions($('ciScroll'));
-
-  const ta = $('descInput'), left = $('descLeft');
-  if(ta && left){
-    ta.addEventListener('input', function(){ left.textContent = 120-ta.value.length; });
-    setTimeout(function(){ try{ ta.focus(); }catch(e){} }, 80);
-  }
-  const dc = $('descCancel'); if(dc) dc.onclick = function(){ descEditing=false; renderClanModal(); };
-  const ds = $('descSave'); if(ds) ds.onclick = saveDesc;
-  const de = $('descEditBtn'); if(de) de.onclick = function(){ descEditing=true; renderClanModal(); };
-
-  $('ciLeave').onclick = leaveClan;
-  $('ciSearch').onclick = function(){ closeClanModal(); openSearch('players',''); };
-  $('ciShare').onclick = function(){ shareClan(myClan.name, myClan.tag); };
+  $('ciScroll').innerHTML=h; bind($('ciScroll'));
+  var ta=$('descInput'),lf=$('descLeft');
+  if(ta&&lf){ta.addEventListener('input',function(){lf.textContent=120-ta.value.length;});
+    setTimeout(function(){try{ta.focus();}catch(e){}},80);}
+  var dc=$('descCancel'); if(dc)dc.onclick=function(){descEdit=false;drawMine();};
+  var ds=$('descSave'); if(ds)ds.onclick=saveDesc;
+  var de=$('descEditBtn'); if(de)de.onclick=function(){descEdit=true;drawMine();};
+  var lv=$('ciLeave'); if(lv)lv.onclick=leaveClan;
+  var sr=$('ciSearch'); if(sr)sr.onclick=function(){closeClan();openSearch('players','');};
+  var sh=$('ciShare'); if(sh)sh.onclick=function(){shareClan(myClan.name,myClan.tag);};
 }
 
 async function saveDesc(){
-  const ta = $('descInput'); if(!ta || !myClan) return;
-  const d = ta.value.trim().slice(0,120);
-  const btn = $('descSave'); if(btn){ btn.disabled=true; btn.textContent='…'; }
-  let ok=false, why='';
-
-  try{
-    const r = await sb.rpc('clan_set_description',{p_clan:myClan.id,p_key:meKey,p_desc:d});
-    if(r.error){ why = r.error.message||'ошибка RPC'; }
-    else if(r.data && r.data.ok===false){ why = r.data.error||'отказ'; }
-    else ok = true;
-  }catch(e){ why='сеть'; }
-
-  if(!ok){
-    try{
-      const u = await sb.from('clans').update({description:d}).eq('id',myClan.id);
-      if(!u.error) ok = true; else if(!why) why = u.error.message;
-    }catch(e){}
-  }
-
-  if(btn){ btn.disabled=false; btn.textContent='Сохранить'; }
-
-  if(!ok){
-    const e = $('descErr');
-    if(e){ e.textContent='Не сохранилось: '+(why||'причина неизвестна'); e.classList.remove('hidden'); }
-    else showToast('Не удалось сохранить описание');
-    return;
-  }
-
-  myClan.description = d; descEditing = false;
-  for(let i=0;i<allClans.length;i++) if(allClans[i].id===myClan.id) allClans[i].description = d;
-  showToast('Описание обновлено');
-  renderClanModal();
-  render();
+  var ta=$('descInput'); if(!ta||!myClan)return;
+  var d=ta.value.trim().slice(0,120);
+  var btn=$('descSave'); if(btn){btn.disabled=true;btn.textContent='…';}
+  var ok=false,why='';
+  try{var r=await sb.rpc('clan_set_description',{p_clan:myClan.id,p_key:meKey,p_desc:d});
+    if(r.error)why=r.error.message||''; else if(r.data&&r.data.ok===false)why=r.data.error||''; else ok=true;}catch(e){why='сеть';}
+  if(!ok){try{var u=await sb.from('clans').update({description:d}).eq('id',myClan.id);if(!u.error)ok=true;else if(!why)why=u.error.message;}catch(e){}}
+  if(btn){btn.disabled=false;btn.textContent='Сохранить';}
+  if(!ok){var e=$('descErr');if(e){e.textContent='Не сохранилось: '+(why||'?');e.classList.remove('hidden');}else toast('Не удалось сохранить');return;}
+  myClan.description=d; descEdit=false;
+  for(var i=0;i<allClans.length;i++)if(allClans[i].id===myClan.id)allClans[i].description=d;
+  toast('Описание обновлено'); drawMine(); drawSafe();
 }
 
-function renderFriendsTab(app){
-  let h = '<div class="section-title">Мои друзья</div>';
-  if(!friendsList.length){
-    h+='<div class="empty">Пока нет друзей.<br>Найди по тегу через поиск.</div>';
-  } else {
-    for(let i=0;i<friendsList.length;i++){
-      const f = friendsList[i];
+function tabFriends(a){
+  var h='<div class="section-title">Мои друзья</div>';
+  if(!friendsList.length)h+='<div class="empty">Пока нет друзей.<br>Найди по тегу через поиск.</div>';
+  else{
+    for(var i=0;i<friendsList.length;i++){
+      var f=friendsList[i];
       h+='<div class="member"><div class="m-avatar" data-profile="'+esc(f.key)+'">🎮</div>';
       h+='<div class="m-info" data-profile="'+esc(f.key)+'">';
-      h+='<div class="m-name">'+esc(f.name)+tagPill(f.tag,'player',f.name)+'</div>';
+      h+='<div class="m-name">'+esc(f.name)+pill(f.tag,'player',f.name)+'</div>';
       h+='<div class="m-role" style="color:#94a3b8">🏆 '+f.cups+'</div></div>';
       h+='<button class="mini play" data-finvite="'+esc(f.key)+'">⚔️</button>';
       h+='<button class="mini kick" data-fremove="'+esc(f.key)+'">✕</button></div>';
     }
   }
   h+='<button class="btn-wide blue" id="addFriendBtn">+ Найти по тегу</button>';
-  app.innerHTML = h;
-
-  $('addFriendBtn').onclick = function(){
-    openSearch('players','');
-    setTimeout(function(){ try{ $('searchInput').focus(); }catch(e){} }, 100);
-  };
-
-  const inv = app.querySelectorAll('[data-finvite]');
-  for(let i=0;i<inv.length;i++){
-    (function(b){
-      b.onclick = function(){
-        const k = b.getAttribute('data-finvite');
-        for(let j=0;j<friendsList.length;j++){
-          if(friendsList[j].key===k){ invitePlayer(k, friendsList[j].name, friendsList[j].cups); return; }
-        }
-      };
-    })(inv[i]);
-  }
-
-  const rem = app.querySelectorAll('[data-fremove]');
-  for(let i=0;i<rem.length;i++){
-    (function(b){
-      b.onclick = async function(){
-        const k = b.getAttribute('data-fremove');
-        if(!confirm('Убрать из друзей?')) return;
-        await Friends.remove(k);
-        showToast('Удалён из друзей');
-        await loadFriends();
-      };
-    })(rem[i]);
-  }
-  bindActions(app);
+  a.innerHTML=h;
+  var af=$('addFriendBtn'); if(af)af.onclick=function(){openSearch('players','');setTimeout(function(){try{$('searchInput').focus();}catch(e){}},100);};
+  var inv=a.querySelectorAll('[data-finvite]');
+  for(var k=0;k<inv.length;k++){(function(b){b.onclick=function(){
+    var key=b.getAttribute('data-finvite');
+    for(var j=0;j<friendsList.length;j++)if(friendsList[j].key===key){invite(friendsList[j].key,friendsList[j].name,friendsList[j].cups);return;}};})(inv[k]);}
+  var rm=a.querySelectorAll('[data-fremove]');
+  for(var n=0;n<rm.length;n++){(function(b){b.onclick=async function(){
+    if(!confirm('Убрать из друзей?'))return;
+    if(window.Friends)await Friends.remove(b.getAttribute('data-fremove'));
+    toast('Удалён'); await loadFriends();};})(rm[n]);}
+  bind(a);
 }
 
 async function loadChat(){
-  if(!myClan) return;
-  const r = await sb.from('clan_messages').select('*').eq('clan_id',myClan.id).order('id',{ascending:false}).limit(60);
-  if(r.error) return;
-  chatMsgs = (r.data||[]).slice().reverse();
-  renderChatMessages();
+  if(!myClan)return;
+  var r=await sb.from('clan_messages').select('*').eq('clan_id',myClan.id).order('id',{ascending:false}).limit(60);
+  if(r.error)return;
+  chatMsgs=(r.data||[]).slice().reverse();
+  drawChat();
 }
-
-function renderChatMessages(){
-  const box = $('chatBox'); if(!box) return;
-  if(!chatMsgs.length){ box.innerHTML = '<div class="empty">Сообщений пока нет.<br>Напиши первым.</div>'; return; }
-
-  let h = '';
-  for(let i=0;i<chatMsgs.length;i++){
-    const m = chatMsgs[i], mine = (m.player_key===meKey);
-    if(m.kind==='system'){ h+='<div class="msg-sys">'+esc(m.text||'')+'</div>'; continue; }
+function drawChat(){
+  var b=$('chatBox'); if(!b)return;
+  if(!chatMsgs.length){b.innerHTML='<div class="empty">Сообщений пока нет.<br>Напиши первым.</div>';return;}
+  var h='';
+  for(var i=0;i<chatMsgs.length;i++){
+    var m=chatMsgs[i],mine=(m.player_key===meKey);
+    if(m.kind==='system'){h+='<div class="msg-sys">'+esc(m.text||'')+'</div>';continue;}
     h+='<div class="msg'+(mine?' mine':'')+'">';
     h+='<div class="msg-head" data-profile="'+esc(m.player_key)+'">'+esc(m.name||'Игрок')+'</div>';
-    if(m.kind==='replay'){
-      h+='<div class="msg-replay">'+esc(m.text||'Повтор партии')+'</div>';
-      if(m.match_id) h+='<button class="msg-btn" data-watch="'+m.match_id+'">▶ Смотреть повтор</button>';
-    } else {
-      h+='<div class="msg-text">'+esc(m.text||'')+'</div>';
-    }
+    if(m.kind==='replay'){h+='<div class="msg-replay">'+esc(m.text||'Повтор')+'</div>';
+      if(m.match_id)h+='<button class="msg-btn" data-watch="'+m.match_id+'">▶ Смотреть повтор</button>';}
+    else h+='<div class="msg-text">'+esc(m.text||'')+'</div>';
     h+='</div>';
   }
-  box.innerHTML = h;
-  box.scrollTop = box.scrollHeight;
-
-  const w = box.querySelectorAll('[data-watch]');
-  for(let i=0;i<w.length;i++){
-    (function(b){ b.onclick = function(){ location.href='chess-history.html?m='+b.getAttribute('data-watch'); }; })(w[i]);
-  }
-  const pr = box.querySelectorAll('[data-profile]');
-  for(let i=0;i<pr.length;i++){
-    (function(el){ el.onclick = function(){ openProfile(el.getAttribute('data-profile')); }; })(pr[i]);
-  }
+  b.innerHTML=h; b.scrollTop=b.scrollHeight;
+  var w=b.querySelectorAll('[data-watch]');
+  for(var k=0;k<w.length;k++){(function(x){x.onclick=function(){location.href='chess-history.html?m='+x.getAttribute('data-watch');};})(w[k]);}
+  var p=b.querySelectorAll('[data-profile]');
+  for(var n=0;n<p.length;n++){(function(el){el.onclick=function(){openProfile(el.getAttribute('data-profile'));};})(p[n]);}
 }
 
 async function sendChat(){
-  const inp = $('chatInput'); if(!inp || !myClan) return;
-  const txt = inp.value.trim(); if(!txt) return;
-
-  if(hasBadWord(txt)){
-    inp.value = '';
-    showToast('Ненормативная лексика — сообщение не отправлено');
-    return;
-  }
-  inp.value = '';
-
-  const r = await sb.rpc('clan_post',{
-    p_clan: myClan.id, p_key: meKey, p_name: meName,
-    p_kind: 'text', p_text: txt, p_match: null
-  });
-
-  if(r.error){ showToast('Не отправлено'); inp.value = txt; return; }
-  if(r.data && r.data.bad){ showToast('Ненормативная лексика — сообщение не отправлено'); inp.value = txt; return; }
+  var ip=$('chatInput'); if(!ip||!myClan)return;
+  var t=ip.value.trim(); if(!t)return;
+  if(badw(t)){ip.value='';toast('Ненормативная лексика — не отправлено');return;}
+  ip.value='';
+  var r=await sb.rpc('clan_post',{p_clan:myClan.id,p_key:meKey,p_name:meName,p_kind:'text',p_text:t,p_match:null});
+  if(r.error){toast('Не отправлено');ip.value=t;return;}
+  if(r.data&&r.data.bad){toast('Ненормативная лексика');ip.value=t;return;}
   await loadChat();
 }
 
 async function openShare(){
-  const r = await sb.from('arena_replays')
-    .select('match_id,opponent_name,winner,my_side,arena,created_at')
-    .eq('player_key',meKey).order('created_at',{ascending:false}).limit(12);
-  shareRows = r.error ? [] : (r.data||[]);
-
-  const box = $('shareList');
-  if(!shareRows.length){
-    box.innerHTML = '<div class="empty">Нет записанных партий.<br>Сыграй бой — он появится здесь.</div>';
-    $('shareModal').classList.remove('hidden');
-    return;
+  var r=await sb.from('arena_replays').select('match_id,opponent_name,winner,my_side,arena,created_at').eq('player_key',meKey).order('created_at',{ascending:false}).limit(12);
+  shareRows=r.error?[]:(r.data||[]);
+  var box=$('shareList');
+  if(!shareRows.length){box.innerHTML='<div class="empty">Нет записанных партий.<br>Сыграй бой.</div>';$('shareModal').classList.remove('hidden');return;}
+  var h='';
+  for(var i=0;i<shareRows.length;i++){
+    var x=shareRows[i],t='ничья';
+    if(x.winner==='a'||x.winner==='b')t=(x.winner===x.my_side)?'победа':'поражение';
+    h+='<div class="member"><div class="m-info"><div class="m-name">'+esc(x.opponent_name||'Соперник')+'</div>';
+    h+='<div class="m-role" style="color:#94a3b8">'+t+' · арена '+(x.arena||1)+'</div></div>';
+    h+='<button class="mini add" data-share="'+x.match_id+'">Отправить</button></div>';
   }
-
-  let h = '';
-  for(let i=0;i<shareRows.length;i++){
-    const r2 = shareRows[i];
-    let t = 'ничья';
-    if(r2.winner==='a'||r2.winner==='b') t = (r2.winner===r2.my_side)?'победа':'поражение';
-    h+='<div class="member"><div class="m-info">';
-    h+='<div class="m-name">'+esc(r2.opponent_name||'Соперник')+'</div>';
-    h+='<div class="m-role" style="color:#94a3b8">'+t+' · арена '+(r2.arena||1)+'</div></div>';
-    h+='<button class="mini add" data-share="'+r2.match_id+'">Отправить</button></div>';
-  }
-  box.innerHTML = h;
-
-  const b = box.querySelectorAll('[data-share]');
-  for(let i=0;i<b.length;i++){
-    (function(x){ x.onclick = function(){ shareReplay(x.getAttribute('data-share')); }; })(b[i]);
-  }
+  box.innerHTML=h;
+  var b=box.querySelectorAll('[data-share]');
+  for(var k=0;k<b.length;k++){(function(y){y.onclick=function(){shareReplay(y.getAttribute('data-share'));};})(b[k]);}
   $('shareModal').classList.remove('hidden');
 }
 
-async function shareReplay(matchId){
-  let row = null;
-  for(let i=0;i<shareRows.length;i++) if(shareRows[i].match_id===matchId){ row = shareRows[i]; break; }
-  if(!row || !myClan) return;
-
-  let t = 'Ничья';
-  if(row.winner==='a'||row.winner==='b') t = (row.winner===row.my_side)?'Победа':'Поражение';
-
-  const label = 'Повтор партии против '+(row.opponent_name||'соперника')+' · '+t+' · арена '+(row.arena||1);
-
-  const r = await sb.rpc('clan_post',{
-    p_clan: myClan.id, p_key: meKey, p_name: meName,
-    p_kind: 'replay', p_text: label, p_match: matchId
-  });
-
-  if(r.error){ showToast('Не отправлено'); return; }
-  $('shareModal').classList.add('hidden');
-  showToast('Повтор отправлен в чат');
-  await loadChat();
+async function shareReplay(id){
+  var row=null;
+  for(var i=0;i<shareRows.length;i++)if(shareRows[i].match_id===id){row=shareRows[i];break;}
+  if(!row||!myClan)return;
+  var t='Ничья';
+  if(row.winner==='a'||row.winner==='b')t=(row.winner===row.my_side)?'Победа':'Поражение';
+  var lb='Повтор партии против '+(row.opponent_name||'соперника')+' · '+t+' · арена '+(row.arena||1);
+  var r=await sb.rpc('clan_post',{p_clan:myClan.id,p_key:meKey,p_name:meName,p_kind:'replay',p_text:lb,p_match:id});
+  if(r.error){toast('Не отправлено');return;}
+  $('shareModal').classList.add('hidden'); toast('Повтор отправлен'); await loadChat();
 }
 
-function bindActions(scope){
-  const inv = scope.querySelectorAll('[data-invite]');
-  for(let i=0;i<inv.length;i++){
-    (function(b){
-      b.onclick = function(){
-        invitePlayer(b.getAttribute('data-invite'), b.getAttribute('data-invname'),
-          parseInt(b.getAttribute('data-invcups')||'0',10)||0);
-      };
-    })(inv[i]);
-  }
-  const add = scope.querySelectorAll('[data-addfriend]');
-  for(let i=0;i<add.length;i++){
-    (function(b){
-      b.onclick = async function(){
-        const ok = await Friends.add(b.getAttribute('data-addfriend'), b.getAttribute('data-addname'));
-        showToast(ok?'Добавлен в друзья':'Не удалось добавить');
-        if(ok) await loadFriends();
-      };
-    })(add[i]);
-  }
-  const kick = scope.querySelectorAll('[data-kick]');
-  for(let i=0;i<kick.length;i++){
-    (function(b){ b.onclick = function(){ kickMember(b.getAttribute('data-kick')); }; })(kick[i]);
-  }
-  const join = scope.querySelectorAll('[data-join]');
-  for(let i=0;i<join.length;i++){
-    (function(b){ b.onclick = function(){ joinClan(b.getAttribute('data-join'), b); }; })(join[i]);
-  }
-  const shc = scope.querySelectorAll('[data-shareclan]');
-  for(let i=0;i<shc.length;i++){
-    (function(b){
-      b.onclick = function(){
-        shareClan(b.getAttribute('data-shareclanname')||'Клан', b.getAttribute('data-shareclan')||'');
-      };
-    })(shc[i]);
-  }
-  const pf = scope.querySelectorAll('[data-profile]');
-  for(let i=0;i<pf.length;i++){
-    (function(el){ el.onclick = function(){ openProfile(el.getAttribute('data-profile')); }; })(pf[i]);
-  }
-  const tg = scope.querySelectorAll('[data-copytag]');
-  for(let i=0;i<tg.length;i++){
-    (function(el){ el.onclick = function(e){ e.stopPropagation(); copyTag(el); }; })(tg[i]);
-  }
+function bind(s){
+  if(!s)return;
+  var pv=s.querySelectorAll('[data-preview]');
+  for(var i=0;i<pv.length;i++){(function(el){el.onclick=function(e){
+    if(e.target&&e.target.closest&&(e.target.closest('[data-join]')||e.target.closest('[data-shareclan]')))return;
+    openPreview(el.getAttribute('data-preview'));};})(pv[i]);}
+  var pb=s.querySelectorAll('[data-previewbtn]');
+  for(var p=0;p<pb.length;p++){(function(el){el.onclick=function(e){e.stopPropagation();openPreview(el.getAttribute('data-previewbtn'));};})(pb[p]);}
+  var inv=s.querySelectorAll('[data-invite]');
+  for(var a=0;a<inv.length;a++){(function(b){b.onclick=function(e){e.stopPropagation();
+    invite(b.getAttribute('data-invite'),b.getAttribute('data-invname'),parseInt(b.getAttribute('data-invcups')||'0',10)||0);};})(inv[a]);}
+  var ad=s.querySelectorAll('[data-addfriend]');
+  for(var c=0;c<ad.length;c++){(function(b){b.onclick=async function(e){e.stopPropagation();
+    if(!window.Friends)return;
+    var ok=await Friends.add(b.getAttribute('data-addfriend'),b.getAttribute('data-addname'));
+    toast(ok?'Добавлен в друзья':'Не удалось'); if(ok)await loadFriends();};})(ad[c]);}
+  var kk=s.querySelectorAll('[data-kick]');
+  for(var k=0;k<kk.length;k++){(function(b){b.onclick=function(e){e.stopPropagation();kick(b.getAttribute('data-kick'));};})(kk[k]);}
+  var jn=s.querySelectorAll('[data-join]');
+  for(var j=0;j<jn.length;j++){(function(b){b.onclick=function(e){e.stopPropagation();joinClan(b.getAttribute('data-join'),b);};})(jn[j]);}
+  var sc=s.querySelectorAll('[data-shareclan]');
+  for(var x=0;x<sc.length;x++){(function(b){b.onclick=function(e){e.stopPropagation();
+    shareClan(b.getAttribute('data-shareclanname')||'Клан',b.getAttribute('data-shareclan')||'');};})(sc[x]);}
+  var pf=s.querySelectorAll('[data-profile]');
+  for(var f=0;f<pf.length;f++){(function(el){el.onclick=function(e){e.stopPropagation();openProfile(el.getAttribute('data-profile'));};})(pf[f]);}
+  var tg=s.querySelectorAll('[data-copytag]');
+  for(var t=0;t<tg.length;t++){(function(el){el.onclick=function(e){e.stopPropagation();copyTag(el);};})(tg[t]);}
 }
 
-async function invitePlayer(key,name,cups){
-  if(!window.Friends){ showToast('friends.js не подключён'); return; }
-  if(!key) return;
-  const r = await Friends.invite(key, name, cups);
-  if(!r){ showToast('Не удалось отправить вызов'); return; }
-  showToast('Вызов отправлен: '+name);
-  setTimeout(function(){ Friends.play(r.id,'host',key,name,cups,r.arena); }, 400);
+async function invite(key,name,cups){
+  if(!window.Friends){toast('friends.js не подключён');return;}
+  if(!key)return;
+  var r=await Friends.invite(key,name,cups);
+  if(!r){toast('Не удалось отправить вызов');return;}
+  toast('Вызов отправлен: '+name);
+  setTimeout(function(){Friends.play(r.id,'host',key,name,cups,r.arena);},400);
 }
 
-async function joinClan(clanId,btn){
-  if(!clanId || joining) return;
-
+async function joinClan(id,btn){
+  if(!id||joining)return;
   if(myMember){
-    showToast(myMember.clan_id===clanId ? 'Ты уже в этом клане' : 'Ты уже в другом клане — сначала выйди из него');
-    closeSearch();
+    if(myMember.clan_id===id){toast('Ты уже в этом клане');openMine();}
+    else{toast('Ты уже в другом клане — сначала выйди');closeSearch();}
     return;
   }
-
-  joining = true;
-  if(btn){ btn.disabled=true; btn.textContent='…'; }
-
-  let ok=false, msg='';
-
+  joining=true;
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  var ok=false,msg='';
   try{
-    const r = await sb.rpc('clan_join',{p_clan:clanId,p_key:meKey,p_name:meName,p_cups:meCups});
-    if(r.error){ msg = r.error.message||''; }
-    else {
-      const d = r.data||{};
-      if(d.ok===false) msg = d.error||'не удалось вступить';
-      else { ok = true; if(d.already) msg = 'Ты уже в этом клане'; }
-    }
-  }catch(e){ msg='сеть недоступна'; }
-
+    var r=await sb.rpc('clan_join',{p_clan:id,p_key:meKey,p_name:meName,p_cups:meCups});
+    if(r.error)msg=r.error.message||'';
+    else{var d=r.data||{};
+      if(d.ok===false)msg=d.error||'не удалось';
+      else{ok=true;if(d.already)msg='Ты уже в этом клане';}}
+  }catch(e){msg='сеть';}
   if(!ok){
-    const chk = await sb.from('clan_members').select('clan_id').eq('player_key',meKey).limit(1);
-    if(!chk.error && chk.data && chk.data.length){
-      ok = true;
-      msg = (chk.data[0].clan_id===clanId) ? 'Ты уже в этом клане' : 'Ты уже в другом клане';
-    }
+    var ch=await sb.from('clan_members').select('clan_id').eq('player_key',meKey).limit(1);
+    if(!ch.error&&ch.data&&ch.data.length){ok=true;msg=(ch.data[0].clan_id===id)?'Ты уже в этом клане':'Ты уже в другом клане';}
   }
-
-  joining = false;
-
-  if(!ok){
-    if(btn){ btn.disabled=false; btn.textContent='Вступить'; }
-    showToast(msg||'Не удалось вступить');
-    return;
-  }
-
-  showToast(msg||'Ты в клане!');
-  closeSearch();
+  joining=false;
+  if(!ok){if(btn){btn.disabled=false;btn.textContent='Вступить';}toast(msg||'Не удалось вступить');return;}
+  toast(msg||'Ты в клане!');
+  closeSearch(); $('clanInfoModal').classList.add('hidden'); previewClan=null;
   await loadAll();
 }
 
 async function leaveClan(){
-  if(!myMember) return;
-  const owner = isOwnerOfMyClan();
-  const mem = myClan ? membersOf(myClan.id) : [];
-  if(owner && mem.length>1){ showToast('Сначала передай главу или выгони всех'); return; }
-  if(!confirm('Покинуть клан?')) return;
-
-  closeClanModal();
+  if(!myMember)return;
+  var owner=isOwner(),m=myClan?memOf(myClan.id):[];
+  if(owner&&m.length>1){toast('Сначала передай главу или выгони всех');return;}
+  if(!confirm('Покинуть клан?'))return;
+  closeClan();
   await sb.from('clan_members').delete().eq('player_key',meKey);
-  if(owner && myClan) await sb.from('clans').delete().eq('id',myClan.id);
-  descEditing = false;
-  showToast('Ты покинул клан');
-  await loadAll();
+  if(owner&&myClan)await sb.from('clans').delete().eq('id',myClan.id);
+  descEdit=false; toast('Ты покинул клан'); await loadAll();
 }
 
-async function kickMember(key){
-  if(!isOwnerOfMyClan()) return;
-  if(!confirm('Выгнать участника?')) return;
+async function kick(key){
+  if(!isOwner())return;
+  if(!confirm('Выгнать участника?'))return;
   await sb.from('clan_members').delete().eq('player_key',key);
-  showToast('Участник выгнан');
-  await loadAll();
-  if(!$('clanInfoModal').classList.contains('hidden')) renderClanModal();
+  toast('Участник выгнан'); await loadAll();
+  if(!$('clanInfoModal').classList.contains('hidden'))drawMine();
 }
 
 async function createClan(){
-  const name = $('inName').value.trim();
-  const desc = $('inDesc').value.trim().slice(0,120);
-  if(name.length<3){ showToast('Название минимум 3 символа'); return; }
-  if(myMember){ showToast('Ты уже в клане'); return; }
-
-  const r = await sb.from('clans').insert({
-    name: name, tag: null, emblem: pickedEmblem, description: desc, owner_key: meKey
-  }).select().single();
-
-  if(r.error){ showToast('Не удалось создать клан'); return; }
-
-  const mr = await sb.from('clan_members').insert({
-    clan_id: r.data.id, player_key: meKey, name: meName, cups: meCups, role: 'owner'
-  });
-
-  if(mr.error) showToast('Клан создан, но вступление не удалось');
-  else showToast('Клан создан!');
-
-  try{ await sb.rpc('ensure_clan_code',{p_clan:r.data.id}); }catch(e){}
-
-  $('createModal').classList.add('hidden');
-  $('inName').value=''; $('inDesc').value='';
+  var n=$('inName').value.trim(),d=$('inDesc').value.trim().slice(0,120);
+  if(n.length<3){toast('Название минимум 3 символа');return;}
+  if(myMember){toast('Ты уже в клане');return;}
+  var r=await sb.from('clans').insert({name:n,tag:null,emblem:pickEm,description:d,owner_key:meKey}).select().single();
+  if(r.error){toast('Не удалось создать клан');return;}
+  var m=await sb.from('clan_members').insert({clan_id:r.data.id,player_key:meKey,name:meName,cups:meCups,role:'owner'});
+  toast(m.error?'Клан создан, но вступление не удалось':'Клан создан!');
+  try{await sb.rpc('ensure_clan_code',{p_clan:r.data.id});}catch(e){}
+  $('createModal').classList.add('hidden'); $('inName').value=''; $('inDesc').value='';
   await loadAll();
 }
 
-function buildEmblems(){
-  const row = $('emblemRow'); row.innerHTML = '';
-  for(let i=0;i<EMBLEMS.length;i++){
-    const b = document.createElement('button');
-    b.className = 'emblem-opt' + (EMBLEMS[i]===pickedEmblem?' on':'');
-    b.textContent = EMBLEMS[i];
-    (function(em){ b.onclick = function(){ pickedEmblem=em; buildEmblems(); }; })(EMBLEMS[i]);
-    row.appendChild(b);
+function buildEmb(){
+  var r=$('emblemRow'); if(!r)return;
+  r.innerHTML='';
+  for(var i=0;i<EMB.length;i++){
+    var b=document.createElement('button');
+    b.className='emblem-opt'+(EMB[i]===pickEm?' on':'');
+    b.textContent=EMB[i];
+    (function(em){b.onclick=function(){pickEm=em;buildEmb();};})(EMB[i]);
+    r.appendChild(b);
   }
 }
 
-$('bannerBtn').onclick = function(){
-  if(myMember){ showToast('Ты уже в клане'); return; }
-  pickedEmblem='🛡️'; buildEmblems(); $('createModal').classList.remove('hidden');
-};
-$('ciClose').onclick = closeClanModal;
-$('searchClose').onclick = closeSearch;
-$('clanInfoModal').onclick = function(e){ if(e.target===$('clanInfoModal')) closeClanModal(); };
-$('searchModal').onclick = function(e){ if(e.target===$('searchModal')) closeSearch(); };
-$('createCancel').onclick = function(){ $('createModal').classList.add('hidden'); };
-$('createOk').onclick = createClan;
-$('addCancel').onclick = function(){ $('addModal').classList.add('hidden'); };
-$('shareCancel').onclick = function(){ $('shareModal').classList.add('hidden'); };
+var bb=$('bannerBtn'); if(bb)bb.onclick=function(){
+  if(myMember){toast('Ты уже в клане');return;}
+  pickEm='🛡️'; buildEmb(); $('createModal').classList.remove('hidden');};
+var c1=$('ciClose'); if(c1)c1.onclick=closeClan;
+var c2=$('searchClose'); if(c2)c2.onclick=closeSearch;
+var cm=$('clanInfoModal'); if(cm)cm.onclick=function(e){if(e.target===cm)closeClan();};
+var sm2=$('searchModal'); if(sm2)sm2.onclick=function(e){if(e.target===sm2)closeSearch();};
+var c3=$('createCancel'); if(c3)c3.onclick=function(){$('createModal').classList.add('hidden');};
+var c4=$('createOk'); if(c4)c4.onclick=createClan;
+var c5=$('addCancel'); if(c5)c5.onclick=function(){$('addModal').classList.add('hidden');};
+var c6=$('shareCancel'); if(c6)c6.onclick=function(){$('shareModal').classList.add('hidden');};
 
-$('searchInput').addEventListener('input', function(){
-  searchQ = this.value;
-  clearTimeout(window.__sqT);
-  window.__sqT = setTimeout(applySearch, 350);
-});
+var si=$('searchInput');
+if(si)si.addEventListener('input',function(){searchQ=this.value;clearTimeout(window.__sqT);window.__sqT=setTimeout(doSearch,350);});
 
-const modalChips = $('searchModal').querySelectorAll('.chip');
-for(let i=0;i<modalChips.length;i++){
-  (function(c){
-    c.onclick = function(){
-      searchMode = c.getAttribute('data-mode');
-      for(let k=0;k<modalChips.length;k++) modalChips[k].classList.toggle('on', modalChips[k]===c);
-      applySearch();
-    };
-  })(modalChips[i]);
-}
+var mc=$('searchModal').querySelectorAll('.chip');
+for(var mi=0;mi<mc.length;mi++){(function(c){c.onclick=function(){
+  searchMode=c.getAttribute('data-mode');
+  for(var k=0;k<mc.length;k++)mc[k].classList.toggle('on',mc[k]===c);
+  doSearch();};})(mc[mi]);}
 
-$('addSearch').onclick = async function(){
-  if(!window.Friends){ showToast('friends.js не подключён'); return; }
-  const nick = $('inNick').value.trim();
-  if(nick.replace('#','').length<2){ showToast('Минимум 2 символа'); return; }
-
-  const box = $('addResults');
-  box.innerHTML = '<div class="empty">Ищем…</div>';
-
-  let list = [];
-  try{
-    const r = await sb.rpc('search_players',{p_q:nick,p_limit:15});
-    if(!r.error) list = r.data||[];
-  }catch(e){}
-
-  if(!list.length){ box.innerHTML='<div class="empty">Никого не нашли</div>'; return; }
-
-  let h = '';
-  for(let i=0;i<list.length;i++){
-    const p = list[i];
-    if(p.player_key===meKey) continue;
+var asb=$('addSearch');
+if(asb)asb.onclick=async function(){
+  if(!window.Friends){toast('friends.js не подключён');return;}
+  var nk=$('inNick').value.trim();
+  if(nk.replace('#','').length<2){toast('Минимум 2 символа');return;}
+  var box=$('addResults'); box.innerHTML='<div class="empty">Ищем…</div>';
+  var l=[];
+  try{var r=await sb.rpc('search_players',{p_q:nk,p_limit:15});if(!r.error)l=r.data||[];}catch(e){}
+  if(!l.length){box.innerHTML='<div class="empty">Никого не нашли</div>';return;}
+  var h='';
+  for(var i=0;i<l.length;i++){
+    var p=l[i]; if(p.player_key===meKey)continue;
     h+='<div class="member"><div class="m-avatar">🎮</div><div class="m-info">';
-    h+='<div class="m-name">'+esc(p.display_name||'Игрок')+tagPill(p.tag,'player',p.display_name)+'</div>';
+    h+='<div class="m-name">'+esc(p.display_name||'Игрок')+pill(p.tag,'player',p.display_name)+'</div>';
     h+='<div class="m-role" style="color:#94a3b8">🏆 '+(p.cups||0)+'</div></div>';
     h+='<button class="mini add" data-pick="'+esc(p.player_key)+'" data-pickname="'+esc(p.display_name||'Игрок')+'">Добавить</button></div>';
   }
-  box.innerHTML = h || '<div class="empty">Никого не нашли</div>';
-  bindActions(box);
-
-  const picks = box.querySelectorAll('[data-pick]');
-  for(let i=0;i<picks.length;i++){
-    (function(b){
-      b.onclick = async function(){
-        const ok = await Friends.add(b.getAttribute('data-pick'), b.getAttribute('data-pickname'));
-        showToast(ok?'Добавлен в друзья':'Не удалось добавить');
-        if(ok){ $('addModal').classList.add('hidden'); await loadFriends(); }
-      };
-    })(picks[i]);
-  }
+  box.innerHTML=h||'<div class="empty">Никого не нашли</div>'; bind(box);
+  var pk=box.querySelectorAll('[data-pick]');
+  for(var k=0;k<pk.length;k++){(function(b){b.onclick=async function(){
+    var ok=await Friends.add(b.getAttribute('data-pick'),b.getAttribute('data-pickname'));
+    toast(ok?'Добавлен':'Не удалось'); if(ok){$('addModal').classList.add('hidden');await loadFriends();}};})(pk[k]);}
 };
 
-function watchChallenges(){
-  if(!window.Friends) return;
+function watchCh(){
+  if(!window.Friends||!Friends.watch)return;
   Friends.watch(function(c){
-    const o = document.createElement('div');
-    o.style.cssText = 'position:fixed;inset:0;background:rgba(2,6,23,.95);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center';
-    o.innerHTML = '<div style="max-width:330px;width:100%;background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #22c55e;border-radius:16px;padding:20px">'+
+    var o=document.createElement('div');
+    o.style.cssText='position:fixed;inset:0;background:rgba(2,6,23,.95);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center';
+    o.innerHTML='<div style="max-width:330px;width:100%;background:#1e293b;border:2px solid #22c55e;border-radius:16px;padding:20px">'+
       '<div style="font-size:40px;margin-bottom:8px">⚔️</div>'+
       '<div id="cnm" style="font-size:15px;font-weight:900;margin-bottom:6px"></div>'+
       '<div style="font-size:12px;color:#94a3b8;margin-bottom:14px">Вызывает тебя на дружескую партию</div>'+
       '<div style="display:flex;gap:8px">'+
-      '<button id="cNo" style="flex:1;padding:12px;border:0;border-radius:10px;background:linear-gradient(145deg,#ef4444,#991b1b);color:#fff;font-weight:900;font-size:13px">Отклонить</button>'+
-      '<button id="cYes" style="flex:1;padding:12px;border:0;border-radius:10px;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-weight:900;font-size:13px">Играть</button>'+
+      '<button id="cNo" style="flex:1;padding:12px;border:0;border-radius:10px;background:#991b1b;color:#fff;font-weight:900;font-size:13px">Отклонить</button>'+
+      '<button id="cYes" style="flex:1;padding:12px;border:0;border-radius:10px;background:#15803d;color:#fff;font-weight:900;font-size:13px">Играть</button>'+
       '</div></div>';
     document.body.appendChild(o);
-    o.querySelector('#cnm').textContent = c.from_name||'Игрок';
-
-    let closed = false;
-    const chk = setInterval(async function(){
-      if(closed) return;
-      const st = await Friends.status(c.id);
-      if(!st || st.status!=='pending'){ closed=true; clearInterval(chk); o.remove(); }
-    }, 3000);
-
-    function close(){ closed=true; clearInterval(chk); o.remove(); }
-
-    o.querySelector('#cNo').onclick = async function(){ close(); await Friends.answer(c.id,'declined'); };
-    o.querySelector('#cYes').onclick = async function(){
-      close();
-      const r = await Friends.answer(c.id,'accepted');
-      if(!r || !r.accepted) return;
-      Friends.play(c.id,'guest',c.from_key,c.from_name,c.from_cups,c.arena);
-    };
+    o.querySelector('#cnm').textContent=c.from_name||'Игрок';
+    var closed=false;
+    var chk=setInterval(async function(){
+      if(closed)return;
+      var st=await Friends.status(c.id);
+      if(!st||st.status!=='pending'){closed=true;clearInterval(chk);o.remove();}},3000);
+    function cl(){closed=true;clearInterval(chk);o.remove();}
+    o.querySelector('#cNo').onclick=async function(){cl();await Friends.answer(c.id,'declined');};
+    o.querySelector('#cYes').onclick=async function(){
+      cl(); var r=await Friends.answer(c.id,'accepted');
+      if(!r||!r.accepted)return;
+      Friends.play(c.id,'guest',c.from_key,c.from_name,c.from_cups,c.arena);};
   });
 }
 
-function handleDeepLink(){
-  const p = new URLSearchParams(location.search);
-  const clan = p.get('clan');
-  const player = p.get('player');
-  if(!clan && !player) return;
-
-  const q = String(clan||player||'').replace(/^#/,'');
-
-  setTab('clan');
-
-  if(clan){
-    if(myMember && myClan && (myClan.tag===q || String(myClan.id)===q)){
-      openClanModal();
-      showToast('Ты уже в этом клане');
-    } else {
-      openSearch('clans',q);
-    }
-  } else {
-    openSearch('players',q);
-    setTimeout(function(){ openProfile(q); }, 600);
+function findCode(code){
+  var up=String(code||'').toUpperCase();
+  for(var i=0;i<allClans.length;i++){
+    if(String(allClans[i].tag||'').toUpperCase()===up)return allClans[i];
+    if(String(allClans[i].id)===String(code))return allClans[i];
   }
-
-  history.replaceState(null,'',location.pathname);
+  return null;
 }
 
-buildEmblems();
-boot();
-setTimeout(watchChallenges, 1500);
+async function deepLink(){
+  var p=new URLSearchParams(location.search);
+  var clan=p.get('clan'), player=p.get('player');
+  if(!clan&&!player)return;
+  var q=String(clan||player||'').replace(/^#/,'');
+  history.replaceState(null,'',location.pathname);
 
-document.addEventListener('visibilitychange', function(){
-  if(!document.hidden){ loadAll(); loadFriends(); }
+  if(clan){
+    setTab('clan');
+    if(myMember&&myClan&&(String(myClan.tag||'').toUpperCase()===q.toUpperCase()||String(myClan.id)===q)){
+      previewClan=null; $('ciTitle').textContent='Клан';
+      drawMine(); $('clanInfoModal').classList.remove('hidden');
+      toast('Ты уже в этом клане'); return;
+    }
+    var f=findCode(q);
+    if(f){openPreview(f.id); toast('Ты пока не в этом клане'); return;}
+    var r=await findClan(q);
+    if(r){
+      var c={id:r.id,name:r.name,tag:r.code,emblem:r.emblem,description:r.description,owner_key:r.owner_key};
+      var inL=false;
+      for(var i=0;i<allClans.length;i++)if(String(allClans[i].id)===String(c.id))inL=true;
+      if(!inL)allClans.push(c);
+      openPreview(c.id); toast('Ты пока не в этом клане'); return;
+    }
+    toast('Клан не найден');
+  } else {
+    setTab('clan');
+    openSearch('players',q);
+    setTimeout(function(){openProfile(q);},600);
+  }
+}
+
+buildEmb();
+drawSafe();
+boot();
+setTimeout(watchCh,1500);
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden){try{loadAll();loadFriends();}catch(e){}}
 });
 </script>
 </body>
