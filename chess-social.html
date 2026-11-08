@@ -5,18 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Chess Royale — Клан</title>
-
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Chess Royale">
 <meta property="og:title" content="Chess Royale — шахматы на аренах">
 <meta property="og:description" content="Вступай в клан, вызывай друзей на партию, поднимайся по аренам.">
-<meta property="og:image" content="https://ВАШ-САЙТ/IMG_20261108_042932_946.jpg">
+<meta property="og:image" content="ВАШ-САЙТ/IMG_20261108_042932_946.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:url" content="https://ВАШ-САЙТ/chess-social.html">
+<meta property="og:url" content="ВАШ-САЙТ/chess-social.html">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://ВАШ-САЙТ/IMG_20261108_042932_946.jpg">
-
+<meta name="twitter:image" content="ВАШ-САЙТ/IMG_20261108_042932_946.jpg">
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
@@ -32,21 +30,19 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .tabs{display:flex;gap:6px;padding:6px 12px 10px}
 .tab{flex:1;padding:10px 4px;border-radius:10px;border:1px solid #334155;background:linear-gradient(145deg,#1e293b,#0f172a);color:#94a3b8;font-size:12.5px;font-weight:900;cursor:pointer}
 .tab.on{background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000;border-color:#fff}
-.banner{margin:0 12px 12px;padding:12px 14px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#5b21b6);display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 6px 18px rgba(124,58,237,.35)}
+.banner{margin:0 12px 12px;padding:12px 14px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#5b21b6);display:flex;align-items:center;justify-content:space-between;gap:10px}
 .banner-text{font-size:13px;font-weight:900;line-height:1.3}
 .banner-btn{background:#fff;color:#4c1d95;border:0;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap}
 #app{padding:0 12px 20px}
-.search-wide{width:100%;padding:13px;border-radius:12px;border:2px solid #334155;background:linear-gradient(145deg,#1e293b,#0f172a);color:#ffcc00;font-size:13.5px;font-weight:900;cursor:pointer;margin-bottom:12px;letter-spacing:.3px}
+.search-wide{width:100%;padding:13px;border-radius:12px;border:2px solid #334155;background:linear-gradient(145deg,#1e293b,#0f172a);color:#ffcc00;font-size:13.5px;font-weight:900;cursor:pointer;margin-bottom:12px}
 .search-box{margin-bottom:8px}
 .search-box input{width:100%;padding:12px 14px;border-radius:11px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none;user-select:text;-webkit-user-select:text}
-.search-box input:focus{border-color:#3b82f6}
 .chips{display:flex;gap:6px;margin-top:8px}
 .chip{flex:1;padding:9px;border-radius:9px;border:1px solid #334155;background:#0f172a;color:#94a3b8;font-size:12px;font-weight:900;cursor:pointer}
 .chip.on{background:linear-gradient(145deg,#ffcc00,#ff9500);color:#000;border-color:#fff}
 .section-title{text-align:center;font-size:12.5px;font-weight:900;letter-spacing:1px;color:#cbd5e1;margin:14px 0 12px;display:flex;align-items:center;gap:10px}
 .section-title::before,.section-title::after{content:'';flex:1;height:1px;background:#334155}
-.tagpill{font-size:10px;font-weight:900;color:#000;background:linear-gradient(145deg,#ffcc00,#ff9500);padding:1px 6px;border-radius:6px;margin-left:5px;letter-spacing:.3px;white-space:nowrap;cursor:pointer;display:inline-block}
-.tagpill:active{transform:scale(.94)}
+.tagpill{font-size:10px;font-weight:900;color:#000;background:linear-gradient(145deg,#ffcc00,#ff9500);padding:1px 6px;border-radius:6px;margin-left:5px;white-space:nowrap;cursor:pointer;display:inline-block}
 .clan-card{display:flex;align-items:center;gap:10px;background:linear-gradient(145deg,#1e293b,#131c2e);border:2px solid #334155;border-radius:14px;padding:12px;margin-bottom:10px}
 .clan-emblem{width:46px;height:46px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.25)}
 .clan-info{flex:1;min-width:0}
@@ -54,18 +50,17 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .clan-sub{font-size:11px;color:#94a3b8;margin-top:2px}
 .clan-join{border:0;border-radius:10px;padding:9px 13px;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap}
 .clan-join:disabled{background:#334155;color:#64748b;opacity:.75}
-.btn-wide{width:100%;padding:14px;border:0;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;color:#fff;background:linear-gradient(145deg,#22c55e,#15803d);box-shadow:0 6px 16px rgba(34,197,94,.3);margin-top:8px}
-.btn-wide.grey{background:linear-gradient(145deg,#475569,#1e293b);box-shadow:none}
-.btn-wide.blue{background:linear-gradient(145deg,#3b82f6,#1d4ed8);box-shadow:0 6px 16px rgba(59,130,246,.3)}
-.clan-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;cursor:pointer;box-shadow:0 8px 20px rgba(245,158,11,.25)}
-.clan-bar:active{transform:scale(.99)}
+.btn-wide{width:100%;padding:14px;border:0;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;color:#fff;background:linear-gradient(145deg,#22c55e,#15803d);margin-top:8px}
+.btn-wide.grey{background:linear-gradient(145deg,#475569,#1e293b)}
+.btn-wide.blue{background:linear-gradient(145deg,#3b82f6,#1d4ed8)}
+.clan-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;cursor:pointer}
 .cb-emblem{width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.6)}
 .cb-info{flex:1;min-width:0}
 .cb-name{font-size:14.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cb-sub{font-size:10.5px;color:#fff3d6;margin-top:2px;font-weight:700}
 .cb-chev{font-size:22px;color:#fff;opacity:.85;line-height:1;margin-left:2px}
 .clan-acts{display:flex;gap:8px;margin:8px 0 10px}
-.clan-act{flex:1;padding:10px 6px;border-radius:11px;border:2px solid #334155;background:linear-gradient(145deg,#1e293b,#0f172a);font-size:12px;font-weight:900;color:#cbd5e1;cursor:pointer;letter-spacing:.2px}
+.clan-act{flex:1;padding:10px 6px;border-radius:11px;border:2px solid #334155;background:linear-gradient(145deg,#1e293b,#0f172a);font-size:12px;font-weight:900;color:#cbd5e1;cursor:pointer}
 .clan-act.red{color:#fca5a5}
 .clan-act.search{color:#ffcc00}
 .desc-card{background:linear-gradient(145deg,#131c2e,#0f172a);border:1px solid #334155;border-radius:12px;padding:11px 12px;margin-bottom:10px}
@@ -75,7 +70,6 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .desc-text{font-size:12.5px;line-height:1.45;color:#cbd5e1;white-space:pre-wrap;word-break:break-word}
 .desc-text.empty{color:#475569;font-style:italic}
 .desc-input{width:100%;height:76px;resize:none;padding:10px 12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:13px;line-height:1.45;outline:none;user-select:text;-webkit-user-select:text;font-family:inherit}
-.desc-input:focus{border-color:#3b82f6}
 .desc-count{font-size:10px;color:#475569;text-align:right;margin-top:4px}
 .desc-row{display:flex;gap:8px;margin-top:8px}
 .desc-row button{flex:1;padding:11px;border:0;border-radius:10px;font-size:12.5px;font-weight:900;color:#fff;cursor:pointer}
@@ -83,7 +77,7 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 #descSave{background:linear-gradient(145deg,#22c55e,#15803d)}
 .desc-err{font-size:11px;color:#f87171;margin-top:6px;line-height:1.35}
 .member{display:flex;align-items:center;gap:8px;background:linear-gradient(145deg,#1e293b,#131c2e);border:1px solid #334155;border-radius:12px;padding:10px 12px;margin-bottom:8px}
-.member.me{border-color:#22c55e;box-shadow:0 0 14px rgba(34,197,94,.25)}
+.member.me{border-color:#22c55e}
 .m-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(0,0,0,.4);border:1px solid #475569}
 .m-info{flex:1;min-width:0;cursor:pointer}
 .m-name{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -112,7 +106,7 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .modal-box{width:100%;max-width:380px;background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #334155;border-radius:16px;padding:18px;max-height:86vh;overflow-y:auto}
 .modal-title{font-size:17px;font-weight:900;margin-bottom:12px;text-align:center}
 .ci-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.ci-emblem{width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;box-shadow:0 0 20px rgba(245,158,11,.4)}
+.ci-emblem{width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24}
 .ci-name{font-size:16px;font-weight:900;line-height:1.25}
 .ci-sub{font-size:11px;color:#94a3b8;margin-top:3px}
 .ci-close{width:32px;height:32px;border-radius:50%;border:1px solid #475569;background:#1e293b;color:#cbd5e1;font-size:14px;cursor:pointer;flex-shrink:0}
@@ -121,9 +115,9 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .ci-stats{display:flex;gap:8px;margin-bottom:12px}
 .ci-stat{flex:1;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:9px 6px;text-align:center}
 .ci-stat b{display:block;font-size:14px;color:#ffcc00;font-weight:900}
-.ci-stat span{font-size:9.5px;color:#64748b;font-weight:700;letter-spacing:.3px}
+.ci-stat span{font-size:9.5px;color:#64748b;font-weight:700}
 .ci-bar{height:8px;background:#020617;border-radius:5px;overflow:hidden;margin-bottom:12px}
-.ci-bar div{height:100%;background:linear-gradient(90deg,#f59e0b,#ffcc00);transition:width .3s}
+.ci-bar div{height:100%;background:linear-gradient(90deg,#f59e0b,#ffcc00)}
 .emblem-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px}
 .emblem-opt{width:42px;height:42px;border-radius:12px;border:2px solid #334155;background:#0f172a;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .emblem-opt.on{border-color:#22c55e;background:#064e3b}
@@ -272,1444 +266,919 @@ const sb = supabase.createClient(
   'https://qnpriwfxzuoymoumdtrl.supabase.co',
   'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF'
 );
-
 const $ = function (id){ return document.getElementById(id); };
-
 const MAX_MEMBERS = 30;
 const EMBLEMS = ['🛡️','👑','⚔️','🐺','🦅','🔥','💀','🐉','⭐','🦁','⚡','♟️'];
 const EMOJI = ['😀','😂','😍','🔥','⚔️','🏆','🤝','👑','💀','🛡️','⚡','😭','👍','🎯','♟️','🙌','😎','🤔','💪','🎉'];
+const BAD_ROOTS = ['хуй','хуя','хую','хуё','хуе','пизд','ебал','ебан','ебат','ебуч','ебло','ебли','бля',
+'мудак','мудо','мудил','пидор','пидар','пидр','педик','залуп','дроч','манда','шлюх','гандон','гондо',
+'сука','суки','суке','суку','сучк','гнида','уёб','уеб','нахуй','нахуя','похуй','похую','жоп','срак',
+'срат','говн','дерьм','твар','мраз','долбоёб','долбоеб','выеб','въеб','заёб','заеб','наёб','наеб',
+'отъеб','подъеб','разъеб','съеб','fuck','phuck','shit','bitch','cunt','asshole','arsehole','bastard',
+'slut','whore','pussy','nigg','retard','dumbass','dipshit','wanker','douche','bollock','puta','puto',
+'mierda','joder','cabron','pendejo','scheiss','fick','hurensohn','wichser','arschloch','kurwa','chuj',
+'pierdol','jebac'];
 
-const BAD_ROOTS = [
-  'хуй','хуя','хую','хуё','хуе','пизд',
-  'ебал','ебан','ебат','ебуч','ебло','ебли','бля',
-  'мудак','мудо','мудил','пидор','пидар','пидр','педик',
-  'залуп','дроч','манда','шлюх','гандон','гондо',
-  'сука','суки','суке','суку','сучк','гнида',
-  'уёб','уеб','нахуй','нахуя','похуй','похую',
-  'жоп','срак','срат','говн','дерьм','твар','мраз',
-  'долбоёб','долбоеб','выеб','въеб','заёб','заеб',
-  'наёб','наеб','отъеб','подъеб','разъеб','съеб',
-  'fuck','phuck','shit','bitch','cunt','asshole','arsehole',
-  'bastard','slut','whore','pussy','nigg','retard','dumbass',
-  'dipshit','wanker','douche','bollock',
-  'puta','puto','mierda','joder','cabron','pendejo',
-  'scheiss','fick','hurensohn','wichser','arschloch',
-  'kurwa','chuj','pierdol','jebac'
-];
-
-function chatNormalize(text){
-  let t = String(text || '').toLowerCase();
-  const map = { '0':'o','1':'i','3':'e','4':'a','5':'s','7':'t','@':'a','$':'s','!':'i' };
-  let out = '';
-  for (let i = 0; i < t.length; i++){
-    const ch = t.charAt(i);
-    out += (map[ch] !== undefined) ? map[ch] : ch;
-  }
-  out = out.replace(/ё/g, 'е').replace(/[^a-zа-я]/g, '');
-  return out;
+function chatNorm(t){
+  t = String(t||'').toLowerCase();
+  const m = {'0':'o','1':'i','3':'e','4':'a','5':'s','7':'t','@':'a','$':'s','!':'i'};
+  let o = '';
+  for (let i=0;i<t.length;i++){ const c=t.charAt(i); o += (m[c]!==undefined)?m[c]:c; }
+  return o.replace(/ё/g,'е').replace(/[^a-zа-я]/g,'');
 }
-
-function hasBadWord(text){
-  const t = chatNormalize(text);
-  if (!t) return false;
-  for (let i = 0; i < BAD_ROOTS.length; i++){
-    if (t.indexOf(BAD_ROOTS[i]) >= 0) return true;
-  }
+function hasBadWord(t){
+  const s = chatNorm(t);
+  if (!s) return false;
+  for (let i=0;i<BAD_ROOTS.length;i++) if (s.indexOf(BAD_ROOTS[i])>=0) return true;
   return false;
 }
 
-let meKey = '';
-let meName = 'Игрок';
-let meCups = 0;
-let myTag = '';
+let meKey='', meName='Игрок', meCups=0, myTag='';
+let myMember=null, myClan=null, allClans=[], allMembers=[], tagMap={};
+let friendsList=[], shareRows=[], activeTab='clan', pickedEmblem='🛡️';
+let searchQ='', searchMode='clans', descEditing=false, joining=false;
+let chatTimer=null, chatMsgs=[], toastTimer=null;
 
-let myMember = null;
-let myClan = null;
-let allClans = [];
-let allMembers = [];
-let tagMap = {};
-
-let friendsList = [];
-let shareRows = [];
-
-let activeTab = 'clan';
-let pickedEmblem = '🛡️';
-
-let searchQ = '';
-let searchMode = 'clans';
-
-let descEditing = false;
-let joining = false;
-
-let chatTimer = null;
-let chatMsgs = [];
-
-let toastTimer = null;
-function showToast(text){
-  const t = $('toast');
-  t.textContent = text;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(function (){ t.classList.remove('show'); }, 2400);
+function showToast(t){
+  const el=$('toast'); el.textContent=t; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(function(){el.classList.remove('show');},2400);
 }
-
-function showErr(text){
-  const box = $('errBox');
-  if (!text){ box.classList.add('hidden'); box.textContent = ''; return; }
-  box.textContent = text;
-  box.classList.remove('hidden');
+function showErr(t){
+  const b=$('errBox');
+  if(!t){ b.classList.add('hidden'); b.textContent=''; return; }
+  b.textContent=t; b.classList.remove('hidden');
 }
-
 function playerKey(){
-  const tgId = localStorage.getItem('tgId');
-  if (tgId) return 'tg:' + tgId;
-  const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
-  if (email) return 'email:' + email.toLowerCase();
-  let anon = localStorage.getItem('arenaAnonId');
-  if (!anon){
-    anon = 'anon:' + Math.random().toString(36).slice(2, 10);
-    localStorage.setItem('arenaAnonId', anon);
-  }
-  return anon;
+  const tg=localStorage.getItem('tgId'); if(tg) return 'tg:'+tg;
+  const em=localStorage.getItem('currentEmail')||localStorage.getItem('linkedEmail');
+  if(em) return 'email:'+em.toLowerCase();
+  let a=localStorage.getItem('arenaAnonId');
+  if(!a){ a='anon:'+Math.random().toString(36).slice(2,10); localStorage.setItem('arenaAnonId',a); }
+  return a;
 }
-
-function playerName(){
-  return localStorage.getItem('userName') || 'Игрок';
-}
-
+function playerName(){ return localStorage.getItem('userName')||'Игрок'; }
 function esc(s){
-  return String(s || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-function tagPill(code, kind, name){
-  if (!code) return '';
-  return '<span class="tagpill" data-copytag="' + esc(code) +
-         '" data-copykind="' + esc(kind || 'player') +
-         '" data-copyname="' + esc(name || '') + '">#' + esc(code) + '</span>';
+function tagPill(code,kind,name){
+  if(!code) return '';
+  return '<span class="tagpill" data-copytag="'+esc(code)+'" data-copykind="'+esc(kind||'player')+
+         '" data-copyname="'+esc(name||'')+'">#'+esc(code)+'</span>';
 }
-
-function baseUrl(){
-  return location.origin + location.pathname;
+function baseUrl(){ return location.origin+location.pathname; }
+function share(url,phrase){
+  if(window.CopyShare) CopyShare.shareLink(url,phrase); else showToast('Не удалось поделиться');
 }
-
-function share(url, phrase){
-  if (window.CopyShare) CopyShare.shareLink(url, phrase);
-  else showToast('Не удалось поделиться');
-}
-
 function shareMe(){
-  if (!myTag){ showToast('Тег ещё не готов'); return; }
-  const url = baseUrl() + '?player=' + encodeURIComponent(myTag);
-  const phrases = [
-    'Сыграем? Мой тег в Chess Royale — #' + myTag + '. Добавляйся в друзья!',
-    'Вызываю тебя на партию ⚔️ Мой тег — #' + myTag + '. Заходи в игру.',
-    'Есть доска, есть время. Мой тег — #' + myTag + ', добавляйся и сыграем.',
-    'Хочу с тобой партию. Мой тег в игре — #' + myTag + '. Жду вызов.'
-  ];
-  share(url, phrases[Math.floor(Math.random() * phrases.length)]);
+  if(!myTag){ showToast('Тег ещё не готов'); return; }
+  const u=baseUrl()+'?player='+encodeURIComponent(myTag);
+  const p=['Сыграем? Мой тег в Chess Royale — #'+myTag+'. Добавляйся в друзья!',
+  'Вызываю тебя на партию ⚔️ Мой тег — #'+myTag+'. Заходи в игру.',
+  'Есть доска, есть время. Мой тег — #'+myTag+', добавляйся и сыграем.',
+  'Хочу с тобой партию. Мой тег в игре — #'+myTag+'. Жду вызов.'];
+  share(u,p[Math.floor(Math.random()*p.length)]);
 }
-
-function shareClan(name, code){
-  if (!code){ showToast('У клана ещё нет тега'); return; }
-  const url = baseUrl() + '?clan=' + encodeURIComponent(code);
-  const phrases = [
-    'Клан «' + name + '» набирает своих. Вступай по тегу #' + code + ' — побеждаем вместе!',
-    'В «' + name + '» не бросают в партии. Заходи по ссылке и вступай ⚔️',
-    '«' + name + '» — клан, где растут вместе. Тег #' + code + ', ждём тебя.',
-    'Ищешь своих? «' + name + '» ждёт. Тег #' + code + ' — вступай.'
-  ];
-  share(url, phrases[Math.floor(Math.random() * phrases.length)]);
+function shareClan(name,code){
+  if(!code){ showToast('У клана ещё нет тега'); return; }
+  const u=baseUrl()+'?clan='+encodeURIComponent(code);
+  const p=['Клан «'+name+'» набирает своих. Вступай по тегу #'+code+' — побеждаем вместе!',
+  'В «'+name+'» не бросают в партии. Заходи по ссылке и вступай ⚔️',
+  '«'+name+'» — клан, где растут вместе. Тег #'+code+', ждём тебя.',
+  'Ищешь своих? «'+name+'» ждёт. Тег #'+code+' — вступай.'];
+  share(u,p[Math.floor(Math.random()*p.length)]);
 }
-
 function copyTag(el){
-  const code = el.getAttribute('data-copytag');
-  const kind = el.getAttribute('data-copykind') || 'player';
-  const name = el.getAttribute('data-copyname') || '';
-  if (!code) return;
-
-  const url = baseUrl() + (kind === 'clan' ? '?clan=' : '?player=') + encodeURIComponent(code);
-  const phrase = (kind === 'clan')
-    ? 'Клан «' + name + '» — тег #' + code + '. Вступай, побеждаем вместе!'
-    : 'Мой тег в Chess Royale — #' + code + '. Добавляйся и сыграем!';
-
-  if (window.CopyShare) CopyShare.show('#' + code, url, phrase);
+  const code=el.getAttribute('data-copytag');
+  const kind=el.getAttribute('data-copykind')||'player';
+  const name=el.getAttribute('data-copyname')||'';
+  if(!code) return;
+  const u=baseUrl()+(kind==='clan'?'?clan=':'?player=')+encodeURIComponent(code);
+  const ph=(kind==='clan')
+    ? 'Клан «'+name+'» — тег #'+code+'. Вступай, побеждаем вместе!'
+    : 'Мой тег в Chess Royale — #'+code+'. Добавляйся и сыграем!';
+  if(window.CopyShare) CopyShare.show('#'+code,u,ph);
 }
-
-/* ================= ЗАГРУЗКА ================= */
+function openProfile(k){ if(window.Profile&&k) Profile.open(k); }
 
 async function boot(){
-  meKey = playerKey();
-  meName = playerName();
-  meCups = parseInt(localStorage.getItem('cr_trophies') || '0', 10) || 0;
-  $('cupsTop').textContent = meCups;
-
-  try {
-    const res = await sb.rpc('arena_ensure_player', {
-      p_key: meKey, p_name: meName, p_seed: 0
-    });
-    if (!res.error && res.data){
-      meCups = res.data.cups || 0;
-      if (res.data.display_name) meName = res.data.display_name;
-    }
-  } catch (e){}
-
-  $('cupsTop').textContent = meCups;
-  localStorage.setItem('cr_trophies', String(meCups));
-
-  try {
-    const t = await sb.rpc('ensure_player_tag', { p_key: meKey });
-    if (!t.error && t.data) myTag = String(t.data);
-  } catch (e){}
-
-  if (!myTag) myTag = localStorage.getItem('cr_tag') || '';
-  if (myTag) localStorage.setItem('cr_tag', myTag);
-
-  $('myTag').textContent = myTag ? '#' + myTag : '#—';
-
-  await loadAll();
-  await loadFriends();
-  handleDeepLink();
+  meKey=playerKey(); meName=playerName();
+  meCups=parseInt(localStorage.getItem('cr_trophies')||'0',10)||0;
+  $('cupsTop').textContent=meCups;
+  try{
+    const r=await sb.rpc('arena_ensure_player',{p_key:meKey,p_name:meName,p_seed:0});
+    if(!r.error&&r.data){ meCups=r.data.cups||0; if(r.data.display_name) meName=r.data.display_name; }
+  }catch(e){}
+  $('cupsTop').textContent=meCups;
+  localStorage.setItem('cr_trophies',String(meCups));
+  try{
+    const t=await sb.rpc('ensure_player_tag',{p_key:meKey});
+    if(!t.error&&t.data) myTag=String(t.data);
+  }catch(e){}
+  if(!myTag) myTag=localStorage.getItem('cr_tag')||'';
+  if(myTag) localStorage.setItem('cr_tag',myTag);
+  $('myTag').textContent=myTag?'#'+myTag:'#—';
+  await loadAll(); await loadFriends(); handleDeepLink();
 }
 
 async function loadAll(){
   showErr('');
-
-  const membersRes = await sb.from('clan_members').select('*');
-  if (membersRes.error){
-    showErr('Таблицы кланов не созданы.\n' + membersRes.error.message);
-    allMembers = [];
-  } else {
-    allMembers = membersRes.data || [];
-  }
-
-  const clansRes = await sb.from('clans').select('*').order('created_at', { ascending: false });
-  allClans = clansRes.error ? [] : (clansRes.data || []);
-
+  const mr=await sb.from('clan_members').select('*');
+  if(mr.error){ showErr('Таблицы кланов не созданы.\n'+mr.error.message); allMembers=[]; }
+  else allMembers=mr.data||[];
+  const cr=await sb.from('clans').select('*').order('created_at',{ascending:false});
+  allClans=cr.error?[]:(cr.data||[]);
   await loadTagMap();
-
-  myMember = null;
-  for (let i = 0; i < allMembers.length; i++){
-    if (allMembers[i].player_key === meKey){ myMember = allMembers[i]; break; }
-  }
-
-  myClan = null;
-  if (myMember){
-    for (let i = 0; i < allClans.length; i++){
-      if (allClans[i].id === myMember.clan_id){ myClan = allClans[i]; break; }
-    }
-  }
-
+  myMember=null;
+  for(let i=0;i<allMembers.length;i++){ if(allMembers[i].player_key===meKey){ myMember=allMembers[i]; break; } }
+  myClan=null;
+  if(myMember){ for(let i=0;i<allClans.length;i++){ if(allClans[i].id===myMember.clan_id){ myClan=allClans[i]; break; } } }
   render();
 }
 
 async function loadTagMap(){
-  tagMap = {};
-  const keys = [];
-  for (let i = 0; i < allMembers.length; i++){
-    if (keys.indexOf(allMembers[i].player_key) < 0) keys.push(allMembers[i].player_key);
-  }
-  if (!keys.length) return;
-
-  const r = await sb.from('arena_players').select('player_key,tag').in('player_key', keys);
-  if (r.error) return;
-
-  for (let i = 0; i < (r.data || []).length; i++){
-    const p = r.data[i];
-    if (p.tag) tagMap[p.player_key] = p.tag;
-  }
+  tagMap={};
+  const keys=[];
+  for(let i=0;i<allMembers.length;i++) if(keys.indexOf(allMembers[i].player_key)<0) keys.push(allMembers[i].player_key);
+  if(!keys.length) return;
+  const r=await sb.from('arena_players').select('player_key,tag').in('player_key',keys);
+  if(r.error) return;
+  for(let i=0;i<(r.data||[]).length;i++){ const p=r.data[i]; if(p.tag) tagMap[p.player_key]=p.tag; }
 }
 
 async function loadFriends(){
-  if (!window.Friends){ friendsList = []; return; }
-
-  const list = await Friends.list();
-  const keys = [];
-  for (let i = 0; i < list.length; i++) keys.push(list[i].friend_key);
-
-  const info = {};
-
-  if (keys.length){
-    const r = await sb.from('arena_players')
-      .select('player_key,display_name,cups,tag')
-      .in('player_key', keys);
-    if (!r.error){
-      for (let i = 0; i < (r.data || []).length; i++){
-        const p = r.data[i];
-        info[p.player_key] = p;
-      }
-    }
+  if(!window.Friends){ friendsList=[]; return; }
+  const list=await Friends.list();
+  const keys=[];
+  for(let i=0;i<list.length;i++) keys.push(list[i].friend_key);
+  const info={};
+  if(keys.length){
+    const r=await sb.from('arena_players').select('player_key,display_name,cups,tag').in('player_key',keys);
+    if(!r.error) for(let i=0;i<(r.data||[]).length;i++){ const p=r.data[i]; info[p.player_key]=p; }
   }
-
-  friendsList = [];
-
-  for (let i = 0; i < list.length; i++){
-    const f = list[i];
-    const p = info[f.friend_key];
+  friendsList=[];
+  for(let i=0;i<list.length;i++){
+    const f=list[i], p=info[f.friend_key];
     friendsList.push({
-      key:  f.friend_key,
-      name: (p && p.display_name) || f.friend_name || 'Игрок',
-      cups: (p && p.cups) || 0,
-      tag:  (p && p.tag) || ''
+      key:f.friend_key,
+      name:(p&&p.display_name)||f.friend_name||'Игрок',
+      cups:(p&&p.cups)||0,
+      tag:(p&&p.tag)||''
     });
   }
-
   render();
 }
 
 function membersOf(clanId){
-  const out = [];
-  const seen = {};
-  for (let i = 0; i < allMembers.length; i++){
-    const m = allMembers[i];
-    if (m.clan_id !== clanId) continue;
-    if (seen[m.player_key]) continue;
-    seen[m.player_key] = true;
-    out.push(m);
+  const out=[], seen={};
+  for(let i=0;i<allMembers.length;i++){
+    const m=allMembers[i];
+    if(m.clan_id!==clanId) continue;
+    if(seen[m.player_key]) continue;
+    seen[m.player_key]=1; out.push(m);
   }
-  out.sort(function (a, b){
-    if (a.role === 'owner' && b.role !== 'owner') return -1;
-    if (b.role === 'owner' && a.role !== 'owner') return 1;
-    return (b.cups || 0) - (a.cups || 0);
+  out.sort(function(a,b){
+    if(a.role==='owner'&&b.role!=='owner') return -1;
+    if(b.role==='owner'&&a.role!=='owner') return 1;
+    return (b.cups||0)-(a.cups||0);
   });
   return out;
 }
-
-function cupsOf(clanId){
-  const mem = membersOf(clanId);
-  let sum = 0;
-  for (let i = 0; i < mem.length; i++) sum += (mem[i].cups || 0);
-  return sum;
-}
-
-function isOwnerOfMyClan(){
-  return !!(myClan && myClan.owner_key === meKey);
-}
-
-/* ================= ВКЛАДКИ ================= */
+function cupsOf(id){ const m=membersOf(id); let s=0; for(let i=0;i<m.length;i++) s+=(m[i].cups||0); return s; }
+function isOwnerOfMyClan(){ return !!(myClan&&myClan.owner_key===meKey); }
 
 function setTab(t){
-  activeTab = t;
-  descEditing = false;
-  const tabs = document.querySelectorAll('.tab');
-  for (let i = 0; i < tabs.length; i++){
-    tabs[i].classList.toggle('on', tabs[i].getAttribute('data-tab') === t);
-  }
+  activeTab=t; descEditing=false;
+  const tabs=document.querySelectorAll('.tab');
+  for(let i=0;i<tabs.length;i++) tabs[i].classList.toggle('on',tabs[i].getAttribute('data-tab')===t);
   render();
 }
-
-const tabBtns = document.querySelectorAll('.tab');
-for (let i = 0; i < tabBtns.length; i++){
-  (function (el){
-    el.onclick = function (){ setTab(el.getAttribute('data-tab')); };
-  })(tabBtns[i]);
+const tabBtns=document.querySelectorAll('.tab');
+for(let i=0;i<tabBtns.length;i++){
+  (function(el){ el.onclick=function(){ setTab(el.getAttribute('data-tab')); }; })(tabBtns[i]);
 }
 
 function render(){
-  const app = $('app');
-  if (chatTimer){ clearInterval(chatTimer); chatTimer = null; }
-  $('banner').classList.toggle('hidden', !(activeTab === 'clan' && !myMember));
-  if (activeTab === 'clan') renderClanTab(app);
-  else renderFriendsTab(app);
+  const app=$('app');
+  if(chatTimer){ clearInterval(chatTimer); chatTimer=null; }
+  $('banner').classList.toggle('hidden',!(activeTab==='clan'&&!myMember));
+  if(activeTab==='clan') renderClanTab(app); else renderFriendsTab(app);
 }
 
-/* ================= КЛАН ================= */
-
 function renderClanTab(app){
-  let html = '';
-
-  if (myMember && myClan){
-    html += '<div class="clan-bar" id="clanBar">';
-    html += '<div class="cb-emblem">' + (myClan.emblem || '🛡️') + '</div>';
-    html += '<div class="cb-info">';
-    html += '<div class="cb-name">' + esc(myClan.name) + ' #' + esc(myClan.tag || '—') + '</div>';
-    html += '<div class="cb-sub">' + membersOf(myClan.id).length + ' / ' + MAX_MEMBERS + ' · 🏆 ' + cupsOf(myClan.id) + '</div>';
-    html += '</div><div class="cb-chev">›</div></div>';
-
-    html += '<div class="clan-acts">';
-    html += '<button class="clan-act red" id="leaveBtn">🚪 Покинуть</button>';
-    html += '<button class="clan-act search" id="searchBtn">🔍 Поиск</button>';
-    html += '</div>';
-
-    html += '<div class="desc-card">';
-    html += '<div class="desc-head"><span>О КЛАНЕ</span>';
-    if (isOwnerOfMyClan() && !descEditing){
-      html += '<button class="desc-edit-btn" id="descEditBtn">✏️ Изменить</button>';
-    }
-    html += '</div><div id="descBody"></div></div>';
-
-    html += '<div class="chat-box" id="chatBox"></div>';
-    html += '<div class="emoji-row" id="emojiRow"></div>';
-    html += '<div class="chat-row">';
-    html += '<input id="chatInput" maxlength="200" placeholder="Сообщение в клан…">';
-    html += '<button id="chatSend">➤</button></div>';
-    html += '<button class="btn-wide grey" id="shareReplayBtn">📤 Отправить повтор в чат</button>';
+  let h='';
+  if(myMember&&myClan){
+    h+='<div class="clan-bar" id="clanBar">';
+    h+='<div class="cb-emblem">'+(myClan.emblem||'🛡️')+'</div>';
+    h+='<div class="cb-info"><div class="cb-name">'+esc(myClan.name)+' #'+esc(myClan.tag||'—')+'</div>';
+    h+='<div class="cb-sub">'+membersOf(myClan.id).length+' / '+MAX_MEMBERS+' · 🏆 '+cupsOf(myClan.id)+'</div></div>';
+    h+='<div class="cb-chev">›</div></div>';
+    h+='<div class="clan-acts">';
+    h+='<button class="clan-act red" id="leaveBtn">🚪 Покинуть</button>';
+    h+='<button class="clan-act search" id="searchBtn">🔍 Поиск</button>';
+    h+='</div>';
+    h+='<div class="desc-card"><div class="desc-head"><span>О КЛАНЕ</span>';
+    if(isOwnerOfMyClan()&&!descEditing) h+='<button class="desc-edit-btn" id="descEditBtn">✏️ Изменить</button>';
+    h+='</div><div id="descBody"></div></div>';
+    h+='<div class="chat-box" id="chatBox"></div>';
+    h+='<div class="emoji-row" id="emojiRow"></div>';
+    h+='<div class="chat-row"><input id="chatInput" maxlength="200" placeholder="Сообщение в клан…">';
+    h+='<button id="chatSend">➤</button></div>';
+    h+='<button class="btn-wide grey" id="shareReplayBtn">📤 Отправить повтор в чат</button>';
   } else {
-    html += '<button class="search-wide" id="searchWide">🔍 Поиск кланов и игроков</button>';
-    html += clanListHtml();
+    h+='<button class="search-wide" id="searchWide">🔍 Поиск кланов и игроков</button>';
+    h+=clanListHtml();
   }
+  app.innerHTML=h;
 
-  app.innerHTML = html;
+  const sw=$('searchWide');
+  if(sw) sw.onclick=function(){ openSearch('clans',''); };
 
-  const sw = $('searchWide');
-  if (sw) sw.onclick = function (){ openSearch('clans', ''); };
-
-  if (myMember && myClan){
-    const bar = $('clanBar');
-    if (bar) bar.onclick = openClanModal;
-
-    const lb = $('leaveBtn');
-    if (lb) lb.onclick = leaveClan;
-
-    const s2 = $('searchBtn');
-    if (s2) s2.onclick = function (){ openSearch('players', ''); };
-
+  if(myMember&&myClan){
+    const bar=$('clanBar'); if(bar) bar.onclick=openClanModal;
+    const lb=$('leaveBtn'); if(lb) lb.onclick=leaveClan;
+    const s2=$('searchBtn'); if(s2) s2.onclick=function(){ openSearch('players',''); };
     renderDesc();
-
-    const row = $('emojiRow');
-    if (row){
-      for (let i = 0; i < EMOJI.length; i++){
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.textContent = EMOJI[i];
-        (function (ch){
-          b.onclick = function (){
-            const ip = $('chatInput');
-            if (!ip) return;
-            ip.value = (ip.value + ch).slice(0, 200);
-            ip.focus();
+    const row=$('emojiRow');
+    if(row){
+      for(let i=0;i<EMOJI.length;i++){
+        const b=document.createElement('button');
+        b.type='button'; b.textContent=EMOJI[i];
+        (function(ch){
+          b.onclick=function(){
+            const ip=$('chatInput'); if(!ip) return;
+            ip.value=(ip.value+ch).slice(0,200); ip.focus();
           };
         })(EMOJI[i]);
         row.appendChild(b);
       }
     }
-
-    const sbtn = $('chatSend');
-    if (sbtn) sbtn.onclick = sendChat;
-
-    const cin = $('chatInput');
-    if (cin){
-      cin.addEventListener('keydown', function (e){
-        if (e.key === 'Enter') sendChat();
-      });
-    }
-
-    const rbtn = $('shareReplayBtn');
-    if (rbtn) rbtn.onclick = openShare;
-
-    loadChat();
-    chatTimer = setInterval(loadChat, 4000);
+    const sbtn=$('chatSend'); if(sbtn) sbtn.onclick=sendChat;
+    const cin=$('chatInput');
+    if(cin) cin.addEventListener('keydown',function(e){ if(e.key==='Enter') sendChat(); });
+    const rbtn=$('shareReplayBtn'); if(rbtn) rbtn.onclick=openShare;
+    loadChat(); chatTimer=setInterval(loadChat,4000);
   }
-
   bindActions(app);
 }
 
-/* ================= ОПИСАНИЕ ================= */
-
 function renderDesc(){
-  const body = $('descBody');
-  if (!body || !myClan) return;
+  const body=$('descBody'); if(!body||!myClan) return;
+  const d=(myClan.description||'').trim();
 
-  const d = (myClan.description || '').trim();
-
-  if (descEditing && isOwnerOfMyClan()){
-    body.innerHTML =
-      '<textarea class="desc-input" id="descInput" maxlength="120" ' +
-      'placeholder="Расскажи, какой у вас клан — это видят все">' + esc(d) + '</textarea>' +
-      '<div class="desc-count"><span id="descLeft">' + (120 - d.length) + '</span>/120</div>' +
-      '<div class="desc-row">' +
-        '<button id="descCancel">Отмена</button>' +
-        '<button id="descSave">Сохранить</button>' +
-      '</div>' +
+  if(descEditing&&isOwnerOfMyClan()){
+    body.innerHTML='<textarea class="desc-input" id="descInput" maxlength="120" placeholder="Расскажи, какой у вас клан — это видят все">'+esc(d)+'</textarea>'+
+      '<div class="desc-count"><span id="descLeft">'+(120-d.length)+'</span>/120</div>'+
+      '<div class="desc-row"><button id="descCancel">Отмена</button><button id="descSave">Сохранить</button></div>'+
       '<div class="desc-err hidden" id="descErr"></div>';
-
-    const ta = $('descInput');
-    const left = $('descLeft');
-    if (ta && left){
-      ta.addEventListener('input', function (){
-        left.textContent = 120 - ta.value.length;
-      });
-      setTimeout(function (){ try { ta.focus(); } catch (e){} }, 80);
+    const ta=$('descInput'), left=$('descLeft');
+    if(ta&&left){
+      ta.addEventListener('input',function(){ left.textContent=120-ta.value.length; });
+      setTimeout(function(){ try{ ta.focus(); }catch(e){} },80);
     }
-
-    const c = $('descCancel');
-    if (c) c.onclick = function (){ descEditing = false; render(); };
-
-    const s = $('descSave');
-    if (s) s.onclick = saveDesc;
-
+    const c=$('descCancel'); if(c) c.onclick=function(){ descEditing=false; render(); };
+    const s=$('descSave'); if(s) s.onclick=saveDesc;
     return;
   }
 
-  body.innerHTML = d
-    ? '<div class="desc-text">' + esc(d) + '</div>'
-    : '<div class="desc-text empty">Описание пока не задано</div>';
-
-  const eb = $('descEditBtn');
-  if (eb) eb.onclick = function (){ descEditing = true; renderDesc(); };
-}
-
-function descFail(msg){
-  const e = $('descErr');
-  if (e){ e.textContent = msg; e.classList.remove('hidden'); }
-  else showToast(msg);
+  body.innerHTML=d?'<div class="desc-text">'+esc(d)+'</div>':'<div class="desc-text empty">Описание пока не задано</div>';
+  const eb=$('descEditBtn'); if(eb) eb.onclick=function(){ descEditing=true; renderDesc(); };
 }
 
 async function saveDesc(){
-  const ta = $('descInput');
-  if (!ta || !myClan) return;
+  const ta=$('descInput'); if(!ta||!myClan) return;
+  const d=ta.value.trim().slice(0,120);
+  const btn=$('descSave'); if(btn){ btn.disabled=true; btn.textContent='…'; }
+  let ok=false, why='';
 
-  const d = ta.value.trim().slice(0, 120);
-  const btn = $('descSave');
-  if (btn){ btn.disabled = true; btn.textContent = '…'; }
+  try{
+    const r=await sb.rpc('clan_set_description',{p_clan:myClan.id,p_key:meKey,p_desc:d});
+    if(r.error){ why=r.error.message||'ошибка RPC'; }
+    else if(r.data&&r.data.ok===false){ why=r.data.error||'отказ'; }
+    else ok=true;
+  }catch(e){ why='сеть'; }
 
-  let ok = false;
-  let why = '';
-
-  try {
-    const r = await sb.rpc('clan_set_description', {
-      p_clan: myClan.id,
-      p_key:  meKey,
-      p_desc: d
-    });
-
-    if (r.error){
-      why = r.error.message || 'ошибка RPC';
-      console.log('clan_set_description error:', why);
-    } else if (r.data && r.data.ok === false){
-      why = r.data.error || 'отказ';
-    } else {
-      ok = true;
-    }
-  } catch (e){
-    why = 'сеть';
-    console.log('clan_set_description threw:', e);
+  if(!ok){
+    try{
+      const u=await sb.from('clans').update({description:d}).eq('id',myClan.id);
+      if(!u.error) ok=true;
+      else if(!why) why=u.error.message;
+    }catch(e){}
   }
 
-  if (!ok){
-    try {
-      const u = await sb.from('clans').update({ description: d }).eq('id', myClan.id);
-      if (!u.error) ok = true;
-      else console.log('direct update error:', u.error.message);
-    } catch (e){}
-  }
+  if(btn){ btn.disabled=false; btn.textContent='Сохранить'; }
 
-  if (btn){ btn.disabled = false; btn.textContent = 'Сохранить'; }
-
-  if (!ok){
-    descFail('Не сохранилось: ' + why);
+  if(!ok){
+    const e=$('descErr');
+    if(e){ e.textContent='Не сохранилось: '+(why||'причина неизвестна'); e.classList.remove('hidden'); }
+    else showToast('Не удалось сохранить описание');
     return;
   }
 
-  myClan.description = d;
-  descEditing = false;
-
-  for (let i = 0; i < allClans.length; i++){
-    if (allClans[i].id === myClan.id) allClans[i].description = d;
-  }
-
+  myClan.description=d; descEditing=false;
+  for(let i=0;i<allClans.length;i++) if(allClans[i].id===myClan.id) allClans[i].description=d;
   showToast('Описание обновлено');
   render();
-  if (!$('clanInfoModal').classList.contains('hidden')) renderClanModal();
+  if(!$('clanInfoModal').classList.contains('hidden')) renderClanModal();
 }
 
 function clanListHtml(){
-  if (!allClans.length){
-    return '<div class="empty">Кланов пока нет.<br>Стань первым — нажми «Создать».</div>';
+  if(!allClans.length) return '<div class="empty">Кланов пока нет.<br>Стань первым — нажми «Создать».</div>';
+  let h='<div class="section-title">Список кланов</div>';
+  for(let i=0;i<allClans.length;i++){
+    const c=allClans[i], mem=membersOf(c.id), full=mem.length>=MAX_MEMBERS;
+    const mine=!!(myMember&&myMember.clan_id===c.id);
+    h+='<div class="clan-card"><div class="clan-emblem">'+(c.emblem||'🛡️')+'</div>';
+    h+='<div class="clan-info"><div class="clan-name">'+esc(c.name)+tagPill(c.tag,'clan',c.name)+'</div>';
+    h+='<div class="clan-sub">'+mem.length+' / '+MAX_MEMBERS+' участников</div></div>';
+    h+='<button class="mini share" data-shareclan="'+esc(c.tag||'')+'" data-shareclanname="'+esc(c.name)+'">📤</button>';
+    if(mine) h+='<button class="clan-join" disabled>Твой клан</button>';
+    else if(myMember) h+='<button class="clan-join" disabled>Уже в клане</button>';
+    else if(full) h+='<button class="clan-join" disabled>Полон</button>';
+    else h+='<button class="clan-join" data-join="'+c.id+'">Вступить</button>';
+    h+='</div>';
   }
-
-  let html = '<div class="section-title">Список кланов</div>';
-
-  for (let i = 0; i < allClans.length; i++){
-    const c = allClans[i];
-    const mem = membersOf(c.id);
-    const full = mem.length >= MAX_MEMBERS;
-    const mine = (myMember && myMember.clan_id === c.id);
-
-    html += '<div class="clan-card">';
-    html += '<div class="clan-emblem">' + (c.emblem || '🛡️') + '</div>';
-    html += '<div class="clan-info">';
-    html += '<div class="clan-name">' + esc(c.name) + tagPill(c.tag, 'clan', c.name) + '</div>';
-    html += '<div class="clan-sub">' + mem.length + ' / ' + MAX_MEMBERS + ' участников</div>';
-    html += '</div>';
-    html += '<button class="mini share" data-shareclan="' + esc(c.tag || '') +
-            '" data-shareclanname="' + esc(c.name) + '">📤</button>';
-
-    if (mine){
-      html += '<button class="clan-join" disabled>Твой клан</button>';
-    } else if (myMember){
-      html += '<button class="clan-join" disabled>Уже в клане</button>';
-    } else if (full){
-      html += '<button class="clan-join" disabled>Полон</button>';
-    } else {
-      html += '<button class="clan-join" data-join="' + c.id + '">Вступить</button>';
-    }
-
-    html += '</div>';
-  }
-
-  return html;
+  return h;
 }
 
-/* ================= ПОИСК ================= */
-
-function openSearch(mode, q){
-  searchMode = mode || 'clans';
-  searchQ = q || '';
-  $('searchInput').value = searchQ;
-
-  const chips = $('searchModal').querySelectorAll('.chip');
-  for (let i = 0; i < chips.length; i++){
-    chips[i].classList.toggle('on', chips[i].getAttribute('data-mode') === searchMode);
-  }
-
+function openSearch(mode,q){
+  searchMode=mode||'clans'; searchQ=q||'';
+  $('searchInput').value=searchQ;
+  const chips=$('searchModal').querySelectorAll('.chip');
+  for(let i=0;i<chips.length;i++) chips[i].classList.toggle('on',chips[i].getAttribute('data-mode')===searchMode);
   $('searchModal').classList.remove('hidden');
   applySearch();
 }
-
-function closeSearch(){
-  $('searchModal').classList.add('hidden');
-}
+function closeSearch(){ $('searchModal').classList.add('hidden'); }
 
 async function applySearch(){
-  const out = $('searchOut');
-  if (!out) return;
-
-  const q = searchQ.trim();
-
-  if (q === ''){
-    out.innerHTML = '<div class="empty">Введи тег или имя.<br>Например: #A7K2M</div>';
-    return;
-  }
-
-  out.innerHTML = '<div class="empty">Ищем…</div>';
-
-  if (searchMode === 'clans') await renderClanResults(out, q);
-  else await renderPlayerResults(out, q);
+  const out=$('searchOut'); if(!out) return;
+  const q=searchQ.trim();
+  if(q===''){ out.innerHTML='<div class="empty">Введи тег или имя.<br>Например: #A7K2M</div>'; return; }
+  out.innerHTML='<div class="empty">Ищем…</div>';
+  if(searchMode==='clans') await renderClanResults(out,q); else await renderPlayerResults(out,q);
 }
 
-async function renderClanResults(out, q){
-  let list = [];
+async function renderClanResults(out,q){
+  let list=[];
+  try{
+    const r=await sb.rpc('search_clans',{p_q:q,p_limit:25});
+    if(!r.error) list=r.data||[];
+  }catch(e){}
+  if(!list.length){ out.innerHTML='<div class="empty">Кланы не найдены по «'+esc(q)+'»</div>'; return; }
 
-  try {
-    const r = await sb.rpc('search_clans', { p_q: q, p_limit: 25 });
-    if (!r.error) list = r.data || [];
-  } catch (e){}
-
-  if (!list.length){
-    out.innerHTML = '<div class="empty">Кланы не найдены по «' + esc(q) + '»</div>';
-    return;
+  let h='';
+  for(let i=0;i<list.length;i++){
+    const c=list[i], full=(Number(c.member_count)||0)>=MAX_MEMBERS;
+    const mine=!!(myMember&&myMember.clan_id===c.id);
+    h+='<div class="clan-card"><div class="clan-emblem">'+(c.emblem||'🛡️')+'</div>';
+    h+='<div class="clan-info"><div class="clan-name">'+esc(c.name)+tagPill(c.code,'clan',c.name)+'</div>';
+    h+='<div class="clan-sub">'+(Number(c.member_count)||0)+' / '+MAX_MEMBERS+' · 🏆 '+(Number(c.total_cups)||0)+'</div></div>';
+    h+='<button class="mini share" data-shareclan="'+esc(c.code||'')+'" data-shareclanname="'+esc(c.name)+'">📤</button>';
+    if(mine) h+='<button class="clan-join" disabled>Твой клан</button>';
+    else if(myMember) h+='<button class="clan-join" disabled>Уже в клане</button>';
+    else if(full) h+='<button class="clan-join" disabled>Полон</button>';
+    else h+='<button class="clan-join" data-join="'+c.id+'">Вступить</button>';
+    h+='</div>';
   }
-
-  let html = '';
-
-  for (let i = 0; i < list.length; i++){
-    const c = list[i];
-    const full = (Number(c.member_count) || 0) >= MAX_MEMBERS;
-    const mine = (myMember && myMember.clan_id === c.id);
-
-    html += '<div class="clan-card">';
-    html += '<div class="clan-emblem">' + (c.emblem || '🛡️') + '</div>';
-    html += '<div class="clan-info">';
-    html += '<div class="clan-name">' + esc(c.name) + tagPill(c.code, 'clan', c.name) + '</div>';
-    html += '<div class="clan-sub">' + (Number(c.member_count) || 0) + ' / ' + MAX_MEMBERS +
-            ' · 🏆 ' + (Number(c.total_cups) || 0) + '</div>';
-    html += '</div>';
-    html += '<button class="mini share" data-shareclan="' + esc(c.code || '') +
-            '" data-shareclanname="' + esc(c.name) + '">📤</button>';
-
-    if (mine){
-      html += '<button class="clan-join" disabled>Твой клан</button>';
-    } else if (myMember){
-      html += '<button class="clan-join" disabled>Уже в клане</button>';
-    } else if (full){
-      html += '<button class="clan-join" disabled>Полон</button>';
-    } else {
-      html += '<button class="clan-join" data-join="' + c.id + '">Вступить</button>';
-    }
-
-    html += '</div>';
-  }
-
-  out.innerHTML = html;
-  bindActions(out);
+  out.innerHTML=h; bindActions(out);
 }
 
-async function renderPlayerResults(out, q){
-  let list = [];
+async function renderPlayerResults(out,q){
+  let list=[];
+  try{
+    const r=await sb.rpc('search_players',{p_q:q,p_limit:25});
+    if(!r.error) list=r.data||[];
+  }catch(e){}
+  if(!list.length){ out.innerHTML='<div class="empty">Никого не нашли по «'+esc(q)+'»</div>'; return; }
 
-  try {
-    const r = await sb.rpc('search_players', { p_q: q, p_limit: 25 });
-    if (!r.error) list = r.data || [];
-  } catch (e){}
-
-  if (!list.length){
-    out.innerHTML = '<div class="empty">Никого не нашли по «' + esc(q) + '»</div>';
-    return;
-  }
-
-  let html = '';
-  let shown = 0;
-
-  for (let i = 0; i < list.length; i++){
-    const p = list[i];
-    if (p.player_key === meKey) continue;
+  let h='', shown=0;
+  for(let i=0;i<list.length;i++){
+    const p=list[i];
+    if(p.player_key===meKey) continue;
     shown++;
-
-    html += '<div class="member">';
-    html += '<div class="m-avatar" data-profile="' + esc(p.player_key) + '">🎮</div>';
-    html += '<div class="m-info" data-profile="' + esc(p.player_key) + '">';
-    html += '<div class="m-name">' + esc(p.display_name || 'Игрок') + tagPill(p.tag, 'player', p.display_name) + '</div>';
-    html += '<div class="m-role" style="color:#94a3b8">🏆 ' + (p.cups || 0) + '</div>';
-    html += '</div>';
-    html += '<button class="mini add" data-addfriend="' + esc(p.player_key) + '" data-addname="' + esc(p.display_name || 'Игрок') + '">+</button>';
-    html += '<button class="mini play" data-invite="' + esc(p.player_key) + '" data-invname="' + esc(p.display_name || 'Игрок') + '" data-invcups="' + (p.cups || 0) + '">⚔️</button>';
-    html += '</div>';
+    h+='<div class="member"><div class="m-avatar" data-profile="'+esc(p.player_key)+'">🎮</div>';
+    h+='<div class="m-info" data-profile="'+esc(p.player_key)+'">';
+    h+='<div class="m-name">'+esc(p.display_name||'Игрок')+tagPill(p.tag,'player',p.display_name)+'</div>';
+    h+='<div class="m-role" style="color:#94a3b8">🏆 '+(p.cups||0)+'</div></div>';
+    h+='<button class="mini add" data-addfriend="'+esc(p.player_key)+'" data-addname="'+esc(p.display_name||'Игрок')+'">+</button>';
+    h+='<button class="mini play" data-invite="'+esc(p.player_key)+'" data-invname="'+esc(p.display_name||'Игрок')+'" data-invcups="'+(p.cups||0)+'">⚔️</button>';
+    h+='</div>';
   }
-
-  if (!shown){
-    out.innerHTML = '<div class="empty">Это ты. Введи другой тег.</div>';
-    return;
-  }
-
-  out.innerHTML = html;
-  bindActions(out);
+  if(!shown){ out.innerHTML='<div class="empty">Это ты. Введи другой тег.</div>'; return; }
+  out.innerHTML=h; bindActions(out);
 }
 
-/* ================= КАРТОЧКА КЛАНА ================= */
-
-function openClanModal(){
-  if (!myClan) return;
-  renderClanModal();
-  $('clanInfoModal').classList.remove('hidden');
-}
-
-function closeClanModal(){
-  $('clanInfoModal').classList.add('hidden');
-}
+function openClanModal(){ if(!myClan) return; renderClanModal(); $('clanInfoModal').classList.remove('hidden'); }
+function closeClanModal(){ $('clanInfoModal').classList.add('hidden'); }
 
 function renderClanModal(){
-  const mem = membersOf(myClan.id);
+  const mem=membersOf(myClan.id);
+  let chief='—';
+  for(let i=0;i<mem.length;i++){ if(mem[i].role==='owner'){ chief=mem[i].name||'Игрок'; break; } }
 
-  let chief = '—';
-  for (let i = 0; i < mem.length; i++){
-    if (mem[i].role === 'owner'){ chief = mem[i].name || 'Игрок'; break; }
-  }
+  $('ciEmblem').textContent=myClan.emblem||'🛡️';
+  $('ciName').innerHTML=esc(myClan.name)+tagPill(myClan.tag,'clan',myClan.name);
+  $('ciSub').textContent='Глава: '+chief;
 
-  $('ciEmblem').textContent = myClan.emblem || '🛡️';
-  $('ciName').innerHTML = esc(myClan.name) + tagPill(myClan.tag, 'clan', myClan.name);
-  $('ciSub').textContent = 'Глава: ' + chief;
+  const d=(myClan.description||'').trim();
+  $('ciDesc').textContent=d||'Описание не задано';
+  $('ciDesc').className=d?'ci-desc':'ci-desc empty-desc';
 
-  const desc = (myClan.description || '').trim();
-  $('ciDesc').textContent = desc || 'Описание не задано';
-  $('ciDesc').className = desc ? 'ci-desc' : 'ci-desc empty-desc';
+  $('ciMem').textContent=mem.length+'/'+MAX_MEMBERS;
+  $('ciCups').textContent=cupsOf(myClan.id);
+  $('ciFree').textContent=Math.max(0,MAX_MEMBERS-mem.length);
+  $('ciBarFill').style.width=Math.min(100,mem.length/MAX_MEMBERS*100)+'%';
 
-  $('ciMem').textContent  = mem.length + '/' + MAX_MEMBERS;
-  $('ciCups').textContent = cupsOf(myClan.id);
-  $('ciFree').textContent = Math.max(0, MAX_MEMBERS - mem.length);
-  $('ciBarFill').style.width = Math.min(100, mem.length / MAX_MEMBERS * 100) + '%';
-
-  let html = '';
-
-  for (let i = 0; i < mem.length; i++){
-    const m = mem[i];
-    const isMe = (m.player_key === meKey);
-    const isChief = (m.role === 'owner');
-
-    html += '<div class="member' + (isMe ? ' me' : '') + '">';
-    html += '<div class="m-avatar" data-profile="' + esc(m.player_key) + '">' + (isChief ? '👑' : '🎮') + '</div>';
-    html += '<div class="m-info" data-profile="' + esc(m.player_key) + '">';
-    html += '<div class="m-name">' + esc(m.name || 'Игрок') + (isMe ? ' (ты)' : '') + tagPill(tagMap[m.player_key], 'player', m.name) + '</div>';
-    html += '<div class="m-role">' + (isChief ? 'Глава клана' : 'Участник') + '</div>';
-    html += '</div>';
-    html += '<div class="m-cups">🏆 ' + (m.cups || 0) + '</div>';
-
-    if (!isMe){
-      html += '<button class="mini play" data-invite="' + esc(m.player_key) +
-              '" data-invname="' + esc(m.name || 'Игрок') +
-              '" data-invcups="' + (m.cups || 0) + '">⚔️</button>';
-      html += '<button class="mini add" data-addfriend="' + esc(m.player_key) +
-              '" data-addname="' + esc(m.name || 'Игрок') + '">+</button>';
+  let h='';
+  for(let i=0;i<mem.length;i++){
+    const m=mem[i], isMe=(m.player_key===meKey), isChief=(m.role==='owner');
+    h+='<div class="member'+(isMe?' me':'')+'">';
+    h+='<div class="m-avatar" data-profile="'+esc(m.player_key)+'">'+(isChief?'👑':'🎮')+'</div>';
+    h+='<div class="m-info" data-profile="'+esc(m.player_key)+'">';
+    h+='<div class="m-name">'+esc(m.name||'Игрок')+(isMe?' (ты)':'')+tagPill(tagMap[m.player_key],'player',m.name)+'</div>';
+    h+='<div class="m-role">'+(isChief?'Глава клана':'Участник')+'</div></div>';
+    h+='<div class="m-cups">🏆 '+(m.cups||0)+'</div>';
+    if(!isMe){
+      h+='<button class="mini play" data-invite="'+esc(m.player_key)+'" data-invname="'+esc(m.name||'Игрок')+'" data-invcups="'+(m.cups||0)+'">⚔️</button>';
+      h+='<button class="mini add" data-addfriend="'+esc(m.player_key)+'" data-addname="'+esc(m.name||'Игрок')+'">+</button>';
     }
-
-    if (isOwnerOfMyClan() && !isMe){
-      html += '<button class="mini kick" data-kick="' + esc(m.player_key) + '">✕</button>';
-    }
-
-    html += '</div>';
+    if(isOwnerOfMyClan()&&!isMe) h+='<button class="mini kick" data-kick="'+esc(m.player_key)+'">✕</button>';
+    h+='</div>';
   }
-
-  $('ciMembers').innerHTML = html;
+  $('ciMembers').innerHTML=h;
   bindActions($('ciMembers'));
-
-  $('ciShare').onclick = function (){ shareClan(myClan.name, myClan.tag); };
+  $('ciShare').onclick=function(){ shareClan(myClan.name,myClan.tag); };
 }
 
-/* ================= ДРУЗЬЯ ================= */
-
 function renderFriendsTab(app){
-  let html = '<div class="section-title">Мои друзья</div>';
-
-  if (!friendsList.length){
-    html += '<div class="empty">Пока нет друзей.<br>Найди по тегу через поиск.</div>';
+  let h='<div class="section-title">Мои друзья</div>';
+  if(!friendsList.length){
+    h+='<div class="empty">Пока нет друзей.<br>Найди по тегу через поиск.</div>';
   } else {
-    for (let i = 0; i < friendsList.length; i++){
-      const f = friendsList[i];
-
-      html += '<div class="member">';
-      html += '<div class="m-avatar" data-profile="' + esc(f.key) + '">🎮</div>';
-      html += '<div class="m-info" data-profile="' + esc(f.key) + '">';
-      html += '<div class="m-name">' + esc(f.name) + tagPill(f.tag, 'player', f.name) + '</div>';
-      html += '<div class="m-role" style="color:#94a3b8">🏆 ' + f.cups + '</div>';
-      html += '</div>';
-      html += '<button class="mini play" data-finvite="' + esc(f.key) + '">⚔️</button>';
-      html += '<button class="mini kick" data-fremove="' + esc(f.key) + '">✕</button>';
-      html += '</div>';
+    for(let i=0;i<friendsList.length;i++){
+      const f=friendsList[i];
+      h+='<div class="member"><div class="m-avatar" data-profile="'+esc(f.key)+'">🎮</div>';
+      h+='<div class="m-info" data-profile="'+esc(f.key)+'">';
+      h+='<div class="m-name">'+esc(f.name)+tagPill(f.tag,'player',f.name)+'</div>';
+      h+='<div class="m-role" style="color:#94a3b8">🏆 '+f.cups+'</div></div>';
+      h+='<button class="mini play" data-finvite="'+esc(f.key)+'">⚔️</button>';
+      h+='<button class="mini kick" data-fremove="'+esc(f.key)+'">✕</button></div>';
     }
   }
+  h+='<button class="btn-wide blue" id="addFriendBtn">+ Найти по тегу</button>';
+  app.innerHTML=h;
 
-  html += '<button class="btn-wide blue" id="addFriendBtn">+ Найти по тегу</button>';
-
-  app.innerHTML = html;
-
-  $('addFriendBtn').onclick = function (){
-    openSearch('players', '');
-    setTimeout(function (){ try { $('searchInput').focus(); } catch (e){} }, 100);
+  $('addFriendBtn').onclick=function(){
+    openSearch('players','');
+    setTimeout(function(){ try{ $('searchInput').focus(); }catch(e){} },100);
   };
 
-  const inv = app.querySelectorAll('[data-finvite]');
-  for (let i = 0; i < inv.length; i++){
-    (function (b){
-      b.onclick = function (){
-        const key = b.getAttribute('data-finvite');
-        for (let j = 0; j < friendsList.length; j++){
-          if (friendsList[j].key === key){
-            invitePlayer(key, friendsList[j].name, friendsList[j].cups);
-            return;
-          }
+  const inv=app.querySelectorAll('[data-finvite]');
+  for(let i=0;i<inv.length;i++){
+    (function(b){
+      b.onclick=function(){
+        const k=b.getAttribute('data-finvite');
+        for(let j=0;j<friendsList.length;j++){
+          if(friendsList[j].key===k){ invitePlayer(k,friendsList[j].name,friendsList[j].cups); return; }
         }
       };
     })(inv[i]);
   }
 
-  const rem = app.querySelectorAll('[data-fremove]');
-  for (let i = 0; i < rem.length; i++){
-    (function (b){
-      b.onclick = async function (){
-        const key = b.getAttribute('data-fremove');
-        if (!confirm('Убрать из друзей?')) return;
-        await Friends.remove(key);
+  const rem=app.querySelectorAll('[data-fremove]');
+  for(let i=0;i<rem.length;i++){
+    (function(b){
+      b.onclick=async function(){
+        const k=b.getAttribute('data-fremove');
+        if(!confirm('Убрать из друзей?')) return;
+        await Friends.remove(k);
         showToast('Удалён из друзей');
         await loadFriends();
       };
     })(rem[i]);
   }
-
   bindActions(app);
 }
 
-/* ================= ЧАТ ================= */
-
 async function loadChat(){
-  if (!myClan) return;
-
-  const res = await sb.from('clan_messages')
-    .select('*').eq('clan_id', myClan.id)
-    .order('id', { ascending: false }).limit(60);
-
-  if (res.error) return;
-
-  chatMsgs = (res.data || []).slice().reverse();
+  if(!myClan) return;
+  const r=await sb.from('clan_messages').select('*').eq('clan_id',myClan.id).order('id',{ascending:false}).limit(60);
+  if(r.error) return;
+  chatMsgs=(r.data||[]).slice().reverse();
   renderChatMessages();
 }
 
 function renderChatMessages(){
-  const box = $('chatBox');
-  if (!box) return;
+  const box=$('chatBox'); if(!box) return;
+  if(!chatMsgs.length){ box.innerHTML='<div class="empty">Сообщений пока нет.<br>Напиши первым.</div>'; return; }
 
-  if (!chatMsgs.length){
-    box.innerHTML = '<div class="empty">Сообщений пока нет.<br>Напиши первым.</div>';
-    return;
-  }
-
-  let html = '';
-
-  for (let i = 0; i < chatMsgs.length; i++){
-    const m = chatMsgs[i];
-    const mine = (m.player_key === meKey);
-
-    if (m.kind === 'system'){
-      html += '<div class="msg-sys">' + esc(m.text || '') + '</div>';
-      continue;
-    }
-
-    html += '<div class="msg' + (mine ? ' mine' : '') + '">';
-    html += '<div class="msg-head" data-profile="' + esc(m.player_key) + '">' + esc(m.name || 'Игрок') + '</div>';
-
-    if (m.kind === 'replay'){
-      html += '<div class="msg-replay">' + esc(m.text || 'Повтор партии') + '</div>';
-      if (m.match_id){
-        html += '<button class="msg-btn" data-watch="' + m.match_id + '">▶ Смотреть повтор</button>';
-      }
+  let h='';
+  for(let i=0;i<chatMsgs.length;i++){
+    const m=chatMsgs[i], mine=(m.player_key===meKey);
+    if(m.kind==='system'){ h+='<div class="msg-sys">'+esc(m.text||'')+'</div>'; continue; }
+    h+='<div class="msg'+(mine?' mine':'')+'">';
+    h+='<div class="msg-head" data-profile="'+esc(m.player_key)+'">'+esc(m.name||'Игрок')+'</div>';
+    if(m.kind==='replay'){
+      h+='<div class="msg-replay">'+esc(m.text||'Повтор партии')+'</div>';
+      if(m.match_id) h+='<button class="msg-btn" data-watch="'+m.match_id+'">▶ Смотреть повтор</button>';
     } else {
-      html += '<div class="msg-text">' + esc(m.text || '') + '</div>';
+      h+='<div class="msg-text">'+esc(m.text||'')+'</div>';
     }
-
-    html += '</div>';
+    h+='</div>';
   }
+  box.innerHTML=h;
+  box.scrollTop=box.scrollHeight;
 
-  box.innerHTML = html;
-  box.scrollTop = box.scrollHeight;
-
-  const watch = box.querySelectorAll('[data-watch]');
-  for (let i = 0; i < watch.length; i++){
-    (function (b){
-      b.onclick = function (){
-        location.href = 'chess-history.html?m=' + b.getAttribute('data-watch');
-      };
-    })(watch[i]);
+  const w=box.querySelectorAll('[data-watch]');
+  for(let i=0;i<w.length;i++){
+    (function(b){
+      b.onclick=function(){ location.href='chess-history.html?m='+b.getAttribute('data-watch'); };
+    })(w[i]);
   }
-
-  const pr = box.querySelectorAll('[data-profile]');
-  for (let i = 0; i < pr.length; i++){
-    (function (el){
-      el.onclick = function (){ openProfile(el.getAttribute('data-profile')); };
+  const pr=box.querySelectorAll('[data-profile]');
+  for(let i=0;i<pr.length;i++){
+    (function(el){
+      el.onclick=function(){ openProfile(el.getAttribute('data-profile')); };
     })(pr[i]);
   }
 }
 
 async function sendChat(){
-  const inp = $('chatInput');
-  if (!inp || !myClan) return;
+  const inp=$('chatInput'); if(!inp||!myClan) return;
+  const txt=inp.value.trim(); if(!txt) return;
 
-  const txt = inp.value.trim();
-  if (!txt) return;
-
-  if (hasBadWord(txt)){
-    inp.value = '';
+  if(hasBadWord(txt)){
+    inp.value='';
     showToast('Ненормативная лексика — сообщение не отправлено');
     return;
   }
+  inp.value='';
 
-  inp.value = '';
-
-  const res = await sb.rpc('clan_post', {
-    p_clan: myClan.id, p_key: meKey, p_name: meName,
-    p_kind: 'text', p_text: txt, p_match: null
+  const r=await sb.rpc('clan_post',{
+    p_clan:myClan.id,p_key:meKey,p_name:meName,
+    p_kind:'text',p_text:txt,p_match:null
   });
 
-  if (res.error){
-    showToast('Не отправлено');
-    inp.value = txt;
-    return;
-  }
-
-  if (res.data && res.data.bad){
-    showToast('Ненормативная лексика — сообщение не отправлено');
-    inp.value = txt;
-    return;
-  }
-
+  if(r.error){ showToast('Не отправлено'); inp.value=txt; return; }
+  if(r.data&&r.data.bad){ showToast('Ненормативная лексика — сообщение не отправлено'); inp.value=txt; return; }
   await loadChat();
 }
 
 async function openShare(){
-  const res = await sb.from('arena_replays')
+  const r=await sb.from('arena_replays')
     .select('match_id,opponent_name,winner,my_side,arena,created_at')
-    .eq('player_key', meKey)
-    .order('created_at', { ascending: false }).limit(12);
+    .eq('player_key',meKey).order('created_at',{ascending:false}).limit(12);
+  shareRows=r.error?[]:(r.data||[]);
 
-  shareRows = res.error ? [] : (res.data || []);
-
-  const box = $('shareList');
-
-  if (!shareRows.length){
-    box.innerHTML = '<div class="empty">Нет записанных партий.<br>Сыграй бой — он появится здесь.</div>';
+  const box=$('shareList');
+  if(!shareRows.length){
+    box.innerHTML='<div class="empty">Нет записанных партий.<br>Сыграй бой — он появится здесь.</div>';
     $('shareModal').classList.remove('hidden');
     return;
   }
 
-  let html = '';
-
-  for (let i = 0; i < shareRows.length; i++){
-    const r = shareRows[i];
-    let resTxt = 'ничья';
-    if (r.winner === 'a' || r.winner === 'b'){
-      resTxt = (r.winner === r.my_side) ? 'победа' : 'поражение';
-    }
-
-    html += '<div class="member">';
-    html += '<div class="m-info">';
-    html += '<div class="m-name">' + esc(r.opponent_name || 'Соперник') + '</div>';
-    html += '<div class="m-role" style="color:#94a3b8">' + resTxt + ' · арена ' + (r.arena || 1) + '</div>';
-    html += '</div>';
-    html += '<button class="mini add" data-share="' + r.match_id + '">Отправить</button>';
-    html += '</div>';
+  let h='';
+  for(let i=0;i<shareRows.length;i++){
+    const r2=shareRows[i];
+    let t='ничья';
+    if(r2.winner==='a'||r2.winner==='b') t=(r2.winner===r2.my_side)?'победа':'поражение';
+    h+='<div class="member"><div class="m-info">';
+    h+='<div class="m-name">'+esc(r2.opponent_name||'Соперник')+'</div>';
+    h+='<div class="m-role" style="color:#94a3b8">'+t+' · арена '+(r2.arena||1)+'</div></div>';
+    h+='<button class="mini add" data-share="'+r2.match_id+'">Отправить</button></div>';
   }
+  box.innerHTML=h;
 
-  box.innerHTML = html;
-
-  const btn = box.querySelectorAll('[data-share]');
-  for (let i = 0; i < btn.length; i++){
-    (function (b){
-      b.onclick = function (){ shareReplay(b.getAttribute('data-share')); };
-    })(btn[i]);
+  const b=box.querySelectorAll('[data-share]');
+  for(let i=0;i<b.length;i++){
+    (function(x){ x.onclick=function(){ shareReplay(x.getAttribute('data-share')); }; })(b[i]);
   }
-
   $('shareModal').classList.remove('hidden');
 }
 
 async function shareReplay(matchId){
-  let row = null;
-  for (let i = 0; i < shareRows.length; i++){
-    if (shareRows[i].match_id === matchId){ row = shareRows[i]; break; }
-  }
-  if (!row || !myClan) return;
+  let row=null;
+  for(let i=0;i<shareRows.length;i++) if(shareRows[i].match_id===matchId){ row=shareRows[i]; break; }
+  if(!row||!myClan) return;
 
-  let resTxt = 'Ничья';
-  if (row.winner === 'a' || row.winner === 'b'){
-    resTxt = (row.winner === row.my_side) ? 'Победа' : 'Поражение';
-  }
+  let t='Ничья';
+  if(row.winner==='a'||row.winner==='b') t=(row.winner===row.my_side)?'Победа':'Поражение';
 
-  const label = 'Повтор партии против ' + (row.opponent_name || 'соперника') +
-                ' · ' + resTxt + ' · арена ' + (row.arena || 1);
+  const label='Повтор партии против '+(row.opponent_name||'соперника')+' · '+t+' · арена '+(row.arena||1);
 
-  const res = await sb.rpc('clan_post', {
-    p_clan: myClan.id, p_key: meKey, p_name: meName,
-    p_kind: 'replay', p_text: label, p_match: matchId
+  const r=await sb.rpc('clan_post',{
+    p_clan:myClan.id,p_key:meKey,p_name:meName,
+    p_kind:'replay',p_text:label,p_match:matchId
   });
 
-  if (res.error){ showToast('Не отправлено'); return; }
-
+  if(r.error){ showToast('Не отправлено'); return; }
   $('shareModal').classList.add('hidden');
   showToast('Повтор отправлен в чат');
   await loadChat();
 }
 
-/* ================= ДЕЙСТВИЯ ================= */
-
 function bindActions(scope){
-  const inv = scope.querySelectorAll('[data-invite]');
-  for (let i = 0; i < inv.length; i++){
-    (function (b){
-      b.onclick = function (){
-        invitePlayer(b.getAttribute('data-invite'), b.getAttribute('data-invname'),
-          parseInt(b.getAttribute('data-invcups') || '0', 10) || 0);
+  const inv=scope.querySelectorAll('[data-invite]');
+  for(let i=0;i<inv.length;i++){
+    (function(b){
+      b.onclick=function(){
+        invitePlayer(b.getAttribute('data-invite'),b.getAttribute('data-invname'),
+          parseInt(b.getAttribute('data-invcups')||'0',10)||0);
       };
     })(inv[i]);
   }
 
-  const add = scope.querySelectorAll('[data-addfriend]');
-  for (let i = 0; i < add.length; i++){
-    (function (b){
-      b.onclick = async function (){
-        const ok = await Friends.add(b.getAttribute('data-addfriend'), b.getAttribute('data-addname'));
-        showToast(ok ? 'Добавлен в друзья' : 'Не удалось добавить');
-        if (ok) await loadFriends();
+  const add=scope.querySelectorAll('[data-addfriend]');
+  for(let i=0;i<add.length;i++){
+    (function(b){
+      b.onclick=async function(){
+        const ok=await Friends.add(b.getAttribute('data-addfriend'),b.getAttribute('data-addname'));
+        showToast(ok?'Добавлен в друзья':'Не удалось добавить');
+        if(ok) await loadFriends();
       };
     })(add[i]);
   }
 
-  const kick = scope.querySelectorAll('[data-kick]');
-  for (let i = 0; i < kick.length; i++){
-    (function (b){
-      b.onclick = function (){ kickMember(b.getAttribute('data-kick')); };
-    })(kick[i]);
+  const kick=scope.querySelectorAll('[data-kick]');
+  for(let i=0;i<kick.length;i++){
+    (function(b){ b.onclick=function(){ kickMember(b.getAttribute('data-kick')); }; })(kick[i]);
   }
 
-  const join = scope.querySelectorAll('[data-join]');
-  for (let i = 0; i < join.length; i++){
-    (function (b){
-      b.onclick = function (){ joinClan(b.getAttribute('data-join'), b); };
-    })(join[i]);
+  const join=scope.querySelectorAll('[data-join]');
+  for(let i=0;i<join.length;i++){
+    (function(b){ b.onclick=function(){ joinClan(b.getAttribute('data-join'),b); }; })(join[i]);
   }
 
-  const shc = scope.querySelectorAll('[data-shareclan]');
-  for (let i = 0; i < shc.length; i++){
-    (function (b){
-      b.onclick = function (){
-        shareClan(b.getAttribute('data-shareclanname') || 'Клан', b.getAttribute('data-shareclan') || '');
+  const shc=scope.querySelectorAll('[data-shareclan]');
+  for(let i=0;i<shc.length;i++){
+    (function(b){
+      b.onclick=function(){
+        shareClan(b.getAttribute('data-shareclanname')||'Клан',b.getAttribute('data-shareclan')||'');
       };
     })(shc[i]);
   }
 
-  const pf = scope.querySelectorAll('[data-profile]');
-  for (let i = 0; i < pf.length; i++){
-    (function (el){
-      el.onclick = function (){ openProfile(el.getAttribute('data-profile')); };
-    })(pf[i]);
+  const pf=scope.querySelectorAll('[data-profile]');
+  for(let i=0;i<pf.length;i++){
+    (function(el){ el.onclick=function(){ openProfile(el.getAttribute('data-profile')); }; })(pf[i]);
   }
 
-  const tg = scope.querySelectorAll('[data-copytag]');
-  for (let i = 0; i < tg.length; i++){
-    (function (el){
-      el.onclick = function (e){
-        e.stopPropagation();
-        copyTag(el);
-      };
+  const tg=scope.querySelectorAll('[data-copytag]');
+  for(let i=0;i<tg.length;i++){
+    (function(el){
+      el.onclick=function(e){ e.stopPropagation(); copyTag(el); };
     })(tg[i]);
   }
 }
 
-function openProfile(key){
-  if (window.Profile && key) Profile.open(key);
+async function invitePlayer(key,name,cups){
+  if(!window.Friends){ showToast('friends.js не подключён'); return; }
+  if(!key) return;
+  const r=await Friends.invite(key,name,cups);
+  if(!r){ showToast('Не удалось отправить вызов'); return; }
+  showToast('Вызов отправлен: '+name);
+  setTimeout(function(){ Friends.play(r.id,'host',key,name,cups,r.arena); },400);
 }
 
-async function invitePlayer(key, name, cups){
-  if (!window.Friends){ showToast('friends.js не подключён'); return; }
-  if (!key) return;
+/* защита от повторного вступления */
+async function joinClan(clanId,btn){
+  if(!clanId||joining) return;
 
-  const r = await Friends.invite(key, name, cups);
-  if (!r){ showToast('Не удалось отправить вызов'); return; }
-
-  showToast('Вызов отправлен: ' + name);
-
-  setTimeout(function (){
-    Friends.play(r.id, 'host', key, name, cups, r.arena);
-  }, 400);
-}
-
-/* ================= ВСТУПЛЕНИЕ ================= */
-
-async function joinClan(clanId, btn){
-  if (!clanId || joining) return;
-
-  if (myMember){
-    showToast(myMember.clan_id === clanId
-      ? 'Ты уже в этом клане'
-      : 'Ты уже в другом клане — сначала выйди из него');
+  if(myMember){
+    showToast(myMember.clan_id===clanId?'Ты уже в этом клане':'Ты уже в другом клане — сначала выйди из него');
     closeSearch();
     return;
   }
 
-  joining = true;
-  if (btn){ btn.disabled = true; btn.textContent = '…'; }
+  joining=true;
+  if(btn){ btn.disabled=true; btn.textContent='…'; }
 
-  let ok = false;
-  let msg = '';
+  let ok=false, msg='';
 
-  try {
-    const r = await sb.rpc('clan_join', {
-      p_clan: clanId, p_key: meKey, p_name: meName, p_cups: meCups
-    });
-
-    if (r.error){
-      msg = r.error.message || '';
-      console.log('clan_join error:', msg);
-    } else {
-      const d = r.data || {};
-      if (d.ok === false){
-        msg = d.error || 'не удалось вступить';
-      } else {
-        ok = true;
-        if (d.already) msg = 'Ты уже в этом клане';
-      }
+  try{
+    const r=await sb.rpc('clan_join',{p_clan:clanId,p_key:meKey,p_name:meName,p_cups:meCups});
+    if(r.error){ msg=r.error.message||''; }
+    else {
+      const d=r.data||{};
+      if(d.ok===false) msg=d.error||'не удалось вступить';
+      else { ok=true; if(d.already) msg='Ты уже в этом клане'; }
     }
-  } catch (e){
-    msg = 'сеть недоступна';
-  }
+  }catch(e){ msg='сеть недоступна'; }
 
-  if (!ok){
-    const chk = await sb.from('clan_members').select('clan_id').eq('player_key', meKey).limit(1);
-    if (!chk.error && chk.data && chk.data.length){
-      ok = true;
-      msg = chk.data[0].clan_id === clanId ? 'Ты уже в этом клане' : 'Ты уже в другом клане';
+  if(!ok){
+    const chk=await sb.from('clan_members').select('clan_id').eq('player_key',meKey).limit(1);
+    if(!chk.error&&chk.data&&chk.data.length){
+      ok=true;
+      msg=(chk.data[0].clan_id===clanId)?'Ты уже в этом клане':'Ты уже в другом клане';
     }
   }
 
-  joining = false;
+  joining=false;
 
-  if (!ok){
-    if (btn){ btn.disabled = false; btn.textContent = 'Вступить'; }
-    showToast(msg || 'Не удалось вступить');
+  if(!ok){
+    if(btn){ btn.disabled=false; btn.textContent='Вступить'; }
+    showToast(msg||'Не удалось вступить');
     return;
   }
 
-  showToast(msg || 'Ты в клане!');
+  showToast(msg||'Ты в клане!');
   closeSearch();
   await loadAll();
 }
 
 async function leaveClan(){
-  if (!myMember) return;
-
-  const owner = isOwnerOfMyClan();
-  const mem = myClan ? membersOf(myClan.id) : [];
-
-  if (owner && mem.length > 1){
-    showToast('Сначала передай главу или выгони всех');
-    return;
-  }
-
-  if (!confirm('Покинуть клан?')) return;
+  if(!myMember) return;
+  const owner=isOwnerOfMyClan();
+  const mem=myClan?membersOf(myClan.id):[];
+  if(owner&&mem.length>1){ showToast('Сначала передай главу или выгони всех'); return; }
+  if(!confirm('Покинуть клан?')) return;
 
   closeClanModal();
-
-  await sb.from('clan_members').delete().eq('player_key', meKey);
-
-  if (owner && myClan){
-    await sb.from('clans').delete().eq('id', myClan.id);
-  }
-
-  descEditing = false;
+  await sb.from('clan_members').delete().eq('player_key',meKey);
+  if(owner&&myClan) await sb.from('clans').delete().eq('id',myClan.id);
+  descEditing=false;
   showToast('Ты покинул клан');
   await loadAll();
 }
 
 async function kickMember(key){
-  if (!isOwnerOfMyClan()) return;
-  if (!confirm('Выгнать участника?')) return;
-
-  await sb.from('clan_members').delete().eq('player_key', key);
+  if(!isOwnerOfMyClan()) return;
+  if(!confirm('Выгнать участника?')) return;
+  await sb.from('clan_members').delete().eq('player_key',key);
   showToast('Участник выгнан');
   await loadAll();
-  if (!$('clanInfoModal').classList.contains('hidden')) renderClanModal();
+  if(!$('clanInfoModal').classList.contains('hidden')) renderClanModal();
 }
 
 async function createClan(){
-  const name = $('inName').value.trim();
-  const desc = $('inDesc').value.trim().slice(0, 120);
+  const name=$('inName').value.trim();
+  const desc=$('inDesc').value.trim().slice(0,120);
+  if(name.length<3){ showToast('Название минимум 3 символа'); return; }
+  if(myMember){ showToast('Ты уже в клане'); return; }
 
-  if (name.length < 3){ showToast('Название минимум 3 символа'); return; }
-  if (myMember){ showToast('Ты уже в клане'); return; }
-
-  const res = await sb.from('clans').insert({
-    name: name, tag: null, emblem: pickedEmblem,
-    description: desc, owner_key: meKey
+  const r=await sb.from('clans').insert({
+    name:name,tag:null,emblem:pickedEmblem,description:desc,owner_key:meKey
   }).select().single();
 
-  if (res.error){ showToast('Не удалось создать клан'); return; }
+  if(r.error){ showToast('Не удалось создать клан'); return; }
 
-  const memRes = await sb.from('clan_members').insert({
-    clan_id: res.data.id, player_key: meKey,
-    name: meName, cups: meCups, role: 'owner'
+  const mr=await sb.from('clan_members').insert({
+    clan_id:r.data.id,player_key:meKey,name:meName,cups:meCups,role:'owner'
   });
 
-  if (memRes.error) showToast('Клан создан, но вступление не удалось');
+  if(mr.error) showToast('Клан создан, но вступление не удалось');
   else showToast('Клан создан!');
 
-  try { await sb.rpc('ensure_clan_code', { p_clan: res.data.id }); } catch (e){}
+  try{ await sb.rpc('ensure_clan_code',{p_clan:r.data.id}); }catch(e){}
 
   $('createModal').classList.add('hidden');
-  $('inName').value = '';
-  $('inDesc').value = '';
-
+  $('inName').value=''; $('inDesc').value='';
   await loadAll();
 }
 
-/* ================= МОДАЛКИ ================= */
-
 function buildEmblems(){
-  const row = $('emblemRow');
-  row.innerHTML = '';
-
-  for (let i = 0; i < EMBLEMS.length; i++){
-    const b = document.createElement('button');
-    b.className = 'emblem-opt' + (EMBLEMS[i] === pickedEmblem ? ' on' : '');
-    b.textContent = EMBLEMS[i];
-    (function (em){
-      b.onclick = function (){ pickedEmblem = em; buildEmblems(); };
-    })(EMBLEMS[i]);
+  const row=$('emblemRow'); row.innerHTML='';
+  for(let i=0;i<EMBLEMS.length;i++){
+    const b=document.createElement('button');
+    b.className='emblem-opt'+(EMBLEMS[i]===pickedEmblem?' on':'');
+    b.textContent=EMBLEMS[i];
+    (function(em){ b.onclick=function(){ pickedEmblem=em; buildEmblems(); }; })(EMBLEMS[i]);
     row.appendChild(b);
   }
 }
 
-$('bannerBtn').onclick = function (){
-  if (myMember){ showToast('Ты уже в клане'); return; }
-  pickedEmblem = '🛡️';
-  buildEmblems();
-  $('createModal').classList.remove('hidden');
+$('bannerBtn').onclick=function(){
+  if(myMember){ showToast('Ты уже в клане'); return; }
+  pickedEmblem='🛡️'; buildEmblems(); $('createModal').classList.remove('hidden');
 };
+$('shareMeBtn').onclick=shareMe;
+$('myTagBox').onclick=function(){ openProfile(meKey); };
+$('ciClose').onclick=closeClanModal;
+$('searchClose').onclick=closeSearch;
+$('clanInfoModal').onclick=function(e){ if(e.target===$('clanInfoModal')) closeClanModal(); };
+$('searchModal').onclick=function(e){ if(e.target===$('searchModal')) closeSearch(); };
+$('createCancel').onclick=function(){ $('createModal').classList.add('hidden'); };
+$('createOk').onclick=createClan;
+$('addCancel').onclick=function(){ $('addModal').classList.add('hidden'); };
+$('shareCancel').onclick=function(){ $('shareModal').classList.add('hidden'); };
 
-$('shareMeBtn').onclick = shareMe;
-$('myTagBox').onclick = function (){ openProfile(meKey); };
-$('ciClose').onclick = closeClanModal;
-$('searchClose').onclick = closeSearch;
-
-$('clanInfoModal').onclick = function (e){
-  if (e.target === $('clanInfoModal')) closeClanModal();
-};
-
-$('searchModal').onclick = function (e){
-  if (e.target === $('searchModal')) closeSearch();
-};
-
-$('searchInput').addEventListener('input', function (){
-  searchQ = this.value;
+$('searchInput').addEventListener('input',function(){
+  searchQ=this.value;
   clearTimeout(window.__sqT);
-  window.__sqT = setTimeout(applySearch, 350);
+  window.__sqT=setTimeout(applySearch,350);
 });
 
-const modalChips = $('searchModal').querySelectorAll('.chip');
-for (let i = 0; i < modalChips.length; i++){
-  (function (c){
-    c.onclick = function (){
-      searchMode = c.getAttribute('data-mode');
-      for (let k = 0; k < modalChips.length; k++){
-        modalChips[k].classList.toggle('on', modalChips[k] === c);
-      }
+const modalChips=$('searchModal').querySelectorAll('.chip');
+for(let i=0;i<modalChips.length;i++){
+  (function(c){
+    c.onclick=function(){
+      searchMode=c.getAttribute('data-mode');
+      for(let k=0;k<modalChips.length;k++) modalChips[k].classList.toggle('on',modalChips[k]===c);
       applySearch();
     };
   })(modalChips[i]);
 }
 
-$('createCancel').onclick = function (){ $('createModal').classList.add('hidden'); };
-$('createOk').onclick = createClan;
-$('addCancel').onclick = function (){ $('addModal').classList.add('hidden'); };
-$('shareCancel').onclick = function (){ $('shareModal').classList.add('hidden'); };
+$('addSearch').onclick=async function(){
+  if(!window.Friends){ showToast('friends.js не подключён'); return; }
+  const nick=$('inNick').value.trim();
+  if(nick.replace('#','').length<2){ showToast('Минимум 2 символа'); return; }
 
-$('addSearch').onclick = async function (){
-  if (!window.Friends){ showToast('friends.js не подключён'); return; }
+  const box=$('addResults');
+  box.innerHTML='<div class="empty">Ищем…</div>';
 
-  const nick = $('inNick').value.trim();
-  if (nick.replace('#', '').length < 2){ showToast('Минимум 2 символа'); return; }
+  let list=[];
+  try{
+    const r=await sb.rpc('search_players',{p_q:nick,p_limit:15});
+    if(!r.error) list=r.data||[];
+  }catch(e){}
 
-  const box = $('addResults');
-  box.innerHTML = '<div class="empty">Ищем…</div>';
+  if(!list.length){ box.innerHTML='<div class="empty">Никого не нашли</div>'; return; }
 
-  let list = [];
-
-  try {
-    const r = await sb.rpc('search_players', { p_q: nick, p_limit: 15 });
-    if (!r.error) list = r.data || [];
-  } catch (e){}
-
-  if (!list.length){
-    box.innerHTML = '<div class="empty">Никого не нашли</div>';
-    return;
+  let h='';
+  for(let i=0;i<list.length;i++){
+    const p=list[i];
+    if(p.player_key===meKey) continue;
+    h+='<div class="member"><div class="m-avatar">🎮</div><div class="m-info">';
+    h+='<div class="m-name">'+esc(p.display_name||'Игрок')+tagPill(p.tag,'player',p.display_name)+'</div>';
+    h+='<div class="m-role" style="color:#94a3b8">🏆 '+(p.cups||0)+'</div></div>';
+    h+='<button class="mini add" data-pick="'+esc(p.player_key)+'" data-pickname="'+esc(p.display_name||'Игрок')+'">Добавить</button></div>';
   }
-
-  let html = '';
-
-  for (let i = 0; i < list.length; i++){
-    const p = list[i];
-    if (p.player_key === meKey) continue;
-
-    html += '<div class="member">';
-    html += '<div class="m-avatar">🎮</div>';
-    html += '<div class="m-info">';
-    html += '<div class="m-name">' + esc(p.display_name || 'Игрок') + tagPill(p.tag, 'player', p.display_name) + '</div>';
-    html += '<div class="m-role" style="color:#94a3b8">🏆 ' + (p.cups || 0) + '</div>';
-    html += '</div>';
-    html += '<button class="mini add" data-pick="' + esc(p.player_key) +
-            '" data-pickname="' + esc(p.display_name || 'Игрок') + '">Добавить</button>';
-    html += '</div>';
-  }
-
-  box.innerHTML = html || '<div class="empty">Никого не нашли</div>';
+  box.innerHTML=h||'<div class="empty">Никого не нашли</div>';
   bindActions(box);
 
-  const picks = box.querySelectorAll('[data-pick]');
-  for (let i = 0; i < picks.length; i++){
-    (function (b){
-      b.onclick = async function (){
-        const ok = await Friends.add(b.getAttribute('data-pick'), b.getAttribute('data-pickname'));
-        showToast(ok ? 'Добавлен в друзья' : 'Не удалось добавить');
-        if (ok){
-          $('addModal').classList.add('hidden');
-          await loadFriends();
-        }
+  const picks=box.querySelectorAll('[data-pick]');
+  for(let i=0;i<picks.length;i++){
+    (function(b){
+      b.onclick=async function(){
+        const ok=await Friends.add(b.getAttribute('data-pick'),b.getAttribute('data-pickname'));
+        showToast(ok?'Добавлен в друзья':'Не удалось добавить');
+        if(ok){ $('addModal').classList.add('hidden'); await loadFriends(); }
       };
     })(picks[i]);
   }
 };
 
-/* ================= ВЫЗОВЫ ================= */
-
 function watchChallenges(){
-  if (!window.Friends) return;
-
-  Friends.watch(function (c){
-    const o = document.createElement('div');
-    o.style.cssText = 'position:fixed;inset:0;background:rgba(2,6,23,.95);z-index:2000;' +
-      'display:flex;align-items:center;justify-content:center;padding:24px;text-align:center';
-
-    o.innerHTML =
-      '<div style="max-width:330px;width:100%;background:linear-gradient(145deg,#1e293b,#0f172a);' +
-        'border:2px solid #22c55e;border-radius:16px;padding:20px">' +
-        '<div style="font-size:40px;margin-bottom:8px">⚔️</div>' +
-        '<div id="cnm" style="font-size:15px;font-weight:900;margin-bottom:6px"></div>' +
-        '<div style="font-size:12px;color:#94a3b8;margin-bottom:14px">Вызывает тебя на дружескую партию</div>' +
-        '<div style="display:flex;gap:8px">' +
-          '<button id="cNo" style="flex:1;padding:12px;border:0;border-radius:10px;' +
-            'background:linear-gradient(145deg,#ef4444,#991b1b);color:#fff;font-weight:900;font-size:13px">Отклонить</button>' +
-          '<button id="cYes" style="flex:1;padding:12px;border:0;border-radius:10px;' +
-            'background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-weight:900;font-size:13px">Играть</button>' +
-        '</div></div>';
-
+  if(!window.Friends) return;
+  Friends.watch(function(c){
+    const o=document.createElement('div');
+    o.style.cssText='position:fixed;inset:0;background:rgba(2,6,23,.95);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center';
+    o.innerHTML='<div style="max-width:330px;width:100%;background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #22c55e;border-radius:16px;padding:20px">'+
+      '<div style="font-size:40px;margin-bottom:8px">⚔️</div>'+
+      '<div id="cnm" style="font-size:15px;font-weight:900;margin-bottom:6px"></div>'+
+      '<div style="font-size:12px;color:#94a3b8;margin-bottom:14px">Вызывает тебя на дружескую партию</div>'+
+      '<div style="display:flex;gap:8px">'+
+      '<button id="cNo" style="flex:1;padding:12px;border:0;border-radius:10px;background:linear-gradient(145deg,#ef4444,#991b1b);color:#fff;font-weight:900;font-size:13px">Отклонить</button>'+
+      '<button id="cYes" style="flex:1;padding:12px;border:0;border-radius:10px;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;font-weight:900;font-size:13px">Играть</button>'+
+      '</div></div>';
     document.body.appendChild(o);
-    o.querySelector('#cnm').textContent = c.from_name || 'Игрок';
+    o.querySelector('#cnm').textContent=c.from_name||'Игрок';
 
-    let closed = false;
-    const chk = setInterval(async function(){
-      if (closed) return;
-      const st = await Friends.status(c.id);
-      if (!st || st.status !== 'pending'){
-        closed = true;
-        clearInterval(chk);
-        o.remove();
-      }
-    }, 3000);
+    let closed=false;
+    const chk=setInterval(async function(){
+      if(closed) return;
+      const st=await Friends.status(c.id);
+      if(!st||st.status!=='pending'){ closed=true; clearInterval(chk); o.remove(); }
+    },3000);
 
-    function close(){
-      closed = true;
-      clearInterval(chk);
-      o.remove();
-    }
+    function close(){ closed=true; clearInterval(chk); o.remove(); }
 
-    o.querySelector('#cNo').onclick = async function (){
+    o.querySelector('#cNo').onclick=async function(){ close(); await Friends.answer(c.id,'declined'); };
+    o.querySelector('#cYes').onclick=async function(){
       close();
-      await Friends.answer(c.id, 'declined');
-    };
-
-    o.querySelector('#cYes').onclick = async function (){
-      close();
-      const r = await Friends.answer(c.id, 'accepted');
-      if (!r || !r.accepted) return;
-      Friends.play(c.id, 'guest', c.from_key, c.from_name, c.from_cups, c.arena);
+      const r=await Friends.answer(c.id,'accepted');
+      if(!r||!r.accepted) return;
+      Friends.play(c.id,'guest',c.from_key,c.from_name,c.from_cups,c.arena);
     };
   });
 }
 
-/* ================= ССЫЛКИ ================= */
-
 function handleDeepLink(){
-  const p = new URLSearchParams(location.search);
-  const clan = p.get('clan');
-  const player = p.get('player');
+  const p=new URLSearchParams(location.search);
+  const clan=p.get('clan');
+  const player=p.get('player');
+  if(!clan&&!player) return;
 
-  if (!clan && !player) return;
-
-  const q = String(clan || player || '').replace(/^#/, '');
+  const q=String(clan||player||'').replace(/^#/,'');
 
   setTab('clan');
 
-  if (clan){
-    openSearch('clans', q);
-    if (myMember && myClan && myClan.tag &&
-        String(myClan.tag).toUpperCase() === q.toUpperCase()){
-      closeSearch();
-      showToast('Это твой клан — ты уже в нём');
-    }
-  } else {
-    openSearch('players', q);
-    setTimeout(function (){ openProfile(q); }, 600);
+  if(clan){ openSearch('clans',q); }
+  else {
+    openSearch('players',q);
+    setTimeout(function(){ openProfile(q); },600);
   }
 
-  history.replaceState(null, '', location.pathname);
+  history.replaceState(null,'',location.pathname);
 }
-
-/* ================= СТАРТ ================= */
 
 buildEmblems();
 boot();
-setTimeout(watchChallenges, 1500);
+setTimeout(watchChallenges,1500);
 
-document.addEventListener('visibilitychange', function (){
-  if (!document.hidden){ loadAll(); loadFriends(); }
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden){ loadAll(); loadFriends(); }
 });
 </script>
 </body>
