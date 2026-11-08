@@ -24,8 +24,14 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .banner-text{font-size:13px;font-weight:900;line-height:1.3}
 .banner-btn{background:#fff;color:#4c1d95;border:0;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap}
 #app{padding:0 12px 20px}
-.search-box{margin:0 0 10px}
-.search-box input{width:100%;padding:11px 14px;border-radius:11px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none}
+.row-top{display:flex;gap:8px;align-items:stretch;margin-bottom:10px}
+.row-top .clan-bar{flex:1;min-width:0}
+.search-fab{width:52px;flex:0 0 52px;border-radius:14px;border:2px solid #334155;background:linear-gradient(145deg,#1e293b,#0f172a);color:#ffcc00;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.search-fab:active{background:#1e293b;border-color:#ffcc00}
+.search-wide{width:100%;padding:13px;border-radius:12px;border:2px solid #334155;background:linear-gradient(145deg,#1e293b,#0f172a);color:#ffcc00;font-size:13.5px;font-weight:900;cursor:pointer;margin-bottom:12px;letter-spacing:.3px}
+.search-wide:active{background:#1e293b;border-color:#ffcc00}
+.search-box{margin-bottom:8px}
+.search-box input{width:100%;padding:12px 14px;border-radius:11px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px;outline:none}
 .search-box input:focus{border-color:#3b82f6}
 .chips{display:flex;gap:6px;margin-top:8px}
 .chip{flex:1;padding:9px;border-radius:9px;border:1px solid #334155;background:#0f172a;color:#94a3b8;font-size:12px;font-weight:900;cursor:pointer}
@@ -44,7 +50,7 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 .btn-wide.grey{background:linear-gradient(145deg,#475569,#1e293b);box-shadow:none}
 .btn-wide.red{background:linear-gradient(145deg,#ef4444,#991b1b);box-shadow:0 6px 16px rgba(239,68,68,.3)}
 .btn-wide.blue{background:linear-gradient(145deg,#3b82f6,#1d4ed8);box-shadow:0 6px 16px rgba(59,130,246,.3)}
-.clan-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;margin-bottom:10px;cursor:pointer;box-shadow:0 8px 20px rgba(245,158,11,.25)}
+.clan-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(145deg,#f59e0b,#b45309);border:2px solid #fbbf24;cursor:pointer;box-shadow:0 8px 20px rgba(245,158,11,.25)}
 .clan-bar:active{transform:scale(.99)}
 .cb-emblem{width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.6)}
 .cb-info{flex:1;min-width:0}
@@ -145,6 +151,28 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
 <div id="errBox" class="errbox hidden"></div>
 <div id="app"></div>
 
+<div id="searchModal" class="modal hidden">
+  <div class="modal-box" style="max-width:420px">
+    <div class="ci-head">
+      <div style="flex:1;min-width:0">
+        <div class="ci-name">Поиск</div>
+        <div class="ci-sub">По тегу #ABC12 или по имени</div>
+      </div>
+      <button class="ci-close" id="searchClose">✕</button>
+    </div>
+
+    <div class="search-box">
+      <input id="searchInput" type="text" placeholder="#тег или имя" autocomplete="off" spellcheck="false">
+      <div class="chips">
+        <button class="chip on" data-mode="clans">Кланы</button>
+        <button class="chip" data-mode="players">Игроки</button>
+      </div>
+    </div>
+
+    <div id="searchOut"></div>
+  </div>
+</div>
+
 <div id="clanInfoModal" class="modal hidden">
   <div class="modal-box" style="max-width:400px">
     <div class="ci-head">
@@ -174,7 +202,6 @@ body{margin:0;background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100
     <div class="modal-title">Новый клан</div>
     <div class="emblem-row" id="emblemRow"></div>
     <input id="inName" type="text" maxlength="20" placeholder="Название клана">
-    <input id="inTag" type="text" maxlength="5" placeholder="Тег (до 5 символов, необязательно)">
     <textarea id="inDesc" maxlength="90" placeholder="Описание (необязательно)"></textarea>
     <div class="modal-btns">
       <button id="createCancel">Отмена</button>
@@ -228,6 +255,56 @@ const MAX_MEMBERS = 30;
 const EMBLEMS = ['🛡️','👑','⚔️','🐺','🦅','🔥','💀','🐉','⭐','🦁','⚡','♟️'];
 const EMOJI = ['😀','😂','😍','🔥','⚔️','🏆','🤝','👑','💀','🛡️','⚡','😭','👍','🎯','♟️','🙌','😎','🤔','💪','🎉'];
 
+/* ===== корни мата — те же, что в базе ===== */
+const BAD_ROOTS = [
+  'хуй','хуя','хую','хуё','хуе',
+  'пизд',
+  'ебал','ебан','ебат','ебуч','ебло','ебли',
+  'бля',
+  'мудак','мудо','мудил',
+  'пидор','пидар','пидр','педик',
+  'залуп','дроч','манда','шлюх','гандон','гондо',
+  'сука','суки','суке','суку','сучк','гнида',
+  'уёб','уеб','нахуй','нахуя','похуй','похую',
+  'жоп','срак','срат','говн','дерьм','твар','мраз',
+  'долбоёб','долбоеб','выеб','въеб','заёб','заеб',
+  'наёб','наеб','отъеб','подъеб','разъеб','съеб',
+  'fuck','phuck','shit','bitch','cunt',
+  'asshole','arsehole','bastard','slut',
+  'whore','pussy','nigg','retard','dumbass',
+  'dipshit','wanker','douche','bollock',
+  'puta','puto','mierda','joder','cabron','pendejo',
+  'scheiss','fick','hurensohn','wichser','arschloch',
+  'kurwa','chuj','pierdol','jebac'
+];
+
+function chatNormalize(text){
+  let t = String(text || '').toLowerCase();
+
+  const map = { '0':'o','1':'i','3':'e','4':'a','5':'s','7':'t','@':'a','$':'s','!':'i' };
+  let out = '';
+
+  for (let i = 0; i < t.length; i++){
+    const ch = t.charAt(i);
+    out += (map[ch] !== undefined) ? map[ch] : ch;
+  }
+
+  out = out.replace(/ё/g, 'е');
+  out = out.replace(/[^a-zа-я]/g, '');
+
+  return out;
+}
+
+function hasBadWord(text){
+  const t = chatNormalize(text);
+  if (!t) return false;
+
+  for (let i = 0; i < BAD_ROOTS.length; i++){
+    if (t.indexOf(BAD_ROOTS[i]) >= 0) return true;
+  }
+  return false;
+}
+
 let meKey = '';
 let meName = 'Игрок';
 let meCups = 0;
@@ -257,7 +334,7 @@ function showToast(text){
   t.textContent = text;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function (){ t.classList.remove('show'); }, 2200);
+  toastTimer = setTimeout(function (){ t.classList.remove('show'); }, 2400);
 }
 
 function showErr(text){
@@ -544,57 +621,44 @@ function render(){
 
   if (chatTimer){ clearInterval(chatTimer); chatTimer = null; }
 
-  const showBanner = (activeTab === 'clan' && !myMember && searchQ.trim() === '');
-  $('banner').classList.toggle('hidden', !showBanner);
+  $('banner').classList.toggle('hidden', !(activeTab === 'clan' && !myMember));
 
   if (activeTab === 'clan') renderClanTab(app);
   else renderFriendsTab(app);
 }
 
-/* ================= КЛАН: ПОИСК + ЧАТ ================= */
-
 function renderClanTab(app){
   let html = '';
 
-  html += '<div class="search-box">';
-  html += '<input id="searchInput" type="text" placeholder="Поиск: #тег или имя" value="' + esc(searchQ) + '" autocomplete="off" spellcheck="false">';
-  html += '<div class="chips">';
-  html += '<button class="chip' + (searchMode === 'clans' ? ' on' : '') + '" data-mode="clans">Кланы</button>';
-  html += '<button class="chip' + (searchMode === 'players' ? ' on' : '') + '" data-mode="players">Игроки</button>';
-  html += '</div></div>';
-
-  html += '<div id="searchOut"></div>';
-
   if (myMember && myClan){
-    html += '<div id="clanBody">' + clanBodyHtml() + '</div>';
+    html += '<div class="row-top">';
+    html += '<div class="clan-bar" id="clanBar">';
+    html += '<div class="cb-emblem">' + (myClan.emblem || '🛡️') + '</div>';
+    html += '<div class="cb-info">';
+    html += '<div class="cb-name">' + esc(myClan.name) + ' #' + esc(myClan.tag || '—') + '</div>';
+    html += '<div class="cb-sub">' + membersOf(myClan.id).length + ' / ' + MAX_MEMBERS + ' · 🏆 ' + cupsOf(myClan.id) + '</div>';
+    html += '</div>';
+    html += '<div class="cb-chev">›</div>';
+    html += '</div>';
+    html += '<button class="search-fab" id="searchFab">🔍</button>';
+    html += '</div>';
+
+    html += '<div class="chat-box" id="chatBox"></div>';
+    html += '<div class="emoji-row" id="emojiRow"></div>';
+    html += '<div class="chat-row">';
+    html += '<input id="chatInput" maxlength="200" placeholder="Сообщение в клан…">';
+    html += '<button id="chatSend">➤</button>';
+    html += '</div>';
+    html += '<button class="btn-wide grey" id="shareReplayBtn">📤 Отправить повтор в чат</button>';
   } else {
-    html += '<div id="clanBody">' + clanListHtml() + '</div>';
+    html += '<button class="search-wide" id="searchFab">🔍 Поиск кланов и игроков</button>';
+    html += clanListHtml();
   }
 
   app.innerHTML = html;
 
-  const inp = $('searchInput');
-  let tmr = null;
-
-  inp.oninput = function (){
-    searchQ = inp.value;
-    clearTimeout(tmr);
-    tmr = setTimeout(applySearch, 350);
-  };
-
-  const chips = app.querySelectorAll('.chip');
-  for (let i = 0; i < chips.length; i++){
-    (function (c){
-      c.onclick = function (){
-        searchMode = c.getAttribute('data-mode');
-        const all = app.querySelectorAll('.chip');
-        for (let k = 0; k < all.length; k++) all[k].classList.toggle('on', all[k] === c);
-        if (searchQ.trim() !== '') applySearch();
-      };
-    })(chips[i]);
-  }
-
-  bindActions(app);
+  const fab = $('searchFab');
+  if (fab) fab.onclick = openSearch;
 
   if (myMember && myClan){
     const bar = $('clanBar');
@@ -630,38 +694,12 @@ function renderClanTab(app){
 
     const rbtn = $('shareReplayBtn');
     if (rbtn) rbtn.onclick = openShare;
-  }
 
-  applySearch();
-
-  if (myMember && myClan && searchQ.trim() === ''){
     loadChat();
     chatTimer = setInterval(loadChat, 4000);
   }
-}
 
-function clanBodyHtml(){
-  let html = '';
-
-  html += '<div class="clan-bar" id="clanBar">';
-  html += '<div class="cb-emblem">' + (myClan.emblem || '🛡️') + '</div>';
-  html += '<div class="cb-info">';
-  html += '<div class="cb-name">' + esc(myClan.name) + ' #' + esc(myClan.tag || '—') + '</div>';
-  html += '<div class="cb-sub">' + membersOf(myClan.id).length + ' / ' + MAX_MEMBERS + ' участников</div>';
-  html += '</div>';
-  html += '<div class="cb-trophy">🏆 ' + cupsOf(myClan.id) + '</div>';
-  html += '<div class="cb-chev">›</div>';
-  html += '</div>';
-
-  html += '<div class="chat-box" id="chatBox"></div>';
-  html += '<div class="emoji-row" id="emojiRow"></div>';
-  html += '<div class="chat-row">';
-  html += '<input id="chatInput" maxlength="200" placeholder="Сообщение в клан…">';
-  html += '<button id="chatSend">➤</button>';
-  html += '</div>';
-  html += '<button class="btn-wide grey" id="shareReplayBtn">📤 Отправить повтор в чат</button>';
-
-  return html;
+  bindActions(app);
 }
 
 function clanListHtml(){
@@ -692,20 +730,39 @@ function clanListHtml(){
   return html;
 }
 
+/* ================= ПОИСК ================= */
+
+function openSearch(mode, q){
+  searchMode = mode || 'clans';
+  searchQ = q || '';
+
+  $('searchInput').value = searchQ;
+
+  const chips = $('searchModal').querySelectorAll('.chip');
+  for (let i = 0; i < chips.length; i++){
+    chips[i].classList.toggle('on', chips[i].getAttribute('data-mode') === searchMode);
+  }
+
+  $('searchModal').classList.remove('hidden');
+
+  applySearch();
+}
+
+function closeSearch(){
+  $('searchModal').classList.add('hidden');
+}
+
 async function applySearch(){
   const out = $('searchOut');
-  const body = $('clanBody');
   if (!out) return;
 
   const q = searchQ.trim();
 
   if (q === ''){
-    out.innerHTML = '';
-    if (body) body.style.display = '';
+    out.innerHTML = '<div class="empty">Введи тег или имя.<br>Например: #A7K2M</div>';
     return;
   }
 
-  if (body) body.style.display = 'none';
   out.innerHTML = '<div class="empty">Ищем…</div>';
 
   if (searchMode === 'clans') await renderClanResults(out, q);
@@ -725,7 +782,7 @@ async function renderClanResults(out, q){
     return;
   }
 
-  let html = '<div class="section-title">Кланы</div>';
+  let html = '';
 
   for (let i = 0; i < list.length; i++){
     const c = list[i];
@@ -765,7 +822,7 @@ async function renderPlayerResults(out, q){
     return;
   }
 
-  let html = '<div class="section-title">Игроки</div>';
+  let html = '';
   let shown = 0;
 
   for (let i = 0; i < list.length; i++){
@@ -869,7 +926,7 @@ function renderFriendsTab(app){
 
   if (!friendsList.length){
     html += '<div class="empty">Пока нет друзей.<br>' +
-            'Найди по тегу на вкладке «Клан».</div>';
+            'Найди по тегу через поиск.</div>';
   } else {
     for (let i = 0; i < friendsList.length; i++){
       const f = friendsList[i];
@@ -890,11 +947,7 @@ function renderFriendsTab(app){
 
   app.innerHTML = html;
 
-  $('addFriendBtn').onclick = function (){
-    $('inNick').value = '';
-    $('addResults').innerHTML = '';
-    $('addModal').classList.remove('hidden');
-  };
+  $('addFriendBtn').onclick = openSearchPlayers;
 
   const inv = app.querySelectorAll('[data-finvite]');
   for (let i = 0; i < inv.length; i++){
@@ -923,6 +976,13 @@ function renderFriendsTab(app){
       };
     })(rem[i]);
   }
+}
+
+function openSearchPlayers(){
+  openSearch('players', '');
+  setTimeout(function (){
+    try { $('searchInput').focus(); } catch (e){}
+  }, 100);
 }
 
 /* ================= ЧАТ ================= */
@@ -997,6 +1057,12 @@ async function sendChat(){
   const txt = inp.value.trim();
   if (!txt) return;
 
+  if (hasBadWord(txt)){
+    inp.value = '';
+    showToast('Ненормативная лексика — сообщение не отправлено');
+    return;
+  }
+
   inp.value = '';
 
   const res = await sb.rpc('clan_post', {
@@ -1008,7 +1074,17 @@ async function sendChat(){
     p_match: null
   });
 
-  if (res.error){ showToast('Не отправлено'); return; }
+  if (res.error){
+    showToast('Не отправлено');
+    inp.value = txt;
+    return;
+  }
+
+  if (res.data && res.data.bad){
+    showToast('Ненормативная лексика — сообщение не отправлено');
+    inp.value = txt;
+    return;
+  }
 
   await loadChat();
 }
@@ -1180,7 +1256,7 @@ async function joinClan(clanId){
   if (res.error){ showToast('Не удалось вступить'); return; }
 
   showToast('Ты в клане!');
-  searchQ = '';
+  closeSearch();
   await loadAll();
 }
 
@@ -1247,7 +1323,6 @@ async function createClan(){
 
   $('createModal').classList.add('hidden');
   $('inName').value = '';
-  $('inTag').value = '';
   $('inDesc').value = '';
 
   await loadAll();
@@ -1279,10 +1354,34 @@ $('bannerBtn').onclick = function (){
 
 $('shareMeBtn').onclick = shareMe;
 $('ciClose').onclick = closeClanModal;
+$('searchClose').onclick = closeSearch;
 
 $('clanInfoModal').onclick = function (e){
   if (e.target === $('clanInfoModal')) closeClanModal();
 };
+
+$('searchModal').onclick = function (e){
+  if (e.target === $('searchModal')) closeSearch();
+};
+
+$('searchInput').addEventListener('input', function (){
+  searchQ = this.value;
+  clearTimeout(window.__sqT);
+  window.__sqT = setTimeout(applySearch, 350);
+});
+
+const modalChips = $('searchModal').querySelectorAll('.chip');
+for (let i = 0; i < modalChips.length; i++){
+  (function (c){
+    c.onclick = function (){
+      searchMode = c.getAttribute('data-mode');
+      for (let k = 0; k < modalChips.length; k++){
+        modalChips[k].classList.toggle('on', modalChips[k] === c);
+      }
+      applySearch();
+    };
+  })(modalChips[i]);
+}
 
 $('createCancel').onclick = function (){ $('createModal').classList.add('hidden'); };
 $('createOk').onclick = createClan;
@@ -1418,10 +1517,11 @@ function handleDeepLink(){
 
   if (!clan && !player) return;
 
-  searchMode = clan ? 'clans' : 'players';
-  searchQ = String(clan || player || '').replace(/^#/, '');
+  const mode = clan ? 'clans' : 'players';
+  const q = String(clan || player || '').replace(/^#/, '');
 
   setTab('clan');
+  openSearch(mode, q);
 
   history.replaceState(null, '', location.pathname);
 }
