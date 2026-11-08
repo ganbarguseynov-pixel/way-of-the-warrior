@@ -1,5 +1,5 @@
 /* ============================================================
-   profile.js — публичный профиль игрока (VER 1)
+   profile.js — публичный профиль игрока (VER 2)
    Profile.open(keyOrTag) — открыть карточку любого игрока
    ============================================================ */
 (function (global) {
@@ -43,72 +43,114 @@ function esc(s){
 
 function num(n){
   var v = (typeof n === 'number' && isFinite(n)) ? Math.round(n) : 0;
-  return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, '\u2009');
 }
 
 /* ---------- стили ---------- */
 
-var CSS = ''
-+ '#pfModal{position:fixed;inset:0;z-index:2100;display:none;background:rgba(2,6,23,.94);align-items:center;justify-content:center}'
-+ '#pfModal.open{display:flex}'
-+ '#pfCard{position:relative;width:100%;max-width:430px;height:100dvh;display:flex;flex-direction:column;overflow:hidden;'
-+ 'background:#16357c;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.06) 0 2px,transparent 2px 26px),'
-+ 'repeating-linear-gradient(-45deg,rgba(255,255,255,.06) 0 2px,transparent 2px 26px);'
-+ 'box-shadow:inset 0 0 80px rgba(0,0,0,.6);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}'
-+ '#pfTop{position:relative;flex:0 0 54px;background:linear-gradient(180deg,#43aef8,#1668d8);border-bottom:3px solid #f7c948;display:flex;align-items:center;justify-content:center}'
-+ '#pfCrown{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:38px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}'
-+ '#pfDia{position:absolute;left:12px;top:50%;transform:translateY(-50%) rotate(45deg);width:14px;height:14px;background:linear-gradient(135deg,#ffe680,#f0a800);border:1px solid #7a4b00}'
-+ '#pfClose{position:absolute;right:10px;top:11px;width:34px;height:34px;border-radius:9px;border:2px solid #fff;'
-+ 'background:linear-gradient(180deg,#f4665e,#c62828);color:#fff;font-size:15px;font-weight:900;cursor:pointer;line-height:1}'
-+ '#pfScroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:14px 0 24px;scrollbar-width:none}'
-+ '#pfScroll::-webkit-scrollbar{display:none}'
-+ '.pf-hero{text-align:center;margin-bottom:14px;padding:0 16px}'
-+ '.pf-ava{width:74px;height:74px;margin:0 auto 8px;border-radius:50%;display:flex;align-items:center;justify-content:center;'
-+ 'font-size:38px;background:linear-gradient(145deg,#ffe27a,#e39b00);border:3px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.55)}'
-+ '.pf-name{font-size:19px;font-weight:900;color:#fff;text-shadow:-2px -2px 0 #10214a,2px -2px 0 #10214a,-2px 2px 0 #10214a,2px 2px 0 #10214a}'
-+ '.pf-tag{display:inline-block;margin-top:6px;font-size:12.5px;font-weight:900;letter-spacing:.8px;color:#10214a;'
-+ 'background:linear-gradient(180deg,#ffe680,#f3b300);padding:3px 12px;border-radius:8px;border:2px solid #fff}'
-+ '.pf-arena{margin-top:8px;font-size:12px;font-weight:800;color:#cfe0ff}'
-+ '.pf-sec{margin:0 12px 14px;border-radius:14px;overflow:hidden;border:2px solid rgba(0,0,0,.35)}'
-+ '.pf-purple{background:linear-gradient(180deg,#7b3fc4,#5a2496)}'
-+ '.pf-blue{background:linear-gradient(180deg,#2e71d4,#1b4a9c)}'
-+ '.pf-sec-h{display:flex;align-items:center;justify-content:center;gap:10px;padding:9px 0;'
-+ 'font-size:13px;font-weight:900;letter-spacing:.4px;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.65)}'
-+ '.pf-sec-h::before,.pf-sec-h::after{content:"";width:46px;height:3px;border-radius:2px;'
-+ 'background:linear-gradient(90deg,#f7d24b,#ffe98a,#f7d24b)}'
-+ '.pf-record{display:flex;align-items:center;justify-content:center;gap:12px;margin:0 18px;padding:10px;'
-+ 'border-radius:10px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.16)}'
-+ '.pf-record span{font-size:24px}'
-+ '.pf-record b{font-size:26px;font-weight:900;color:#fff;text-shadow:-2px -2px 0 #2a1a4d,2px -2px 0 #2a1a4d,-2px 2px 0 #2a1a4d,2px 2px 0 #2a1a4d}'
-+ '.pf-note{text-align:center;font-size:11px;color:rgba(255,255,255,.8);padding:8px 16px 12px;line-height:1.4}'
-+ '.pf-deck{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:4px 12px 10px}'
-+ '.pf-card2{position:relative;aspect-ratio:1/1.18;border-radius:10px;display:flex;align-items:center;justify-content:center;'
-+ 'font-size:26px;color:#fff;background:linear-gradient(180deg,#8b6bff,#4a2fbe);border:2px solid #f7d24b;'
-+ 'box-shadow:inset 0 -14px 18px rgba(0,0,0,.28)}'
-+ '.pf-card2 i{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-style:normal;font-size:9px;font-weight:900;'
-+ 'color:#fff;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000}'
-+ '.pf-avg{margin:0 12px 12px;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.3);'
-+ 'font-size:11.5px;font-weight:800;color:#fff;display:flex;justify-content:space-between;align-items:center}'
-+ '.pf-avg b{color:#ffd84d}'
-+ '.pf-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:10px 12px 14px}'
-+ '.pf-cell{background:#e6e8f7;border-radius:9px;padding:7px 9px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.15)}'
-+ '.pf-cell span{display:block;font-size:9.5px;font-weight:800;color:#5b4b8a;margin-bottom:3px;line-height:1.2}'
-+ '.pf-cell b{display:block;font-size:19px;font-weight:900;color:#fff;line-height:1.15;'
-+ 'text-shadow:-2px -2px 0 #202a44,2px -2px 0 #202a44,-2px 2px 0 #202a44,2px 2px 0 #202a44}'
-+ '.pf-cell.wide b{font-size:13px}'
-+ '.pf-clan{display:flex;align-items:center;gap:11px;padding:12px}'
-+ '.pf-clan-e{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;'
-+ 'background:linear-gradient(145deg,#ffe27a,#e39b00);border:2px solid #fff;flex-shrink:0}'
-+ '.pf-clan-n{font-size:14px;font-weight:900;color:#fff}'
-+ '.pf-clan-n i{font-style:normal;font-size:11px;color:#ffd84d;margin-left:4px}'
-+ '.pf-clan-r{font-size:11px;color:#cfe0ff;margin-top:3px;font-weight:700}'
-+ '.pf-btns{display:flex;gap:8px;padding:4px 12px 0}'
-+ '.pf-btns button{flex:1;padding:13px 4px;border-radius:12px;border:2px solid rgba(255,255,255,.4);'
-+ 'font-size:12.5px;font-weight:900;color:#fff;cursor:pointer}'
-+ '#pfPlay{background:linear-gradient(180deg,#5ddc7a,#1f9e42)}'
-+ '#pfAdd{background:linear-gradient(180deg,#5ea8ff,#1e63c8)}'
-+ '#pfNick,#pfShare{background:linear-gradient(180deg,#8b6bff,#5a2fc4)}'
-+ '.pf-load{padding:60px 20px;text-align:center;color:#cfe0ff;font-size:13px;font-weight:800}';
+var CSS = `
+#pfModal{position:fixed;inset:0;z-index:2100;display:none;background:rgba(2,6,23,.94);
+align-items:center;justify-content:center;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+#pfModal.open{display:flex}
+
+#pfCard{position:relative;width:100%;max-width:440px;height:100dvh;display:flex;flex-direction:column;
+overflow:hidden;background:#1b43a0;
+background-image:
+repeating-linear-gradient(45deg,rgba(255,255,255,.045) 0 2px,transparent 2px 30px),
+repeating-linear-gradient(-45deg,rgba(255,255,255,.045) 0 2px,transparent 2px 30px)}
+
+#pfTop{position:relative;flex:0 0 56px;display:flex;align-items:center;justify-content:center;
+background:linear-gradient(180deg,#4ab3f8,#1b6fd6);border-bottom:3px solid #f7c948}
+#pfCrown{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:36px;
+filter:drop-shadow(0 4px 8px rgba(0,0,0,.55))}
+#pfDia{position:absolute;left:14px;top:50%;transform:translateY(-50%) rotate(45deg);
+width:13px;height:13px;border-radius:2px;background:linear-gradient(135deg,#ffe680,#eda200);
+border:1px solid #8a5600}
+#pfClose{position:absolute;right:10px;top:11px;width:34px;height:34px;border-radius:9px;
+border:2px solid rgba(255,255,255,.9);background:linear-gradient(180deg,#f4665e,#c62828);
+color:#fff;font-size:15px;font-weight:700;cursor:pointer;line-height:1;
+box-shadow:0 3px 8px rgba(0,0,0,.4)}
+
+#pfScroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+padding:16px 0 26px;scrollbar-width:none}
+#pfScroll::-webkit-scrollbar{display:none}
+
+.pf-hero{text-align:center;padding:0 16px;margin-bottom:16px}
+.pf-ava{width:76px;height:76px;margin:0 auto 10px;border-radius:50%;display:flex;
+align-items:center;justify-content:center;font-size:38px;
+background:linear-gradient(145deg,#ffe27a,#e39b00);border:3px solid #fff;
+box-shadow:0 8px 20px rgba(0,0,0,.5)}
+.pf-name{font-size:21px;font-weight:800;letter-spacing:.2px;color:#fff;
+text-shadow:0 2px 6px rgba(0,0,0,.55);line-height:1.2}
+.pf-tag{display:inline-block;margin-top:8px;font-size:13px;font-weight:800;letter-spacing:1px;
+color:#2a1c00;background:linear-gradient(180deg,#ffe680,#f3b300);
+padding:3px 14px;border-radius:9px;border:2px solid rgba(255,255,255,.85)}
+.pf-arena{margin-top:9px;font-size:12.5px;font-weight:600;color:#c6d8ff}
+
+.pf-sec{margin:0 14px 15px;border-radius:16px;padding-bottom:12px;
+box-shadow:0 8px 22px rgba(0,0,0,.28)}
+.pf-purple{background:linear-gradient(180deg,#7d43c9,#56239b)}
+.pf-blue{background:linear-gradient(180deg,#2f74d8,#1a4c9e)}
+
+.pf-sec-h{display:flex;align-items:center;justify-content:center;gap:12px;
+padding:11px 0 9px;font-size:13.5px;font-weight:800;letter-spacing:.4px;color:#fff;
+text-shadow:0 1px 3px rgba(0,0,0,.45)}
+.pf-sec-h::before,.pf-sec-h::after{content:"";width:44px;height:3px;border-radius:3px;
+background:linear-gradient(90deg,#ffe066,#ffc400,#ffe066)}
+
+.pf-record{display:flex;align-items:center;justify-content:center;gap:12px;margin:0 20px;
+padding:11px;border-radius:12px;background:rgba(0,0,0,.26);
+border:1px solid rgba(255,255,255,.15)}
+.pf-record span{font-size:24px}
+.pf-record b{font-size:28px;font-weight:800;color:#fff;letter-spacing:.5px;
+font-variant-numeric:tabular-nums}
+.pf-note{text-align:center;font-size:11.5px;font-weight:600;color:rgba(255,255,255,.78);
+padding:9px 16px 4px;line-height:1.4}
+
+.pf-deck{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:2px 14px 0}
+.pf-card2{position:relative;aspect-ratio:1/1.16;border-radius:11px;display:flex;
+align-items:center;justify-content:center;background:linear-gradient(180deg,#9168ff,#5b2ec4);
+border:2px solid #f7c948;box-shadow:inset 0 -12px 16px rgba(0,0,0,.25)}
+.pf-glyph{font-size:29px;line-height:1;color:#fff;text-shadow:0 2px 5px rgba(0,0,0,.45)}
+.pf-cost{position:absolute;right:3px;bottom:2px;font-style:normal;font-size:10px;
+font-weight:800;color:#fff;background:rgba(0,0,0,.45);border-radius:6px;padding:1px 5px;
+font-variant-numeric:tabular-nums}
+
+.pf-avg{margin:11px 14px 0;padding:9px 12px;border-radius:11px;background:rgba(0,0,0,.28);
+font-size:12px;font-weight:700;color:#fff;display:flex;justify-content:space-between;
+align-items:center;letter-spacing:.2px}
+.pf-avg b{color:#ffd84d;font-size:14px;font-variant-numeric:tabular-nums}
+
+.pf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px 0}
+.pf-cell{background:linear-gradient(180deg,#f6f8ff,#dee4f8);border-radius:11px;padding:9px 11px;
+box-shadow:inset 0 -2px 0 rgba(20,30,70,.1)}
+.pf-cell span{display:block;font-size:10.5px;font-weight:700;color:#6b5fa8;
+letter-spacing:.15px;margin-bottom:3px;line-height:1.2}
+.pf-cell b{display:block;font-size:23px;font-weight:800;color:#16224a;line-height:1.1;
+font-variant-numeric:tabular-nums;letter-spacing:.2px}
+.pf-cell.wide b{font-size:13.5px;font-weight:700;line-height:1.3}
+
+.pf-clan{display:flex;align-items:center;gap:12px;padding:12px 14px 0}
+.pf-clan-e{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;
+justify-content:center;font-size:25px;background:linear-gradient(145deg,#ffe27a,#e39b00);
+border:2px solid rgba(255,255,255,.9);flex-shrink:0}
+.pf-clan-n{font-size:14.5px;font-weight:800;color:#fff;line-height:1.25}
+.pf-clan-n i{font-style:normal;font-size:12px;font-weight:800;color:#ffd84d;margin-left:4px}
+.pf-clan-r{font-size:11.5px;font-weight:600;color:#c6d8ff;margin-top:4px}
+
+.pf-btns{display:flex;gap:10px;padding:2px 14px 0}
+.pf-btns button{flex:1;padding:14px 6px;border-radius:13px;border:2px solid rgba(255,255,255,.35);
+font-size:13px;font-weight:800;color:#fff;cursor:pointer;letter-spacing:.2px}
+#pfPlay{background:linear-gradient(180deg,#5ddc7a,#1f9e42)}
+#pfAdd{background:linear-gradient(180deg,#5ea8ff,#1e63c8)}
+#pfNick{background:linear-gradient(180deg,#9168ff,#5b2ec4)}
+#pfShare{background:linear-gradient(180deg,#9168ff,#5b2ec4)}
+
+.pf-load{padding:70px 24px;text-align:center;color:#c6d8ff;font-size:13.5px;
+font-weight:600;line-height:1.6}
+`;
 
 function ensure(){
   if (document.getElementById('pfModal')) return;
@@ -155,12 +197,12 @@ function pieceDeck(deck){
   var P = (global.Arena && global.Arena.PIECES) ? global.Arena.PIECES : null;
 
   var def = [
-    ['pawn',   '♙', 1, 'Пешка'],
-    ['knight', '♘', 3, 'Конь'],
-    ['bishop', '♗', 3, 'Слон'],
-    ['rook',   '♖', 5, 'Ладья'],
-    ['queen',  '♕', 9, 'Ферзь'],
-    ['king',   '♔', 1, 'Король']
+    ['pawn',   '♙', 1],
+    ['knight', '♘', 3],
+    ['bishop', '♗', 3],
+    ['rook',   '♖', 5],
+    ['queen',  '♕', 9],
+    ['king',   '♔', 1]
   ];
 
   for (var k = 0; k < def.length; k++){
@@ -168,8 +210,7 @@ function pieceDeck(deck){
     var p = P ? P[t] : null;
     out.push({
       g: (p && p.w) || def[k][1],
-      c: (p && typeof p.cost === 'number') ? p.cost : def[k][2],
-      n: def[k][3]
+      c: (p && typeof p.cost === 'number') ? p.cost : def[k][2]
     });
   }
 
@@ -201,7 +242,7 @@ function render(p){
   h += '<div class="pf-ava">👑</div>';
   h += '<div class="pf-name">' + esc(p.name || 'Игрок') + '</div>';
   h += '<div class="pf-tag">#' + esc(p.tag || '—') + '</div>';
-  h += '<div class="pf-arena">Арена ' + arena + ': ' + esc(ARENAS[arena - 1]) + '</div>';
+  h += '<div class="pf-arena">Арена ' + arena + ' · ' + esc(ARENAS[arena - 1]) + '</div>';
   h += '</div>';
 
   h += '<div class="pf-sec pf-purple">';
@@ -215,7 +256,8 @@ function render(p){
   h += '<div class="pf-deck">';
   for (i = 0; i < deck.length; i++){
     h += '<div class="pf-card2" title="' + esc(deck[i].n) + '">' +
-         esc(deck[i].g) + '<i>' + deck[i].c + '</i></div>';
+         '<span class="pf-glyph">' + esc(deck[i].g) + '</span>' +
+         '<i class="pf-cost">' + deck[i].c + '</i></div>';
   }
   h += '</div>';
   h += '<div class="pf-avg"><span>💧 Средние затраты эликсира</span><b>' + avg + '</b></div>';
@@ -262,7 +304,6 @@ function render(p){
   } else {
     h += '<button id="pfPlay">⚔️ Вызвать</button>';
     h += '<button id="pfAdd">+ В друзья</button>';
-    h += '<button id="pfShare">📤</button>';
   }
   h += '</div>';
 
@@ -380,7 +421,7 @@ Profile.ensureStyles = ensure;
 
 global.Profile = Profile;
 
-/* автопривязка к бейджу с ником, если он есть на странице */
+/* бейдж с ником на любой странице */
 document.addEventListener('DOMContentLoaded', function (){
   var b = document.getElementById('profileBadge');
   if (b && !b.dataset.pfBound){
@@ -389,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function (){
   }
 });
 
-/* ссылка ?player=TAG открывает профиль, если на странице нет своего поиска */
+/* ссылка ?player=TAG */
 setTimeout(function (){
   if (document.getElementById('searchModal')) return;
 
