@@ -41,9 +41,13 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 
 /* ==== ЭЛИКСИР ==== */
 .elixir-row{display:flex;align-items:center;gap:10px;width:100%;margin-top:4px}
-.elixir-badge{display:flex;align-items:center;gap:8px;padding:6px 16px 6px 9px;border-radius:13px;background:linear-gradient(180deg,#213a68,#0c1630);border:2px solid #5b8fd8;box-shadow:0 4px 0 rgba(4,10,26,.85),inset 0 2px 0 rgba(255,255,255,.14),0 0 16px rgba(232,62,232,.28);line-height:1}
-.elixir-drop{width:30px;height:33px;display:block;flex-shrink:0;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55))}
-.elixir-num{font-size:22px;font-weight:900;color:#fff;letter-spacing:.5px;text-shadow:0 2px 3px rgba(0,0,0,.6)}
+.elixir-badge{display:flex;align-items:center;gap:7px;padding:5px 15px 5px 7px;border-radius:11px;
+  background:linear-gradient(180deg,#1b3563,#0a1430);
+  border:2px solid #4d7fc4;
+  box-shadow:0 4px 0 rgba(3,8,22,.9),inset 0 2px 0 rgba(127,180,255,.35);
+  line-height:1}
+.elixir-drop{width:31px;height:34px;display:block;flex-shrink:0;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+.elixir-num{font-size:22px;font-weight:900;color:#fff;letter-spacing:.3px;text-shadow:0 2px 3px rgba(0,0,0,.7),0 0 10px rgba(255,90,220,.45)}
 .elixir-cap{font-size:11px;font-weight:800;color:#eaf3ff;line-height:1.3;text-shadow:0 1px 3px rgba(0,0,0,.5)}
 
 /* ==== СЕТКА КАРТ ==== */
@@ -109,7 +113,7 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 <div class="currency-row">
 <div class="currency">🪙 <span id="deck-coins">1250</span></div>
 <div class="currency">💎 <span id="deck-gems">50</span></div>
-<div class="deck-ver">v3</div>
+<div class="deck-ver">v4</div>
 </div>
 <div class="sub-tabs">
 <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
@@ -136,24 +140,38 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 <div class="elixir-badge">
 <svg class="elixir-drop" viewBox="0 0 40 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 <defs>
-<radialGradient id="dropFill" cx="34%" cy="22%" r="86%">
-<stop offset="0%" stop-color="#ffc4fb"/>
-<stop offset="30%" stop-color="#f45cee"/>
-<stop offset="62%" stop-color="#cf1ecb"/>
-<stop offset="100%" stop-color="#6d0664"/>
+<radialGradient id="dropFill" cx="33%" cy="17%" r="95%">
+<stop offset="0%" stop-color="#ffe3fd"/>
+<stop offset="18%" stop-color="#ff9df0"/>
+<stop offset="40%" stop-color="#f43fdd"/>
+<stop offset="66%" stop-color="#c60fae"/>
+<stop offset="86%" stop-color="#8a0679"/>
+<stop offset="100%" stop-color="#56044c"/>
 </radialGradient>
-<radialGradient id="dropShine" cx="50%" cy="50%" r="50%">
+<radialGradient id="dropGloss" cx="50%" cy="50%" r="50%">
 <stop offset="0%" stop-color="#ffffff" stop-opacity=".95"/>
+<stop offset="70%" stop-color="#ffffff" stop-opacity=".28"/>
 <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
 </radialGradient>
-<linearGradient id="dropRim" x1="0" y1="0" x2="0" y2="1">
-<stop offset="0%" stop-color="#ff9df6" stop-opacity=".8"/>
-<stop offset="100%" stop-color="#ff9df6" stop-opacity="0"/>
+<linearGradient id="dropEdge" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" stop-color="#ffc9f7" stop-opacity=".85"/>
+<stop offset="45%" stop-color="#ff6ce4" stop-opacity=".25"/>
+<stop offset="100%" stop-color="#ff6ce4" stop-opacity="0"/>
 </linearGradient>
 </defs>
-<path d="M20 2.6 C20 2.6 6.6 18 6.6 27.6 A13.4 13.4 0 0 0 33.4 27.6 C33.4 18 20 2.6 20 2.6 Z" fill="url(#dropFill)" stroke="#4e0548" stroke-width="1.8" stroke-linejoin="round"/>
-<ellipse cx="14.4" cy="24.2" rx="3.6" ry="5.8" fill="url(#dropShine)" opacity=".75" transform="rotate(-18 14.4 24.2)"/>
-<path d="M20 7.6 C20 7.6 11 18.6 11 27.4" fill="none" stroke="url(#dropRim)" stroke-width="1.6" stroke-linecap="round"/>
+<path d="M20 2.4
+C23.9 9.6 32.6 20.2 32.6 27.3
+A12.6 12.6 0 0 1 7.4 27.3
+C7.4 20.2 16.1 9.6 20 2.4 Z"
+fill="url(#dropFill)" stroke="#3f0339" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M20 2.4
+C23.9 9.6 32.6 20.2 32.6 27.3
+A12.6 12.6 0 0 1 7.4 27.3
+C7.4 20.2 16.1 9.6 20 2.4 Z"
+fill="none" stroke="url(#dropEdge)" stroke-width="1.6"/>
+<ellipse cx="14.6" cy="25.6" rx="3.5" ry="6.1" fill="url(#dropGloss)" transform="rotate(-16 14.6 25.6)"/>
+<ellipse cx="16.4" cy="15.2" rx="1.7" ry="2.6" fill="#ffffff" opacity=".6" transform="rotate(-22 16.4 15.2)"/>
+<path d="M28.8 31.6 A11 11 0 0 1 22 38.6" fill="none" stroke="#ff8ae9" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
 </svg>
 <span class="elixir-num" id="elixirAvg">—</span>
 </div>
