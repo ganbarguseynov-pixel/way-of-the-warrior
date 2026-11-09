@@ -48,33 +48,27 @@ body.battle-mode #verTag{display:none!important}
 #checkBar.on{visibility:visible;opacity:1;animation:barPulse .8s infinite alternate}
 @keyframes barPulse{from{opacity:.72}to{opacity:1}}
 
-/* ===== ЭЛИКСИР: КАПЛЯ + КРАСНАЯ 3D-ПОЛОСКА ===== */
-.elix-wrap{position:relative;width:min(95vw,420px);display:flex;align-items:center;gap:6px;margin-top:8px;margin-bottom:0}
-.elix-drop-badge{position:relative;width:42px;height:46px;flex-shrink:0;filter:drop-shadow(0 4px 6px rgba(0,0,0,.85))}
-.elix-drop-badge svg{width:100%;height:100%;display:block}
-.elix-drop-num{position:absolute;left:0;right:0;bottom:5px;text-align:center;font-size:14px;font-weight:900;color:#fff;line-height:1;letter-spacing:.3px;pointer-events:none;text-shadow:0 2px 3px rgba(0,0,0,.95),0 0 8px rgba(255,80,80,.85)}
-.elix-bar{position:relative;flex:1;height:40px;border-radius:13px;padding:4px;background:linear-gradient(180deg,#0c1932,#050a16);border:2px solid #3b5c96;box-shadow:0 5px 0 #060c1c,0 12px 22px rgba(0,0,0,.7),inset 0 2px 0 rgba(140,180,255,.22)}
-.elix-bar.bump{animation:elixBump .3s ease-out}
-@keyframes elixBump{0%{transform:translateY(0)}35%{transform:translateY(-3px) scale(1.015)}100%{transform:translateY(0)}}
-.elix-track{position:relative;width:100%;height:100%;border-radius:10px;overflow:hidden;background:#02060f;box-shadow:inset 0 6px 13px rgba(0,0,0,.95),inset 0 -1px 2px rgba(120,170,255,.08)}
-.elix-fill{position:absolute;left:0;top:0;height:100%;width:50%;overflow:hidden;z-index:1;
-  background:linear-gradient(180deg,#ff9d9d 0%,#ff3535 16%,#d40f0f 40%,#a80606 62%,#780303 84%,#4d0000 100%);
-  box-shadow:0 0 18px rgba(255,50,50,.95),0 0 38px rgba(190,0,0,.55),inset 0 3px 6px rgba(255,255,255,.55),inset 0 -9px 15px rgba(60,0,0,.7);
-  transition:width .1s linear}
-.elix-fill::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 55% 45% at 50% 0%,rgba(255,255,255,.6),transparent 72%);mix-blend-mode:screen}
+/* ===== ЭЛИКСИР КАК В CLASH ROYALE: КАПЛЯ + ПОЛОСКА ===== */
+.elix-wrap{position:relative;width:min(95vw,420px);height:48px;padding:5px 5px 5px 68px;margin-top:8px;margin-bottom:0;border-radius:15px;background:linear-gradient(180deg,#1d2b52,#111a33 55%,#0a0f20);border:2px solid #3f5c9e;box-shadow:0 5px 0 #060c1c,0 12px 24px rgba(0,0,0,.75),inset 0 2px 0 rgba(140,180,255,.35)}
+.elix-wrap.bump{animation:elixBump .3s ease-out}
+@keyframes elixBump{0%{transform:translateY(0)}35%{transform:translateY(-3px) scale(1.012)}100%{transform:translateY(0)}}
+.elix-bar{position:relative;width:100%;height:100%;border-radius:11px;background:#2b1046;box-shadow:inset 0 6px 13px rgba(0,0,0,.95);overflow:hidden}
+.elix-fill{position:absolute;left:0;top:0;height:100%;width:50%;overflow:hidden;z-index:1;transition:width .1s linear;background:linear-gradient(180deg,#ffb0f7 0%,#ff5ce6 16%,#ef1fd6 38%,#c20fbb 60%,#8c0a97 80%,#560563 100%);box-shadow:0 0 16px rgba(255,80,235,.95),0 0 34px rgba(190,15,200,.6),inset 0 3px 7px rgba(255,255,255,.65),inset 0 -9px 15px rgba(55,0,65,.65)}
+.elix-fill::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 58% 48% at 50% 0%,rgba(255,255,255,.75),transparent 75%);mix-blend-mode:screen}
 .elix-bubbles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-.elix-bub{position:absolute;bottom:-8px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff,rgba(255,255,255,.5) 45%,rgba(255,120,120,.1) 75%);box-shadow:0 0 6px rgba(255,190,190,.75);animation-name:elixRise;animation-timing-function:linear;animation-iteration-count:infinite}
+.elix-bub{position:absolute;bottom:-8px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff,rgba(255,255,255,.5) 45%,rgba(255,120,220,.1) 75%);box-shadow:0 0 6px rgba(255,190,250,.75);animation-name:elixRise;animation-timing-function:linear;animation-iteration-count:infinite}
 @keyframes elixRise{0%{transform:translateY(0) scale(.5);opacity:0}15%{opacity:.9}80%{opacity:.45}100%{transform:translateY(-40px) scale(1.2);opacity:0}}
 .elix-segs{position:absolute;inset:0;display:grid;grid-template-columns:repeat(10,1fr);pointer-events:none;z-index:2}
-.elix-segs i{border-right:2px solid rgba(0,0,0,.6);box-shadow:1px 0 0 rgba(255,255,255,.06)}
+.elix-segs i{border-right:2px solid rgba(0,0,0,.5);box-shadow:1px 0 0 rgba(255,255,255,.07)}
 .elix-segs i:last-child{border-right:0}
-.elix-gloss{position:absolute;left:0;right:0;top:0;height:46%;border-radius:10px 10px 50% 50%;background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,.04) 65%,transparent);pointer-events:none;z-index:3}
-.elix-plus{position:absolute;top:-2px;font-size:13px;font-weight:900;color:#fff;z-index:6;pointer-events:none;text-shadow:0 0 10px rgba(255,90,90,1),0 1px 3px #000;animation:elixPlus .9s ease-out forwards}
+.elix-num{position:absolute;left:0;top:0;width:68px;height:100%;display:flex;align-items:center;padding-left:38px;font-size:21px;font-weight:900;color:#fff;z-index:9;pointer-events:none;text-shadow:0 2px 0 rgba(60,0,70,.9),0 3px 5px rgba(0,0,0,.9),0 0 12px rgba(255,110,240,.85)}
+.elix-num::before{content:'';position:absolute;left:6px;top:50%;width:29px;height:29px;margin-top:-15px;border-radius:0 50% 50% 50%;transform:rotate(45deg);background:linear-gradient(140deg,#ffb4f8 0%,#ff55e6 26%,#e01fce 52%,#a30fae 76%,#5f0670 100%);border:1.5px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.85),inset -3px -3px 8px rgba(60,0,70,.55),inset 3px 3px 7px rgba(255,255,255,.55)}
+.elix-plus{position:absolute;top:-2px;font-size:13px;font-weight:900;color:#fff;z-index:6;pointer-events:none;text-shadow:0 0 10px rgba(255,90,235,1),0 1px 3px #000;animation:elixPlus .9s ease-out forwards}
 @keyframes elixPlus{0%{opacity:0;transform:translate(-50%,10px) scale(.5)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-26px) scale(1.15)}}
-.elix-spark{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;z-index:6;pointer-events:none;background:radial-gradient(circle,#fff,rgba(255,110,110,.6) 45%,transparent 72%);animation:elixSpark .55s ease-out forwards}
+.elix-spark{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;z-index:6;pointer-events:none;background:radial-gradient(circle,#fff,rgba(255,110,235,.6) 45%,transparent 72%);animation:elixSpark .55s ease-out forwards}
 @keyframes elixSpark{0%{transform:scale(.3);opacity:1}60%{transform:scale(2.4);opacity:.7}100%{transform:scale(3.2);opacity:0}}
 
-#board{--side:min(95vw,420px,calc(100dvh - 208px));width:var(--side);height:var(--side);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border:3px solid #334155;border-radius:12px;overflow:hidden;background:var(--dark);box-shadow:0 12px 34px rgba(0,0,0,.85);position:relative;contain:layout paint}
+#board{--side:min(95vw,420px,calc(100dvh - 200px));width:var(--side);height:var(--side);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border:3px solid #334155;border-radius:12px;overflow:hidden;background:var(--dark);box-shadow:0 12px 34px rgba(0,0,0,.85);position:relative;contain:layout paint}
 .cell{position:relative;display:flex;align-items:center;justify-content:center;font-size:clamp(15px,5vw,26px);cursor:pointer;overflow:hidden}
 .cell.light{background:var(--light)}
 .cell.dark{background:var(--dark)}
@@ -87,7 +81,7 @@ body.battle-mode #verTag{display:none!important}
 .piece{position:relative;z-index:3;line-height:1;margin-bottom:7px;font-weight:400;pointer-events:none}
 .piece.mine{color:#5aa9ec;text-shadow:0 0 6px rgba(90,169,236,.75),0 2px 4px rgba(0,0,0,.95)}
 .piece.theirs{color:#ef5350;text-shadow:0 0 6px rgba(239,83,80,.75),0 2px 4px rgba(0,0,0,.95)}
-.cost-badge{position:absolute;top:0;right:0;width:36%;height:36%;max-width:15px;max-height:15px;border-radius:50%;background:linear-gradient(145deg,#ff5a5a,#a80606);color:#fff;font-size:8px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;border:1px solid #fff;z-index:9;box-shadow:0 1px 3px rgba(0,0,0,.8);pointer-events:none}
+.cost-badge{position:absolute;top:0;right:0;width:36%;height:36%;max-width:15px;max-height:15px;border-radius:50%;background:linear-gradient(145deg,#ff5ce0,#8a0f9e);color:#fff;font-size:8px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;border:1px solid #fff;z-index:9;box-shadow:0 1px 3px rgba(0,0,0,.8);pointer-events:none}
 .hp-bar{position:absolute;bottom:7px;left:8%;width:84%;height:7px;border-radius:3px;background:#000;border:1px solid #000;z-index:8;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.8);pointer-events:none}
 .hp-fill{position:absolute;left:0;top:0;height:100%;background:linear-gradient(180deg,#34c759,#34c759aa);z-index:1}
 .hp-fill.mid{background:linear-gradient(180deg,#ffcc00,#ffcc00aa)}
@@ -141,7 +135,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 </style>
 </head>
 <body data-arena="1">
-<div id="verTag">v28</div>
+<div id="verTag">v31</div>
 
 <div id="lobby">
   <div class="card">
@@ -174,45 +168,15 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
   <div id="board"></div>
 
   <div class="elix-wrap" id="myElix">
-    <div class="elix-drop-badge">
-      <svg viewBox="0 0 44 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <defs>
-          <linearGradient id="edf" x1="18%" y1="0%" x2="82%" y2="100%">
-            <stop offset="0%" stop-color="#ff9d9d"/>
-            <stop offset="26%" stop-color="#ff3a3a"/>
-            <stop offset="56%" stop-color="#cc0f0f"/>
-            <stop offset="82%" stop-color="#8a0505"/>
-            <stop offset="100%" stop-color="#4d0000"/>
-          </linearGradient>
-          <radialGradient id="edg" cx="46%" cy="42%" r="54%">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity=".95"/>
-            <stop offset="55%" stop-color="#ffffff" stop-opacity=".3"/>
-            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-          </radialGradient>
-          <clipPath id="edc">
-            <path d="M22 2.6 C27 11 37.4 21.6 37.4 29.4 A15.4 15.4 0 0 1 6.6 29.4 C6.6 21.6 17 11 22 2.6 Z"/>
-          </clipPath>
-        </defs>
-        <path d="M22 2.6 C27 11 37.4 21.6 37.4 29.4 A15.4 15.4 0 0 1 6.6 29.4 C6.6 21.6 17 11 22 2.6 Z" fill="url(#edf)" stroke="#2e0000" stroke-width="2.4" stroke-linejoin="round"/>
-        <g clip-path="url(#edc)">
-          <ellipse cx="16.4" cy="28.6" rx="5.4" ry="9.4" fill="url(#edg)" transform="rotate(-14 16.4 28.6)"/>
-          <ellipse cx="19" cy="13.4" rx="2.6" ry="4" fill="#ffffff" opacity=".8" transform="rotate(-20 19 13.4)"/>
-        </g>
-      </svg>
-      <span class="elix-drop-num" id="myElixNum">5</span>
-    </div>
-
     <div class="elix-bar" id="myElixBar">
-      <div class="elix-track">
-        <div class="elix-fill" id="myElixFill">
-          <div class="elix-bubbles" id="elixBubbles"></div>
-        </div>
-        <div class="elix-segs">
-          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-        </div>
-        <div class="elix-gloss"></div>
+      <div class="elix-fill" id="myElixFill">
+        <div class="elix-bubbles" id="elixBubbles"></div>
+      </div>
+      <div class="elix-segs">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
       </div>
     </div>
+    <div class="elix-num" id="myElixNum">5</div>
   </div>
 
   <div id="tools">
@@ -355,10 +319,9 @@ function elixReset(){
 function elixBubble(){
   const bar = $('myElixBar');
   if (!bar) return;
-
-  bar.classList.remove('bump');
-  void bar.offsetWidth;
-  bar.classList.add('bump');
+  bar.parentNode.classList.remove('bump');
+  void bar.parentNode.offsetWidth;
+  bar.parentNode.classList.add('bump');
 
   const pos = Math.max(5, Math.min(93, elixView * 10));
 
