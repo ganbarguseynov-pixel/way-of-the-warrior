@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Эликсир</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;min-height:100vh;min-height:100dvh;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% -10%,#1e4a8a 0%,#0d2144 45%,#050b18 100%);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color:#fff;user-select:none;overflow:hidden;padding:16px;
+}
+
+.elixir-panel{
+  width:min(94vw,440px);padding:14px 14px 16px;border-radius:20px;
+  background:linear-gradient(180deg,#1b3563,#0a1430);
+  border:3px solid #ffd447;
+  box-shadow:0 10px 0 #b45309,0 22px 44px rgba(0,0,0,.7),inset 0 2px 0 rgba(255,255,255,.18);
+}
+
+/* ===== ВЕРХНЯЯ СТРОКА: ВРЕМЯ И МНОЖИТЕЛЬ ===== */
+.hud{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.timer-chip{
+  display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:11px;
+  background:linear-gradient(180deg,#122048,#070f22);
+  border:2px solid #3b6bb5;
+  box-shadow:inset 0 2px 0 rgba(120,170,255,.35),0 3px 0 rgba(0,0,0,.55);
+  font-weight:900;font-size:16px;color:#eaf3ff;letter-spacing:.3px;
+}
+.timer-chip svg{width:15px;height:15px;flex-shrink:0;opacity:.85}
+.timer-chip .unit{font-size:11px;color:#9fbcdf;font-weight:800;margin-left:-1px}
+
+.mult-chip{
+  padding:6px 11px;border-radius:11px;font-weight:900;font-size:15px;
+  background:linear-gradient(180deg,#2a3560,#141c38);
+  border:2px solid #55689a;color:#8fa5c9;
+  box-shadow:0 3px 0 rgba(0,0,0,.55);transition:.2s;
+}
+.mult-chip.hot{
+  background:linear-gradient(180deg,#ffe082,#ffb300);
+  border-color:#fff;color:#3b1f00;
+  box-shadow:0 3px 0 #b45309,0 0 20px rgba(255,196,0,.75);
+  animation:pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+.spacer{flex:1}
+.count-chip{
+  font-weight:900;font-size:13px;color:#ffd447;
+  padding:5px 11px;border-radius:10px;
+  background:rgba(2,8,22,.6);border:2px solid rgba(255,212,71,.45);
+}
+.count-chip .of{color:#7f93b5;font-size:11px}
+
+/* ===== 3D ТРУБКА ===== */
+.tube{
+  position:relative;width:100%;height:64px;border-radius:19px;
+  background:linear-gradient(180deg,#060d20,#0b1730 55%,#050a18);
+  box-shadow:
+    inset 0 10px 18px rgba(0,0,0,.9),
+    inset 0 -2px 4px rgba(120,170,255,.14),
+    0 0 0 3px #24365e,
+    0 0 0 6px #0a1226,
+    0 9px 0 #060c1c,
+    0 20px 34px rgba(0,0,0,.6);
+  cursor:pointer;
+}
+.tube.bump{animation:bump .3s ease-out}
+@keyframes bump{
+  0%{transform:translateY(0) scale(1)}
+  35%{transform:translateY(-4px) scale(1.015)}
+  100%{transform:translateY(0) scale(1)}
+}
+
+.field{position:absolute;inset:6px;border-radius:14px}
+
+.liquid{
+  position:absolute;top:0;left:0;height:100%;width:30%;
+  border-radius:14px;
+  background:linear-gradient(180deg,
+    #ffe4fd 0%,
+    #ff6ae8 14%,
+    #e027d2 34%,
+    #b41fbb 58%,
+    #7c1fa8 80%,
+    #4a1078 100%);
+  box-shadow:
+    inset 0 5px 9px rgba(255,255,255,.6),
+    inset 0 -10px 16px rgba(46,0,60,.6),
+    0 0 24px rgba(236,72,225,.8),
+    0 0 52px rgba(168,85,247,.4);
+  overflow:hidden;
+}
+
+/* блик по поверхности жидкости */
+.liquid .surface{
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 34% at 50% 0%,rgba(255,255,255,.65),transparent 72%);
+  mix-blend-mode:screen;
+  animation:surface 3.4s ease-in-out infinite;
+}
+@keyframes surface{
+  0%,100%{transform:translateX(-4%) scaleY(1);opacity:.85}
+  50%{transform:translateX(4%) scaleY(1.12);opacity:1}
+}
+
+/* пузырьки */
+.bubbles{position:absolute;inset:0;pointer-events:none}
+.bub{
+  position:absolute;bottom:-10px;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%,#fff,rgba(255,255,255,.55) 42%,rgba(216,102,255,.12) 72%);
+  box-shadow:0 0 7px rgba(255,190,255,.65),inset 0 0 3px rgba(255,255,255,.9);
+  animation-name:rise;animation-timing-function:linear;animation-iteration-count:infinite;
+}
+@keyframes rise{
+  0%{transform:translateY(0) scale(.5);opacity:0}
+  12%{opacity:.95}
+  76%{opacity:.6}
+  100%{transform:translateY(-56px) scale(1.3);opacity:0}
+}
+
+/* всплеск при получении эликсира */
+.splash{
+  position:absolute;top:50%;width:20px;height:20px;margin-top:-10px;margin-left:-10px;
+  border-radius:50%;opacity:0;pointer-events:none;
+  background:radial-gradient(circle,#fff,rgba(255,120,240,.65) 42%,transparent 72%);
+}
+.splash.pop{animation:splashPop .55s ease-out}
+@keyframes splashPop{
+  0%{transform:scale(.3);opacity:1}
+  55%{transform:scale(2.6);opacity:.8}
+  100%{transform:scale(3.6);opacity:0}
+}
+
+/* +1 при получении */
+.plus1{
+  position:absolute;top:2px;font-weight:900;font-size:17px;color:#fff;pointer-events:none;
+  text-shadow:0 0 12px rgba(255,120,240,1),0 2px 3px rgba(0,0,0,.7);
+  animation:floatUp .95s ease-out forwards;
+}
+@keyframes floatUp{
+  0%{transform:translate(-50%,12px) scale(.5);opacity:0}
+  22%{opacity:1}
+  100%{transform:translate(-50%,-40px) scale(1.2);opacity:0}
+}
+
+/* деления каждые 10% */
+.ticks{position:absolute;inset:6px;pointer-events:none}
+.ticks i{
+  position:absolute;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,rgba(200,230,255,.22),rgba(200,230,255,.05));
+  box-shadow:1px 0 0 rgba(0,0,0,.4);
+}
+
+/* стеклянный блик сверху */
+.gloss{
+  position:absolute;left:6px;right:6px;top:6px;height:44%;
+  border-radius:14px 14px 46% 46%;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,.07) 62%,transparent);
+}
+
+/* бегущий отблеск по стеклу */
+.shine{
+  position:absolute;top:-30%;left:-45%;width:38%;height:160%;pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.32),transparent);
+  transform:skewX(-18deg);animation:sweep 5s linear infinite;
+}
+@keyframes sweep{0%{left:-45%}55%{left:130%}100%{left:130%}}
+
+.num{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  font-size:30px;font-weight:900;color:#fff;pointer-events:none;letter-spacing:.5px;
+  text-shadow:0 2px 0 rgba(80,0,80,.9),0 3px 6px rgba(0,0,0,.8),0 0 18px rgba(255,140,255,.9);
+}
+
+/* ===== КНОПКИ ===== */
+.controls{display:flex;gap:6px;margin-top:14px}
+.controls button{
+  flex:1;padding:10px 4px;border-radius:11px;font-weight:900;font-size:13px;
+  background:linear-gradient(180deg,#22437f,#122a5e);
+  border:2px solid #4a72c0;color:#c6d8ff;cursor:pointer;
+  box-shadow:0 3px 0 #0b1b45;font-family:inherit;
+}
+.controls button:active{transform:translateY(2px);box-shadow:0 1px 0 #0b1b45}
+.controls button.on{
+  background:linear-gradient(180deg,#ffe082,#ffb300);
+  border-color:#fff;color:#3b1f00;box-shadow:0 3px 0 #b45309;
+}
+
+.caption{
+  text-align:center;font-size:10.5px;font-weight:800;color:#8fa8cc;
+  margin-top:10px;line-height:1.45;
+}
+</style>
+</head>
+<body>
+
+<div class="elixir-panel">
+
+  <div class="hud">
+    <div class="timer-chip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#8fb8f0" stroke-width="2.2" stroke-linecap="round">
+        <circle cx="12" cy="13" r="8"></circle>
+        <path d="M12 9v4l2.5 2"></path>
+        <path d="M9 2h6"></path>
+      </svg>
+      <span id="tNext">2.0</span><span class="unit">с</span>
+    </div>
+    <div class="mult-chip" id="multChip">×1</div>
+    <div class="spacer"></div>
+    <div class="count-chip"><span id="count">3</span><span class="of">/10</span></div>
+  </div>
+
+  <div class="tube" id="tube">
+    <div class="field">
+      <div class="liquid" id="liquid">
+        <div class="surface"></div>
+        <div class="bubbles" id="bubbles"></div>
+      </div>
+      <div class="splash" id="splash"></div>
+    </div>
+    <div class="ticks" id="ticks"></div>
+    <div class="gloss"></div>
+    <div class="shine"></div>
+    <div class="num" id="num">3</div>
+  </div>
+
+  <div class="controls">
+    <button data-m="1" class="on">×1</button>
+    <button data-m="1.5">×1.5</button>
+    <button data-m="2">×2</button>
+    <button id="resetBtn">Сброс</button>
+  </div>
+
+  <div class="caption">1 эликсир за 2 секунды · ×1.5 — за 1.33 с · ×2 — за 1 с<br>Нажми на трубку, чтобы потратить эликсир</div>
+
+</div>
+
+<script>
+(function(){
+  var MAX = 10;
+  var BASE_MS = 2000;
+
+  var mult = 1;
+  var elixir = 3.0;
+  var prevInt = 3;
+  var lastT = 0;
+
+  var tube = document.getElementById('tube');
+  var field = tube.querySelector('.field');
+  var liquid = document.getElementById('liquid');
+  var numEl = document.getElementById('num');
+  var tNext = document.getElementById('tNext');
+  var multChip = document.getElementById('multChip');
+  var countEl = document.getElementById('count');
+  var splash = document.getElementById('splash');
+
+  /* деления */
+  var ticks = document.getElementById('ticks');
+  for (var i = 1; i < MAX; i++){
+    var t = document.createElement('i');
+    t.style.left = (i * 10) + '%';
+    ticks.appendChild(t);
+  }
+
+  /* пузырьки */
+  var box = document.getElementById('bubbles');
+  for (var b = 0; b < 18; b++){
+    var el = document.createElement('div');
+    el.className = 'bub';
+    var size = 4 + Math.random() * 5;
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+    el.style.left = (3 + Math.random() * 94) + '%';
+    el.style.animationDuration = (1.7 + Math.random() * 2) + 's';
+    el.style.animationDelay = (-Math.random() * 3.4) + 's';
+    el.style.opacity = (0.5 + Math.random() * 0.45).toFixed(2);
+    box.appendChild(el);
+  }
+
+  function blup(){
+    tube.classList.remove('bump');
+    void tube.offsetWidth;
+    tube.classList.add('bump');
+
+    splash.style.left = (elixir / MAX * 100) + '%';
+    splash.classList.remove('pop');
+    void splash.offsetWidth;
+    splash.classList.add('pop');
+
+    var p = document.createElement('div');
+    p.className = 'plus1';
+    p.textContent = '+1';
+    p.style.left = (elixir / MAX * 100) + '%';
+    field.appendChild(p);
+    setTimeout(function(){ if (p.parentNode) p.parentNode.removeChild(p); }, 980);
+  }
+
+  function draw(){
+    liquid.style.width = (elixir / MAX * 100).toFixed(2) + '%';
+    numEl.textContent = Math.floor(elixir);
+    countEl.textContent = Math.floor(elixir);
+
+    if (elixir >= MAX){
+      tNext.textContent = 'МАКС';
+    } else {
+      var need = (Math.floor(elixir) + 1) - elixir;
+      var ms = need * BASE_MS / mult;
+      tNext.textContent = (ms / 1000).toFixed(1);
+    }
+  }
+
+  function loop(now){
+    if (!lastT) lastT = now;
+    var dt = now - lastT;
+    lastT = now;
+    if (dt > 250) dt = 250;
+
+    if (elixir < MAX){
+      elixir += dt / BASE_MS * mult;
+      if (elixir > MAX) elixir = MAX;
+
+      var cur = Math.floor(elixir);
+      if (cur > prevInt){
+        prevInt = cur;
+        blup();
+      }
+    } else {
+      prevInt = MAX;
+    }
+
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  document.querySelectorAll('[data-m]').forEach(function(btn){
+    btn.onclick = function(){
+      mult = parseFloat(btn.getAttribute('data-m'));
+      document.querySelectorAll('[data-m]').forEach(function(x){
+        x.classList.toggle('on', x === btn);
+      });
+      multChip.textContent = '×' + (mult === 1 ? '1' : mult);
+      multChip.classList.toggle('hot', mult > 1);
+      draw();
+    };
+  });
+
+  document.getElementById('resetBtn').onclick = function(){
+    elixir = 0;
+    prevInt = 0;
+    draw();
+  };
+
+  tube.onclick = function(){
+    if (elixir >= 1){
+      elixir -= 1;
+      prevInt = Math.floor(elixir);
+      draw();
+    }
+  };
+
+  draw();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
