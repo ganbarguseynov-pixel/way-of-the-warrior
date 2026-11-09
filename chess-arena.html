@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <title>Шахматные арены</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -15,9 +13,8 @@
 html,body{overscroll-behavior:none;touch-action:manipulation}
 body{margin:0;background:var(--bg);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;min-height:100dvh;user-select:none;overflow:hidden;-webkit-text-size-adjust:100%}
 .hidden{display:none!important}
-body.battle-mode .bottom-nav{display:none!important}
-body.battle-mode #verTag{display:none!important}
-#verTag{position:fixed;left:8px;bottom:74px;z-index:1300;font-size:10px;font-weight:900;color:#facc15;letter-spacing:.5px;background:#0f172a;border:1px solid #facc15;padding:3px 8px;border-radius:6px;pointer-events:none}
+body.battle-mode .bottom-nav,body.battle-mode #verTag{display:none!important}
+#verTag{position:fixed;left:8px;bottom:74px;z-index:1300;font-size:10px;font-weight:900;color:#facc15;background:#0f172a;border:1px solid #facc15;padding:3px 8px;border-radius:6px;pointer-events:none}
 #lobby{width:95vw;max-width:400px;text-align:center;margin:20px auto 0;max-height:calc(100dvh - 100px);overflow-y:auto}
 .card{background:linear-gradient(145deg,#1e293b,#0f172a);border:1px solid #334155;border-radius:14px;padding:18px;margin-bottom:12px;box-shadow:0 8px 22px rgba(0,0,0,.6)}
 #pName{font-size:16px;font-weight:700;color:#94a3b8}
@@ -28,13 +25,13 @@ body.battle-mode #verTag{display:none!important}
 #progFill{height:100%;width:0;background:linear-gradient(90deg,#b5541f,#ffcc00);transition:width .4s}
 #playBtn{width:100%;padding:16px;border:0;border-radius:12px;font-size:17px;font-weight:900;letter-spacing:1px;cursor:pointer;background:linear-gradient(145deg,#22c55e,#15803d);color:#fff;box-shadow:0 6px 16px rgba(34,197,94,.35)}
 #playBtn:active{transform:scale(.98)}
-#playBtn.searching{background:linear-gradient(145deg,#475569,#1e293b);box-shadow:0 6px 16px rgba(0,0,0,.5)}
-#playBtn:disabled{opacity:.45;cursor:not-allowed}
+#playBtn.searching{background:linear-gradient(145deg,#475569,#1e293b)}
+#playBtn:disabled{opacity:.45}
 #statusMsg{font-size:13px;color:#ffcc00;min-height:36px;margin-top:10px;line-height:1.35}
 #ruleBox{font-size:12px;color:#94a3b8;line-height:1.45;margin-top:10px;min-height:34px}
 #bootErr{margin-top:12px;padding:12px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid #7f1d1d;text-align:left}
-#bootErrHead{font-size:12px;font-weight:900;color:#fca5a5;margin-bottom:6px;letter-spacing:.5px}
-#bootErrText{font-size:11px;color:#fecaca;line-height:1.45;word-break:break-word;font-family:ui-monospace,Menlo,Consolas,monospace;max-height:150px;overflow-y:auto}
+#bootErrHead{font-size:12px;font-weight:900;color:#fca5a5;margin-bottom:6px}
+#bootErrText{font-size:11px;color:#fecaca;line-height:1.45;word-break:break-word;font-family:ui-monospace,Menlo,monospace;max-height:150px;overflow-y:auto}
 #retryBtn{width:100%;margin-top:10px;padding:10px;border-radius:9px;border:1px solid #b91c1c;background:linear-gradient(145deg,#ef4444,#991b1b);color:#fff;font-size:13px;font-weight:800;cursor:pointer}
 #battle{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:6px 0 calc(8px + env(safe-area-inset-bottom));overflow:hidden;z-index:5}
 #battle>*{flex-shrink:0}
@@ -42,14 +39,12 @@ body.battle-mode #verTag{display:none!important}
 #topBar b{color:#ffcc00}
 #timeBox{display:flex;align-items:center;gap:6px}
 #timeLabel{font-weight:900;font-variant-numeric:tabular-nums;font-size:15px;min-width:52px;text-align:right}
-#speedTag{font-size:10px;font-weight:900;color:#3b1f00;background:linear-gradient(180deg,#ffe082,#ffb300);padding:2px 7px;border-radius:6px;border:1px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.6),0 0 10px rgba(255,196,0,.6);letter-spacing:.3px;line-height:1.35;animation:spdPulse 1.3s ease-in-out infinite}
+#speedTag{font-size:10px;font-weight:900;color:#3b1f00;background:linear-gradient(180deg,#ffe082,#ffb300);padding:2px 7px;border-radius:6px;border:1px solid #fff;line-height:1.35;animation:spdPulse 1.3s ease-in-out infinite}
 @keyframes spdPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
 #checkBar{width:min(95vw,420px);height:24px;line-height:24px;text-align:center;font-size:12px;font-weight:900;letter-spacing:1.2px;color:#fff;border-radius:8px;margin-bottom:6px;white-space:nowrap;overflow:hidden;background:linear-gradient(145deg,#ef4444,#991b1b);box-shadow:0 0 18px rgba(239,68,68,.55);visibility:hidden;opacity:0}
 #checkBar.on{visibility:visible;opacity:1;animation:barPulse .8s infinite alternate}
 @keyframes barPulse{from{opacity:.72}to{opacity:1}}
-
-/* ===== ЭЛИКСИР КАК В CLASH ROYALE: КАПЛЯ + ПОЛОСКА ===== */
-.elix-wrap{position:relative;width:min(95vw,420px);height:48px;padding:5px 5px 5px 68px;margin-top:8px;margin-bottom:0;border-radius:15px;background:linear-gradient(180deg,#1d2b52,#111a33 55%,#0a0f20);border:2px solid #3f5c9e;box-shadow:0 5px 0 #060c1c,0 12px 24px rgba(0,0,0,.75),inset 0 2px 0 rgba(140,180,255,.35)}
+.elix-wrap{position:relative;width:min(95vw,420px);height:48px;padding:5px 5px 5px 68px;margin-top:8px;border-radius:15px;background:linear-gradient(180deg,#1d2b52,#111a33 55%,#0a0f20);border:2px solid #3f5c9e;box-shadow:0 5px 0 #060c1c,0 12px 24px rgba(0,0,0,.75),inset 0 2px 0 rgba(140,180,255,.35)}
 .elix-wrap.bump{animation:elixBump .3s ease-out}
 @keyframes elixBump{0%{transform:translateY(0)}35%{transform:translateY(-3px) scale(1.012)}100%{transform:translateY(0)}}
 .elix-bar{position:relative;width:100%;height:100%;border-radius:11px;background:#2b1046;box-shadow:inset 0 6px 13px rgba(0,0,0,.95);overflow:hidden}
@@ -67,46 +62,44 @@ body.battle-mode #verTag{display:none!important}
 @keyframes elixPlus{0%{opacity:0;transform:translate(-50%,10px) scale(.5)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-26px) scale(1.15)}}
 .elix-spark{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;z-index:6;pointer-events:none;background:radial-gradient(circle,#fff,rgba(255,110,235,.6) 45%,transparent 72%);animation:elixSpark .55s ease-out forwards}
 @keyframes elixSpark{0%{transform:scale(.3);opacity:1}60%{transform:scale(2.4);opacity:.7}100%{transform:scale(3.2);opacity:0}}
-
 #board{--side:min(95vw,420px,calc(100dvh - 200px));width:var(--side);height:var(--side);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border:3px solid #334155;border-radius:12px;overflow:hidden;background:var(--dark);box-shadow:0 12px 34px rgba(0,0,0,.85);position:relative;contain:layout paint}
 .cell{position:relative;display:flex;align-items:center;justify-content:center;font-size:clamp(15px,5vw,26px);cursor:pointer;overflow:hidden}
 .cell.light{background:var(--light)}
 .cell.dark{background:var(--dark)}
 .cell.sel{outline:3px solid #4ade80;outline-offset:-3px}
-.cell.move::after{content:'';position:absolute;width:24%;height:24%;border-radius:50%;background:radial-gradient(circle,#ffcc00,#b8860b);box-shadow:0 0 8px rgba(255,204,0,.9)}
+.cell.move::after{content:'';position:absolute;width:24%;height:24%;border-radius:50%;background:radial-gradient(circle,#ffcc00,#b8860b)}
 .cell.cap::after{content:'';position:absolute;inset:6%;border:3px solid #ef4444;border-radius:50%}
 .cell.check{box-shadow:inset 0 0 0 3px #ef4444,inset 0 0 20px rgba(239,68,68,.8)}
 .cell.check .piece{animation:checkPulse .65s infinite alternate}
 @keyframes checkPulse{from{filter:brightness(1)}to{filter:brightness(1.9)}}
-.piece{position:relative;z-index:3;line-height:1;margin-bottom:7px;font-weight:400;pointer-events:none}
+.piece{position:relative;z-index:3;line-height:1;margin-bottom:7px;pointer-events:none}
 .piece.mine{color:#5aa9ec;text-shadow:0 0 6px rgba(90,169,236,.75),0 2px 4px rgba(0,0,0,.95)}
 .piece.theirs{color:#ef5350;text-shadow:0 0 6px rgba(239,83,80,.75),0 2px 4px rgba(0,0,0,.95)}
-.cost-badge{position:absolute;top:0;right:0;width:36%;height:36%;max-width:15px;max-height:15px;border-radius:50%;background:linear-gradient(145deg,#ff5ce0,#8a0f9e);color:#fff;font-size:8px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;border:1px solid #fff;z-index:9;box-shadow:0 1px 3px rgba(0,0,0,.8);pointer-events:none}
-.hp-bar{position:absolute;bottom:7px;left:8%;width:84%;height:7px;border-radius:3px;background:#000;border:1px solid #000;z-index:8;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.8);pointer-events:none}
+.cost-badge{position:absolute;top:0;right:0;width:36%;height:36%;max-width:15px;max-height:15px;border-radius:50%;background:linear-gradient(145deg,#ff5ce0,#8a0f9e);color:#fff;font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;border:1px solid #fff;z-index:9;pointer-events:none}
+.hp-bar{position:absolute;bottom:7px;left:8%;width:84%;height:7px;border-radius:3px;background:#000;z-index:8;display:flex;align-items:center;justify-content:center;overflow:hidden;pointer-events:none}
 .hp-fill{position:absolute;left:0;top:0;height:100%;background:linear-gradient(180deg,#34c759,#34c759aa);z-index:1}
 .hp-fill.mid{background:linear-gradient(180deg,#ffcc00,#ffcc00aa)}
 .hp-fill.low{background:linear-gradient(180deg,#ff3b30,#ff3b30aa)}
 .hp-lvl{position:relative;z-index:2;font-size:6px;font-weight:900;color:#000;line-height:1}
-.hp-text{position:absolute;bottom:-1px;left:0;width:100%;text-align:center;font-size:6px;font-weight:bold;color:#fff;z-index:9;white-space:nowrap;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 1px 2px rgba(0,0,0,.9);pointer-events:none}
+.hp-text{position:absolute;bottom:-1px;left:0;width:100%;text-align:center;font-size:6px;font-weight:bold;color:#fff;z-index:9;white-space:nowrap;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;pointer-events:none}
 #tools{width:min(95vw,420px);display:flex;gap:6px;margin-top:10px}
 #tools button{flex:1;padding:11px 4px;border-radius:10px;font-size:12px;font-weight:800;border:1px solid #475569;background:linear-gradient(145deg,#475569,#1e293b);color:#fff;cursor:pointer}
-#tools button:disabled{opacity:.35;cursor:not-allowed}
-#promoPanel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,340px);background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #5aa9ec;border-radius:16px;padding:16px;z-index:980;box-shadow:0 18px 46px rgba(0,0,0,.92);text-align:center}
-#promoTitle{font-size:13px;font-weight:900;color:#e2e8f0;letter-spacing:.5px;margin-bottom:12px;line-height:1.35}
+#tools button:disabled{opacity:.35}
+#promoPanel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,340px);background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #5aa9ec;border-radius:16px;padding:16px;z-index:980;text-align:center}
+#promoTitle{font-size:13px;font-weight:900;color:#e2e8f0;margin-bottom:12px;line-height:1.35}
 #promoRow{display:flex;gap:8px}
 .promo-opt{flex:1;border:2px solid #334155;border-radius:12px;background:#0f172a;cursor:pointer;padding:8px 0 6px;display:flex;flex-direction:column;align-items:center;gap:4px}
-.promo-opt:active{border-color:#5aa9ec;background:#132033}
-.promo-glyph{font-size:30px;line-height:1;color:#5aa9ec;text-shadow:0 0 8px rgba(90,169,236,.7),0 2px 4px rgba(0,0,0,.9)}
+.promo-glyph{font-size:30px;line-height:1;color:#5aa9ec;text-shadow:0 0 8px rgba(90,169,236,.7)}
 .promo-name{font-size:9.5px;font-weight:800;color:#94a3b8}
 #promoCancel{width:100%;margin-top:10px;padding:9px;border-radius:9px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:12px;font-weight:800;cursor:pointer}
-#drawPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:140px;width:min(92vw,380px);background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #22c55e;border-radius:14px;padding:14px;text-align:center;z-index:960;box-shadow:0 14px 40px rgba(0,0,0,.9)}
+#drawPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:140px;width:min(92vw,380px);background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #22c55e;border-radius:14px;padding:14px;text-align:center;z-index:960}
 #drawPanelText{font-size:13px;font-weight:800;color:#e2e8f0;margin-bottom:10px}
 #drawPanelBtns{display:flex;gap:8px}
 #drawPanelBtns button{flex:1;padding:11px;border-radius:10px;border:0;font-size:13px;font-weight:900;cursor:pointer;color:#fff}
 #drawAccept{background:linear-gradient(145deg,#22c55e,#15803d)}
 #drawDecline{background:linear-gradient(145deg,#ef4444,#991b1b)}
 #overlay{position:fixed;inset:0;background:rgba(2,6,23,.92);display:flex;align-items:center;justify-content:center;z-index:900;padding:20px;overflow-y:auto}
-.ov{text-align:center;padding:26px 30px;background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #334155;border-radius:16px;max-width:340px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.8)}
+.ov{text-align:center;padding:26px 30px;background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #334155;border-radius:16px;max-width:340px;width:100%}
 .ov h2{margin:0 0 6px;font-size:26px}
 .ov p{margin:0 0 14px;color:#94a3b8;font-size:13px}
 .ov .big{font-size:30px;font-weight:900;color:#ffcc00;margin:8px 0}
@@ -119,7 +112,6 @@ body.battle-mode #verTag{display:none!important}
 .nav-btn .icon-wrap{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a2a3e,#15151f)}
 .nav-btn .icon{font-size:20px}
 .nav-btn.active{color:#ffcc00}
-.nav-btn.active .icon-wrap{background:linear-gradient(145deg,#ffcc00,#ff9500)}
 body[data-arena="1"]{--dark:#33241c;--light:#4a3428;--accent:#b5541f;--bg:#0f0b09}
 body[data-arena="2"]{--dark:#2a2b1f;--light:#3f4230;--accent:#8a8f4a;--bg:#0d0e0a}
 body[data-arena="3"]{--dark:#6b5236;--light:#8d6d49;--accent:#c0c8cf;--bg:#181210}
@@ -130,8 +122,8 @@ body[data-arena="7"]{--dark:#1c1414;--light:#332222;--accent:#8b1a1a;--bg:#08050
 body[data-arena="8"]{--dark:#1b1b22;--light:#2b2b38;--accent:#3b6fd4;--bg:#08080c}
 body[data-arena="9"]{--dark:#262a1a;--light:#3a4028;--accent:#6a8f3a;--bg:#0a0c07}
 body[data-arena="10"]{--dark:#a89880;--light:#ded4c2;--accent:#c9a227;--bg:#0d0b08}
-body[data-arena="10"] .piece.mine{color:#15529c;text-shadow:0 0 4px rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.35)}
-body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.35)}
+body[data-arena="10"] .piece.mine{color:#15529c;text-shadow:0 0 4px rgba(255,255,255,.9)}
+body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,255,255,.9)}
 </style>
 </head>
 <body data-arena="1">
@@ -159,26 +151,17 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
   <div id="topBar">
     <span id="oppLabel">Соперник</span>
     <span>Ставка <b id="stakeWin">+30</b> / <b id="stakeLose" style="color:#ef4444">−30</b></span>
-    <span id="timeBox">
-      <span id="speedTag" class="hidden"></span>
-      <span id="timeLabel">5:00</span>
-    </span>
+    <span id="timeBox"><span id="speedTag" class="hidden"></span><span id="timeLabel">5:00</span></span>
   </div>
   <div id="checkBar"></div>
   <div id="board"></div>
-
   <div class="elix-wrap" id="myElix">
     <div class="elix-bar" id="myElixBar">
-      <div class="elix-fill" id="myElixFill">
-        <div class="elix-bubbles" id="elixBubbles"></div>
-      </div>
-      <div class="elix-segs">
-        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-      </div>
+      <div class="elix-fill" id="myElixFill"><div class="elix-bubbles" id="elixBubbles"></div></div>
+      <div class="elix-segs"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
     <div class="elix-num" id="myElixNum">5</div>
   </div>
-
   <div id="tools">
     <button id="drawBtn">🤝 Ничья (2)</button>
     <button id="resignBtn">Сдаться</button>
@@ -229,308 +212,185 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 <script src="friends.js?v=3"></script>
 <script src="net.js?v=20"></script>
 <script>
-const sb = supabase.createClient(
-  'https://qnpriwfxzuoymoumdtrl.supabase.co',
-  'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF'
-);
-
+const sb = supabase.createClient('https://qnpriwfxzuoymoumdtrl.supabase.co','sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF');
 const tg = window.Telegram.WebApp;
-try { tg.ready(); tg.expand(); } catch (e){}
-
-const $ = function (id){ return document.getElementById(id); };
-
+try { tg.ready(); tg.expand(); } catch(e){}
+const $ = function(id){ return document.getElementById(id); };
 const DRAW_MAX = 2;
 
-let sel = null;
-let cells = [];
-let cellSig = [];
-let lastTimeTxt = '';
-let lastSpeedTxt = '';
-let searching = false;
-let checkState = -1;
-let drawState = '';
-let promoPending = null;
+let sel=null, cells=[], cellSig=[], lastTimeTxt='', lastSpeedTxt='', searching=false, checkState=-1, drawState='', promoPending=null;
 
-let toastTimer = null;
+let toastTimer=null;
 function toast(text){
-  const t = $('toast');
-  t.textContent = text;
-  t.classList.add('show');
+  const t=$('toast'); t.textContent=text; t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function (){ t.classList.remove('show'); }, 2000);
+  toastTimer=setTimeout(function(){ t.classList.remove('show'); },2000);
 }
-
 function playerKey(){
-  const tgId = localStorage.getItem('tgId');
-  if (tgId) return 'tg:' + tgId;
-  const email = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
-  if (email) return 'email:' + email.toLowerCase();
-  let anon = localStorage.getItem('arenaAnonId');
-  if (!anon){
-    anon = 'anon:' + Math.random().toString(36).slice(2, 10);
-    localStorage.setItem('arenaAnonId', anon);
-  }
-  return anon;
+  const tgId=localStorage.getItem('tgId'); if(tgId) return 'tg:'+tgId;
+  const em=localStorage.getItem('currentEmail')||localStorage.getItem('linkedEmail');
+  if(em) return 'email:'+em.toLowerCase();
+  let a=localStorage.getItem('arenaAnonId');
+  if(!a){ a='anon:'+Math.random().toString(36).slice(2,10); localStorage.setItem('arenaAnonId',a); }
+  return a;
 }
+function playerName(){ return localStorage.getItem('userName')||'Игрок'; }
 
-function playerName(){
-  return localStorage.getItem('userName') || 'Игрок';
-}
-
-/* ================= ЭЛИКСИР ================= */
-
-let elixView = 0;
-let elixStarted = false;
-let elixIntShown = -1;
-let elixLastFrame = 0;
-let elixLoopOn = false;
+let elixView=0, elixStarted=false, elixIntShown=-1, elixLastFrame=0, elixLoopOn=false;
 
 function elixBuildBubbles(){
-  const box = $('elixBubbles');
-  if (!box || box.childElementCount) return;
-  for (let i = 0; i < 12; i++){
-    const b = document.createElement('div');
-    b.className = 'elix-bub';
-    const sz = 3 + Math.random() * 4;
-    b.style.width = sz + 'px';
-    b.style.height = sz + 'px';
-    b.style.left = (2 + Math.random() * 94) + '%';
-    b.style.animationDuration = (1.5 + Math.random() * 1.9) + 's';
-    b.style.animationDelay = (-Math.random() * 3) + 's';
+  const box=$('elixBubbles'); if(!box||box.childElementCount) return;
+  for(let i=0;i<12;i++){
+    const b=document.createElement('div'); b.className='elix-bub';
+    const sz=3+Math.random()*4;
+    b.style.width=sz+'px'; b.style.height=sz+'px';
+    b.style.left=(2+Math.random()*94)+'%';
+    b.style.animationDuration=(1.5+Math.random()*1.9)+'s';
+    b.style.animationDelay=(-Math.random()*3)+'s';
     box.appendChild(b);
   }
 }
-
 function elixReset(){
-  elixView = 0;
-  elixStarted = false;
-  elixIntShown = -1;
-  elixLastFrame = 0;
-  elixLoopOn = false;
-  const st = $('speedTag');
-  if (st){ st.textContent = ''; st.classList.add('hidden'); }
-  lastSpeedTxt = '';
-  const num = $('myElixNum');
-  if (num) num.textContent = '0';
-  const fill = $('myElixFill');
-  if (fill) fill.style.width = '0%';
+  elixView=0; elixStarted=false; elixIntShown=-1; elixLastFrame=0; elixLoopOn=false;
+  const st=$('speedTag'); if(st){ st.textContent=''; st.classList.add('hidden'); }
+  lastSpeedTxt='';
+  const num=$('myElixNum'); if(num) num.textContent='0';
+  const fill=$('myElixFill'); if(fill) fill.style.width='0%';
 }
-
 function elixBubble(){
-  const bar = $('myElixBar');
-  if (!bar) return;
-  bar.parentNode.classList.remove('bump');
-  void bar.parentNode.offsetWidth;
-  bar.parentNode.classList.add('bump');
-
-  const pos = Math.max(5, Math.min(93, elixView * 10));
-
-  const sp = document.createElement('div');
-  sp.className = 'elix-spark';
-  sp.style.left = pos + '%';
-  bar.appendChild(sp);
-  setTimeout(function(){ if (sp.parentNode) sp.parentNode.removeChild(sp); }, 600);
-
-  const p = document.createElement('div');
-  p.className = 'elix-plus';
-  p.textContent = '+1';
-  p.style.left = pos + '%';
-  bar.appendChild(p);
-  setTimeout(function(){ if (p.parentNode) p.parentNode.removeChild(p); }, 920);
+  const bar=$('myElixBar'); if(!bar) return;
+  const wrap=bar.parentNode;
+  wrap.classList.remove('bump'); void wrap.offsetWidth; wrap.classList.add('bump');
+  const pos=Math.max(5,Math.min(93,elixView*10));
+  const sp=document.createElement('div'); sp.className='elix-spark'; sp.style.left=pos+'%';
+  bar.appendChild(sp); setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); },600);
+  const p=document.createElement('div'); p.className='elix-plus'; p.textContent='+1'; p.style.left=pos+'%';
+  bar.appendChild(p); setTimeout(function(){ if(p.parentNode) p.parentNode.removeChild(p); },920);
 }
-
 function elixPaint(){
-  const fill = $('myElixFill');
-  const num  = $('myElixNum');
-  if (!fill || !num) return;
-
-  fill.style.width = (elixView * 10).toFixed(2) + '%';
-
-  const i = Math.floor(elixView + 0.0001);
-  if (i !== elixIntShown){
-    if (elixIntShown >= 0 && i > elixIntShown) elixBubble();
-    elixIntShown = i;
-    num.textContent = i;
+  const fill=$('myElixFill'), num=$('myElixNum');
+  if(!fill||!num) return;
+  fill.style.width=(elixView*10).toFixed(2)+'%';
+  const i=Math.floor(elixView+0.0001);
+  if(i!==elixIntShown){
+    if(elixIntShown>=0 && i>elixIntShown) elixBubble();
+    elixIntShown=i; num.textContent=i;
   }
 }
-
 function elixRate(){
-  if (window.Arena && typeof Arena.energyRate === 'function'){
-    const r = Arena.energyRate(Net.state);
-    if (typeof r === 'number' && isFinite(r) && r > 0) return r;
+  if(window.Arena && typeof Arena.energyRate==='function'){
+    const r=Arena.energyRate(Net.state);
+    if(typeof r==='number' && isFinite(r) && r>0) return r;
   }
   return 0.5;
 }
-
 function elixFrame(now){
-  const s = Net.state;
-  if (!s || s.over || !document.body.classList.contains('battle-mode')){
-    elixLoopOn = false;
-    return;
-  }
-
-  let dt = elixLastFrame ? (now - elixLastFrame) : 16;
-  if (dt > 200) dt = 200;
-  elixLastFrame = now;
-
-  const my = Net.mySide;
-  const raw = (s.energy && typeof s.energy[my] === 'number' && isFinite(s.energy[my])) ? s.energy[my] : 0;
-  const srv = Math.max(0, Math.min(10, raw));
-
-  const rate = elixRate();
-
-  if (!elixStarted){
-    elixView = srv;
-    elixIntShown = Math.floor(srv + 0.0001);
-    elixStarted = true;
-  }
-
-  elixView += (dt / 1000) * rate;
-
-  const drift = srv - elixView;
-  if (drift > 0.45 || drift < -0.45) elixView = srv;
-
-  if (elixView > 10) elixView = 10;
-  if (elixView < 0) elixView = 0;
-
+  const s=Net.state;
+  if(!s||s.over||!document.body.classList.contains('battle-mode')){ elixLoopOn=false; return; }
+  let dt=elixLastFrame?(now-elixLastFrame):16;
+  if(dt>200) dt=200;
+  elixLastFrame=now;
+  const my=Net.mySide;
+  const raw=(s.energy && typeof s.energy[my]==='number' && isFinite(s.energy[my]))?s.energy[my]:0;
+  const srv=Math.max(0,Math.min(10,raw));
+  const rate=elixRate();
+  if(!elixStarted){ elixView=srv; elixIntShown=Math.floor(srv+0.0001); elixStarted=true; }
+  elixView+=(dt/1000)*rate;
+  const drift=srv-elixView;
+  if(drift>0.45||drift<-0.45) elixView=srv;
+  if(elixView>10) elixView=10;
+  if(elixView<0) elixView=0;
   elixPaint();
   requestAnimationFrame(elixFrame);
 }
-
 function elixStart(){
-  if (elixLoopOn) return;
-  elixLoopOn = true;
-  elixLastFrame = 0;
-  requestAnimationFrame(elixFrame);
+  if(elixLoopOn) return;
+  elixLoopOn=true; elixLastFrame=0; requestAnimationFrame(elixFrame);
 }
-
-function renderElix(s, my){
-  if (!elixStarted && s && s.energy){
-    const v = s.energy[my];
-    if (typeof v === 'number' && isFinite(v)){
-      elixView = Math.max(0, Math.min(10, v));
-      elixIntShown = Math.floor(elixView + 0.0001);
-      elixStarted = true;
+function renderElix(s,my){
+  if(!elixStarted && s && s.energy){
+    const v=s.energy[my];
+    if(typeof v==='number' && isFinite(v)){
+      elixView=Math.max(0,Math.min(10,v));
+      elixIntShown=Math.floor(elixView+0.0001);
+      elixStarted=true;
     }
   }
-  elixPaint();
-  elixStart();
+  elixPaint(); elixStart();
 }
-
-/* ================= ЛОББИ ================= */
 
 function renderLobby(){
-  const me = Net.me;
-  if (!me) return;
-
-  const arena = Arena.arenaOf(me.cups);
-  const floor = Arena.floorOf(me.cups);
-
-  $('pName').textContent  = me.display_name || playerName();
-  $('pCups').textContent  = me.cups + ' 🏆';
-  $('pArena').textContent = 'АРЕНА ' + arena + ' · ' + Arena.ARENAS[arena - 1].name.toUpperCase();
-  $('pFloor').textContent = 'Пол арены: ' + floor + ' 🏆 — ниже не упадёшь';
-
-  let pct;
-  if (arena >= Arena.MAX_ARENA) pct = 100;
-  else pct = ((me.cups - floor) / Arena.STEP) * 100;
-  $('progFill').style.width = Math.max(0, Math.min(100, pct)) + '%';
-
-  $('ruleBox').textContent = Arena.ARENAS[arena - 1].rule;
-  document.body.dataset.arena = arena;
+  const me=Net.me; if(!me) return;
+  const arena=Arena.arenaOf(me.cups), floor=Arena.floorOf(me.cups);
+  $('pName').textContent=me.display_name||playerName();
+  $('pCups').textContent=me.cups+' 🏆';
+  $('pArena').textContent='АРЕНА '+arena+' · '+Arena.ARENAS[arena-1].name.toUpperCase();
+  $('pFloor').textContent='Пол арены: '+floor+' 🏆 — ниже не упадёшь';
+  let pct = arena>=Arena.MAX_ARENA ? 100 : ((me.cups-floor)/Arena.STEP)*100;
+  $('progFill').style.width=Math.max(0,Math.min(100,pct))+'%';
+  $('ruleBox').textContent=Arena.ARENAS[arena-1].rule;
+  document.body.dataset.arena=arena;
 }
-
 async function startSearch(){
-  if (searching) return;
-  if (!Net.me) return;
-  searching = true;
+  if(searching||!Net.me) return;
+  searching=true;
   $('playBtn').classList.add('searching');
-  $('playBtn').textContent = 'ОТМЕНА';
+  $('playBtn').textContent='ОТМЕНА';
   await Net.findMatch();
 }
-
 function stopSearch(){
-  searching = false;
+  searching=false;
   $('playBtn').classList.remove('searching');
-  $('playBtn').textContent = 'В БОЙ';
+  $('playBtn').textContent='В БОЙ';
 }
-
-$('playBtn').onclick = async function (){
-  if (searching){
-    await Net.cancelQueue();
-    stopSearch();
-    $('statusMsg').textContent = '';
-    return;
-  }
+$('playBtn').onclick=async function(){
+  if(searching){ await Net.cancelQueue(); stopSearch(); $('statusMsg').textContent=''; return; }
   startSearch();
 };
+Net.on('status',function(d){ $('statusMsg').textContent=d.text||''; });
+Net.on('error',function(d){ toast(d.message); });
 
-Net.on('status', function (d){
-  $('statusMsg').textContent = d.text || '';
-});
-
-Net.on('error', function (d){
-  toast(d.message);
-});
-
-Net.on('start', function (info){
+Net.on('start',function(info){
   stopSearch();
-  $('statusMsg').textContent = '';
-
+  $('statusMsg').textContent='';
   document.body.classList.add('battle-mode');
-
   $('lobby').classList.add('hidden');
   $('battle').classList.remove('hidden');
   $('overlay').classList.add('hidden');
   $('bootErr').classList.add('hidden');
   $('drawPanel').classList.add('hidden');
   $('promoPanel').classList.add('hidden');
-
-  sel = null;
-  promoPending = null;
-  checkState = -1;
-  drawState = '';
-  lastTimeTxt = '';
-  lastSpeedTxt = '';
-  document.body.dataset.arena = info.arena;
-
+  sel=null; promoPending=null; checkState=-1; drawState='';
+  lastTimeTxt=''; lastSpeedTxt='';
+  document.body.dataset.arena=info.arena;
   buildBoard();
-  for (let i = 0; i < cellSig.length; i++) cellSig[i] = '';
-
-  elixReset();
-  elixBuildBubbles();
-
-  const myCups  = Net.me ? Net.me.cups : 0;
-  const oppCups = (info.opponent && info.opponent.cups) || 0;
-  const diff = myCups - oppCups;
-  const win  = diff === 0 ? 30 : (diff < 0 ? 31 : 29);
-  const lose = Arena.lossFor(myCups, win);
-
-  $('oppLabel').textContent = (info.opponent ? info.opponent.name : 'Соперник') + ' (' + oppCups + ' 🏆)';
-  $('stakeWin').textContent  = '+' + win;
-  $('stakeLose').textContent = '−' + lose;
-
-  if (info.friendly){
-    $('stakeWin').textContent  = '±0';
-    $('stakeLose').textContent = '±0';
-  }
-
-  if (info.state) render(info.state);
-  else { $('timeLabel').textContent = '…'; toast('Собираем доску…'); }
+  for(let i=0;i<cellSig.length;i++) cellSig[i]='';
+  elixReset(); elixBuildBubbles();
+  const myCups=Net.me?Net.me.cups:0;
+  const oppCups=(info.opponent&&info.opponent.cups)||0;
+  const diff=myCups-oppCups;
+  const win = diff===0?30:(diff<0?31:29);
+  const lose= Arena.lossFor(myCups,win);
+  $('oppLabel').textContent=(info.opponent?info.opponent.name:'Соперник')+' ('+oppCups+' 🏆)';
+  $('stakeWin').textContent='+'+win;
+  $('stakeLose').textContent='−'+lose;
+  if(info.friendly){ $('stakeWin').textContent='±0'; $('stakeLose').textContent='±0'; }
+  if(info.state) render(info.state);
+  else { $('timeLabel').textContent='…'; toast('Собираем доску…'); }
 });
 
-Net.on('state', function (s){ render(s); });
+Net.on('state',function(s){ render(s); });
 
-Net.on('resumeFailed', function (){
+Net.on('resumeFailed',function(){
   toast('Соперник не вернулся. Засчитано поражение.');
   document.body.classList.remove('battle-mode');
   $('battle').classList.add('hidden');
   $('promoPanel').classList.add('hidden');
   $('lobby').classList.remove('hidden');
-  Net.leaveMatch().then(function (){ return Net.refresh(); }).then(function (){ renderLobby(); }).catch(function (){});
+  Net.leaveMatch().then(function(){ return Net.refresh(); }).then(function(){ renderLobby(); }).catch(function(){});
 });
 
-Net.on('result', function (r){
+Net.on('result',function(r){
   stopSearch();
   document.body.classList.remove('battle-mode');
   $('battle').classList.add('hidden');
@@ -538,45 +398,25 @@ Net.on('result', function (r){
   $('drawPanel').classList.add('hidden');
   $('promoPanel').classList.add('hidden');
   $('overlay').classList.remove('hidden');
-
-  promoPending = null;
-  elixLoopOn = false;
-
-  const won  = r.winner === r.mySide;
-  const draw = r.winner === 'draw';
-
-  $('ovTitle').textContent = draw ? 'НИЧЬЯ' : (won ? 'ПОБЕДА' : 'ПОРАЖЕНИЕ');
-  $('ovTitle').style.color = draw ? '#9fb6c4' : (won ? '#ffcc00' : '#ef4444');
-  $('ovArena').textContent = 'Арена «' + Arena.ARENAS[Net.arena - 1].name + '»';
-
-  const sign = r.delta > 0 ? '+' : '';
-  $('ovDelta').textContent = draw ? '±0' : sign + r.delta + ' 🏆';
-  $('ovDelta').style.color = r.delta < 0 ? '#ef4444' : '#ffcc00';
-  $('ovCups').textContent = r.before + ' → ' + r.after;
-
-  const arenaNow  = Arena.arenaOf(r.after);
-  const arenaThen = Arena.arenaOf(r.before);
-
-  if (r.friendly){
-    $('ovNote').textContent = 'Дружеская партия — кубки не изменились';
-    $('ovNote').style.color = '#64748b';
-  } else if (arenaNow > arenaThen){
-    $('ovNote').textContent = '⬆ НОВАЯ АРЕНА: ' + Arena.ARENAS[arenaNow - 1].name;
-    $('ovNote').style.color = '#22c55e';
-  } else if (arenaNow < arenaThen){
-    $('ovNote').textContent = '⬇ Ты выпал на арену «' + Arena.ARENAS[arenaNow - 1].name + '»';
-    $('ovNote').style.color = '#ef4444';
-  } else if (!draw && r.delta === 0){
-    $('ovNote').textContent = 'Пол арены: ниже ' + r.floor + ' не падаешь';
-    $('ovNote').style.color = '#64748b';
-  } else {
-    $('ovNote').textContent = '';
-  }
-
-  Net.leaveMatch().then(function (){ return Net.refresh(); }).then(function (){ renderLobby(); }).catch(function (){});
+  promoPending=null; elixLoopOn=false;
+  const won=r.winner===r.mySide, draw=r.winner==='draw';
+  $('ovTitle').textContent=draw?'НИЧЬЯ':(won?'ПОБЕДА':'ПОРАЖЕНИЕ');
+  $('ovTitle').style.color=draw?'#9fb6c4':(won?'#ffcc00':'#ef4444');
+  $('ovArena').textContent='Арена «'+Arena.ARENAS[Net.arena-1].name+'»';
+  const sign=r.delta>0?'+':'';
+  $('ovDelta').textContent=draw?'±0':sign+r.delta+' 🏆';
+  $('ovDelta').style.color=r.delta<0?'#ef4444':'#ffcc00';
+  $('ovCups').textContent=r.before+' → '+r.after;
+  const arenaNow=Arena.arenaOf(r.after), arenaThen=Arena.arenaOf(r.before);
+  if(r.friendly){ $('ovNote').textContent='Дружеская партия — кубки не изменились'; $('ovNote').style.color='#64748b'; }
+  else if(arenaNow>arenaThen){ $('ovNote').textContent='⬆ НОВАЯ АРЕНА: '+Arena.ARENAS[arenaNow-1].name; $('ovNote').style.color='#22c55e'; }
+  else if(arenaNow<arenaThen){ $('ovNote').textContent='⬇ Ты выпал на арену «'+Arena.ARENAS[arenaNow-1].name+'»'; $('ovNote').style.color='#ef4444'; }
+  else if(!draw && r.delta===0){ $('ovNote').textContent='Пол арены: ниже '+r.floor+' не падаешь'; $('ovNote').style.color='#64748b'; }
+  else { $('ovNote').textContent=''; }
+  Net.leaveMatch().then(function(){ return Net.refresh(); }).then(function(){ renderLobby(); }).catch(function(){});
 });
 
-$('ovBtn').onclick = function (){
+$('ovBtn').onclick=function(){
   document.body.classList.remove('battle-mode');
   $('overlay').classList.add('hidden');
   $('battle').classList.add('hidden');
@@ -586,517 +426,343 @@ $('ovBtn').onclick = function (){
 };
 
 function buildBoard(){
-  if (cells.length) return;
-  const b = $('board');
-  for (let i = 0; i < 64; i++){
-    const d = document.createElement('div');
-    d.className = 'cell';
-    (function (idx){
-      d.onclick = function (){ onCell(idx % 8, Math.floor(idx / 8)); };
-    })(i);
-    b.appendChild(d);
-    cells.push(d);
-    cellSig.push('');
+  if(cells.length) return;
+  const b=$('board');
+  for(let i=0;i<64;i++){
+    const d=document.createElement('div');
+    d.className='cell';
+    (function(idx){ d.onclick=function(){ onCell(idx%8, Math.floor(idx/8)); }; })(i);
+    b.appendChild(d); cells.push(d); cellSig.push('');
   }
 }
+function toCanon(dx,dy){ return Net.mySide==='a'?[dx,dy]:[7-dx,7-dy]; }
 
-function toCanon(dx, dy){
-  return Net.mySide === 'a' ? [dx, dy] : [7 - dx, 7 - dy];
-}
-
-function onCell(dx, dy){
-  const s = Net.state;
-  if (!s || s.over) return;
-  if (promoPending) return;
-
-  const my = Net.mySide;
-  const xy = toCanon(dx, dy);
-  const x = xy[0], y = xy[1];
-  const pc = s.board[y][x];
-
-  if (sel){
-    if (pc && pc.side === my && sel.x === x && sel.y === y){
-      sel = null; render(s); return;
-    }
-    if (pc && pc.side === my){
-      sel = { x:x, y:y }; render(s); return;
-    }
-
-    const legal = Arena.legalMoves(s, sel.x, sel.y);
-    let ok = false;
-    for (let i = 0; i < legal.length; i++){
-      if (legal[i][0] === x && legal[i][1] === y){ ok = true; break; }
-    }
-
-    if (!ok){
-      sel = null;
-      render(s);
-      toast(Arena.kingAttacked(s, my) ? 'Шах! Уходи из-под удара' : 'Так ходить нельзя');
+function onCell(dx,dy){
+  const s=Net.state;
+  if(!s||s.over||promoPending) return;
+  const my=Net.mySide;
+  const xy=toCanon(dx,dy);
+  const x=xy[0], y=xy[1];
+  const pc=s.board[y][x];
+  if(sel){
+    if(pc && pc.side===my && sel.x===x && sel.y===y){ sel=null; render(s); return; }
+    if(pc && pc.side===my){ sel={x:x,y:y}; render(s); return; }
+    const legal=Arena.legalMoves(s, sel.x, sel.y);
+    let ok=false;
+    for(let i=0;i<legal.length;i++){ if(legal[i][0]===x && legal[i][1]===y){ ok=true; break; } }
+    if(!ok){
+      sel=null; render(s);
+      toast(Arena.kingAttacked(s,my)?'Шах! Уходи из-под удара':'Так ходить нельзя');
       return;
     }
-
-    const mover = s.board[sel.y][sel.x];
-    const need  = Arena.moveCost(s, mover);
-    if (s.energy[my] < need){
-      sel = null;
-      render(s);
-      toast('Нужно ' + need + ' эликсира');
-      return;
-    }
-
-    if (Arena.isPromotion(s, sel.x, sel.y, x, y)){
-      promoPending = { fx: sel.x, fy: sel.y, tx: x, ty: y };
-      sel = null;
-      render(s);
+    const mover=s.board[sel.y][sel.x];
+    const need=Arena.moveCost(s, mover);
+    if(s.energy[my]<need){ sel=null; render(s); toast('Нужно '+need+' эликсира'); return; }
+    if(Arena.isPromotion(s, sel.x, sel.y, x, y)){
+      promoPending={fx:sel.x,fy:sel.y,tx:x,ty:y};
+      sel=null; render(s);
       $('promoPanel').classList.remove('hidden');
       return;
     }
-
     Net.intent({ t:'move', fx:sel.x, fy:sel.y, tx:x, ty:y });
-    sel = null;
-    return;
+    sel=null; return;
   }
-
-  if (pc && pc.side === my){
-    sel = { x:x, y:y };
-    render(s);
-  }
+  if(pc && pc.side===my){ sel={x:x,y:y}; render(s); }
 }
 
 function choosePromo(key){
-  if (!promoPending) return;
-  const mv = promoPending;
-  promoPending = null;
+  if(!promoPending) return;
+  const mv=promoPending; promoPending=null;
   $('promoPanel').classList.add('hidden');
   Net.intent({ t:'move', fx:mv.fx, fy:mv.fy, tx:mv.tx, ty:mv.ty, promo:key });
 }
-
-const promoOpts = document.querySelectorAll('.promo-opt');
-for (let i = 0; i < promoOpts.length; i++){
-  (function (el){
-    el.onclick = function (){ choosePromo(el.dataset.promo); };
-  })(promoOpts[i]);
+const promoOpts=document.querySelectorAll('.promo-opt');
+for(let i=0;i<promoOpts.length;i++){
+  (function(el){ el.onclick=function(){ choosePromo(el.dataset.promo); }; })(promoOpts[i]);
 }
-
-$('promoCancel').onclick = function (){
-  promoPending = null;
+$('promoCancel').onclick=function(){
+  promoPending=null;
   $('promoPanel').classList.add('hidden');
-  if (Net.state) render(Net.state);
+  if(Net.state) render(Net.state);
 };
 
-function drawsLeftOf(s, my){
-  const used = (s && s.drawUsed && s.drawUsed[my]) || 0;
-  return Math.max(0, DRAW_MAX - used);
+function drawsLeftOf(s,my){
+  const used=(s && s.drawUsed && s.drawUsed[my])||0;
+  return Math.max(0, DRAW_MAX-used);
 }
-
-function updateDrawUI(s, my, opp){
-  const offer = s.drawOffer || { a:false, b:false };
-  const mine   = !!offer[my];
-  const theirs = !!offer[opp];
-  const left   = drawsLeftOf(s, my);
-
-  const key = (mine ? '1' : '0') + (theirs ? '1' : '0') + (s.over ? 'X' : '') + 'L' + left;
-  if (key === drawState) return;
-  drawState = key;
-
-  const btn = $('drawBtn');
-  if (mine){
-    btn.textContent = '⏳ Ждём ответа';
-    btn.disabled = true;
-  } else if (left <= 0){
-    btn.textContent = '🤝 Ничья (0)';
-    btn.disabled = true;
-  } else {
-    btn.textContent = '🤝 Ничья (' + left + ')';
-    btn.disabled = !!s.over;
-  }
-
-  if (theirs && !s.over) $('drawPanel').classList.remove('hidden');
+function updateDrawUI(s,my,opp){
+  const offer=s.drawOffer||{a:false,b:false};
+  const mine=!!offer[my], theirs=!!offer[opp], left=drawsLeftOf(s,my);
+  const key=(mine?'1':'0')+(theirs?'1':'0')+(s.over?'X':'')+'L'+left;
+  if(key===drawState) return;
+  drawState=key;
+  const btn=$('drawBtn');
+  if(mine){ btn.textContent='⏳ Ждём ответа'; btn.disabled=true; }
+  else if(left<=0){ btn.textContent='🤝 Ничья (0)'; btn.disabled=true; }
+  else { btn.textContent='🤝 Ничья ('+left+')'; btn.disabled=!!s.over; }
+  if(theirs && !s.over) $('drawPanel').classList.remove('hidden');
   else $('drawPanel').classList.add('hidden');
 }
-
 function pieceHp(pc){
-  const hp  = (typeof pc.hp === 'number' && isFinite(pc.hp)) ? pc.hp : 1;
-  const max = (typeof pc.maxHp === 'number' && isFinite(pc.maxHp) && pc.maxHp > 0) ? pc.maxHp : 1;
-  return { hp: hp, max: max };
+  const hp=(typeof pc.hp==='number'&&isFinite(pc.hp))?pc.hp:1;
+  const max=(typeof pc.maxHp==='number'&&isFinite(pc.maxHp)&&pc.maxHp>0)?pc.maxHp:1;
+  return { hp:hp, max:max };
 }
 
 function render(s){
-  if (!s) return;
-
-  const my  = Net.mySide;
-  const opp = (my === 'a') ? 'b' : 'a';
-  const rot = (my === 'b');
-
-  let myCheck = false, opCheck = false;
-
-  if (s.check){
-    myCheck = !!s.check[my];
-    opCheck = !!s.check[opp];
-  } else if (Arena && typeof Arena.kingAttacked === 'function'){
-    myCheck = Arena.kingAttacked(s, my);
-    opCheck = Arena.kingAttacked(s, opp);
+  if(!s) return;
+  const my=Net.mySide, opp=(my==='a')?'b':'a', rot=(my==='b');
+  let myCheck=false, opCheck=false;
+  if(s.check){ myCheck=!!s.check[my]; opCheck=!!s.check[opp]; }
+  else if(Arena && typeof Arena.kingAttacked==='function'){
+    myCheck=Arena.kingAttacked(s,my); opCheck=Arena.kingAttacked(s,opp);
   }
-
-  const nowState = myCheck ? 1 : (opCheck ? 2 : 0);
-  if (nowState !== checkState){
-    checkState = nowState;
-    const bar = $('checkBar');
-    if (nowState === 1){ bar.textContent = 'ШАХ! УХОДИ ИЗ-ПОД УДАРА'; bar.classList.add('on'); }
-    else if (nowState === 2){ bar.textContent = 'ШАХ У СОПЕРНИКА'; bar.classList.add('on'); }
+  const nowState=myCheck?1:(opCheck?2:0);
+  if(nowState!==checkState){
+    checkState=nowState;
+    const bar=$('checkBar');
+    if(nowState===1){ bar.textContent='ШАХ! УХОДИ ИЗ-ПОД УДАРА'; bar.classList.add('on'); }
+    else if(nowState===2){ bar.textContent='ШАХ У СОПЕРНИКА'; bar.classList.add('on'); }
     else { bar.classList.remove('on'); }
   }
-
-  updateDrawUI(s, my, opp);
-
-  if (sel){
-    const p0 = s.board[sel.y] && s.board[sel.y][sel.x];
-    if (!p0 || p0.side !== my) sel = null;
+  updateDrawUI(s,my,opp);
+  if(sel){
+    const p0=s.board[sel.y] && s.board[sel.y][sel.x];
+    if(!p0||p0.side!==my) sel=null;
   }
-
-  const moveSet = {};
-  if (sel){
-    const legal = Arena.legalMoves(s, sel.x, sel.y);
-    for (let i = 0; i < legal.length; i++){
-      moveSet[legal[i][0] + ':' + legal[i][1]] = true;
-    }
+  const moveSet={};
+  if(sel){
+    const legal=Arena.legalMoves(s, sel.x, sel.y);
+    for(let i=0;i<legal.length;i++) moveSet[legal[i][0]+':'+legal[i][1]]=true;
   }
-
-  for (let dy = 0; dy < 8; dy++) for (let dx = 0; dx < 8; dx++){
-    const idx = dy * 8 + dx;
-    const x = rot ? 7 - dx : dx;
-    const y = rot ? 7 - dy : dy;
-
-    const el = cells[idx];
-    const pc = s.board[y] && s.board[y][x];
-
-    const isLight = ((x + y) % 2 === 0);
-    const isSel   = !!(sel && sel.x === x && sel.y === y);
-    const key     = x + ':' + y;
-    const isMove  = !!moveSet[key];
-    const isCap   = isMove && !!pc;
-
-    const kingChk = !!(pc && pc.type === 'king' && ((pc.side === my) ? myCheck : opCheck));
-
-    let sig = (isLight ? 'L' : 'D');
-    if (pc){ const hp1 = pieceHp(pc); sig += pc.type + pc.side + 'h' + hp1.hp + '/' + hp1.max; }
-    if (kingChk) sig += 'K';
-    if (isSel) sig += 'S';
-    if (isMove) sig += (isCap ? 'C' : 'M');
-
-    if (cellSig[idx] === sig) continue;
-    cellSig[idx] = sig;
-
-    el.className = 'cell ' + (isLight ? 'light' : 'dark');
-    el.textContent = '';
-
-    if (kingChk) el.classList.add('check');
-
-    if (pc){
-      const mine = (pc.side === my);
-      const def = Arena.PIECES[pc.type];
-
-      const sp = document.createElement('span');
-      sp.className = 'piece ' + (mine ? 'mine' : 'theirs');
-      sp.textContent = def ? (mine ? def.w : def.b) : '?';
+  for(let dy=0;dy<8;dy++) for(let dx=0;dx<8;dx++){
+    const idx=dy*8+dx;
+    const x=rot?7-dx:dx, y=rot?7-dy:dy;
+    const el=cells[idx];
+    const pc=s.board[y] && s.board[y][x];
+    const isLight=((x+y)%2===0);
+    const isSel=!!(sel && sel.x===x && sel.y===y);
+    const key=x+':'+y;
+    const isMove=!!moveSet[key];
+    const isCap=isMove && !!pc;
+    const kingChk=!!(pc && pc.type==='king' && ((pc.side===my)?myCheck:opCheck));
+    let sig=(isLight?'L':'D');
+    if(pc){ const hp1=pieceHp(pc); sig+=pc.type+pc.side+'h'+hp1.hp+'/'+hp1.max; }
+    if(kingChk) sig+='K';
+    if(isSel) sig+='S';
+    if(isMove) sig+=(isCap?'C':'M');
+    if(cellSig[idx]===sig) continue;
+    cellSig[idx]=sig;
+    el.className='cell '+(isLight?'light':'dark');
+    el.textContent='';
+    if(kingChk) el.classList.add('check');
+    if(pc){
+      const mine=(pc.side===my);
+      const def=Arena.PIECES[pc.type];
+      const sp=document.createElement('span');
+      sp.className='piece '+(mine?'mine':'theirs');
+      sp.textContent=def?(mine?def.w:def.b):'?';
       el.appendChild(sp);
-
-      if (def && typeof def.cost === 'number'){
-        const cb = document.createElement('div');
-        cb.className = 'cost-badge';
-        cb.textContent = def.cost;
+      if(def && typeof def.cost==='number'){
+        const cb=document.createElement('div');
+        cb.className='cost-badge'; cb.textContent=def.cost;
         el.appendChild(cb);
       }
-
-      const hh = pieceHp(pc);
-      const pct = Math.max(0, Math.min(100, (hh.hp / hh.max) * 100));
-
-      let cls = 'hp-fill';
-      if (pct <= 30) cls += ' low';
-      else if (pct <= 60) cls += ' mid';
-
-      const bar2 = document.createElement('div');
-      bar2.className = 'hp-bar';
-
-      const fill = document.createElement('div');
-      fill.className = cls;
-      fill.style.width = pct + '%';
-      bar2.appendChild(fill);
-
-      const lvl = document.createElement('span');
-      lvl.className = 'hp-lvl';
-      lvl.textContent = '1';
+      const hh=pieceHp(pc);
+      const pct=Math.max(0,Math.min(100,(hh.hp/hh.max)*100));
+      let cls='hp-fill';
+      if(pct<=30) cls+=' low'; else if(pct<=60) cls+=' mid';
+      const bar2=document.createElement('div'); bar2.className='hp-bar';
+      const fl=document.createElement('div'); fl.className=cls; fl.style.width=pct+'%';
+      bar2.appendChild(fl);
+      const lvl=document.createElement('span'); lvl.className='hp-lvl'; lvl.textContent='1';
       bar2.appendChild(lvl);
-
       el.appendChild(bar2);
-
-      const txt = document.createElement('div');
-      txt.className = 'hp-text';
-      txt.textContent = hh.hp + '/' + hh.max;
+      const txt=document.createElement('div'); txt.className='hp-text'; txt.textContent=hh.hp+'/'+hh.max;
       el.appendChild(txt);
     }
-
-    if (isSel) el.classList.add('sel');
-    if (isMove) el.classList.add(isCap ? 'cap' : 'move');
+    if(isSel) el.classList.add('sel');
+    if(isMove) el.classList.add(isCap?'cap':'move');
   }
+  renderElix(s,my);
 
-  renderElix(s, my);
-
-  const base = (Arena && Arena.ENERGY_PER_SEC) ? Arena.ENERGY_PER_SEC : 0.5;
-  const rate = elixRate();
-  const mult = rate / base;
-
-  let speedTxt = '';
-  if (mult > 1.001){
-    speedTxt = '×' + (Math.abs(mult - Math.round(mult)) < 0.05 ? Math.round(mult) : mult.toFixed(1)) + ' ⚡';
+  const base=(Arena && Arena.ENERGY_PER_SEC)?Arena.ENERGY_PER_SEC:0.5;
+  const rate=elixRate(), mult=rate/base;
+  let speedTxt='';
+  if(mult>1.001){
+    speedTxt='×'+(Math.abs(mult-Math.round(mult))<0.05?Math.round(mult):mult.toFixed(1))+' ⚡';
   }
-
-  if (speedTxt !== lastSpeedTxt){
-    lastSpeedTxt = speedTxt;
-    const st = $('speedTag');
-    st.textContent = speedTxt;
-    st.classList.toggle('hidden', !speedTxt);
+  if(speedTxt!==lastSpeedTxt){
+    lastSpeedTxt=speedTxt;
+    const st=$('speedTag');
+    st.textContent=speedTxt;
+    st.classList.toggle('hidden',!speedTxt);
   }
-
-  const tl = $('timeLabel');
-  let timeTxt = '';
-  let timeColor = '';
-
-  let left = s.timeLeft;
-  if (typeof left !== 'number' || !isFinite(left)) left = Arena.MAIN_TIME;
-
-  const t = Math.max(0, Math.ceil(left));
-  const txt2 = Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
-
-  if (s.phase === 'overtime'){ timeTxt = 'ДОП ' + txt2; timeColor = '#ef4444'; }
-  else if (left <= Arena.FAST_FROM){ timeTxt = txt2; timeColor = '#f59e0b'; }
-  else { timeTxt = txt2; }
-
-  if (timeTxt !== lastTimeTxt){ lastTimeTxt = timeTxt; tl.textContent = timeTxt; }
-  if (tl.style.color !== timeColor) tl.style.color = timeColor;
+  const tl=$('timeLabel');
+  let timeTxt='', timeColor='';
+  let left=s.timeLeft;
+  if(typeof left!=='number'||!isFinite(left)) left=Arena.MAIN_TIME;
+  const t=Math.max(0,Math.ceil(left));
+  const txt2=Math.floor(t/60)+':'+String(t%60).padStart(2,'0');
+  if(s.phase==='overtime'){ timeTxt='ДОП '+txt2; timeColor='#ef4444'; }
+  else if(left<=Arena.FAST_FROM){ timeTxt=txt2; timeColor='#f59e0b'; }
+  else { timeTxt=txt2; }
+  if(timeTxt!==lastTimeTxt){ lastTimeTxt=timeTxt; tl.textContent=timeTxt; }
+  if(tl.style.color!==timeColor) tl.style.color=timeColor;
 }
 
-$('drawBtn').onclick = function (){ Net.intent({ t:'draw' }); };
-$('drawAccept').onclick = function (){ Net.intent({ t:'draw' }); };
-$('drawDecline').onclick = function (){ Net.intent({ t:'undraw' }); };
-
-$('resignBtn').onclick = function (){
-  if (confirm('Сдаться? Это поражение и минус кубки.')) Net.resign();
+$('drawBtn').onclick=function(){ Net.intent({ t:'draw' }); };
+$('drawAccept').onclick=function(){ Net.intent({ t:'draw' }); };
+$('drawDecline').onclick=function(){ Net.intent({ t:'undraw' }); };
+$('resignBtn').onclick=function(){
+  if(confirm('Сдаться? Это поражение и минус кубки.')) Net.resign();
 };
 
 function showBootError(e){
-  let msg = 'неизвестная ошибка';
-  let extra = '';
-
-  if (e){
-    if (typeof e === 'string') msg = e;
-    else {
-      msg = e.message || e.error_description || e.details || 'неизвестная ошибка';
-      if (e.code) extra += '\nкод: ' + e.code;
-      if (e.hint) extra += '\nподсказка: ' + e.hint;
+  let msg='неизвестная ошибка', extra='';
+  if(e){
+    if(typeof e==='string') msg=e;
+    else{
+      msg=e.message||e.error_description||e.details||'неизвестная ошибка';
+      if(e.code) extra+='\nкод: '+e.code;
+      if(e.hint) extra+='\nподсказка: '+e.hint;
     }
   }
-
-  $('bootErrText').textContent = msg + extra;
+  $('bootErrText').textContent=msg+extra;
   $('bootErr').classList.remove('hidden');
-  $('playBtn').disabled = true;
-  $('playBtn').textContent = 'В БОЙ';
+  $('playBtn').disabled=true;
+  $('playBtn').textContent='В БОЙ';
 }
 
 async function boot(){
   $('bootErr').classList.add('hidden');
-  $('pName').textContent = 'Загрузка…';
-
-  try {
+  $('pName').textContent='Загрузка…';
+  try{
     await Net.init({ client: sb, key: playerKey(), name: playerName(), seed: 0 });
-  } catch (e){
-    showBootError(e);
-    return;
-  }
-
+  }catch(e){ showBootError(e); return; }
   renderLobby();
-  $('playBtn').disabled = false;
-
-  let resumed = false;
-  try { resumed = await Net.tryResume(); } catch (e){ resumed = false; }
-
-  if (!resumed && sessionStorage.getItem('arenaAutoQueue') === '1'){
+  $('playBtn').disabled=false;
+  let resumed=false;
+  try{ resumed=await Net.tryResume(); }catch(e){ resumed=false; }
+  if(!resumed && sessionStorage.getItem('arenaAutoQueue')==='1'){
     sessionStorage.removeItem('arenaAutoQueue');
     startSearch();
   }
 }
-
-$('retryBtn').onclick = boot;
-
-document.addEventListener('visibilitychange', function (){
-  if (!document.hidden && Net.checkAway) Net.checkAway();
+$('retryBtn').onclick=boot;
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden && Net.checkAway) Net.checkAway();
 });
-
 elixBuildBubbles();
 boot();
 </script>
 
 <script>
-/* ===== дружеский вызов: пульс, отмена, ожидание ===== */
 (function(){
-  var qs = new URLSearchParams(location.search);
-  var chId = qs.get('ch');
-  if (!chId) return;
-
-  var role    = qs.get('role') === 'guest' ? 'guest' : 'host';
-  var oppKey  = qs.get('opp') || '';
-  var oppName = qs.get('name') || 'Соперник';
-  var oppCups = parseInt(qs.get('cups') || '0', 10) || 0;
-  var arena   = parseInt(qs.get('arena') || '1', 10) || 1;
-
-  var started = false;
-  var killed  = false;
-  var tick = null;
-  var poll = null;
+  var qs=new URLSearchParams(location.search);
+  var chId=qs.get('ch');
+  if(!chId) return;
+  var role=qs.get('role')==='guest'?'guest':'host';
+  var oppKey=qs.get('opp')||'';
+  var oppName=qs.get('name')||'Соперник';
+  var oppCups=parseInt(qs.get('cups')||'0',10)||0;
+  var arena=parseInt(qs.get('arena')||'1',10)||1;
+  var started=false, killed=false, tick=null, poll=null;
 
   function stopAll(){
-    killed = true;
-    if (tick){ clearInterval(tick); tick = null; }
-    if (poll){ clearInterval(poll); poll = null; }
+    killed=true;
+    if(tick){ clearInterval(tick); tick=null; }
+    if(poll){ clearInterval(poll); poll=null; }
   }
-
-  function killOverlay(){
-    var o = document.getElementById('frOv');
-    if (o) o.remove();
-  }
-
+  function killOverlay(){ var o=document.getElementById('frOv'); if(o) o.remove(); }
   function goBack(){
-    stopAll();
-    killOverlay();
-    try { if (window.Friends) Friends.stopBeat(); } catch (e){}
-    location.href = 'chess-social.html';
+    stopAll(); killOverlay();
+    try{ if(window.Friends) Friends.stopBeat(); }catch(e){}
+    location.href='chess-social.html';
   }
-
   function drop(){
-    if (role !== 'host') return;
-    if (started || killed) return;
-    try { if (window.Friends) Friends.stopBeat(); } catch (e){}
-    try { if (window.Friends) Friends.cancelBeacon(chId); } catch (e){}
+    if(role!=='host'||started||killed) return;
+    try{ if(window.Friends) Friends.stopBeat(); }catch(e){}
+    try{ if(window.Friends) Friends.cancelBeacon(chId); }catch(e){}
   }
+  window.addEventListener('pagehide',drop);
+  window.addEventListener('beforeunload',drop);
+  document.addEventListener('visibilitychange',function(){ if(document.hidden) drop(); });
 
-  window.addEventListener('pagehide', drop);
-  window.addEventListener('beforeunload', drop);
-
-  document.addEventListener('visibilitychange', function (){
-    if (document.hidden) drop();
-  });
-
-  function overlay(title, sub){
-    var o = document.getElementById('frOv');
-    if (!o){
-      o = document.createElement('div');
-      o.id = 'frOv';
-      o.style.cssText = 'position:fixed;inset:0;background:rgba(2,6,23,.97);z-index:2000;' +
-        'display:flex;align-items:center;justify-content:center;padding:24px;text-align:center';
-      o.innerHTML =
-        '<div style="max-width:340px;width:100%">' +
-          '<div style="font-size:44px;margin-bottom:10px">⚔️</div>' +
-          '<div id="frT" style="font-size:17px;font-weight:900;margin-bottom:8px"></div>' +
-          '<div id="frS" style="font-size:12.5px;color:#94a3b8;line-height:1.5;margin-bottom:16px"></div>' +
-          '<button id="frC" style="width:100%;padding:13px;border:0;border-radius:10px;' +
-          'background:linear-gradient(145deg,#ef4444,#991b1b);color:#fff;font-weight:900;' +
-          'font-size:14px;cursor:pointer">Отменить вызов</button>' +
+  function overlay(title,sub){
+    var o=document.getElementById('frOv');
+    if(!o){
+      o=document.createElement('div');
+      o.id='frOv';
+      o.style.cssText='position:fixed;inset:0;background:rgba(2,6,23,.97);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center';
+      o.innerHTML='<div style="max-width:340px;width:100%">'+
+        '<div style="font-size:44px;margin-bottom:10px">⚔️</div>'+
+        '<div id="frT" style="font-size:17px;font-weight:900;margin-bottom:8px"></div>'+
+        '<div id="frS" style="font-size:12.5px;color:#94a3b8;line-height:1.5;margin-bottom:16px"></div>'+
+        '<button id="frC" style="width:100%;padding:13px;border:0;border-radius:10px;background:linear-gradient(145deg,#ef4444,#991b1b);color:#fff;font-weight:900;font-size:14px;cursor:pointer">Отменить вызов</button>'+
         '</div>';
       document.body.appendChild(o);
-
-      document.getElementById('frC').onclick = async function(){
-        stopAll();
-        killOverlay();
-
-        try {
-          if (window.Friends){
+      document.getElementById('frC').onclick=async function(){
+        stopAll(); killOverlay();
+        try{
+          if(window.Friends){
             Friends.stopBeat();
-            if (role === 'host' && !started) await Friends.cancel(chId);
+            if(role==='host' && !started) await Friends.cancel(chId);
           }
-        } catch (e){}
-
-        try { await Net.leaveMatch(); } catch (e){}
-        location.href = 'chess-social.html';
+        }catch(e){}
+        try{ await Net.leaveMatch(); }catch(e){}
+        location.href='chess-social.html';
       };
     }
-    document.getElementById('frT').textContent = title;
-    document.getElementById('frS').textContent = sub;
+    document.getElementById('frT').textContent=title;
+    document.getElementById('frS').textContent=sub;
   }
-
   function waitNet(cb){
-    var n = 0;
-    tick = setInterval(function(){
+    var n=0;
+    tick=setInterval(function(){
       n++;
-      if (window.Net && Net.me && Net.sb && window.Friends){
-        clearInterval(tick); tick = null; cb();
-      } else if (n > 100){
-        clearInterval(tick); tick = null; killOverlay();
+      if(window.Net && Net.me && Net.sb && window.Friends){
+        clearInterval(tick); tick=null; cb();
+      } else if(n>100){
+        clearInterval(tick); tick=null; killOverlay();
       }
-    }, 150);
+    },150);
   }
-
   function start(){
-    try { Net.leaveMatch(); } catch (e){}
-
-    if (role === 'host'){
-      overlay('Вызов отправлен', 'Ждём, пока ' + oppName + ' примет вызов…');
-
-      Net.startFriendlyHost({
-        matchId: chId, oppKey: oppKey, oppName: oppName,
-        oppCups: oppCups, arena: arena
-      });
-
+    try{ Net.leaveMatch(); }catch(e){}
+    if(role==='host'){
+      overlay('Вызов отправлен','Ждём, пока '+oppName+' примет вызов…');
+      Net.startFriendlyHost({ matchId:chId, oppKey:oppKey, oppName:oppName, oppCups:oppCups, arena:arena });
       Friends.startBeat(chId);
-
-      poll = setInterval(async function(){
-        if (killed || started) return;
-
-        var st = await Friends.status(chId);
-
-        if (!st || st.status === 'declined'){
-          toast('Вызов отменён');
-          goBack();
-        }
-      }, 2500);
-
+      poll=setInterval(async function(){
+        if(killed||started) return;
+        var st=await Friends.status(chId);
+        if(!st||st.status==='declined'){ toast('Вызов отменён'); goBack(); }
+      },2500);
     } else {
-      Net.joinFriendly({
-        matchId: chId, oppKey: oppKey, oppName: oppName,
-        oppCups: oppCups, arena: arena
-      });
-
-      overlay('Загружаем партию', 'Соединяемся с ' + oppName + '…');
-
-      poll = setInterval(async function(){
-        if (killed || started) return;
-
-        var st = await Friends.status(chId);
-
-        if (!st){
-          toast('Соперник отменил вызов');
-          goBack();
-        }
-      }, 2500);
+      Net.joinFriendly({ matchId:chId, oppKey:oppKey, oppName:oppName, oppCups:oppCups, arena:arena });
+      overlay('Загружаем партию','Соединяемся с '+oppName+'…');
+      poll=setInterval(async function(){
+        if(killed||started) return;
+        var st=await Friends.status(chId);
+        if(!st){ toast('Соперник отменил вызов'); goBack(); }
+      },2500);
     }
   }
-
-  if (window.Net){
-    Net.on('state', function(s){
-      if (s && s.board){
-        started = true;
-        try { if (window.Friends) Friends.stopBeat(); } catch (e){}
-        stopAll();
-        killOverlay();
+  if(window.Net){
+    Net.on('state',function(s){
+      if(s && s.board){
+        started=true;
+        try{ if(window.Friends) Friends.stopBeat(); }catch(e){}
+        stopAll(); killOverlay();
       }
     });
-    Net.on('result', function(){
-      try { if (window.Friends) Friends.stopBeat(); } catch (e){}
-      stopAll();
-      killOverlay();
+    Net.on('result',function(){
+      try{ if(window.Friends) Friends.stopBeat(); }catch(e){}
+      stopAll(); killOverlay();
     });
   }
-
-  history.replaceState(null, '', location.pathname);
+  history.replaceState(null,'',location.pathname);
   waitNet(start);
 })();
 </script>
