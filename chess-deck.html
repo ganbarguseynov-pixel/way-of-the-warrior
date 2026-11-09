@@ -37,8 +37,8 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 .deck-slot.filled{border-style:solid;border-color:#43e97b;color:#fff;background:linear-gradient(145deg,#0f6b3a,#064e26)}
 .elixir-row{display:flex;align-items:center;gap:10px;width:100%;margin-top:4px}
 .elixir-badge{display:flex;align-items:center;gap:7px;padding:5px 15px 5px 6px;border-radius:11px;background:linear-gradient(180deg,#1b3563,#0a1430);border:2px solid #4d7fc4;box-shadow:0 4px 0 rgba(3,8,22,.9),inset 0 2px 0 rgba(127,180,255,.35);line-height:1}
-.elixir-drop{width:36px;height:39px;display:block;flex-shrink:0;filter:drop-shadow(0 3px 5px rgba(0,0,0,.7))}
-.elixir-num{font-size:22px;font-weight:900;color:#fff;letter-spacing:.3px;text-shadow:0 2px 3px rgba(0,0,0,.7),0 0 12px rgba(255,90,220,.5)}
+.elixir-drop{width:36px;height:39px;display:block;flex-shrink:0;filter:drop-shadow(0 3px 5px rgba(0,0,0,.75))}
+.elixir-num{font-size:22px;font-weight:900;color:#fff;letter-spacing:.3px;text-shadow:0 2px 3px rgba(0,0,0,.7),0 0 12px rgba(255,80,80,.55)}
 .elixir-cap{font-size:11px;font-weight:800;color:#eaf3ff;line-height:1.3}
 .deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
 .card{border-radius:11px;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:space-between;align-items:center;position:relative;padding:5px}
@@ -47,7 +47,7 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 .card.epic{border-color:#b06aff;background:linear-gradient(145deg,#2a2a48,#250f3e)}
 .card.picked{border-color:#43e97b!important}
 .card.soon{opacity:.45}
-.card-elixir{position:absolute;top:-6px;left:-6px;width:22px;height:22px;border-radius:50%;border:2px solid #fff;z-index:2;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;color:#fff;background:linear-gradient(145deg,#c026d3,#701a75);box-shadow:0 2px 5px rgba(0,0,0,.5)}
+.card-elixir{position:absolute;top:-6px;left:-6px;width:22px;height:22px;border-radius:50%;border:2px solid #fff;z-index:2;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;color:#fff;background:linear-gradient(145deg,#ff5a5a,#a80606);box-shadow:0 2px 5px rgba(0,0,0,.5)}
 .pick-order{position:absolute;bottom:-6px;right:-6px;background:linear-gradient(145deg,#5ef08a,#1f9e42);color:#083b1c;font-weight:900;font-size:11px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:3}
 .card-icon{font-size:30px;margin-top:16px;color:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,.7))}
 .card-name{font-size:10px;color:#fff;text-align:center;font-weight:900}
@@ -65,7 +65,7 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 @keyframes zonePulse{from{background-color:rgba(255,212,71,.2)}to{background-color:rgba(255,212,71,.42)}}
 .cell.selected{background:linear-gradient(145deg,#4ade80,#22c55e 60%,#15803d)!important;box-shadow:inset 0 0 12px rgba(255,255,255,.7),0 0 15px rgba(74,222,128,.8)!important}
 .piece{position:relative;z-index:2;pointer-events:none;margin-bottom:8px;filter:drop-shadow(0 4px 5px rgba(0,0,0,.8))}
-.top-cost-badge{position:absolute;top:-4px;left:50%;transform:translateX(-50%);background:linear-gradient(145deg,#c084fc,#7c3aed);color:#fff;border-radius:50%;width:15px;height:15px;font-size:9px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1.5px solid #fff;z-index:10}
+.top-cost-badge{position:absolute;top:-4px;left:50%;transform:translateX(-50%);background:linear-gradient(145deg,#ff5a5a,#a80606);color:#fff;border-radius:50%;width:15px;height:15px;font-size:9px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1.5px solid #fff;z-index:10}
 .bottom-hp-bar{position:absolute;bottom:12px;left:5%;width:90%;height:11px;border-radius:4px;display:flex;justify-content:center;align-items:center;z-index:10;border:1px solid #000;background:linear-gradient(180deg,#34c759,#34c75999)}
 .lvl-num{font-size:9px;font-weight:900;color:#000;line-height:11px}
 .hp-text-below{position:absolute;bottom:1px;left:0;width:100%;text-align:center;font-size:8px;font-weight:bold;color:#fff;z-index:10;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000}
@@ -100,7 +100,7 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 <div class="currency-row">
 <div class="currency">🪙 <span id="deck-coins">1250</span></div>
 <div class="currency">💎 <span id="deck-gems">50</span></div>
-<div class="deck-ver">v6</div>
+<div class="deck-ver">v7</div>
 </div>
 <div class="sub-tabs">
 <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
@@ -123,26 +123,26 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 <svg class="elixir-drop" viewBox="0 0 44 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 <defs>
 <linearGradient id="df" x1="18%" y1="0%" x2="82%" y2="100%">
-<stop offset="0%" stop-color="#ff9df5"/>
-<stop offset="26%" stop-color="#f83ee0"/>
-<stop offset="56%" stop-color="#cc12b8"/>
-<stop offset="82%" stop-color="#8a0780"/>
-<stop offset="100%" stop-color="#4d0346"/>
+<stop offset="0%" stop-color="#ff9d9d"/>
+<stop offset="26%" stop-color="#ff3a3a"/>
+<stop offset="56%" stop-color="#cc0f0f"/>
+<stop offset="82%" stop-color="#8a0505"/>
+<stop offset="100%" stop-color="#4d0000"/>
 </linearGradient>
 <radialGradient id="dg" cx="46%" cy="42%" r="54%">
-<stop offset="0%" stop-color="#ffffff" stop-opacity=".98"/>
-<stop offset="55%" stop-color="#ffffff" stop-opacity=".35"/>
+<stop offset="0%" stop-color="#ffffff" stop-opacity=".95"/>
+<stop offset="55%" stop-color="#ffffff" stop-opacity=".3"/>
 <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
 </radialGradient>
 <clipPath id="dc">
 <path d="M22 2.6 C27 11 37.4 21.6 37.4 29.4 A15.4 15.4 0 0 1 6.6 29.4 C6.6 21.6 17 11 22 2.6 Z"/>
 </clipPath>
 </defs>
-<path d="M22 2.6 C27 11 37.4 21.6 37.4 29.4 A15.4 15.4 0 0 1 6.6 29.4 C6.6 21.6 17 11 22 2.6 Z" fill="url(#df)" stroke="#2e0129" stroke-width="2.4" stroke-linejoin="round"/>
+<path d="M22 2.6 C27 11 37.4 21.6 37.4 29.4 A15.4 15.4 0 0 1 6.6 29.4 C6.6 21.6 17 11 22 2.6 Z" fill="url(#df)" stroke="#2e0000" stroke-width="2.4" stroke-linejoin="round"/>
 <g clip-path="url(#dc)">
 <ellipse cx="16.4" cy="28.6" rx="5.4" ry="9.4" fill="url(#dg)" transform="rotate(-14 16.4 28.6)"/>
 <ellipse cx="19" cy="13.4" rx="2.6" ry="4" fill="#ffffff" opacity=".85" transform="rotate(-20 19 13.4)"/>
-<path d="M37 30 A15 15 0 0 1 24 44.4" fill="none" stroke="#ffb0f6" stroke-width="2.2" stroke-linecap="round" opacity=".45"/>
+<path d="M37 30 A15 15 0 0 1 24 44.4" fill="none" stroke="#ffb0b0" stroke-width="2.2" stroke-linecap="round" opacity=".45"/>
 </g>
 </svg>
 <span class="elixir-num" id="elixirAvg">—</span>
