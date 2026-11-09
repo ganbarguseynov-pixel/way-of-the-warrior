@@ -44,25 +44,28 @@ body.battle-mode .bottom-nav,body.battle-mode #verTag{display:none!important}
 #checkBar{width:min(95vw,420px);height:24px;line-height:24px;text-align:center;font-size:12px;font-weight:900;letter-spacing:1.2px;color:#fff;border-radius:8px;margin-bottom:6px;white-space:nowrap;overflow:hidden;background:linear-gradient(145deg,#ef4444,#991b1b);box-shadow:0 0 18px rgba(239,68,68,.55);visibility:hidden;opacity:0}
 #checkBar.on{visibility:visible;opacity:1;animation:barPulse .8s infinite alternate}
 @keyframes barPulse{from{opacity:.72}to{opacity:1}}
-.elix-wrap{position:relative;width:min(95vw,420px);height:48px;padding:5px 5px 5px 68px;margin-top:8px;border-radius:15px;background:linear-gradient(180deg,#1d2b52,#111a33 55%,#0a0f20);border:2px solid #3f5c9e;box-shadow:0 5px 0 #060c1c,0 12px 24px rgba(0,0,0,.75),inset 0 2px 0 rgba(140,180,255,.35)}
+
+/* ===== ЭЛИКСИР: маджента как в Clash Royale ===== */
+.elix-wrap{position:relative;width:min(95vw,420px);height:50px;padding:5px 6px 5px 70px;margin-top:8px;border-radius:15px;background:linear-gradient(180deg,#1b2a52,#101a34 55%,#080e1f);border:2px solid #3f5c9e;box-shadow:0 5px 0 #060c1c,0 12px 24px rgba(0,0,0,.75),inset 0 2px 0 rgba(140,180,255,.35)}
 .elix-wrap.bump{animation:elixBump .3s ease-out}
 @keyframes elixBump{0%{transform:translateY(0)}35%{transform:translateY(-3px) scale(1.012)}100%{transform:translateY(0)}}
-.elix-bar{position:relative;width:100%;height:100%;border-radius:11px;background:#2b1046;box-shadow:inset 0 6px 13px rgba(0,0,0,.95);overflow:hidden}
-.elix-fill{position:absolute;left:0;top:0;height:100%;width:50%;overflow:hidden;z-index:1;transition:width .1s linear;background:linear-gradient(180deg,#ffb0f7 0%,#ff5ce6 16%,#ef1fd6 38%,#c20fbb 60%,#8c0a97 80%,#560563 100%);box-shadow:0 0 16px rgba(255,80,235,.95),0 0 34px rgba(190,15,200,.6),inset 0 3px 7px rgba(255,255,255,.65),inset 0 -9px 15px rgba(55,0,65,.65)}
-.elix-fill::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 58% 48% at 50% 0%,rgba(255,255,255,.75),transparent 75%);mix-blend-mode:screen}
+.elix-bar{position:relative;width:100%;height:100%;border-radius:11px;background:#1d0a2c;box-shadow:inset 0 6px 13px rgba(0,0,0,.95),inset 0 0 0 1px rgba(0,0,0,.8);overflow:hidden}
+.elix-fill{position:absolute;left:0;top:0;height:100%;width:50%;overflow:hidden;z-index:1;transition:width .1s linear;background:linear-gradient(180deg,#ffd4f8 0%,#ff8aea 11%,#f742d3 29%,#dc1bbd 49%,#b00fa2 69%,#75086d 87%,#460442 100%);box-shadow:inset 0 4px 8px rgba(255,255,255,.65),inset 0 -11px 18px rgba(60,0,55,.7),0 0 18px rgba(255,80,225,.9)}
+.elix-fill::after{content:'';position:absolute;left:0;right:0;top:0;height:46%;pointer-events:none;background:radial-gradient(ellipse 60% 90% at 50% 0%,rgba(255,255,255,.88),rgba(255,255,255,.18) 55%,transparent 78%)}
 .elix-bubbles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-.elix-bub{position:absolute;bottom:-8px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff,rgba(255,255,255,.5) 45%,rgba(255,120,220,.1) 75%);box-shadow:0 0 6px rgba(255,190,250,.75);animation-name:elixRise;animation-timing-function:linear;animation-iteration-count:infinite}
-@keyframes elixRise{0%{transform:translateY(0) scale(.5);opacity:0}15%{opacity:.9}80%{opacity:.45}100%{transform:translateY(-40px) scale(1.2);opacity:0}}
+.elix-bub{position:absolute;bottom:-8px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff,rgba(255,255,255,.5) 45%,rgba(255,130,230,.1) 75%);box-shadow:0 0 6px rgba(255,200,245,.8);animation-name:elixRise;animation-timing-function:linear;animation-iteration-count:infinite}
+@keyframes elixRise{0%{transform:translateY(0) scale(.5);opacity:0}15%{opacity:.9}80%{opacity:.45}100%{transform:translateY(-42px) scale(1.2);opacity:0}}
 .elix-segs{position:absolute;inset:0;display:grid;grid-template-columns:repeat(10,1fr);pointer-events:none;z-index:2}
-.elix-segs i{border-right:2px solid rgba(0,0,0,.5);box-shadow:1px 0 0 rgba(255,255,255,.07)}
+.elix-segs i{border-right:2px solid rgba(0,0,0,.42);box-shadow:1px 0 0 rgba(255,255,255,.09)}
 .elix-segs i:last-child{border-right:0}
-.elix-num{position:absolute;left:0;top:0;width:68px;height:100%;display:flex;align-items:center;padding-left:38px;font-size:21px;font-weight:900;color:#fff;z-index:9;pointer-events:none;text-shadow:0 2px 0 rgba(60,0,70,.9),0 3px 5px rgba(0,0,0,.9),0 0 12px rgba(255,110,240,.85)}
-.elix-num::before{content:'';position:absolute;left:6px;top:50%;width:29px;height:29px;margin-top:-15px;border-radius:0 50% 50% 50%;transform:rotate(45deg);background:linear-gradient(140deg,#ffb4f8 0%,#ff55e6 26%,#e01fce 52%,#a30fae 76%,#5f0670 100%);border:1.5px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.85),inset -3px -3px 8px rgba(60,0,70,.55),inset 3px 3px 7px rgba(255,255,255,.55)}
-.elix-plus{position:absolute;top:-2px;font-size:13px;font-weight:900;color:#fff;z-index:6;pointer-events:none;text-shadow:0 0 10px rgba(255,90,235,1),0 1px 3px #000;animation:elixPlus .9s ease-out forwards}
+.elix-num{position:absolute;left:0;top:0;width:70px;height:100%;display:flex;align-items:center;padding-left:40px;font-size:22px;font-weight:900;color:#fff;z-index:9;pointer-events:none;text-shadow:0 2px 0 rgba(70,0,60,.95),0 3px 6px rgba(0,0,0,.9),0 0 14px rgba(255,110,235,.95)}
+.elix-num::before{content:'';position:absolute;left:6px;top:50%;width:30px;height:30px;margin-top:-15px;border-radius:0 50% 50% 50%;transform:rotate(45deg);background:linear-gradient(140deg,#ffc8f7 0%,#ff7ce6 24%,#ea2ecb 50%,#ab11a2 74%,#600a63 100%);border:1.5px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.85),inset -3px -3px 8px rgba(70,0,60,.55),inset 3px 3px 7px rgba(255,255,255,.6)}
+.elix-plus{position:absolute;top:-2px;font-size:13px;font-weight:900;color:#fff;z-index:6;pointer-events:none;text-shadow:0 0 10px rgba(255,90,220,1),0 1px 3px #000;animation:elixPlus .9s ease-out forwards}
 @keyframes elixPlus{0%{opacity:0;transform:translate(-50%,10px) scale(.5)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-26px) scale(1.15)}}
-.elix-spark{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;z-index:6;pointer-events:none;background:radial-gradient(circle,#fff,rgba(255,110,235,.6) 45%,transparent 72%);animation:elixSpark .55s ease-out forwards}
+.elix-spark{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;z-index:6;pointer-events:none;background:radial-gradient(circle,#fff,rgba(255,110,225,.6) 45%,transparent 72%);animation:elixSpark .55s ease-out forwards}
 @keyframes elixSpark{0%{transform:scale(.3);opacity:1}60%{transform:scale(2.4);opacity:.7}100%{transform:scale(3.2);opacity:0}}
-#board{--side:min(95vw,420px,calc(100dvh - 200px));width:var(--side);height:var(--side);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border:3px solid #334155;border-radius:12px;overflow:hidden;background:var(--dark);box-shadow:0 12px 34px rgba(0,0,0,.85);position:relative;contain:layout paint}
+
+#board{--side:min(95vw,420px,calc(100dvh - 202px));width:var(--side);height:var(--side);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border:3px solid #334155;border-radius:12px;overflow:hidden;background:var(--dark);box-shadow:0 12px 34px rgba(0,0,0,.85);position:relative;contain:layout paint}
 .cell{position:relative;display:flex;align-items:center;justify-content:center;font-size:clamp(15px,5vw,26px);cursor:pointer;overflow:hidden}
 .cell.light{background:var(--light)}
 .cell.dark{background:var(--dark)}
@@ -75,7 +78,7 @@ body.battle-mode .bottom-nav,body.battle-mode #verTag{display:none!important}
 .piece{position:relative;z-index:3;line-height:1;margin-bottom:7px;pointer-events:none}
 .piece.mine{color:#5aa9ec;text-shadow:0 0 6px rgba(90,169,236,.75),0 2px 4px rgba(0,0,0,.95)}
 .piece.theirs{color:#ef5350;text-shadow:0 0 6px rgba(239,83,80,.75),0 2px 4px rgba(0,0,0,.95)}
-.cost-badge{position:absolute;top:0;right:0;width:36%;height:36%;max-width:15px;max-height:15px;border-radius:50%;background:linear-gradient(145deg,#ff5ce0,#8a0f9e);color:#fff;font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;border:1px solid #fff;z-index:9;pointer-events:none}
+.cost-badge{position:absolute;top:0;right:0;width:36%;height:36%;max-width:15px;max-height:15px;border-radius:50%;background:linear-gradient(145deg,#ff6ee0,#a50fa6);color:#fff;font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;border:1px solid #fff;z-index:9;pointer-events:none}
 .hp-bar{position:absolute;bottom:7px;left:8%;width:84%;height:7px;border-radius:3px;background:#000;z-index:8;display:flex;align-items:center;justify-content:center;overflow:hidden;pointer-events:none}
 .hp-fill{position:absolute;left:0;top:0;height:100%;background:linear-gradient(180deg,#34c759,#34c759aa);z-index:1}
 .hp-fill.mid{background:linear-gradient(180deg,#ffcc00,#ffcc00aa)}
@@ -127,7 +130,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 </style>
 </head>
 <body data-arena="1">
-<div id="verTag">v31</div>
+<div id="verTag">v33</div>
 
 <div id="lobby">
   <div class="card">
