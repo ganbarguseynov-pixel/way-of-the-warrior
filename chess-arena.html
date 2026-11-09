@@ -40,16 +40,100 @@ body.battle-mode #verTag{display:none!important}
 #battle>*{flex-shrink:0}
 #topBar{width:min(95vw,420px);display:flex;justify-content:space-between;align-items:center;font-size:12px;height:22px;margin-bottom:8px;color:#94a3b8}
 #topBar b{color:#ffcc00}
+#timeBox{display:flex;align-items:center;gap:6px}
 #timeLabel{font-weight:900;font-variant-numeric:tabular-nums;font-size:15px;min-width:52px;text-align:right}
+#speedTag{font-size:10px;font-weight:900;color:#3b1f00;background:linear-gradient(180deg,#ffe082,#ffb300);padding:2px 7px;border-radius:6px;border:1px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.6),0 0 10px rgba(255,196,0,.6);letter-spacing:.3px;line-height:1.35;animation:spdPulse 1.3s ease-in-out infinite}
+@keyframes spdPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
 #checkBar{width:min(95vw,420px);height:24px;line-height:24px;text-align:center;font-size:12px;font-weight:900;letter-spacing:1.2px;color:#fff;border-radius:8px;margin-bottom:6px;white-space:nowrap;overflow:hidden;background:linear-gradient(145deg,#ef4444,#991b1b);box-shadow:0 0 18px rgba(239,68,68,.55);visibility:hidden;opacity:0}
 #checkBar.on{visibility:visible;opacity:1;animation:barPulse .8s infinite alternate}
 @keyframes barPulse{from{opacity:.72}to{opacity:1}}
-.elix-wrap{position:relative;width:min(95vw,420px);height:22px;background:#020617;border-radius:8px;overflow:hidden;margin-bottom:6px;box-shadow:inset 0 3px 6px rgba(0,0,0,.8);border:1px solid rgba(255,255,255,.1)}
-.elix-fill{position:absolute;left:0;top:0;height:100%;width:50%;transition:width .2s linear}
-#myElixFill{background:linear-gradient(180deg,#ff6b7a,#7f1d1d)}
-.elix-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;letter-spacing:.5px;z-index:3;text-shadow:0 1px 3px #000,0 0 6px #000,0 0 3px #000;pointer-events:none}
-.elix-label{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:9px;font-weight:900;letter-spacing:.6px;color:rgba(255,255,255,.8);z-index:3;pointer-events:none;text-shadow:0 1px 3px #000}
-#board{--side:min(95vw,420px,calc(100dvh - 175px));width:var(--side);height:var(--side);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border:3px solid #334155;border-radius:12px;overflow:hidden;background:var(--dark);box-shadow:0 12px 34px rgba(0,0,0,.85);position:relative;contain:layout paint}
+
+/* ===== ЭЛИКСИР: 3D-ТРУБКА ===== */
+.elix-wrap{
+  position:relative;width:min(95vw,420px);height:38px;margin-top:6px;margin-bottom:0;
+  border-radius:16px;padding:4px;
+  background:linear-gradient(180deg,#0b1730,#040914);
+  border:2px solid #2c4270;
+  box-shadow:
+    0 5px 0 #060c1c,
+    0 12px 24px rgba(0,0,0,.7),
+    inset 0 2px 0 rgba(140,180,255,.2);
+}
+.elix-wrap.bump{animation:elixBump .3s ease-out}
+@keyframes elixBump{0%{transform:translateY(0)}35%{transform:translateY(-3px) scale(1.012)}100%{transform:translateY(0)}}
+.elix-inner{
+  position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;
+  background:#02060f;
+  box-shadow:inset 0 6px 14px rgba(0,0,0,.95),inset 0 -1px 2px rgba(120,170,255,.1);
+}
+.elix-fill{
+  position:absolute;left:0;top:0;height:100%;width:50%;
+  background:linear-gradient(180deg,#ffe6fe 0%,#ff6ae8 15%,#e027d2 36%,#b41fbb 60%,#7c1fa8 82%,#4a1078 100%);
+  box-shadow:
+    0 0 20px rgba(236,72,225,.9),
+    0 0 42px rgba(168,85,247,.5),
+    inset 0 3px 6px rgba(255,255,255,.6),
+    inset 0 -8px 14px rgba(46,0,60,.65);
+  transition:width .1s linear;
+  overflow:hidden;
+}
+.elix-fill::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 55% 45% at 50% 0%,rgba(255,255,255,.72),transparent 72%);
+  mix-blend-mode:screen;
+}
+.elix-bubbles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.elix-bub{
+  position:absolute;bottom:-8px;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%,#fff,rgba(255,255,255,.5) 45%,rgba(216,102,255,.1) 75%);
+  box-shadow:0 0 6px rgba(255,190,255,.75);
+  animation-name:elixRise;animation-timing-function:linear;animation-iteration-count:infinite;
+}
+@keyframes elixRise{
+  0%{transform:translateY(0) scale(.5);opacity:0}
+  15%{opacity:.9}
+  80%{opacity:.45}
+  100%{transform:translateY(-38px) scale(1.2);opacity:0}
+}
+.elix-gloss{
+  position:absolute;left:4px;right:4px;top:4px;height:46%;border-radius:12px 12px 50% 50%;
+  background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,.05) 65%,transparent);
+  pointer-events:none;z-index:4;
+}
+.elix-num{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:900;color:#fff;letter-spacing:.5px;z-index:5;
+  text-shadow:0 2px 0 rgba(80,0,80,.9),0 2px 4px rgba(0,0,0,.85),0 0 10px rgba(255,140,255,.8);
+  pointer-events:none;
+}
+.elix-label{
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  font-size:9px;font-weight:900;letter-spacing:.7px;color:rgba(255,255,255,.85);
+  z-index:5;pointer-events:none;text-shadow:0 1px 3px #000;
+}
+.elix-plus{
+  position:absolute;top:-2px;font-size:13px;font-weight:900;color:#fff;z-index:6;
+  pointer-events:none;text-shadow:0 0 10px rgba(255,120,240,1),0 1px 3px #000;
+  animation:elixPlus .9s ease-out forwards;
+}
+@keyframes elixPlus{
+  0%{opacity:0;transform:translate(-50%,10px) scale(.5)}
+  25%{opacity:1}
+  100%{opacity:0;transform:translate(-50%,-26px) scale(1.15)}
+}
+.elix-spark{
+  position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;
+  z-index:6;pointer-events:none;
+  background:radial-gradient(circle,#fff,rgba(255,120,240,.6) 45%,transparent 72%);
+  animation:elixSpark .55s ease-out forwards;
+}
+@keyframes elixSpark{
+  0%{transform:scale(.3);opacity:1}
+  60%{transform:scale(2.4);opacity:.7}
+  100%{transform:scale(3.2);opacity:0}
+}
+
+#board{--side:min(95vw,420px,calc(100dvh - 193px));width:var(--side);height:var(--side);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border:3px solid #334155;border-radius:12px;overflow:hidden;background:var(--dark);box-shadow:0 12px 34px rgba(0,0,0,.85);position:relative;contain:layout paint}
 .cell{position:relative;display:flex;align-items:center;justify-content:center;font-size:clamp(15px,5vw,26px);cursor:pointer;overflow:hidden}
 .cell.light{background:var(--light)}
 .cell.dark{background:var(--dark)}
@@ -69,8 +153,6 @@ body.battle-mode #verTag{display:none!important}
 .hp-fill.low{background:linear-gradient(180deg,#ff3b30,#ff3b30aa)}
 .hp-lvl{position:relative;z-index:2;font-size:6px;font-weight:900;color:#000;line-height:1}
 .hp-text{position:absolute;bottom:-1px;left:0;width:100%;text-align:center;font-size:6px;font-weight:bold;color:#fff;z-index:9;white-space:nowrap;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 1px 2px rgba(0,0,0,.9);pointer-events:none}
-#myElix{margin-top:6px;margin-bottom:0}
-#speedTag{position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:900;color:#ffe08a;letter-spacing:.3px;text-shadow:0 1px 3px #000,0 0 6px #000;z-index:4;pointer-events:none}
 #tools{width:min(95vw,420px);display:flex;gap:6px;margin-top:10px}
 #tools button{flex:1;padding:11px 4px;border-radius:10px;font-size:12px;font-weight:800;border:1px solid #475569;background:linear-gradient(145deg,#475569,#1e293b);color:#fff;cursor:pointer}
 #tools button:disabled{opacity:.35;cursor:not-allowed}
@@ -118,7 +200,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 </style>
 </head>
 <body data-arena="1">
-<div id="verTag">v26</div>
+<div id="verTag">v27</div>
 
 <div id="lobby">
   <div class="card">
@@ -142,15 +224,22 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
   <div id="topBar">
     <span id="oppLabel">Соперник</span>
     <span>Ставка <b id="stakeWin">+30</b> / <b id="stakeLose" style="color:#ef4444">−30</b></span>
-    <span id="timeLabel">5:00</span>
+    <span id="timeBox">
+      <span id="speedTag" class="hidden"></span>
+      <span id="timeLabel">5:00</span>
+    </span>
   </div>
   <div id="checkBar"></div>
   <div id="board"></div>
   <div class="elix-wrap" id="myElix">
-    <div class="elix-fill" id="myElixFill"></div>
+    <div class="elix-inner" id="myElixInner">
+      <div class="elix-fill" id="myElixFill">
+        <div class="elix-bubbles" id="elixBubbles"></div>
+      </div>
+    </div>
+    <div class="elix-gloss"></div>
     <div class="elix-label">ЭЛИКСИР</div>
     <div class="elix-num" id="myElixNum">5 / 10</div>
-    <span id="speedTag"></span>
   </div>
   <div id="tools">
     <button id="drawBtn">🤝 Ничья (2)</button>
@@ -213,6 +302,7 @@ try { tg.ready(); tg.expand(); } catch (e){}
 const $ = function (id){ return document.getElementById(id); };
 
 const DRAW_MAX = 2;
+const ELIX_MS_PER_UNIT = 2000;
 
 let sel = null;
 let cells = [];
@@ -249,6 +339,150 @@ function playerKey(){
 function playerName(){
   return localStorage.getItem('userName') || 'Игрок';
 }
+
+/* ================= ЭЛИКСИР: ПЛАВНАЯ 3D-ТРУБКА ================= */
+
+let elixView = 0;
+let elixStarted = false;
+let elixIntShown = -1;
+let elixLastFrame = 0;
+let elixLoopOn = false;
+
+function elixBuildBubbles(){
+  const box = $('elixBubbles');
+  if (!box || box.childElementCount) return;
+  for (let i = 0; i < 12; i++){
+    const b = document.createElement('div');
+    b.className = 'elix-bub';
+    const sz = 3 + Math.random() * 4;
+    b.style.width = sz + 'px';
+    b.style.height = sz + 'px';
+    b.style.left = (2 + Math.random() * 94) + '%';
+    b.style.animationDuration = (1.5 + Math.random() * 1.9) + 's';
+    b.style.animationDelay = (-Math.random() * 3) + 's';
+    box.appendChild(b);
+  }
+}
+
+function elixReset(){
+  elixView = 0;
+  elixStarted = false;
+  elixIntShown = -1;
+  elixLastFrame = 0;
+  elixLoopOn = false;
+  const st = $('speedTag');
+  if (st){ st.textContent = ''; st.classList.add('hidden'); }
+  lastSpeedTxt = '';
+  const num = $('myElixNum');
+  if (num) num.textContent = '0 / 10';
+  const fill = $('myElixFill');
+  if (fill) fill.style.width = '0%';
+}
+
+function elixBubble(){
+  const wrap = $('myElix');
+  if (wrap){ wrap.classList.remove('bump'); void wrap.offsetWidth; wrap.classList.add('bump'); }
+
+  const inner = $('myElixInner');
+  if (!inner) return;
+
+  const pos = Math.max(5, Math.min(93, elixView * 10));
+
+  const sp = document.createElement('div');
+  sp.className = 'elix-spark';
+  sp.style.left = pos + '%';
+  inner.appendChild(sp);
+  setTimeout(function(){ if (sp.parentNode) sp.parentNode.removeChild(sp); }, 600);
+
+  const p = document.createElement('div');
+  p.className = 'elix-plus';
+  p.textContent = '+1';
+  p.style.left = pos + '%';
+  inner.appendChild(p);
+  setTimeout(function(){ if (p.parentNode) p.parentNode.removeChild(p); }, 920);
+}
+
+function elixPaint(){
+  const fill = $('myElixFill');
+  const num  = $('myElixNum');
+  if (!fill || !num) return;
+
+  fill.style.width = (elixView * 10).toFixed(2) + '%';
+
+  const i = Math.floor(elixView + 0.0001);
+  if (i !== elixIntShown){
+    if (elixIntShown >= 0 && i > elixIntShown) elixBubble();
+    elixIntShown = i;
+  }
+  num.textContent = i + ' / 10';
+}
+
+function elixFrame(now){
+  const s = Net.state;
+  if (!s || s.over || !document.body.classList.contains('battle-mode')){
+    elixLoopOn = false;
+    return;
+  }
+
+  let dt = elixLastFrame ? (now - elixLastFrame) : 16;
+  if (dt > 200) dt = 200;
+  elixLastFrame = now;
+
+  const my = Net.mySide;
+  const raw = (s.energy && typeof s.energy[my] === 'number' && isFinite(s.energy[my])) ? s.energy[my] : 0;
+  const srv = Math.max(0, Math.min(10, raw));
+
+  let rate = 1;
+  if (window.Arena && typeof Arena.energyRate === 'function'){
+    const r = Arena.energyRate(s);
+    if (typeof r === 'number' && isFinite(r) && r > 0) rate = r;
+  }
+
+  if (!elixStarted){
+    elixView = srv;
+    elixIntShown = Math.floor(srv + 0.0001);
+    elixStarted = true;
+  }
+
+  const diff = srv - elixView;
+
+  if (diff < -0.9){
+    elixView = srv;
+  } else if (diff < -0.02){
+    /* сервер чуть позади — придержим, пока не догонит */
+  } else {
+    elixView += (dt / ELIX_MS_PER_UNIT) * rate;
+    if (elixView > srv + 0.9) elixView = srv + 0.9;
+  }
+
+  if (elixView > 10) elixView = 10;
+  if (elixView < 0) elixView = 0;
+
+  elixPaint();
+  requestAnimationFrame(elixFrame);
+}
+
+function elixStart(){
+  if (elixLoopOn) return;
+  elixLoopOn = true;
+  elixLastFrame = 0;
+  requestAnimationFrame(elixFrame);
+}
+
+function renderElix(s, my){
+  if (!elixStarted && s && s.energy){
+    const v = s.energy[my];
+    if (typeof v === 'number' && isFinite(v)){
+      elixView = Math.max(0, Math.min(10, v));
+      elixIntShown = Math.floor(elixView + 0.0001);
+      elixStarted = true;
+    }
+  }
+  elixPaint();
+  elixStart();
+}
+
+/* ================= ЛОББИ ================= */
 
 function renderLobby(){
   const me = Net.me;
@@ -328,6 +562,9 @@ Net.on('start', function (info){
   buildBoard();
   for (let i = 0; i < cellSig.length; i++) cellSig[i] = '';
 
+  elixReset();
+  elixBuildBubbles();
+
   const myCups  = Net.me ? Net.me.cups : 0;
   const oppCups = (info.opponent && info.opponent.cups) || 0;
   const diff = myCups - oppCups;
@@ -368,6 +605,7 @@ Net.on('result', function (r){
   $('overlay').classList.remove('hidden');
 
   promoPending = null;
+  elixLoopOn = false;
 
   const won  = r.winner === r.mySide;
   const draw = r.winner === 'draw';
@@ -548,13 +786,6 @@ function pieceHp(pc){
   return { hp: hp, max: max };
 }
 
-function renderElix(s, my){
-  let myE = (typeof s.energy[my] === 'number' && isFinite(s.energy[my])) ? s.energy[my] : 0;
-  myE = Math.max(0, Math.min(10, Math.floor(myE)));
-  $('myElixFill').style.width = (myE * 10) + '%';
-  $('myElixNum').textContent  = myE + ' / 10';
-}
-
 function render(s){
   if (!s) return;
 
@@ -677,10 +908,12 @@ function render(s){
   renderElix(s, my);
 
   const rate = Arena.energyRate(s);
-  const speedTxt = rate > 1 ? ('⚡×' + rate) : '';
+  const speedTxt = rate > 1 ? ('×' + rate + ' ⚡') : '';
   if (speedTxt !== lastSpeedTxt){
     lastSpeedTxt = speedTxt;
-    $('speedTag').textContent = speedTxt;
+    const st = $('speedTag');
+    st.textContent = speedTxt;
+    st.classList.toggle('hidden', !speedTxt);
   }
 
   const tl = $('timeLabel');
@@ -757,6 +990,7 @@ document.addEventListener('visibilitychange', function (){
   if (!document.hidden && Net.checkAway) Net.checkAway();
 });
 
+elixBuildBubbles();
 boot();
 </script>
 
@@ -796,7 +1030,6 @@ boot();
     location.href = 'chess-social.html';
   }
 
-  /* отправитель уходит — вызов немедленно снимается */
   function drop(){
     if (role !== 'host') return;
     if (started || killed) return;
