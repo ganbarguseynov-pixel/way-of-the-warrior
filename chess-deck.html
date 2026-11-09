@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <title>Chess Royale - Колода</title>
 <link rel="stylesheet" href="royale.css?v=1">
 <style>
@@ -19,7 +17,7 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 .screen{display:none;flex-direction:column;width:100%;align-items:center;flex:1;overflow-y:auto;padding-bottom:90px}
 .screen.active{display:flex}
 .deck-area{width:95vw;max-width:400px;padding:10px;display:flex;flex-direction:column;gap:10px}
-.pager-note{width:100%;text-align:center;font-size:11px;font-weight:900;color:#dbe9ff;letter-spacing:.4px;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.pager-note{width:100%;text-align:center;font-size:11px;font-weight:900;color:#dbe9ff;letter-spacing:.4px}
 .slot-bar{display:flex;align-items:center;gap:6px;width:100%}
 .slot-nav{width:38px;height:46px;flex-shrink:0;border-radius:12px!important;padding:0;cursor:pointer;font-size:20px;font-weight:900;line-height:1;color:#fff!important;background:linear-gradient(180deg,#3b8ef0,#1c56b8)!important;border:3px solid #fff!important;box-shadow:0 4px 0 #123b7a!important}
 .slot-nav:active{transform:translateY(3px);box-shadow:0 1px 0 #123b7a!important}
@@ -30,7 +28,6 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 .slot-btn.on{background:linear-gradient(180deg,#ffe082,#ffb300)!important;color:#3b1f00!important;border-color:#fff!important;box-shadow:0 4px 0 #b45309!important}
 .slot-btn.empty{color:#7b93bd!important}
 .slot-dot{position:absolute;top:3px;right:4px;width:7px;height:7px;border-radius:50%;background:#43e97b;box-shadow:0 0 6px rgba(67,233,123,.9)}
-.slot-btn.full .slot-dot{background:#43e97b}
 .slot-btn.part .slot-dot{background:#ffd447}
 .deck-note{width:100%;text-align:center;font-size:12px;color:#dbe9ff;font-weight:700;line-height:1.45;padding:0 6px}
 .deck-note b{color:#43e97b}
@@ -38,19 +35,11 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 .deck-picked{display:flex;gap:6px;justify-content:center;margin-top:2px}
 .deck-slot{flex:1;height:38px;border-radius:9px;border:2px dashed rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:19px;color:#c6d8ff;background:rgba(2,6,23,.35)}
 .deck-slot.filled{border-style:solid;border-color:#43e97b;color:#fff;background:linear-gradient(145deg,#0f6b3a,#064e26)}
-
-/* ==== ЭЛИКСИР ==== */
 .elixir-row{display:flex;align-items:center;gap:10px;width:100%;margin-top:4px}
-.elixir-badge{display:flex;align-items:center;gap:7px;padding:5px 15px 5px 7px;border-radius:11px;
-  background:linear-gradient(180deg,#1b3563,#0a1430);
-  border:2px solid #4d7fc4;
-  box-shadow:0 4px 0 rgba(3,8,22,.9),inset 0 2px 0 rgba(127,180,255,.35);
-  line-height:1}
-.elixir-drop{width:31px;height:34px;display:block;flex-shrink:0;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
-.elixir-num{font-size:22px;font-weight:900;color:#fff;letter-spacing:.3px;text-shadow:0 2px 3px rgba(0,0,0,.7),0 0 10px rgba(255,90,220,.45)}
-.elixir-cap{font-size:11px;font-weight:800;color:#eaf3ff;line-height:1.3;text-shadow:0 1px 3px rgba(0,0,0,.5)}
-
-/* ==== СЕТКА КАРТ ==== */
+.elixir-badge{display:flex;align-items:center;gap:7px;padding:5px 15px 5px 7px;border-radius:11px;background:linear-gradient(180deg,#1b3563,#0a1430);border:2px solid #4d7fc4;box-shadow:0 4px 0 rgba(3,8,22,.9),inset 0 2px 0 rgba(127,180,255,.35);line-height:1}
+.elixir-drop{width:32px;height:35px;display:block;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,.65))}
+.elixir-num{font-size:22px;font-weight:900;color:#fff;letter-spacing:.3px;text-shadow:0 2px 3px rgba(0,0,0,.7),0 0 12px rgba(255,90,220,.5)}
+.elixir-cap{font-size:11px;font-weight:800;color:#eaf3ff;line-height:1.3}
 .deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
 .card{border-radius:11px;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:space-between;align-items:center;position:relative;padding:5px}
 .card.common{border-color:#9aa7b8}
@@ -61,10 +50,8 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 .card-elixir{position:absolute;top:-6px;left:-6px;background:linear-gradient(145deg,#ff6b7a,#c0392b);color:#fff;font-weight:900;font-size:12px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:2}
 .pick-order{position:absolute;top:-6px;right:-6px;background:linear-gradient(145deg,#5ef08a,#1f9e42);color:#083b1c;font-weight:900;font-size:12px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:3}
 .card-icon{font-size:30px;margin-top:16px;color:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,.7))}
-.card-name{font-size:10px;color:#fff;text-align:center;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.card-name{font-size:10px;color:#fff;text-align:center;font-weight:900}
 .card-level{font-size:9px;color:#ffd447;background:rgba(0,0,0,.75);padding:2px 5px;border-radius:4px;width:90%;text-align:center;margin-top:5px;font-weight:800}
-
-/* ==== РАССТАНОВКА ==== */
 .setup-area{width:95vw;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:10px}
 .setup-hint{text-align:center;color:#dbe9ff;font-size:12px;margin:0;min-height:18px;padding:0 10px;line-height:1.45;font-weight:700}
 .board-container{position:relative;width:100%;aspect-ratio:1/1;border:4px solid #ffd447;border-radius:14px;overflow:hidden;box-shadow:0 10px 0 #b45309,0 18px 40px rgba(0,0,0,.6);background:linear-gradient(145deg,#1a1f2e,#0f1420)}
@@ -113,7 +100,7 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 <div class="currency-row">
 <div class="currency">🪙 <span id="deck-coins">1250</span></div>
 <div class="currency">💎 <span id="deck-gems">50</span></div>
-<div class="deck-ver">v4</div>
+<div class="deck-ver">v5</div>
 </div>
 <div class="sub-tabs">
 <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
@@ -123,63 +110,48 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 
 <div id="screen-cards" class="screen active">
 <div class="deck-area">
-
 <div class="pager-note" id="pagerNote">Колоды 1–5 из 10</div>
-
 <div class="slot-bar">
 <button class="slot-nav" id="pPrev" onclick="pagePrev()">‹</button>
 <div class="slot-list" id="slotList"></div>
 <button class="slot-nav" id="pNext" onclick="pageNext()">›</button>
 </div>
-
 <div class="deck-note" id="deck-note">Выбери 4 карты</div>
-
 <div class="deck-picked" id="deck-picked"></div>
-
 <div class="elixir-row">
 <div class="elixir-badge">
 <svg class="elixir-drop" viewBox="0 0 40 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 <defs>
-<radialGradient id="dropFill" cx="33%" cy="17%" r="95%">
-<stop offset="0%" stop-color="#ffe3fd"/>
-<stop offset="18%" stop-color="#ff9df0"/>
-<stop offset="40%" stop-color="#f43fdd"/>
-<stop offset="66%" stop-color="#c60fae"/>
-<stop offset="86%" stop-color="#8a0679"/>
-<stop offset="100%" stop-color="#56044c"/>
+<radialGradient id="df" cx="32%" cy="16%" r="96%">
+<stop offset="0%" stop-color="#fff0ff"/>
+<stop offset="16%" stop-color="#ffb0f8"/>
+<stop offset="38%" stop-color="#ff4ee4"/>
+<stop offset="62%" stop-color="#d40fbb"/>
+<stop offset="84%" stop-color="#90077f"/>
+<stop offset="100%" stop-color="#54044b"/>
 </radialGradient>
-<radialGradient id="dropGloss" cx="50%" cy="50%" r="50%">
-<stop offset="0%" stop-color="#ffffff" stop-opacity=".95"/>
-<stop offset="70%" stop-color="#ffffff" stop-opacity=".28"/>
-<stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+<radialGradient id="dg" cx="50%" cy="50%" r="50%">
+<stop offset="0%" stop-color="#fff" stop-opacity=".97"/>
+<stop offset="62%" stop-color="#fff" stop-opacity=".3"/>
+<stop offset="100%" stop-color="#fff" stop-opacity="0"/>
 </radialGradient>
-<linearGradient id="dropEdge" x1="0" y1="0" x2="1" y2="1">
-<stop offset="0%" stop-color="#ffc9f7" stop-opacity=".85"/>
-<stop offset="45%" stop-color="#ff6ce4" stop-opacity=".25"/>
-<stop offset="100%" stop-color="#ff6ce4" stop-opacity="0"/>
+<linearGradient id="de" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" stop-color="#ffd4f9" stop-opacity=".9"/>
+<stop offset="50%" stop-color="#ff7ae8" stop-opacity=".2"/>
+<stop offset="100%" stop-color="#ff7ae8" stop-opacity="0"/>
 </linearGradient>
 </defs>
-<path d="M20 2.4
-C23.9 9.6 32.6 20.2 32.6 27.3
-A12.6 12.6 0 0 1 7.4 27.3
-C7.4 20.2 16.1 9.6 20 2.4 Z"
-fill="url(#dropFill)" stroke="#3f0339" stroke-width="1.6" stroke-linejoin="round"/>
-<path d="M20 2.4
-C23.9 9.6 32.6 20.2 32.6 27.3
-A12.6 12.6 0 0 1 7.4 27.3
-C7.4 20.2 16.1 9.6 20 2.4 Z"
-fill="none" stroke="url(#dropEdge)" stroke-width="1.6"/>
-<ellipse cx="14.6" cy="25.6" rx="3.5" ry="6.1" fill="url(#dropGloss)" transform="rotate(-16 14.6 25.6)"/>
-<ellipse cx="16.4" cy="15.2" rx="1.7" ry="2.6" fill="#ffffff" opacity=".6" transform="rotate(-22 16.4 15.2)"/>
-<path d="M28.8 31.6 A11 11 0 0 1 22 38.6" fill="none" stroke="#ff8ae9" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+<path d="M20 2.2 C24.4 9.8 33.4 20.4 33.4 27.6 A13.4 13.4 0 0 1 6.6 27.6 C6.6 20.4 15.6 9.8 20 2.2 Z" fill="url(#df)" stroke="#3d0337" stroke-width="1.7" stroke-linejoin="round"/>
+<path d="M20 2.2 C24.4 9.8 33.4 20.4 33.4 27.6 A13.4 13.4 0 0 1 6.6 27.6 C6.6 20.4 15.6 9.8 20 2.2 Z" fill="none" stroke="url(#de)" stroke-width="1.7"/>
+<ellipse cx="14" cy="26" rx="3.9" ry="6.6" fill="url(#dg)" transform="rotate(-15 14 26)"/>
+<ellipse cx="16.2" cy="14.6" rx="1.9" ry="2.9" fill="#fff" opacity=".7" transform="rotate(-22 16.2 14.6)"/>
+<path d="M29.6 32.4 A11.6 11.6 0 0 1 22.2 39.6" fill="none" stroke="#ff9df0" stroke-width="1.6" stroke-linecap="round" opacity=".55"/>
 </svg>
 <span class="elixir-num" id="elixirAvg">—</span>
 </div>
 <div class="elixir-cap" id="elixirCap">Средние затраты<br>эликсира</div>
 </div>
-
 <div class="deck-grid" id="deck-grid"></div>
-
 </div>
 </div>
 
@@ -228,7 +200,6 @@ const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',ico
 const PIECE_TYPES=['p','n','b','r','k','q'];
 const ELIXIR={p:1,n:2,b:3,r:4,k:5,q:6};
 const HAND_SIZE=4;
-
 const SLOT_COUNT=10;
 const PER_PAGE=5;
 const DECKS_KEY='chessDecks';
