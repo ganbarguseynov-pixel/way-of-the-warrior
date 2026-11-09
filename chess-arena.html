@@ -48,92 +48,33 @@ body.battle-mode #verTag{display:none!important}
 #checkBar.on{visibility:visible;opacity:1;animation:barPulse .8s infinite alternate}
 @keyframes barPulse{from{opacity:.72}to{opacity:1}}
 
-/* ===== ЭЛИКСИР: 3D-ТРУБКА ===== */
-.elix-wrap{
-  position:relative;width:min(95vw,420px);height:38px;margin-top:6px;margin-bottom:0;
-  border-radius:16px;padding:4px;
-  background:linear-gradient(180deg,#0b1730,#040914);
-  border:2px solid #2c4270;
-  box-shadow:
-    0 5px 0 #060c1c,
-    0 12px 24px rgba(0,0,0,.7),
-    inset 0 2px 0 rgba(140,180,255,.2);
-}
-.elix-wrap.bump{animation:elixBump .3s ease-out}
-@keyframes elixBump{0%{transform:translateY(0)}35%{transform:translateY(-3px) scale(1.012)}100%{transform:translateY(0)}}
-.elix-inner{
-  position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;
-  background:#02060f;
-  box-shadow:inset 0 6px 14px rgba(0,0,0,.95),inset 0 -1px 2px rgba(120,170,255,.1);
-}
-.elix-fill{
-  position:absolute;left:0;top:0;height:100%;width:50%;
-  background:linear-gradient(180deg,#ffe6fe 0%,#ff6ae8 15%,#e027d2 36%,#b41fbb 60%,#7c1fa8 82%,#4a1078 100%);
-  box-shadow:
-    0 0 20px rgba(236,72,225,.9),
-    0 0 42px rgba(168,85,247,.5),
-    inset 0 3px 6px rgba(255,255,255,.6),
-    inset 0 -8px 14px rgba(46,0,60,.65);
-  transition:width .1s linear;
-  overflow:hidden;
-}
-.elix-fill::after{
-  content:'';position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(ellipse 55% 45% at 50% 0%,rgba(255,255,255,.72),transparent 72%);
-  mix-blend-mode:screen;
-}
+/* ===== ЭЛИКСИР: КАПЛЯ + КРАСНАЯ 3D-ПОЛОСКА ===== */
+.elix-wrap{position:relative;width:min(95vw,420px);display:flex;align-items:center;gap:6px;margin-top:8px;margin-bottom:0}
+.elix-drop-badge{position:relative;width:42px;height:46px;flex-shrink:0;filter:drop-shadow(0 4px 6px rgba(0,0,0,.85))}
+.elix-drop-badge svg{width:100%;height:100%;display:block}
+.elix-drop-num{position:absolute;left:0;right:0;bottom:5px;text-align:center;font-size:14px;font-weight:900;color:#fff;line-height:1;letter-spacing:.3px;pointer-events:none;text-shadow:0 2px 3px rgba(0,0,0,.95),0 0 8px rgba(255,80,80,.85)}
+.elix-bar{position:relative;flex:1;height:40px;border-radius:13px;padding:4px;background:linear-gradient(180deg,#0c1932,#050a16);border:2px solid #3b5c96;box-shadow:0 5px 0 #060c1c,0 12px 22px rgba(0,0,0,.7),inset 0 2px 0 rgba(140,180,255,.22)}
+.elix-bar.bump{animation:elixBump .3s ease-out}
+@keyframes elixBump{0%{transform:translateY(0)}35%{transform:translateY(-3px) scale(1.015)}100%{transform:translateY(0)}}
+.elix-track{position:relative;width:100%;height:100%;border-radius:10px;overflow:hidden;background:#02060f;box-shadow:inset 0 6px 13px rgba(0,0,0,.95),inset 0 -1px 2px rgba(120,170,255,.08)}
+.elix-fill{position:absolute;left:0;top:0;height:100%;width:50%;overflow:hidden;z-index:1;
+  background:linear-gradient(180deg,#ff9d9d 0%,#ff3535 16%,#d40f0f 40%,#a80606 62%,#780303 84%,#4d0000 100%);
+  box-shadow:0 0 18px rgba(255,50,50,.95),0 0 38px rgba(190,0,0,.55),inset 0 3px 6px rgba(255,255,255,.55),inset 0 -9px 15px rgba(60,0,0,.7);
+  transition:width .1s linear}
+.elix-fill::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 55% 45% at 50% 0%,rgba(255,255,255,.6),transparent 72%);mix-blend-mode:screen}
 .elix-bubbles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-.elix-bub{
-  position:absolute;bottom:-8px;border-radius:50%;
-  background:radial-gradient(circle at 32% 28%,#fff,rgba(255,255,255,.5) 45%,rgba(216,102,255,.1) 75%);
-  box-shadow:0 0 6px rgba(255,190,255,.75);
-  animation-name:elixRise;animation-timing-function:linear;animation-iteration-count:infinite;
-}
-@keyframes elixRise{
-  0%{transform:translateY(0) scale(.5);opacity:0}
-  15%{opacity:.9}
-  80%{opacity:.45}
-  100%{transform:translateY(-38px) scale(1.2);opacity:0}
-}
-.elix-gloss{
-  position:absolute;left:4px;right:4px;top:4px;height:46%;border-radius:12px 12px 50% 50%;
-  background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,.05) 65%,transparent);
-  pointer-events:none;z-index:4;
-}
-.elix-num{
-  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-size:15px;font-weight:900;color:#fff;letter-spacing:.5px;z-index:5;
-  text-shadow:0 2px 0 rgba(80,0,80,.9),0 2px 4px rgba(0,0,0,.85),0 0 10px rgba(255,140,255,.8);
-  pointer-events:none;
-}
-.elix-label{
-  position:absolute;left:10px;top:50%;transform:translateY(-50%);
-  font-size:9px;font-weight:900;letter-spacing:.7px;color:rgba(255,255,255,.85);
-  z-index:5;pointer-events:none;text-shadow:0 1px 3px #000;
-}
-.elix-plus{
-  position:absolute;top:-2px;font-size:13px;font-weight:900;color:#fff;z-index:6;
-  pointer-events:none;text-shadow:0 0 10px rgba(255,120,240,1),0 1px 3px #000;
-  animation:elixPlus .9s ease-out forwards;
-}
-@keyframes elixPlus{
-  0%{opacity:0;transform:translate(-50%,10px) scale(.5)}
-  25%{opacity:1}
-  100%{opacity:0;transform:translate(-50%,-26px) scale(1.15)}
-}
-.elix-spark{
-  position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;
-  z-index:6;pointer-events:none;
-  background:radial-gradient(circle,#fff,rgba(255,120,240,.6) 45%,transparent 72%);
-  animation:elixSpark .55s ease-out forwards;
-}
-@keyframes elixSpark{
-  0%{transform:scale(.3);opacity:1}
-  60%{transform:scale(2.4);opacity:.7}
-  100%{transform:scale(3.2);opacity:0}
-}
+.elix-bub{position:absolute;bottom:-8px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff,rgba(255,255,255,.5) 45%,rgba(255,120,120,.1) 75%);box-shadow:0 0 6px rgba(255,190,190,.75);animation-name:elixRise;animation-timing-function:linear;animation-iteration-count:infinite}
+@keyframes elixRise{0%{transform:translateY(0) scale(.5);opacity:0}15%{opacity:.9}80%{opacity:.45}100%{transform:translateY(-40px) scale(1.2);opacity:0}}
+.elix-segs{position:absolute;inset:0;display:grid;grid-template-columns:repeat(10,1fr);pointer-events:none;z-index:2}
+.elix-segs i{border-right:2px solid rgba(0,0,0,.6);box-shadow:1px 0 0 rgba(255,255,255,.06)}
+.elix-segs i:last-child{border-right:0}
+.elix-gloss{position:absolute;left:0;right:0;top:0;height:46%;border-radius:10px 10px 50% 50%;background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,.04) 65%,transparent);pointer-events:none;z-index:3}
+.elix-plus{position:absolute;top:-2px;font-size:13px;font-weight:900;color:#fff;z-index:6;pointer-events:none;text-shadow:0 0 10px rgba(255,90,90,1),0 1px 3px #000;animation:elixPlus .9s ease-out forwards}
+@keyframes elixPlus{0%{opacity:0;transform:translate(-50%,10px) scale(.5)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-26px) scale(1.15)}}
+.elix-spark{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;z-index:6;pointer-events:none;background:radial-gradient(circle,#fff,rgba(255,110,110,.6) 45%,transparent 72%);animation:elixSpark .55s ease-out forwards}
+@keyframes elixSpark{0%{transform:scale(.3);opacity:1}60%{transform:scale(2.4);opacity:.7}100%{transform:scale(3.2);opacity:0}}
 
-#board{--side:min(95vw,420px,calc(100dvh - 193px));width:var(--side);height:var(--side);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border:3px solid #334155;border-radius:12px;overflow:hidden;background:var(--dark);box-shadow:0 12px 34px rgba(0,0,0,.85);position:relative;contain:layout paint}
+#board{--side:min(95vw,420px,calc(100dvh - 208px));width:var(--side);height:var(--side);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border:3px solid #334155;border-radius:12px;overflow:hidden;background:var(--dark);box-shadow:0 12px 34px rgba(0,0,0,.85);position:relative;contain:layout paint}
 .cell{position:relative;display:flex;align-items:center;justify-content:center;font-size:clamp(15px,5vw,26px);cursor:pointer;overflow:hidden}
 .cell.light{background:var(--light)}
 .cell.dark{background:var(--dark)}
@@ -146,7 +87,7 @@ body.battle-mode #verTag{display:none!important}
 .piece{position:relative;z-index:3;line-height:1;margin-bottom:7px;font-weight:400;pointer-events:none}
 .piece.mine{color:#5aa9ec;text-shadow:0 0 6px rgba(90,169,236,.75),0 2px 4px rgba(0,0,0,.95)}
 .piece.theirs{color:#ef5350;text-shadow:0 0 6px rgba(239,83,80,.75),0 2px 4px rgba(0,0,0,.95)}
-.cost-badge{position:absolute;top:0;right:0;width:36%;height:36%;max-width:15px;max-height:15px;border-radius:50%;background:linear-gradient(145deg,#c084fc,#7c3aed);color:#fff;font-size:8px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;border:1px solid #fff;z-index:9;box-shadow:0 1px 3px rgba(0,0,0,.8);pointer-events:none}
+.cost-badge{position:absolute;top:0;right:0;width:36%;height:36%;max-width:15px;max-height:15px;border-radius:50%;background:linear-gradient(145deg,#ff5a5a,#a80606);color:#fff;font-size:8px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;border:1px solid #fff;z-index:9;box-shadow:0 1px 3px rgba(0,0,0,.8);pointer-events:none}
 .hp-bar{position:absolute;bottom:7px;left:8%;width:84%;height:7px;border-radius:3px;background:#000;border:1px solid #000;z-index:8;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.8);pointer-events:none}
 .hp-fill{position:absolute;left:0;top:0;height:100%;background:linear-gradient(180deg,#34c759,#34c759aa);z-index:1}
 .hp-fill.mid{background:linear-gradient(180deg,#ffcc00,#ffcc00aa)}
@@ -200,7 +141,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 </style>
 </head>
 <body data-arena="1">
-<div id="verTag">v27</div>
+<div id="verTag">v28</div>
 
 <div id="lobby">
   <div class="card">
@@ -231,16 +172,49 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
   </div>
   <div id="checkBar"></div>
   <div id="board"></div>
+
   <div class="elix-wrap" id="myElix">
-    <div class="elix-inner" id="myElixInner">
-      <div class="elix-fill" id="myElixFill">
-        <div class="elix-bubbles" id="elixBubbles"></div>
+    <div class="elix-drop-badge">
+      <svg viewBox="0 0 44 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="edf" x1="18%" y1="0%" x2="82%" y2="100%">
+            <stop offset="0%" stop-color="#ff9d9d"/>
+            <stop offset="26%" stop-color="#ff3a3a"/>
+            <stop offset="56%" stop-color="#cc0f0f"/>
+            <stop offset="82%" stop-color="#8a0505"/>
+            <stop offset="100%" stop-color="#4d0000"/>
+          </linearGradient>
+          <radialGradient id="edg" cx="46%" cy="42%" r="54%">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity=".95"/>
+            <stop offset="55%" stop-color="#ffffff" stop-opacity=".3"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+          </radialGradient>
+          <clipPath id="edc">
+            <path d="M22 2.6 C27 11 37.4 21.6 37.4 29.4 A15.4 15.4 0 0 1 6.6 29.4 C6.6 21.6 17 11 22 2.6 Z"/>
+          </clipPath>
+        </defs>
+        <path d="M22 2.6 C27 11 37.4 21.6 37.4 29.4 A15.4 15.4 0 0 1 6.6 29.4 C6.6 21.6 17 11 22 2.6 Z" fill="url(#edf)" stroke="#2e0000" stroke-width="2.4" stroke-linejoin="round"/>
+        <g clip-path="url(#edc)">
+          <ellipse cx="16.4" cy="28.6" rx="5.4" ry="9.4" fill="url(#edg)" transform="rotate(-14 16.4 28.6)"/>
+          <ellipse cx="19" cy="13.4" rx="2.6" ry="4" fill="#ffffff" opacity=".8" transform="rotate(-20 19 13.4)"/>
+        </g>
+      </svg>
+      <span class="elix-drop-num" id="myElixNum">5</span>
+    </div>
+
+    <div class="elix-bar" id="myElixBar">
+      <div class="elix-track">
+        <div class="elix-fill" id="myElixFill">
+          <div class="elix-bubbles" id="elixBubbles"></div>
+        </div>
+        <div class="elix-segs">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+        <div class="elix-gloss"></div>
       </div>
     </div>
-    <div class="elix-gloss"></div>
-    <div class="elix-label">ЭЛИКСИР</div>
-    <div class="elix-num" id="myElixNum">5 / 10</div>
   </div>
+
   <div id="tools">
     <button id="drawBtn">🤝 Ничья (2)</button>
     <button id="resignBtn">Сдаться</button>
@@ -287,7 +261,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
   <button class="nav-btn" onclick="location.href='leaderboard.html'"><div class="icon-wrap"><span class="icon">🏆</span></div><span>Рейтинг</span></button>
 </div>
 
-<script src="arena.js?v=18"></script>
+<script src="arena.js?v=19"></script>
 <script src="friends.js?v=3"></script>
 <script src="net.js?v=20"></script>
 <script>
@@ -302,7 +276,6 @@ try { tg.ready(); tg.expand(); } catch (e){}
 const $ = function (id){ return document.getElementById(id); };
 
 const DRAW_MAX = 2;
-const ELIX_MS_PER_UNIT = 2000;
 
 let sel = null;
 let cells = [];
@@ -340,7 +313,7 @@ function playerName(){
   return localStorage.getItem('userName') || 'Игрок';
 }
 
-/* ================= ЭЛИКСИР: ПЛАВНАЯ 3D-ТРУБКА ================= */
+/* ================= ЭЛИКСИР ================= */
 
 let elixView = 0;
 let elixStarted = false;
@@ -374,31 +347,32 @@ function elixReset(){
   if (st){ st.textContent = ''; st.classList.add('hidden'); }
   lastSpeedTxt = '';
   const num = $('myElixNum');
-  if (num) num.textContent = '0 / 10';
+  if (num) num.textContent = '0';
   const fill = $('myElixFill');
   if (fill) fill.style.width = '0%';
 }
 
 function elixBubble(){
-  const wrap = $('myElix');
-  if (wrap){ wrap.classList.remove('bump'); void wrap.offsetWidth; wrap.classList.add('bump'); }
+  const bar = $('myElixBar');
+  if (!bar) return;
 
-  const inner = $('myElixInner');
-  if (!inner) return;
+  bar.classList.remove('bump');
+  void bar.offsetWidth;
+  bar.classList.add('bump');
 
   const pos = Math.max(5, Math.min(93, elixView * 10));
 
   const sp = document.createElement('div');
   sp.className = 'elix-spark';
   sp.style.left = pos + '%';
-  inner.appendChild(sp);
+  bar.appendChild(sp);
   setTimeout(function(){ if (sp.parentNode) sp.parentNode.removeChild(sp); }, 600);
 
   const p = document.createElement('div');
   p.className = 'elix-plus';
   p.textContent = '+1';
   p.style.left = pos + '%';
-  inner.appendChild(p);
+  bar.appendChild(p);
   setTimeout(function(){ if (p.parentNode) p.parentNode.removeChild(p); }, 920);
 }
 
@@ -413,8 +387,16 @@ function elixPaint(){
   if (i !== elixIntShown){
     if (elixIntShown >= 0 && i > elixIntShown) elixBubble();
     elixIntShown = i;
+    num.textContent = i;
   }
-  num.textContent = i + ' / 10';
+}
+
+function elixRate(){
+  if (window.Arena && typeof Arena.energyRate === 'function'){
+    const r = Arena.energyRate(Net.state);
+    if (typeof r === 'number' && isFinite(r) && r > 0) return r;
+  }
+  return 0.5;
 }
 
 function elixFrame(now){
@@ -432,11 +414,7 @@ function elixFrame(now){
   const raw = (s.energy && typeof s.energy[my] === 'number' && isFinite(s.energy[my])) ? s.energy[my] : 0;
   const srv = Math.max(0, Math.min(10, raw));
 
-  let rate = 1;
-  if (window.Arena && typeof Arena.energyRate === 'function'){
-    const r = Arena.energyRate(s);
-    if (typeof r === 'number' && isFinite(r) && r > 0) rate = r;
-  }
+  const rate = elixRate();
 
   if (!elixStarted){
     elixView = srv;
@@ -444,16 +422,10 @@ function elixFrame(now){
     elixStarted = true;
   }
 
-  const diff = srv - elixView;
+  elixView += (dt / 1000) * rate;
 
-  if (diff < -0.9){
-    elixView = srv;
-  } else if (diff < -0.02){
-    /* сервер чуть позади — придержим, пока не догонит */
-  } else {
-    elixView += (dt / ELIX_MS_PER_UNIT) * rate;
-    if (elixView > srv + 0.9) elixView = srv + 0.9;
-  }
+  const drift = srv - elixView;
+  if (drift > 0.45 || drift < -0.45) elixView = srv;
 
   if (elixView > 10) elixView = 10;
   if (elixView < 0) elixView = 0;
@@ -702,7 +674,7 @@ function onCell(dx, dy){
 
     const mover = s.board[sel.y][sel.x];
     const need  = Arena.moveCost(s, mover);
-    if (Math.floor(s.energy[my]) < need){
+    if (s.energy[my] < need){
       sel = null;
       render(s);
       toast('Нужно ' + need + ' эликсира');
@@ -907,8 +879,15 @@ function render(s){
 
   renderElix(s, my);
 
-  const rate = Arena.energyRate(s);
-  const speedTxt = rate > 1 ? ('×' + rate + ' ⚡') : '';
+  const base = (Arena && Arena.ENERGY_PER_SEC) ? Arena.ENERGY_PER_SEC : 0.5;
+  const rate = elixRate();
+  const mult = rate / base;
+
+  let speedTxt = '';
+  if (mult > 1.001){
+    speedTxt = '×' + (Math.abs(mult - Math.round(mult)) < 0.05 ? Math.round(mult) : mult.toFixed(1)) + ' ⚡';
+  }
+
   if (speedTxt !== lastSpeedTxt){
     lastSpeedTxt = speedTxt;
     const st = $('speedTag');
