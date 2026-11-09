@@ -1,11 +1,12 @@
 /* ============================================================
-   arena.js — правила и движок шахматных арен  (VER 18)
-   Пешка на последней линии превращается в выбранную фигуру.
+   arena.js — правила и движок шахматных арен  (VER 19)
+   Эликсир: 1 единица за 2 секунды, дробный, плавный.
+   ×1.5 в последнюю минуту, ×2 в дополнительное время.
    ============================================================ */
 (function (global) {
 'use strict';
 
-const VER = '18';
+const VER = '19';
 const STEP = 1000;
 const MAX_ARENA = 10;
 
@@ -16,7 +17,9 @@ const KING_HP   = 1;
 const MATE_DAMAGE = 1;
 const STATUS_STEP = 0.35;
 const ENERGY_MAX = 10;
-const ENERGY_PER_SEC = 1;
+const ENERGY_PER_SEC = 0.5;
+const ENERGY_FAST_MULT = 1.5;
+const ENERGY_OT_MULT = 2;
 
 const ARMY_MAX = { p:8, r:2, n:2, b:2, q:1, k:1 };
 
@@ -33,7 +36,6 @@ const TYPE_BY_LETTER = {
   p:'pawn', n:'knight', b:'bishop', r:'rook', q:'queen', k:'king'
 };
 
-/* какие фигуры можно выбрать при превращении пешки */
 const PROMO_CHOICES = ['q', 'r', 'b', 'n'];
 
 const ARENAS = [
@@ -94,7 +96,14 @@ function log(s, text){
 
 /* ================= ЭЛИКСИР ================= */
 
-function energyRate(s){ return ENERGY_PER_SEC; }
+function energyRate(s){
+  if (!s) return ENERGY_PER_SEC;
+  if (s.phase === 'overtime') return ENERGY_PER_SEC * ENERGY_OT_MULT;
+  if (typeof s.timeLeft === 'number' && isFinite(s.timeLeft) && s.timeLeft <= FAST_FROM){
+    return ENERGY_PER_SEC * ENERGY_FAST_MULT;
+  }
+  return ENERGY_PER_SEC;
+}
 
 function moveCost(s, pc){
   if (!pc) return 1;
@@ -353,7 +362,6 @@ function kingAttacked(s, side){
   return isSquareAttacked(s, kp.x, kp.y, foeOf(side));
 }
 
-/* проверка: превратится ли пешка, идя с (fy) на (ty) */
 function isPromotion(s, fx, fy, tx, ty){
   const pc = s.board[fy] && s.board[fy][fx];
   if (!pc || pc.type !== 'pawn') return false;
@@ -436,7 +444,7 @@ function create(opts){
 
     board: Array.from({ length:8 }, () => Array(8).fill(null)),
     energy: { a:5, b:5 },
-    energyAcc: { a:0, b:0 },
+    energyAcc: { a:5, b:5 },
     hand:   { a:[], b:[] },
     deck:   { a:[], b:[] },
     placed: { a:0, b:0 },
@@ -505,8 +513,13 @@ function move(s, side, fx, fy, tx, ty, promo){
   }
 
   const cost = moveCost(s, pc);
-  if (s.energy[side] < cost) return { ok:false, error:'Мало эликсира' };
-  s.energy[side] = Math.max(0, Math.floor(s.energy[side]) - cost);
+
+  let have = s.energy[side];
+  if (typeof have !== 'number' || !isFinite(have)) have = 0;
+  if (have < cost) return { ok:false, error:'Мало эликсира' };
+
+  s.energy[side] = Math.max(0, have - cost);
+  s.energyAcc[side] = s.energy[side];
 
   if (tgt){
     capture(s, pc, tx, ty);
@@ -569,22 +582,18 @@ function resign(s, side){
 function growEnergy(s, side, dt){
   let e = s.energy[side];
   if (typeof e !== 'number' || !isFinite(e)) e = 0;
-  e = Math.floor(e);
 
   if (e >= ENERGY_MAX){
     s.energy[side] = ENERGY_MAX;
-    s.energyAcc[side] = 0;
+    s.energyAcc[side] = ENERGY_MAX;
     return;
   }
 
-  s.energyAcc[side] += dt * ENERGY_PER_SEC;
-
-  while (s.energyAcc[side] >= 1 && e < ENERGY_MAX){
-    s.energyAcc[side] -= 1;
-    e += 1;
-  }
+  e += dt * energyRate(s);
+  if (e > ENERGY_MAX) e = ENERGY_MAX;
 
   s.energy[side] = e;
+  s.energyAcc[side] = e;
 }
 
 function tick(s, dt){
@@ -651,6 +660,8 @@ global.Arena = {
   KING_HP: KING_HP,
   ENERGY_MAX: ENERGY_MAX,
   ENERGY_PER_SEC: ENERGY_PER_SEC,
+  ENERGY_FAST_MULT: ENERGY_FAST_MULT,
+  ENERGY_OT_MULT: ENERGY_OT_MULT,
   ARMY_MAX: ARMY_MAX,
   PIECES: PIECES,
   ARENAS: ARENAS,
