@@ -4,20 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Chess Royale - Колода</title>
 <link rel="stylesheet" href="royale.css?v=1">
 <style>
 body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;padding-bottom:88px}
 .top-bar{width:100%;padding:12px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;z-index:10}
-.currency-row{display:flex;justify-content:center;gap:8px}
+.currency-row{display:flex;justify-content:center;align-items:center;gap:8px}
 .currency{display:flex;align-items:center;gap:5px;padding:5px 14px;border-radius:10px;font-weight:900}
+.deck-ver{font-size:10px;font-weight:900;color:#3b1f00;background:linear-gradient(180deg,#ffe082,#ffb300);padding:3px 8px;border-radius:7px;border:2px solid #fff;box-shadow:0 2px 0 #b45309;letter-spacing:.5px}
 .sub-tabs{display:flex;gap:6px;margin-top:4px}
 .sub-tab-btn{flex:1;padding:10px;border-radius:10px;font-weight:900;cursor:pointer;font-size:12.5px}
 .screen{display:none;flex-direction:column;width:100%;align-items:center;flex:1;overflow-y:auto;padding-bottom:90px}
 .screen.active{display:flex}
 .deck-area{width:95vw;max-width:400px;padding:10px;display:flex;flex-direction:column;gap:10px}
-
-/* ==== ПЕРЕКЛЮЧАТЕЛЬ КОЛОД ==== */
 .pager-note{width:100%;text-align:center;font-size:11px;font-weight:900;color:#dbe9ff;letter-spacing:.4px;text-shadow:0 1px 2px rgba(0,0,0,.35)}
 .slot-bar{display:flex;align-items:center;gap:6px;width:100%}
 .slot-nav{width:38px;height:46px;flex-shrink:0;border-radius:12px!important;padding:0;cursor:pointer;font-size:20px;font-weight:900;line-height:1;color:#fff!important;background:linear-gradient(180deg,#3b8ef0,#1c56b8)!important;border:3px solid #fff!important;box-shadow:0 4px 0 #123b7a!important}
@@ -31,8 +32,6 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 .slot-dot{position:absolute;top:3px;right:4px;width:7px;height:7px;border-radius:50%;background:#43e97b;box-shadow:0 0 6px rgba(67,233,123,.9)}
 .slot-btn.full .slot-dot{background:#43e97b}
 .slot-btn.part .slot-dot{background:#ffd447}
-
-/* ==== ВЫБРАННЫЕ КАРТЫ ==== */
 .deck-note{width:100%;text-align:center;font-size:12px;color:#dbe9ff;font-weight:700;line-height:1.45;padding:0 6px}
 .deck-note b{color:#43e97b}
 .deck-note.warn{color:#ffd447}
@@ -42,11 +41,7 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 
 /* ==== ЭЛИКСИР ==== */
 .elixir-row{display:flex;align-items:center;gap:10px;width:100%;margin-top:4px}
-.elixir-badge{display:flex;align-items:center;gap:8px;padding:6px 16px 6px 9px;border-radius:13px;
-  background:linear-gradient(180deg,#213a68,#0c1630);
-  border:2px solid #5b8fd8;
-  box-shadow:0 4px 0 rgba(4,10,26,.85),inset 0 2px 0 rgba(255,255,255,.14),0 0 16px rgba(232,62,232,.28);
-  line-height:1}
+.elixir-badge{display:flex;align-items:center;gap:8px;padding:6px 16px 6px 9px;border-radius:13px;background:linear-gradient(180deg,#213a68,#0c1630);border:2px solid #5b8fd8;box-shadow:0 4px 0 rgba(4,10,26,.85),inset 0 2px 0 rgba(255,255,255,.14),0 0 16px rgba(232,62,232,.28);line-height:1}
 .elixir-drop{width:30px;height:33px;display:block;flex-shrink:0;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55))}
 .elixir-num{font-size:22px;font-weight:900;color:#fff;letter-spacing:.5px;text-shadow:0 2px 3px rgba(0,0,0,.6)}
 .elixir-cap{font-size:11px;font-weight:800;color:#eaf3ff;line-height:1.3;text-shadow:0 1px 3px rgba(0,0,0,.5)}
@@ -98,8 +93,6 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 .lock-badge{display:inline-block;background:linear-gradient(180deg,#475569,#1e293b);color:#ffd447;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;margin-left:6px}
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120px);background:linear-gradient(135deg,#22437f,#122a5e);color:#fff;padding:14px 22px;border-radius:12px;font-weight:800;z-index:9999;border:3px solid #34c759;transition:transform .4s cubic-bezier(.4,0,.2,1);font-size:14px;text-align:center;max-width:80vw}
 .toast.show{transform:translateX(-50%) translateY(0)}
-
-/* ==== МЕНЮ ==== */
 .nav{position:fixed;bottom:0;left:0;width:100%;height:68px;display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom)}
 .nb{background:transparent;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px}
 .nb i{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-style:normal}
@@ -116,6 +109,7 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 <div class="currency-row">
 <div class="currency">🪙 <span id="deck-coins">1250</span></div>
 <div class="currency">💎 <span id="deck-gems">50</span></div>
+<div class="deck-ver">v3</div>
 </div>
 <div class="sub-tabs">
 <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
@@ -140,23 +134,26 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 
 <div class="elixir-row">
 <div class="elixir-badge">
-<svg class="elixir-drop" viewBox="0 0 40 44" aria-hidden="true">
+<svg class="elixir-drop" viewBox="0 0 40 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 <defs>
-<radialGradient id="dropFill" cx="34%" cy="24%" r="82%">
-<stop offset="0%" stop-color="#ffb0f8"/>
-<stop offset="34%" stop-color="#f45cee"/>
-<stop offset="68%" stop-color="#cc23cc"/>
-<stop offset="100%" stop-color="#78096f"/>
+<radialGradient id="dropFill" cx="34%" cy="22%" r="86%">
+<stop offset="0%" stop-color="#ffc4fb"/>
+<stop offset="30%" stop-color="#f45cee"/>
+<stop offset="62%" stop-color="#cf1ecb"/>
+<stop offset="100%" stop-color="#6d0664"/>
 </radialGradient>
 <radialGradient id="dropShine" cx="50%" cy="50%" r="50%">
-<stop offset="0%" stop-color="#ffffff" stop-opacity=".9"/>
+<stop offset="0%" stop-color="#ffffff" stop-opacity=".95"/>
 <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
 </radialGradient>
+<linearGradient id="dropRim" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#ff9df6" stop-opacity=".8"/>
+<stop offset="100%" stop-color="#ff9df6" stop-opacity="0"/>
+</linearGradient>
 </defs>
-<path d="M20 2.6 C20 2.6 6.6 18 6.6 27.6 A13.4 13.4 0 0 0 33.4 27.6 C33.4 18 20 2.6 20 2.6 Z"
-fill="url(#dropFill)" stroke="#4e0548" stroke-width="1.8" stroke-linejoin="round"/>
-<ellipse cx="14.6" cy="24.5" rx="3.6" ry="5.6" fill="url(#dropShine)" opacity=".7" transform="rotate(-18 14.6 24.5)"/>
-<path d="M20 7.5 C20 7.5 11 18.5 11 27.4" fill="none" stroke="#ffd6fb" stroke-width="1.3" stroke-linecap="round" opacity=".45"/>
+<path d="M20 2.6 C20 2.6 6.6 18 6.6 27.6 A13.4 13.4 0 0 0 33.4 27.6 C33.4 18 20 2.6 20 2.6 Z" fill="url(#dropFill)" stroke="#4e0548" stroke-width="1.8" stroke-linejoin="round"/>
+<ellipse cx="14.4" cy="24.2" rx="3.6" ry="5.8" fill="url(#dropShine)" opacity=".75" transform="rotate(-18 14.4 24.2)"/>
+<path d="M20 7.6 C20 7.6 11 18.6 11 27.4" fill="none" stroke="url(#dropRim)" stroke-width="1.6" stroke-linecap="round"/>
 </svg>
 <span class="elixir-num" id="elixirAvg">—</span>
 </div>
@@ -208,8 +205,6 @@ document.getElementById('sub-tab-setup-btn').classList.remove('active');
 if(tab==='cards'){document.getElementById('screen-cards').classList.add('active');document.getElementById('sub-tab-cards-btn').classList.add('active');}
 else{document.getElementById('screen-setup').classList.add('active');document.getElementById('sub-tab-setup-btn').classList.add('active');renderSetupBoard();}
 }
-
-/* ================= КАРТЫ ================= */
 
 const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
 const PIECE_TYPES=['p','n','b','r','k','q'];
@@ -264,16 +259,11 @@ function loadDecks(){
     const raw=JSON.parse(localStorage.getItem(DECKS_KEY)||'null');
     if(Array.isArray(raw)) arr=raw;
   }catch(e){}
-
   const out=[];
-  for(let i=0;i<SLOT_COUNT;i++){
-    out.push((arr&&Array.isArray(arr[i]))?sanitize(arr[i]):[]);
-  }
-
+  for(let i=0;i<SLOT_COUNT;i++){ out.push((arr&&Array.isArray(arr[i]))?sanitize(arr[i]):[]); }
   let any=false;
   for(let i=0;i<out.length;i++){ if(out[i].length) any=true; }
   if(!any) out[0]=legacyDeck();
-
   return out;
 }
 
@@ -298,14 +288,10 @@ function deckElixir(d){
   return s/d.length;
 }
 
-/* ================= ПЕРЕКЛЮЧАТЕЛЬ КОЛОД ================= */
-
 function renderSlots(){
   const list=document.getElementById('slotList');
   list.innerHTML='';
-
   const start=page*PER_PAGE;
-
   for(let i=start;i<start+PER_PAGE && i<SLOT_COUNT;i++){
     const d=decks[i]||[];
     const b=document.createElement('button');
@@ -314,21 +300,13 @@ function renderSlots(){
     if(!d.length){ b.classList.add('empty'); }
     else if(d.length>=HAND_SIZE){ b.classList.add('full'); }
     else { b.classList.add('part'); }
-
     b.innerHTML='<span>'+(i+1)+'</span>'+(d.length?'<i class="slot-dot"></i>':'');
-
-    (function(idx){
-      b.onclick=function(){ selectSlot(idx); };
-    })(i);
-
+    (function(idx){ b.onclick=function(){ selectSlot(idx); }; })(i);
     list.appendChild(b);
   }
-
   document.getElementById('pPrev').disabled=(page<=0);
   document.getElementById('pNext').disabled=(page>=Math.ceil(SLOT_COUNT/PER_PAGE)-1);
-
-  document.getElementById('pagerNote').textContent =
-    'Колоды ' + (start+1) + '–' + Math.min(start+PER_PAGE,SLOT_COUNT) + ' из ' + SLOT_COUNT;
+  document.getElementById('pagerNote').textContent='Колоды ' + (start+1) + '–' + Math.min(start+PER_PAGE,SLOT_COUNT) + ' из ' + SLOT_COUNT;
 }
 
 function selectSlot(i){
@@ -339,28 +317,17 @@ function selectSlot(i){
   renderDeck();
 }
 
-function pagePrev(){
-  if(page<=0) return;
-  page--;
-  renderSlots();
-}
-
-function pageNext(){
-  if(page>=Math.ceil(SLOT_COUNT/PER_PAGE)-1) return;
-  page++;
-  renderSlots();
-}
+function pagePrev(){ if(page<=0) return; page--; renderSlots(); }
+function pageNext(){ if(page>=Math.ceil(SLOT_COUNT/PER_PAGE)-1) return; page++; renderSlots(); }
 
 (function initSwipe(){
   const el=document.getElementById('slotList');
   if(!el) return;
   let x0=null, y0=null;
-
   el.addEventListener('touchstart',function(e){
     if(!e.touches||!e.touches.length) return;
     x0=e.touches[0].clientX; y0=e.touches[0].clientY;
   },{passive:true});
-
   el.addEventListener('touchend',function(e){
     if(x0===null) return;
     const t=(e.changedTouches&&e.changedTouches[0])||null;
@@ -373,22 +340,14 @@ function pageNext(){
   },{passive:true});
 })();
 
-/* ================= КАРТЫ КОЛОДЫ ================= */
-
 function toggleCard(type){
   const d=currentDeck();
   const i=d.indexOf(type);
-
-  if(i>=0){
-    d.splice(i,1);
-  }else{
-    if(d.length>=HAND_SIZE){
-      showToast('В колоде уже 4 карты — убери одну','#ffb300');
-      return;
-    }
+  if(i>=0){ d.splice(i,1); }
+  else{
+    if(d.length>=HAND_SIZE){ showToast('В колоде уже 4 карты — убери одну','#ffb300'); return; }
     d.push(type);
   }
-
   saveDecks();
   renderDeck();
   renderSlots();
@@ -396,27 +355,20 @@ function toggleCard(type){
 
 function renderDeck(){
   const d=currentDeck();
-
   const grid=document.getElementById('deck-grid');
   grid.innerHTML='';
-
   DECK_CARDS.forEach(function(card){
     const cardDiv=document.createElement('div');
     const picked=card.type?d.indexOf(card.type):-1;
     const isSoon=!!card.soon;
-
     cardDiv.className='card '+card.rarity+(picked>=0?' picked':'')+(isSoon?' soon':'');
-
     let order='';
     if(picked>=0) order='<div class="pick-order">'+(picked+1)+'</div>';
-
     cardDiv.innerHTML='<div class="card-elixir">'+card.elixir+'</div>'+order+
       '<div class="card-icon">'+card.icon+'</div>'+
       '<div class="card-name">'+card.name+'</div>'+
       '<div class="card-level">'+(isSoon?'скоро':card.level+'-й ур.')+'</div>';
-
     if(!isSoon&&card.type) cardDiv.onclick=function(){ toggleCard(card.type); };
-
     grid.appendChild(cardDiv);
   });
 
@@ -425,13 +377,8 @@ function renderDeck(){
   for(let i=0;i<HAND_SIZE;i++){
     const slot=document.createElement('div');
     const t=d[i];
-    if(t){
-      slot.className='deck-slot filled';
-      slot.textContent=PIECES[t]?PIECES[t].icon:'';
-    }else{
-      slot.className='deck-slot';
-      slot.textContent='—';
-    }
+    if(t){ slot.className='deck-slot filled'; slot.textContent=PIECES[t]?PIECES[t].icon:''; }
+    else{ slot.className='deck-slot'; slot.textContent='—'; }
     pickedBox.appendChild(slot);
   }
 
@@ -447,21 +394,16 @@ function renderDeck(){
 
   const avgEl=document.getElementById('elixirAvg');
   const capEl=document.getElementById('elixirCap');
-
   if(!d.length){
     avgEl.textContent='—';
     capEl.innerHTML='Средние затраты<br>эликсира';
   }else{
     avgEl.textContent=deckElixir(d).toFixed(1);
-    if(d.length===HAND_SIZE){
-      capEl.innerHTML='Средние затраты<br>эликсира';
-    }else{
-      capEl.innerHTML='Средние затраты<br>эликсира (' + d.length + ' из 4)';
-    }
+    capEl.innerHTML=(d.length===HAND_SIZE)
+      ? 'Средние затраты<br>эликсира'
+      : 'Средние затраты<br>эликсира (' + d.length + ' из 4)';
   }
 }
-
-/* ================= РАССТАНОВКА ================= */
 
 const SETUP_KEY='chessSetup';
 const SETUP_ROWS=[6,7];
@@ -632,8 +574,6 @@ function showToast(msg,color){
   setTimeout(()=>toast.classList.add('show'),50);
   setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),400);},2400);
 }
-
-/* ================= СТАРТ ================= */
 
 decks=loadDecks();
 activeSlot=loadActive();
