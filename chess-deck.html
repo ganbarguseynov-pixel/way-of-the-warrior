@@ -16,13 +16,38 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 .screen{display:none;flex-direction:column;width:100%;align-items:center;flex:1;overflow-y:auto;padding-bottom:90px}
 .screen.active{display:flex}
 .deck-area{width:95vw;max-width:400px;padding:10px;display:flex;flex-direction:column;gap:10px}
+
+/* ==== ПЕРЕКЛЮЧАТЕЛЬ КОЛОД ==== */
+.pager-note{width:100%;text-align:center;font-size:11px;font-weight:900;color:#dbe9ff;letter-spacing:.4px;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.slot-bar{display:flex;align-items:center;gap:6px;width:100%}
+.slot-nav{width:38px;height:46px;flex-shrink:0;border-radius:12px!important;padding:0;cursor:pointer;font-size:20px;font-weight:900;line-height:1;color:#fff!important;background:linear-gradient(180deg,#3b8ef0,#1c56b8)!important;border:3px solid #fff!important;box-shadow:0 4px 0 #123b7a!important}
+.slot-nav:active{transform:translateY(3px);box-shadow:0 1px 0 #123b7a!important}
+.slot-nav:disabled{opacity:.35;filter:grayscale(.6)}
+.slot-list{flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;touch-action:pan-y}
+.slot-btn{position:relative;height:46px;border-radius:12px!important;padding:0;cursor:pointer;font-size:16px;font-weight:900;color:#c6d8ff!important;background:linear-gradient(180deg,#22437f,#122a5e)!important;border:3px solid #4a72c0!important;box-shadow:0 4px 0 #0b1b45!important}
+.slot-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #0b1b45!important}
+.slot-btn.on{background:linear-gradient(180deg,#ffe082,#ffb300)!important;color:#3b1f00!important;border-color:#fff!important;box-shadow:0 4px 0 #b45309!important}
+.slot-btn.empty{color:#7b93bd!important}
+.slot-dot{position:absolute;top:3px;right:4px;width:7px;height:7px;border-radius:50%;background:#43e97b;box-shadow:0 0 6px rgba(67,233,123,.9)}
+.slot-btn.full .slot-dot{background:#43e97b}
+.slot-btn.part .slot-dot{background:#ffd447}
+
+/* ==== ВЫБРАННЫЕ КАРТЫ ==== */
 .deck-note{width:100%;text-align:center;font-size:12px;color:#dbe9ff;font-weight:700;line-height:1.45;padding:0 6px}
 .deck-note b{color:#43e97b}
 .deck-note.warn{color:#ffd447}
 .deck-picked{display:flex;gap:6px;justify-content:center;margin-top:2px}
-.deck-slot{flex:1;height:36px;border-radius:9px;border:2px dashed rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:18px;color:#c6d8ff;background:rgba(2,6,23,.35)}
+.deck-slot{flex:1;height:38px;border-radius:9px;border:2px dashed rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:19px;color:#c6d8ff;background:rgba(2,6,23,.35)}
 .deck-slot.filled{border-style:solid;border-color:#43e97b;color:#fff;background:linear-gradient(145deg,#0f6b3a,#064e26)}
-.deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
+
+/* ==== ЭЛИКСИР ==== */
+.elixir-row{display:flex;align-items:center;gap:8px;width:100%;margin-top:2px}
+.elixir-badge{display:flex;align-items:center;gap:7px;padding:7px 16px;border-radius:13px;background:linear-gradient(180deg,#2b2450,#171233);border:3px solid #a855f7;box-shadow:0 4px 0 #140f2e,0 0 16px rgba(168,85,247,.4);font-size:19px;font-weight:900;color:#fff;line-height:1}
+.elixir-drop{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;background:radial-gradient(circle at 35% 30%,#e879f9,#a855f7 60%,#6b21a8)}
+.elixir-cap{font-size:10.5px;font-weight:800;color:#c6d8ff;line-height:1.25;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+
+/* ==== СЕТКА КАРТ ==== */
+.deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
 .card{border-radius:11px;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:space-between;align-items:center;position:relative;padding:5px}
 .card.common{border-color:#9aa7b8}
 .card.rare{border-color:#ffb300;background:linear-gradient(145deg,#2a2a48,#2a1a00)}
@@ -34,6 +59,8 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 .card-icon{font-size:30px;margin-top:16px;color:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,.7))}
 .card-name{font-size:10px;color:#fff;text-align:center;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.8)}
 .card-level{font-size:9px;color:#ffd447;background:rgba(0,0,0,.75);padding:2px 5px;border-radius:4px;width:90%;text-align:center;margin-top:5px;font-weight:800}
+
+/* ==== РАССТАНОВКА ==== */
 .setup-area{width:95vw;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:10px}
 .setup-hint{text-align:center;color:#dbe9ff;font-size:12px;margin:0;min-height:18px;padding:0 10px;line-height:1.45;font-weight:700}
 .board-container{position:relative;width:100%;aspect-ratio:1/1;border:4px solid #ffd447;border-radius:14px;overflow:hidden;box-shadow:0 10px 0 #b45309,0 18px 40px rgba(0,0,0,.6);background:linear-gradient(145deg,#1a1f2e,#0f1420)}
@@ -66,6 +93,8 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 .lock-badge{display:inline-block;background:linear-gradient(180deg,#475569,#1e293b);color:#ffd447;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;margin-left:6px}
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120px);background:linear-gradient(135deg,#22437f,#122a5e);color:#fff;padding:14px 22px;border-radius:12px;font-weight:800;z-index:9999;border:3px solid #34c759;transition:transform .4s cubic-bezier(.4,0,.2,1);font-size:14px;text-align:center;max-width:80vw}
 .toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ==== МЕНЮ ==== */
 .nav{position:fixed;bottom:0;left:0;width:100%;height:68px;display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom)}
 .nb{background:transparent;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px}
 .nb i{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-style:normal}
@@ -91,9 +120,26 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 
 <div id="screen-cards" class="screen active">
 <div class="deck-area">
-<div class="deck-note" id="deck-note">Выбери 4 карты — они пойдут с тобой в тренировку</div>
+
+<div class="pager-note" id="pagerNote">Колоды 1–5 из 10</div>
+
+<div class="slot-bar">
+<button class="slot-nav" id="pPrev" onclick="pagePrev()">‹</button>
+<div class="slot-list" id="slotList"></div>
+<button class="slot-nav" id="pNext" onclick="pageNext()">›</button>
+</div>
+
+<div class="deck-note" id="deck-note">Выбери 4 карты</div>
+
 <div class="deck-picked" id="deck-picked"></div>
+
+<div class="elixir-row">
+<div class="elixir-badge"><span class="elixir-drop">💧</span><span id="elixirAvg">—</span></div>
+<div class="elixir-cap" id="elixirCap">Средние затраты<br>эликсира</div>
+</div>
+
 <div class="deck-grid" id="deck-grid"></div>
+
 </div>
 </div>
 
@@ -138,10 +184,18 @@ if(tab==='cards'){document.getElementById('screen-cards').classList.add('active'
 else{document.getElementById('screen-setup').classList.add('active');document.getElementById('sub-tab-setup-btn').classList.add('active');renderSetupBoard();}
 }
 
+/* ================= КАРТЫ ================= */
+
 const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
 const PIECE_TYPES=['p','n','b','r','k','q'];
+const ELIXIR={p:1,n:2,b:3,r:4,k:5,q:6};
 const HAND_SIZE=4;
-const HOARD_KEY='chessHand';
+
+const SLOT_COUNT=10;
+const PER_PAGE=5;
+const DECKS_KEY='chessDecks';
+const ACTIVE_KEY='chessDeckActive';
+const LEGACY_KEY='chessHand';
 
 const DECK_CARDS=[
 {name:'Пешка',icon:'♟',elixir:1,level:1,rarity:'common',type:'p'},
@@ -154,63 +208,237 @@ const DECK_CARDS=[
 {name:'Щит',icon:'🛡️',elixir:3,level:1,rarity:'common',soon:true}
 ];
 
-let chosenDeck=[];
+let decks=[];
+let activeSlot=0;
+let page=0;
 
-function loadDeck(){
+function sanitize(list){
+  const out=[];
+  if(!Array.isArray(list)) return out;
+  for(let i=0;i<list.length;i++){
+    const t=list[i];
+    if(PIECE_TYPES.indexOf(t)>=0 && out.length<HAND_SIZE) out.push(t);
+  }
+  return out;
+}
+
+function legacyDeck(){
   let saved=null;
-  try{const raw=JSON.parse(localStorage.getItem(HOARD_KEY)||'null');if(Array.isArray(raw))saved=raw.filter(t=>PIECE_TYPES.indexOf(t)>=0);}catch(e){}
-  if(!saved||!saved.length)saved=['p','n','b','r'];
-  while(saved.length<HAND_SIZE)saved.push('p');
+  try{
+    const raw=JSON.parse(localStorage.getItem(LEGACY_KEY)||'null');
+    if(Array.isArray(raw)) saved=raw.filter(function(t){return PIECE_TYPES.indexOf(t)>=0;});
+  }catch(e){}
+  if(!saved||!saved.length) return ['p','n','b','r'];
+  while(saved.length<HAND_SIZE) saved.push('p');
   return saved.slice(0,HAND_SIZE);
 }
-function saveDeck(){try{localStorage.setItem(HOARD_KEY,JSON.stringify(chosenDeck));}catch(e){}}
+
+function loadDecks(){
+  let arr=null;
+  try{
+    const raw=JSON.parse(localStorage.getItem(DECKS_KEY)||'null');
+    if(Array.isArray(raw)) arr=raw;
+  }catch(e){}
+
+  const out=[];
+  for(let i=0;i<SLOT_COUNT;i++){
+    let d=(arr&&Array.isArray(arr[i]))?sanitize(arr[i]):[];
+    out.push(d);
+  }
+
+  let any=false;
+  for(let i=0;i<out.length;i++){ if(out[i].length) any=true; }
+  if(!any) out[0]=legacyDeck();
+
+  return out;
+}
+
+function loadActive(){
+  const v=parseInt(localStorage.getItem(ACTIVE_KEY)||'0',10);
+  if(!isFinite(v)||v<0||v>=SLOT_COUNT) return 0;
+  return v;
+}
+
+function saveDecks(){
+  try{ localStorage.setItem(DECKS_KEY, JSON.stringify(decks)); }catch(e){}
+  try{ localStorage.setItem(ACTIVE_KEY, String(activeSlot)); }catch(e){}
+  try{ localStorage.setItem(LEGACY_KEY, JSON.stringify(decks[activeSlot]||[])); }catch(e){}
+}
+
+function currentDeck(){ return decks[activeSlot]||[]; }
+
+function deckElixir(d){
+  if(!d||!d.length) return 0;
+  let s=0;
+  for(let i=0;i<d.length;i++) s+=(ELIXIR[d[i]]||0);
+  return s/d.length;
+}
+
+/* ================= ПЕРЕКЛЮЧАТЕЛЬ КОЛОД ================= */
+
+function renderSlots(){
+  const list=document.getElementById('slotList');
+  list.innerHTML='';
+
+  const start=page*PER_PAGE;
+
+  for(let i=start;i<start+PER_PAGE && i<SLOT_COUNT;i++){
+    const d=decks[i]||[];
+    const b=document.createElement('button');
+    b.className='slot-btn';
+    if(i===activeSlot) b.classList.add('on');
+    if(!d.length){ b.classList.add('empty'); }
+    else if(d.length>=HAND_SIZE){ b.classList.add('full'); }
+    else { b.classList.add('part'); }
+
+    b.innerHTML='<span>'+(i+1)+'</span>'+(d.length?'<i class="slot-dot"></i>':'');
+
+    (function(idx){
+      b.onclick=function(){ selectSlot(idx); };
+    })(i);
+
+    list.appendChild(b);
+  }
+
+  document.getElementById('pPrev').disabled=(page<=0);
+  document.getElementById('pNext').disabled=(page>=Math.ceil(SLOT_COUNT/PER_PAGE)-1);
+
+  document.getElementById('pagerNote').textContent =
+    'Колоды ' + (start+1) + '–' + Math.min(start+PER_PAGE,SLOT_COUNT) + ' из ' + SLOT_COUNT;
+}
+
+function selectSlot(i){
+  if(i<0||i>=SLOT_COUNT) return;
+  activeSlot=i;
+  saveDecks();
+  renderSlots();
+  renderDeck();
+}
+
+function pagePrev(){
+  if(page<=0) return;
+  page--;
+  renderSlots();
+}
+
+function pageNext(){
+  if(page>=Math.ceil(SLOT_COUNT/PER_PAGE)-1) return;
+  page++;
+  renderSlots();
+}
+
+/* свайп по полосе колод */
+(function initSwipe(){
+  const el=document.getElementById('slotList');
+  if(!el) return;
+  let x0=null, y0=null;
+
+  el.addEventListener('touchstart',function(e){
+    if(!e.touches||!e.touches.length) return;
+    x0=e.touches[0].clientX; y0=e.touches[0].clientY;
+  },{passive:true});
+
+  el.addEventListener('touchend',function(e){
+    if(x0===null) return;
+    const t=(e.changedTouches&&e.changedTouches[0])||null;
+    if(!t) return;
+    const dx=t.clientX-x0, dy=t.clientY-y0;
+    if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)){
+      if(dx<0) pageNext(); else pagePrev();
+    }
+    x0=null; y0=null;
+  },{passive:true});
+})();
+
+/* ================= КАРТЫ КОЛОДЫ ================= */
 
 function toggleCard(type){
-  const i=chosenDeck.indexOf(type);
-  if(i>=0)chosenDeck.splice(i,1);
-  else{
-    if(chosenDeck.length>=HAND_SIZE){showToast('В колоде уже 4 карты — убери одну','#ffb300');return;}
-    chosenDeck.push(type);
+  const d=currentDeck();
+  const i=d.indexOf(type);
+
+  if(i>=0){
+    d.splice(i,1);
+  }else{
+    if(d.length>=HAND_SIZE){
+      showToast('В колоде уже 4 карты — убери одну','#ffb300');
+      return;
+    }
+    d.push(type);
   }
-  saveDeck();renderDeck();
+
+  saveDecks();
+  renderDeck();
+  renderSlots();
 }
 
 function renderDeck(){
+  const d=currentDeck();
+
   const grid=document.getElementById('deck-grid');
   grid.innerHTML='';
+
   DECK_CARDS.forEach(function(card){
     const cardDiv=document.createElement('div');
-    const picked=card.type?chosenDeck.indexOf(card.type):-1;
+    const picked=card.type?d.indexOf(card.type):-1;
     const isSoon=!!card.soon;
+
     cardDiv.className='card '+card.rarity+(picked>=0?' picked':'')+(isSoon?' soon':'');
+
     let order='';
-    if(picked>=0)order='<div class="pick-order">'+(picked+1)+'</div>';
+    if(picked>=0) order='<div class="pick-order">'+(picked+1)+'</div>';
+
     cardDiv.innerHTML='<div class="card-elixir">'+card.elixir+'</div>'+order+
       '<div class="card-icon">'+card.icon+'</div>'+
       '<div class="card-name">'+card.name+'</div>'+
       '<div class="card-level">'+(isSoon?'скоро':card.level+'-й ур.')+'</div>';
-    if(!isSoon&&card.type)cardDiv.onclick=function(){toggleCard(card.type);};
+
+    if(!isSoon&&card.type) cardDiv.onclick=function(){ toggleCard(card.type); };
+
     grid.appendChild(cardDiv);
   });
-  const picked=document.getElementById('deck-picked');
-  picked.innerHTML='';
+
+  const pickedBox=document.getElementById('deck-picked');
+  pickedBox.innerHTML='';
   for(let i=0;i<HAND_SIZE;i++){
     const slot=document.createElement('div');
-    const t=chosenDeck[i];
-    if(t){slot.className='deck-slot filled';slot.textContent=PIECES[t]?PIECES[t].icon:'';}
-    else{slot.className='deck-slot';slot.textContent='—';}
-    picked.appendChild(slot);
+    const t=d[i];
+    if(t){
+      slot.className='deck-slot filled';
+      slot.textContent=PIECES[t]?PIECES[t].icon:'';
+    }else{
+      slot.className='deck-slot';
+      slot.textContent='—';
+    }
+    pickedBox.appendChild(slot);
   }
+
   const note=document.getElementById('deck-note');
-  if(chosenDeck.length===HAND_SIZE){
-    const names=chosenDeck.map(function(t){return PIECES[t].name;}).join(' · ');
+  if(d.length===HAND_SIZE){
+    const names=d.map(function(t){return PIECES[t].name;}).join(' · ');
     note.className='deck-note';
-    note.innerHTML='Колода готова: <b>'+names+'</b>';
+    note.innerHTML='Колода ' + (activeSlot+1) + ' готова: <b>'+names+'</b>';
   }else{
     note.className='deck-note warn';
-    note.innerHTML='Выбрано '+chosenDeck.length+' из 4 — добери карты';
+    note.innerHTML='Колода ' + (activeSlot+1) + ': выбрано ' + d.length + ' из 4 — добери карты';
+  }
+
+  const avgEl=document.getElementById('elixirAvg');
+  const capEl=document.getElementById('elixirCap');
+
+  if(!d.length){
+    avgEl.textContent='—';
+    capEl.innerHTML='Средние затраты<br>эликсира';
+  }else{
+    avgEl.textContent=deckElixir(d).toFixed(1);
+    if(d.length===HAND_SIZE){
+      capEl.innerHTML='Средние затраты<br>эликсира';
+    }else{
+      capEl.innerHTML='Средние затраты<br>эликсира (' + d.length + ' из 4)';
+    }
   }
 }
+
+/* ================= РАССТАНОВКА ================= */
 
 const SETUP_KEY='chessSetup';
 const SETUP_ROWS=[6,7];
@@ -382,7 +610,14 @@ function showToast(msg,color){
   setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),400);},2400);
 }
 
-chosenDeck=loadDeck();
+/* ================= СТАРТ ================= */
+
+decks=loadDecks();
+activeSlot=loadActive();
+page=Math.floor(activeSlot/PER_PAGE);
+
+saveDecks();
+renderSlots();
 renderDeck();
 initSetup();
 setTimeout(function(){switchSubTab('cards');},0);
