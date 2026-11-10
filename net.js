@@ -1,6 +1,7 @@
 /* ============================================================
-   net.js — сеть: очередь, матч, бот, ничья, дружеский вызов (VER 22)
+   net.js — сеть: очередь, матч, бот, ничья, дружеский вызов (VER 23)
    Карты бесплатны, рука по таймеру 30 сек. Бот разыгрывает карты.
+   Уровни карт и фигур передаются в бой. Единицы: шанс за победу.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -12,6 +13,11 @@ const SETUP_KEY  = 'chessSetup';
 const DECK_KEY   = 'chessDecks';
 const DECK_ACTIVE_KEY = 'chessDeckActive';
 const NAME_KEY   = 'userName';
+
+const CARD_LV_KEY  = 'chessCardLv';
+const PIECE_LV_KEY = 'chessPieceLv';
+const UNITS_KEY    = 'chessUnits';
+const UNIT_CHANCE  = 0.03;
 
 const PUSH_MS = 200;
 const TICK_MS = 100;
@@ -64,7 +70,7 @@ const Net = {
   handlers: {},
 
   queueCh: null, matchCh: null, matchId: null,
-  mySide: null, arena: 1, players: null, setups: null, decks: null,
+  mySide: null, arena: 1, players: null, setups: null, decks: null, levels: null,
   host: false, state: null,
 
   timer: null, retry: null, resumeTimer: null,
@@ -113,6 +119,30 @@ function shuffled(list){
   }
   return a;
 }
+
+/* ---------------- уровни и единицы ---------------- */
+
+function readLvObj(k){
+  try {
+    const o = JSON.parse(localStorage.getItem(k) || '{}');
+    return (o && typeof o === 'object') ? o : {};
+  } catch (e){ return {}; }
+}
+
+function addUnits(n){
+  try {
+    const c = parseInt(localStorage.getItem(UNITS_KEY) || '0', 10) || 0;
+    localStorage.setItem(UNITS_KEY, String(c + n));
+  } catch (e){}
+}
+
+function levelsFor(side, mine, theirs){
+  return side === 'a' ? { a: mine, b: theirs } : { a: theirs, b: mine };
+}
+
+Net.myLevels = function (){
+  return { cards: readLvObj(CARD_LV_KEY), pieces: readLvObj(PIECE_LV_KEY) };
+};
 
 function slimState(s){
   return {
@@ -315,6 +345,7 @@ Net._writeRecord = function (){
       arena:   Net.arena,
       players: Net.players,
       decks:   Net.decks,
+      levels:  Net.levels,
       bot:     !!Net.botMode,
       at:      Date.now()
     }));
@@ -460,7 +491,7 @@ Net._tryPair = function (){
     payload: {
       from: Net.key, to: opp.key, matchId: matchId, arena: arena,
       name: Net.name, cups: myCups,
-      setup: Net.mySetup(), deck: Net.myDeck()
+      setup: Net.mySetup(), deck: Net.myDeck(), levels: Net.myLevels()
     }
   });
 
@@ -478,14 +509,14 @@ Net._onInvite = function (p){
     payload: {
       from: Net.key, to: p.from, matchId: p.matchId,
       name: Net.name, cups: Net.me ? Net.me.cups : 0,
-      setup: Net.mySetup(), deck: Net.myDeck()
+      setup: Net.mySetup(), deck: Net.myDeck(), levels: Net.myLevels()
     }
   });
 
   Net._beginMatch({
     matchId: p.matchId, arena: p.arena, side: 'b',
     oppKey: p.from, oppName: p.name, oppCups: p.cups,
-    oppSetup: p.setup, oppDeck: p.deck
+    oppSetup: p.setup, oppDeck: p.deck, oppLevels: p.levels
   });
 };
 
@@ -496,7 +527,7 @@ Net._onAccept = function (p){
   Net._beginMatch({
     matchId: Net.pending.matchId, arena: Net.pending.arena, side: 'a',
     oppKey: p.from, oppName: p.name, oppCups: p.cups,
-    oppSetup: p.setup, oppDeck: p.deck
+    oppSetup: p.setup, oppDeck: p.deck, oppLevels: p.levels
   });
 };
 
@@ -551,7 +582,7 @@ Net._attach = async function (){
         payload: {
           from: Net.key, name: Net.name,
           cups: Net.me ? Net.me.cups : 0,
-          setup: Net.mySetup(), deck: Net.myDeck()
+          setup: Net.mySetup(), deck: Net.myDeck(), levels: Net.myLevels()
         }
       });
     }
@@ -564,7 +595,7 @@ Net._attach = async function (){
       await ch.track({
         key: Net.key, name: Net.name,
         cups: Net.me ? Net.me.cups : 0,
-        setup: Net.mySetup(), deck: Net.myDeck()
+        setup: Net.mySetup(), deck: Net.myDeck(), levels: Net.myLevels()
       });
     }
   });
@@ -602,6 +633,7 @@ Net._beginMatch = async function (m){
 
   Net.setups = Net.host ? { a: mySetup, b: oppSetup } : { a: oppSetup, b: mySetup };
   Net.decks  = decksFor(m.side, Net.myDeck(), m.oppDeck);
+  Net.levels = levelsFor(m.side, Net.myLevels(), m.oppLevels || null);
 
   Net._writeRecord();
   await Net._attach();
@@ -640,6 +672,7 @@ Net.startFriendlyHost = async function (o){
   };
   Net.setups = null;
   Net.decks = decksFor('a', Net.myDeck(), null);
+  Net.levels = levelsFor('a', Net.myLevels(), null);
 
   Net._writeRecord();
   await Net._attach();
@@ -660,6 +693,7 @@ Net._friendlyBuildFor = function (p){
 
   Net.setups = { a: Net.mySetup(), b: oppSetup };
   Net.decks  = decksFor('a', Net.myDeck(), p ? p.deck : null);
+  Net.levels = levelsFor('a', Net.myLevels(), p ? p.levels : null);
   Net._writeRecord();
   Net._hostStart();
 };
@@ -707,6 +741,7 @@ Net.joinFriendly = async function (o){
   };
   Net.setups = { a: null, b: Net.mySetup() };
   Net.decks  = decksFor('b', Net.myDeck(), null);
+  Net.levels = levelsFor('b', Net.myLevels(), null);
 
   Net._writeRecord();
   await Net._attach();
@@ -721,7 +756,7 @@ Net.joinFriendly = async function (o){
       type: 'broadcast', event: 'hello',
       payload: {
         from: Net.key, name: Net.name, cups: myCups,
-        setup: Net.mySetup(), deck: Net.myDeck()
+        setup: Net.mySetup(), deck: Net.myDeck(), levels: Net.myLevels()
       }
     });
   }
@@ -788,6 +823,7 @@ Net._startBotMatch = async function (){
   };
   Net.setups = { a: Net.mySetup(), b: null };
   Net.decks = { a: Net.myDeck(), b: shuffled(SPELL_TYPES).slice(0, HAND_SIZE) };
+  Net.levels = { a: Net.myLevels(), b: null };
 
   Net._writeRecord();
   Net._hostStart();
@@ -1060,7 +1096,8 @@ Net._hostStart = function (){
   Net.state = Arena.create({
     id: Net.matchId, arena: Net.arena,
     players: Net.players, setups: Net.setups,
-    decks: Net.decks
+    decks: Net.decks,
+    levels: Net.levels || null
   });
 
   ensureSpellFields(Net.state);
@@ -1353,6 +1390,7 @@ Net.tryResume = async function (){
   Net.arena = rec.arena || 1;
   Net.players = rec.players;
   Net.decks = rec.decks || null;
+  Net.levels = rec.levels || null;
   Net.finished = false;
   Net.finishing = false;
   Net.botMode = isBot;
@@ -1441,12 +1479,19 @@ Net._finish = function (payload){
   if (Net.timer){ clearInterval(Net.timer); Net.timer = null; }
   if (!payload || Net.finished) return;
 
+  const wasBot = !!Net.botMode;
+
   Net.finished = true;
   Net.finishing = false;
 
   if (Net.botTimer){ clearTimeout(Net.botTimer); Net.botTimer = null; }
 
   const wasFriendly = !!Net.friendly;
+
+  /* Единицы: только за победу в бою с живым игроком */
+  if (!wasFriendly && !wasBot && payload.winner === Net.mySide && Math.random() < UNIT_CHANCE){
+    addUnits(1);
+  }
 
   Net._clearMatch();
 
@@ -1474,7 +1519,8 @@ Net._finish = function (payload){
     delta: wasFriendly ? 0 : (after - before),
     floor: Arena.floorOf(after),
     opponent: opp,
-    friendly: wasFriendly
+    friendly: wasFriendly,
+    unitWon: false
   });
 
   if (!wasFriendly) Net.refresh().catch(function(){});
