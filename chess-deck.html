@@ -60,6 +60,9 @@ body.dragging{cursor:grabbing}
 .card-name{font-size:9.5px;text-align:center;font-weight:900;line-height:1.1}
 .card-role{font-size:7.5px;color:#9fb6c4;text-align:center;font-weight:800;line-height:1.1;margin-top:1px}
 .card-lv{font-size:8px;color:#ffd447;background:rgba(0,0,0,.75);padding:2px 4px;border-radius:4px;width:92%;text-align:center;margin-top:4px;font-weight:800}
+.card-up{width:92%;padding:4px 0;margin-bottom:6px;border:0;border-radius:6px;font-size:8.5px;font-weight:900;color:#3b1f00;background:linear-gradient(180deg,#ffe082,#ffb300);box-shadow:0 2px 0 #b45309;cursor:pointer}
+.card-up:active{transform:translateY(1px)}
+.card-up:disabled{background:#475569;color:#e2e8f0;box-shadow:none;opacity:.7}
 .drag-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.95;transform:translate(-50%,-58%) scale(1.1) rotate(-4deg);filter:drop-shadow(0 14px 24px rgba(0,0,0,.8))}
 
 .pip{display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid #5ee0ff;margin-right:3px;vertical-align:middle}
@@ -173,7 +176,7 @@ body.dragging{cursor:grabbing}
     <div class="currency">🪙 <span id="deck-coins">1250</span></div>
     <div class="currency">💎 <span id="deck-gems">50</span></div>
     <div class="currency unit-chip">🔹 <span id="deck-units">0</span></div>
-    <div class="deck-ver">v12</div>
+    <div class="deck-ver">v13</div>
   </div>
   <div class="sub-tabs">
     <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
@@ -184,7 +187,7 @@ body.dragging{cursor:grabbing}
 
 <div id="screen-cards" class="screen active">
   <div class="deck-area">
-    <div class="rule-banner">Карты <b>бесплатны</b>. В колоде 4 карты — каждые <b>30 сек</b> в руку выпадает одна из них. Используешь или пропускаешь — таймер запускается заново.</div>
+    <div class="rule-banner">Карты <b>бесплатны</b>. В колоде 4 карты — каждые <b>30 сек</b> в руку выпадает одна из них. Используешь или пропускаешь — таймер запускается заново.<br>Прокачка: ур.2 — <b>100 🔹</b>, ур.3 — <b>200 🔹</b>.</div>
     <div class="pager-note" id="pagerNote"></div>
     <div class="slot-bar">
       <button class="slot-nav" id="pPrev" onclick="pagePrev()">‹</button>
@@ -200,7 +203,7 @@ body.dragging{cursor:grabbing}
 
 <div id="screen-pieces" class="screen">
   <div class="deck-area">
-    <div class="rule-banner">Шахматные фигуры <b>не входят</b> в колоду из 4 карт. Здесь они прокачиваются отдельно: уровень фигуры — это её <b>HP</b>. Ур.2 переживает один удар, ур.3 — два.</div>
+    <div class="rule-banner">Шахматные фигуры <b>не входят</b> в колоду из 4 карт. Здесь они прокачиваются отдельно: уровень фигуры — это её <b>HP</b>. Ур.2 переживает один удар, ур.3 — два.<br>Прокачка: ур.2 — <b>100 🔹</b>, ур.3 — <b>200 🔹</b>.</div>
     <div class="units-note">🔹 Единицы: <b id="pieces-units">0</b> · 3% шанс за победу в бою с игроком</div>
     <div class="piece-list" id="piece-list"></div>
     <div class="lock-note">Короля не прокачиваем: его HP определяет мат, и это решает исход партии.</div>
@@ -543,7 +546,7 @@ function activateDrag(){
 }
 function cardPointerDown(e){
   if(e.button && e.button!==0) return;
-  if(e.target.closest('.card-add')||e.target.closest('.card-info')) return;
+  if(e.target.closest('.card-add')||e.target.closest('.card-info')||e.target.closest('.card-up')) return;
   const card=e.currentTarget;
   const type=card.dataset.type;
   cleanupDrag();
@@ -605,10 +608,17 @@ function renderDeck(){
       '<div class="card-name">'+card.name+'</div>'+
       '<div class="card-role">'+card.role+'</div>'+
       '<div class="card-lv">ур. '+lv+'/'+LV_MAX+'</div>'+
+      '<button class="card-up"'+(lv>=LV_MAX?' disabled':'')+'>'+
+        (lv>=LV_MAX?'MAX':'⬆ '+LV_COST[lv+1]+' 🔹')+
+      '</button>'+
       '<button class="card-add'+(picked>=0?' off':'')+'">'+(picked>=0?'✓':'+')+'</button>';
 
     cardDiv.querySelector('.card-info').onclick=function(ev){ ev.stopPropagation(); openCardModal(card.type); };
     cardDiv.querySelector('.card-add').onclick=function(ev){ ev.stopPropagation(); toggleCard(card.type); };
+    cardDiv.querySelector('.card-up').onclick=function(ev){
+      ev.stopPropagation();
+      if(buyLevel(CARD_LV_KEY,card.type,card.name)) renderDeck();
+    };
     cardDiv.addEventListener('pointerdown',cardPointerDown);
     cardDiv.onclick=function(){
       if(Date.now()<suppressClickUntil) return;
@@ -671,12 +681,11 @@ function renderPieces(){
     const lv=clampLv(store[p.t]);
     const row=document.createElement('div');
     row.className='prow';
-    const cost=LV_COST[lv+1];
     row.innerHTML=
       '<div class="pi">'+p.icon+'</div>'+
       '<div class="pm"><div class="pn">'+p.ru+' · ур. '+lv+'/'+LV_MAX+'</div>'+
       '<div class="ps">'+pipsHtml(lv)+' '+p.note+'</div></div>'+
-      '<button'+(lv>=LV_MAX?' disabled':'')+'>'+(lv>=LV_MAX?'Макс':'⬆ '+cost+' 🔹')+'</button>';
+      '<button'+(lv>=LV_MAX?' disabled':'')+'>'+(lv>=LV_MAX?'Макс':'⬆ '+LV_COST[lv+1]+' 🔹')+'</button>';
     row.querySelector('button').onclick=function(){
       if(buyLevel(PIECE_LV_KEY,p.t,p.ru)) renderPieces();
     };
