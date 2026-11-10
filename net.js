@@ -1,6 +1,7 @@
 /* ============================================================
-   net.js — сеть: очередь, матч, бот, ничья, дружеский вызов (VER 20)
-   Бот принимает ничью только когда реально проигрывает.
+   net.js — сеть: очередь, матч, бот, ничья, дружеский вызов (VER 21)
+   Добавлены карты: cast через Arena.cast, колоды в состоянии,
+   бот умеет Ярость, Щит, Рокировку и Превращение.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -9,6 +10,8 @@ const RECORD_KEY = 'arenaActiveMatch';
 const STATE_KEY  = 'arenaActiveState';
 const LOG_KEY    = 'arenaMoveLog';
 const SETUP_KEY  = 'chessSetup';
+const DECK_KEY   = 'chessDecks';
+const DECK_ACTIVE_KEY = 'chessDeckActive';
 const NAME_KEY   = 'userName';
 
 const PUSH_MS = 200;
@@ -26,6 +29,9 @@ const CATCHUP_MAX  = 600;
 const LOG_MAX = 700;
 
 const DRAW_OFFER_MAX = 2;
+
+const SPELL_TYPES = ['f', 's', 'c', 'u'];
+const BOT_DECK = ['f', 's', 'c', 'u'];
 
 const BOT_NAMES = [
   'Дмитрий','Алексей','Максим','Артём','Сергей','Кирилл','Иван','Никита',
@@ -58,7 +64,7 @@ const Net = {
   handlers: {},
 
   queueCh: null, matchCh: null, matchId: null,
-  mySide: null, arena: 1, players: null, setups: null,
+  mySide: null, arena: 1, players: null, setups: null, decks: null,
   host: false, state: null,
 
   timer: null, retry: null, resumeTimer: null,
@@ -103,6 +109,7 @@ function slimState(s){
   return {
     id: s.id, arena: s.arena, players: s.players,
     board: s.board, energy: s.energy, energyAcc: s.energyAcc,
+    hand: s.hand, spellUsed: s.spellUsed,
     traps: s.traps, returns: s.returns, elapsed: s.elapsed,
     phase: s.phase, timeLeft: s.timeLeft,
     nightMode: s.nightMode, nightUsed: s.nightUsed,
@@ -111,6 +118,19 @@ function slimState(s){
     check: s.check, mate: s.mate, mateHit: s.mateHit,
     over: s.over, winner: s.winner
   };
+}
+
+function ensureSpellFields(s){
+  if (!s) return s;
+  if (!s.spellUsed) s.spellUsed = { a:{}, b:{} };
+  if (!s.spellUsed.a) s.spellUsed.a = {};
+  if (!s.spellUsed.b) s.spellUsed.b = {};
+  if (!s.hand) s.hand = { a: SPELL_TYPES.slice(), b: SPELL_TYPES.slice() };
+  if (!Array.isArray(s.hand.a) || !s.hand.a.length) s.hand.a = SPELL_TYPES.slice();
+  if (!Array.isArray(s.hand.b) || !s.hand.b.length) s.hand.b = SPELL_TYPES.slice();
+  if (!s.drawUsed) s.drawUsed = { a:0, b:0 };
+  if (!s.drawOffer) s.drawOffer = { a:false, b:false };
+  return s;
 }
 
 /* ---------------- журнал ходов ---------------- */
@@ -138,6 +158,14 @@ Net._logMove = function (side, fx, fy, tx, ty, promo, s){
   if (Net.replayLog.length >= LOG_MAX) return;
 
   Net.replayLog.push({ t:'m', s:side, at:logAt(s), fx:fx, fy:fy, tx:tx, ty:ty, p:promo || 'q' });
+  Net._logSave(false);
+};
+
+Net._logCast = function (side, card, x, y, s){
+  if (!Net.replayLog) Net.replayLog = [];
+  if (Net.replayLog.length >= LOG_MAX) return;
+
+  Net.replayLog.push({ t:'x', s:side, at:logAt(s), c:card, x:x, y:y });
   Net._logSave(false);
 };
 
@@ -180,6 +208,49 @@ Net.mySetup = function (){
   } catch (e){}
   return global.Arena ? Arena.defaultSetup() : null;
 };
+
+/* ---------------- колода ---------------- */
+
+function sanitizeDeck(raw){
+  const out = [];
+  if (!Array.isArray(raw)) return out;
+
+  for (let i = 0; i < raw.length; i++){
+    const t = String(raw[i] || '').toLowerCase();
+    if (SPELL_TYPES.indexOf(t) >= 0 && out.indexOf(t) < 0) out.push(t);
+  }
+  return out;
+}
+
+Net.myDeck = function (){
+  try {
+    const all = JSON.parse(localStorage.getItem(DECK_KEY) || 'null');
+    const idx = parseInt(localStorage.getItem(DECK_ACTIVE_KEY) || '0', 10);
+    if (Array.isArray(all) && Array.isArray(all[idx])){
+      const clean = sanitizeDeck(all[idx]);
+      if (clean.length) return clean;
+    }
+  } catch (e){}
+
+  try {
+    const legacy = JSON.parse(localStorage.getItem('chessHand') || 'null');
+    const clean = sanitizeDeck(legacy);
+    if (clean.length) return clean;
+  } catch (e){}
+
+  return SPELL_TYPES.slice();
+};
+
+function decksFor(side, myDeck, oppDeck){
+  const mine = sanitizeDeck(myDeck);
+  const theirs = sanitizeDeck(oppDeck);
+  const a = (side === 'a') ? mine : theirs;
+  const b = (side === 'a') ? theirs : mine;
+  return {
+    a: a.length ? a : SPELL_TYPES.slice(),
+    b: b.length ? b : SPELL_TYPES.slice()
+  };
+}
 
 /* ---------------- профиль ---------------- */
 
@@ -234,6 +305,7 @@ Net._writeRecord = function (){
       side:    Net.mySide,
       arena:   Net.arena,
       players: Net.players,
+      decks:   Net.decks,
       bot:     !!Net.botMode,
       at:      Date.now()
     }));
@@ -378,7 +450,8 @@ Net._tryPair = function (){
     type: 'broadcast', event: 'invite',
     payload: {
       from: Net.key, to: opp.key, matchId: matchId, arena: arena,
-      name: Net.name, cups: myCups, setup: Net.mySetup()
+      name: Net.name, cups: myCups,
+      setup: Net.mySetup(), deck: Net.myDeck()
     }
   });
 
@@ -395,13 +468,15 @@ Net._onInvite = function (p){
     type: 'broadcast', event: 'accept',
     payload: {
       from: Net.key, to: p.from, matchId: p.matchId,
-      name: Net.name, cups: Net.me ? Net.me.cups : 0, setup: Net.mySetup()
+      name: Net.name, cups: Net.me ? Net.me.cups : 0,
+      setup: Net.mySetup(), deck: Net.myDeck()
     }
   });
 
   Net._beginMatch({
     matchId: p.matchId, arena: p.arena, side: 'b',
-    oppKey: p.from, oppName: p.name, oppCups: p.cups, oppSetup: p.setup
+    oppKey: p.from, oppName: p.name, oppCups: p.cups,
+    oppSetup: p.setup, oppDeck: p.deck
   });
 };
 
@@ -411,7 +486,8 @@ Net._onAccept = function (p){
 
   Net._beginMatch({
     matchId: Net.pending.matchId, arena: Net.pending.arena, side: 'a',
-    oppKey: p.from, oppName: p.name, oppCups: p.cups, oppSetup: p.setup
+    oppKey: p.from, oppName: p.name, oppCups: p.cups,
+    oppSetup: p.setup, oppDeck: p.deck
   });
 };
 
@@ -430,7 +506,7 @@ Net._attach = async function (){
   ch.on('broadcast', { event: 'state' }, function (msg){
     if (Net.host) return;
 
-    Net.state = payloadOf(msg);
+    Net.state = ensureSpellFields(payloadOf(msg));
     if (Net.resumeTimer){ clearTimeout(Net.resumeTimer); Net.resumeTimer = null; }
     Net.emit('state', Net.state);
 
@@ -465,7 +541,8 @@ Net._attach = async function (){
         type: 'broadcast', event: 'hello',
         payload: {
           from: Net.key, name: Net.name,
-          cups: Net.me ? Net.me.cups : 0, setup: Net.mySetup()
+          cups: Net.me ? Net.me.cups : 0,
+          setup: Net.mySetup(), deck: Net.myDeck()
         }
       });
     }
@@ -477,7 +554,8 @@ Net._attach = async function (){
     if (status === 'SUBSCRIBED'){
       await ch.track({
         key: Net.key, name: Net.name,
-        cups: Net.me ? Net.me.cups : 0, setup: Net.mySetup()
+        cups: Net.me ? Net.me.cups : 0,
+        setup: Net.mySetup(), deck: Net.myDeck()
       });
     }
   });
@@ -514,6 +592,7 @@ Net._beginMatch = async function (m){
   const oppSetup = sanitizeSetup(m.oppSetup) || (Arena.defaultSetup ? Arena.defaultSetup() : null);
 
   Net.setups = Net.host ? { a: mySetup, b: oppSetup } : { a: oppSetup, b: mySetup };
+  Net.decks  = decksFor(m.side, Net.myDeck(), m.oppDeck);
 
   Net._writeRecord();
   await Net._attach();
@@ -551,6 +630,7 @@ Net.startFriendlyHost = async function (o){
     b: { key: o.oppKey, name: o.oppName || 'Друг', cups: o.oppCups || 0 }
   };
   Net.setups = null;
+  Net.decks = decksFor('a', Net.myDeck(), null);
 
   Net._writeRecord();
   await Net._attach();
@@ -570,6 +650,8 @@ Net._friendlyBuildFor = function (p){
   if (p && typeof p.cups === 'number') Net.players.b.cups = p.cups;
 
   Net.setups = { a: Net.mySetup(), b: oppSetup };
+  Net.decks  = decksFor('a', Net.myDeck(), p ? p.deck : null);
+  Net._writeRecord();
   Net._hostStart();
 };
 
@@ -615,6 +697,7 @@ Net.joinFriendly = async function (o){
     b: { key: Net.key, name: Net.name, cups: myCups }
   };
   Net.setups = { a: null, b: Net.mySetup() };
+  Net.decks  = decksFor('b', Net.myDeck(), null);
 
   Net._writeRecord();
   await Net._attach();
@@ -627,7 +710,10 @@ Net.joinFriendly = async function (o){
   if (Net.matchCh){
     Net.matchCh.send({
       type: 'broadcast', event: 'hello',
-      payload: { from: Net.key, name: Net.name, cups: myCups, setup: Net.mySetup() }
+      payload: {
+        from: Net.key, name: Net.name, cups: myCups,
+        setup: Net.mySetup(), deck: Net.myDeck()
+      }
     });
   }
 
@@ -692,6 +778,7 @@ Net._startBotMatch = async function (){
     b: { key: rivalKey, name: rivalName, cups: rivalCups }
   };
   Net.setups = { a: Net.mySetup(), b: null };
+  Net.decks = { a: Net.myDeck(), b: BOT_DECK.slice() };
 
   Net._writeRecord();
   Net._hostStart();
@@ -720,6 +807,7 @@ Net._botTick = function (){
       const accept = Net._botLosing(st, 'b');
       Net._applyIntent({ t: accept ? 'draw' : 'undraw' }, 'b');
     } else {
+      if (Net._botSpell(st)) Net._push();
       Net._botMove();
     }
 
@@ -763,6 +851,76 @@ Net._botLosing = function (s, side){
   if (gap <= -5 && inCheck) return true;
   if (myQ === 0 && hisQ > 0 && gap <= -4) return true;
   if (myCount <= 4 && hisCount >= 9 && gap <= -6) return true;
+
+  return false;
+};
+
+/* ---------------- карты у бота ---------------- */
+
+function botFind(s, type, needFreeShield, needFreeRage){
+  for (let y = 0; y < 8; y++){
+    for (let x = 0; x < 8; x++){
+      const pc = s.board[y][x];
+      if (!pc || pc.side !== 'b' || pc.type !== type) continue;
+      if (needFreeShield && pc.shield) continue;
+      if (needFreeRage && pc.rage) continue;
+      return { x:x, y:y };
+    }
+  }
+  return null;
+}
+
+Net._botSpell = function (s){
+  if (!s || s.over) return false;
+  if (!s.hand || !s.hand.b) return false;
+
+  const hand = s.hand.b;
+  const used = (s.spellUsed && s.spellUsed.b) || {};
+  const e = (typeof s.energy.b === 'number') ? s.energy.b : 0;
+
+  /* Превращение: пешка уже глубоко — сразу ферзь */
+  if (hand.indexOf('u') >= 0 && e >= 6 && Math.random() < 0.9){
+    for (let y = 7; y >= 5; y--){
+      for (let x = 0; x < 8; x++){
+        const pc = s.board[y][x];
+        if (pc && pc.side === 'b' && pc.type === 'pawn'){
+          const r = Arena.cast(s, 'b', 'u', x, y);
+          if (r && r.ok) return true;
+        }
+      }
+    }
+  }
+
+  /* Щит: на ферзя, иначе на ладью */
+  if (hand.indexOf('s') >= 0 && e >= 3 && Math.random() < 0.45){
+    let t = botFind(s, 'queen', true, false);
+    if (!t) t = botFind(s, 'rook', true, false);
+    if (t){
+      const r = Arena.cast(s, 'b', 's', t.x, t.y);
+      if (r && r.ok) return true;
+    }
+  }
+
+  /* Ярость: ферзь сходит бесплатно */
+  if (hand.indexOf('f') >= 0 && e >= 2 && Math.random() < 0.35){
+    let t = botFind(s, 'queen', false, true);
+    if (!t) t = botFind(s, 'rook', false, true);
+    if (t){
+      const r = Arena.cast(s, 'b', 'f', t.x, t.y);
+      if (r && r.ok) return true;
+    }
+  }
+
+  /* Рокировка: увести короля заранее */
+  if (hand.indexOf('c') >= 0 && !used.c && e >= 4 && Math.random() < 0.2){
+    if (!(s.check && s.check.b)){
+      const t = botFind(s, 'rook', false, false);
+      if (t){
+        const r = Arena.cast(s, 'b', 'c', t.x, t.y);
+        if (r && r.ok) return true;
+      }
+    }
+  }
 
   return false;
 };
@@ -868,10 +1026,11 @@ Net.checkAway = function (){
 Net._hostStart = function (){
   Net.state = Arena.create({
     id: Net.matchId, arena: Net.arena,
-    players: Net.players, setups: Net.setups
+    players: Net.players, setups: Net.setups,
+    decks: Net.decks
   });
 
-  if (!Net.state.drawUsed) Net.state.drawUsed = { a:0, b:0 };
+  ensureSpellFields(Net.state);
 
   Net.emit('start', {
     side: 'a', arena: Net.arena,
@@ -979,6 +1138,7 @@ Net._applyIntent = function (msg, side){
   } else {
     switch (msg.t){
       case 'move':   res = Arena.move(s, side, msg.fx, msg.fy, msg.tx, msg.ty, msg.promo); break;
+      case 'cast':   res = Arena.cast(s, side, msg.card, msg.x, msg.y); break;
       case 'night':  res = Arena.castNight(s, side); break;
       case 'unlock': res = Arena.unlock(s, side, msg.x, msg.y); break;
       case 'resign': res = Arena.resign(s, side); break;
@@ -997,6 +1157,7 @@ Net._applyIntent = function (msg, side){
 
   if (res && res.ok){
     if (msg.t === 'move') Net._logMove(side, msg.fx, msg.fy, msg.tx, msg.ty, msg.promo, s);
+    else if (msg.t === 'cast') Net._logCast(side, msg.card, msg.x, msg.y, s);
     else if (msg.t === 'resign') Net._logEvent('r', side, s);
     else if (msg.t === 'draw') Net._logEvent('d', side, s);
     else if (msg.t === 'undraw') Net._logEvent('u', side, s);
@@ -1157,6 +1318,7 @@ Net.tryResume = async function (){
   Net.host = (rec.side === 'a');
   Net.arena = rec.arena || 1;
   Net.players = rec.players;
+  Net.decks = rec.decks || null;
   Net.finished = false;
   Net.finishing = false;
   Net.botMode = isBot;
@@ -1173,7 +1335,7 @@ Net.tryResume = async function (){
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); } catch (e){}
   if (saved && !saved.board) saved = null;
-  if (saved && !saved.drawUsed) saved.drawUsed = { a:0, b:0 };
+  if (saved) ensureSpellFields(saved);
 
   if (isBot){
     if (!saved){
@@ -1309,6 +1471,7 @@ Net.leaveMatch = async function (){
 };
 
 Net.DRAW_OFFER_MAX = DRAW_OFFER_MAX;
+Net.SPELL_TYPES = SPELL_TYPES;
 
 global.Net = Net;
 
