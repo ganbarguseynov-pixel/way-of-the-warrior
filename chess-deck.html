@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Chess Royale - Колода</title>
-<link rel="stylesheet" href="royale.css?v=4">
+<link rel="stylesheet" href="royale.css?v=5">
 <style>
 body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;padding-bottom:88px}
 body.dragging{cursor:grabbing}
@@ -30,45 +30,36 @@ body.dragging{cursor:grabbing}
 .slot-btn.empty{color:#7b93bd!important}
 .slot-dot{position:absolute;top:3px;right:4px;width:7px;height:7px;border-radius:50%;background:#43e97b;box-shadow:0 0 6px rgba(67,233,123,.9)}
 .slot-btn.part .slot-dot{background:#ffd447}
+
+.rule-banner{width:100%;box-sizing:border-box;text-align:center;font-size:11.5px;font-weight:800;line-height:1.45;color:#dbe9ff;padding:8px 10px;border-radius:12px;background:linear-gradient(180deg,#132a4d,#0a1a33);border:2px solid #2f5aa0;box-shadow:0 3px 0 #061225}
+.rule-banner b{color:#5ee0ff}
+
 .deck-note{width:100%;text-align:center;font-size:12px;color:#dbe9ff;font-weight:700;line-height:1.45;padding:0 6px}
 .deck-note b{color:#43e97b}
 .deck-note.warn{color:#ffd447}
 .deck-picked{display:flex;gap:6px;justify-content:center;margin-top:2px;padding:5px;border-radius:12px;border:2px dashed transparent;transition:border-color .15s,background .15s}
 .deck-picked.drop-on{border-color:#43e97b;background:rgba(67,233,123,.12)}
 .deck-picked.drop-on .deck-slot{border-color:#43e97b;background:rgba(67,233,123,.2)}
-.deck-slot{flex:1;height:38px;border-radius:9px;border:2px dashed rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:19px;color:#c6d8ff;background:rgba(2,6,23,.35)}
+.deck-slot{flex:1;height:38px;border-radius:9px;border:2px dashed rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:17px;color:#c6d8ff;background:rgba(2,6,23,.35)}
 .deck-slot.filled{border-style:solid;border-color:#43e97b;color:#fff;background:linear-gradient(145deg,#0f6b3a,#064e26)}
 
-/* ===== ЗНАЧОК ЭЛИКСИРА ===== */
-.elixir-row{display:flex;align-items:center;gap:10px;width:100%;margin-top:4px}
-.elixir-badge{display:flex;align-items:center;gap:8px;padding:5px 16px 5px 5px;border-radius:12px;background:linear-gradient(180deg,#1b3563,#0a1430);border:2px solid #4d7fc4;box-shadow:0 4px 0 rgba(3,8,22,.9),inset 0 2px 0 rgba(127,180,255,.35);line-height:1}
-.elixir-drop{width:38px;height:41px;display:block;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(0,0,0,.85))}
-.elixir-num{font-size:23px;font-weight:900;color:#fff;letter-spacing:.3px;text-shadow:0 2px 0 rgba(60,0,0,.9),0 3px 5px rgba(0,0,0,.85),0 0 14px rgba(255,70,70,.75)}
-.elixir-cap{font-size:11px;font-weight:800;color:#eaf3ff;line-height:1.3}
-
-.balance-line{width:100%;text-align:center;font-size:11px;font-weight:900;letter-spacing:.3px;min-height:15px;margin-top:2px}
+.balance-line{width:100%;text-align:center;font-size:11px;font-weight:900;letter-spacing:.3px;min-height:15px;margin-top:2px;line-height:1.35}
 .balance-line.good{color:#43e97b;text-shadow:0 0 10px rgba(67,233,123,.45)}
 .balance-line.warn{color:#ffd447}
-.balance-line.bad{color:#ff7b72}
 
 .deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:4px;padding:8px 6px 10px}
-.card{border-radius:11px;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:space-between;align-items:center;position:relative;padding:4px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
-.card.common{border-color:#9aa7b8}
+.card{border-radius:11px;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:space-between;align-items:center;position:relative;padding:4px;touch-action:pan-y;user-select:none;-webkit-user-select:none;background:linear-gradient(145deg,#0e2a3d,#071e2c);border:2px solid #5ee0ff}
 .card.rare{border-color:#ffb300;background:linear-gradient(145deg,#2a2a48,#2a1a00)}
 .card.epic{border-color:#b06aff;background:linear-gradient(145deg,#2a2a48,#250f3e)}
-.card.spell{border-color:#5ee0ff;background:linear-gradient(145deg,#0e2a3d,#071e2c);box-shadow:inset 0 0 18px rgba(94,224,255,.14)}
+.card.common{border-color:#9aa7b8}
 .card.picked{border-color:#43e97b!important}
-.card.soon{opacity:.45}
 
-.card-elixir{position:absolute;top:-7px;left:-7px;width:25px;height:25px;border-radius:50%;border:2px solid #fff;z-index:3;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff;background:radial-gradient(circle at 34% 26%,#ff7c7c 0%,#ef2b2b 42%,#c00d0d 72%,#7d0202 100%);box-shadow:0 3px 6px rgba(0,0,0,.65),inset 0 2px 3px rgba(255,255,255,.45),inset 0 -3px 5px rgba(90,0,0,.6);text-shadow:0 1px 2px rgba(0,0,0,.7)}
-
+.card-free{position:absolute;top:-7px;left:-7px;min-width:25px;height:25px;padding:0 4px;border-radius:12px;border:2px solid #fff;z-index:3;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px;color:#06301a;background:linear-gradient(180deg,#5ef08a,#1f9e42);box-shadow:0 3px 6px rgba(0,0,0,.65),inset 0 2px 3px rgba(255,255,255,.45)}
 .card-add{position:absolute;bottom:-7px;left:-7px;width:25px;height:25px;border-radius:50%;border:2px solid #fff;background:linear-gradient(180deg,#5ef08a,#1f9e42);color:#083b1c;font-size:17px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;z-index:4;padding:0;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,.6),inset 0 2px 3px rgba(255,255,255,.5)}
 .card-add:active{transform:scale(.88)}
 .card-add.off{background:linear-gradient(180deg,#94a3b8,#475569);color:#e2e8f0;font-size:15px}
-
 .card-info{position:absolute;top:-7px;right:-7px;width:23px;height:23px;border-radius:50%;border:2px solid #fff;background:linear-gradient(180deg,#5ea8ff,#1e63c8);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;z-index:4;padding:0;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,.6),inset 0 2px 3px rgba(255,255,255,.45)}
 .card-info:active{transform:scale(.9)}
-
 .pick-order{position:absolute;bottom:-6px;right:-6px;background:linear-gradient(145deg,#5ef08a,#1f9e42);color:#083b1c;font-weight:900;font-size:11px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:5}
 .card-icon{font-size:27px;margin-top:13px;color:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,.7));line-height:1}
 .card-name{font-size:9.5px;color:#fff;text-align:center;font-weight:900;line-height:1.1}
@@ -116,7 +107,7 @@ body.dragging{cursor:grabbing}
 @keyframes cmUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
 .cm-close{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:2px solid #475569;background:rgba(2,6,23,.7);color:#cbd5e1;font-size:15px;font-weight:900;cursor:pointer;z-index:3}
 .cm-head{display:flex;align-items:center;gap:12px;padding-right:40px;margin-bottom:10px}
-.cm-badge{width:44px;height:44px;flex-shrink:0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;background:radial-gradient(circle at 34% 26%,#ff7c7c 0%,#ef2b2b 42%,#c00d0d 72%,#7d0202 100%);border:2px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 2px 3px rgba(255,255,255,.45)}
+.cm-badge{width:44px;height:44px;flex-shrink:0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;background:linear-gradient(180deg,#22c55e,#15803d);border:2px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 2px 3px rgba(255,255,255,.45)}
 .cm-name{font-size:17px;font-weight:900;line-height:1.1}
 .cm-rar{font-size:11px;font-weight:800;color:#9fb6c4;margin-top:2px}
 .cm-stage{position:relative;width:100%;aspect-ratio:5/3;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,#0d1a2e,#060d18);border:2px solid #24446b;box-shadow:inset 0 0 30px rgba(0,0,0,.8)}
@@ -125,14 +116,28 @@ body.dragging{cursor:grabbing}
 .cm-grid i.d{background:rgba(90,140,200,.075)}
 .cm-stage.flash::before{content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,.6),transparent 72%);z-index:4;animation:cmFlash .32s ease-out;pointer-events:none}
 @keyframes cmFlash{from{opacity:1}to{opacity:0}}
-.cm-piece{position:absolute;z-index:3;transform:translate(-50%,-50%);font-size:clamp(20px,7.5vw,30px);line-height:1;transition:left .42s cubic-bezier(.3,1.2,.6,1),top .42s cubic-bezier(.3,1.2,.6,1);will-change:left,top}
+.cm-zone{position:absolute;z-index:1;pointer-events:none;animation:cmZoneIn .3s ease-out}
+@keyframes cmZoneIn{from{opacity:0}to{opacity:1}}
+.cm-zone.block{background:repeating-linear-gradient(45deg,rgba(148,163,184,.55) 0 6px,rgba(51,65,85,.75) 6px 12px);border:1px solid #94a3b8}
+.cm-zone.home{background:rgba(94,224,255,.18);border:1px dashed #5ee0ff;animation:cmHome 1s infinite alternate}
+@keyframes cmHome{from{background:rgba(94,224,255,.10)}to{background:rgba(94,224,255,.28)}}
+.cm-zone.tgt{border:2px dashed #5ee0ff;box-shadow:inset 0 0 12px rgba(94,224,255,.5)}
+.cm-zone.boom{background:radial-gradient(circle,rgba(255,200,80,.95),rgba(239,68,68,.55) 55%,rgba(239,68,68,0) 75%);animation:cmBoom .6s ease-out forwards}
+@keyframes cmBoom{0%{opacity:0;transform:scale(.6)}30%{opacity:1;transform:scale(1.05)}100%{opacity:0;transform:scale(1)}}
+.cm-piece{position:absolute;z-index:3;transform:translate(-50%,-50%);font-size:clamp(20px,7.5vw,30px);line-height:1;transition:left .42s cubic-bezier(.3,1.2,.6,1),top .42s cubic-bezier(.3,1.2,.6,1),opacity .4s;will-change:left,top}
 .cm-piece.mine{color:#7cc4ff;text-shadow:0 0 10px rgba(90,169,236,.9),0 2px 4px #000}
 .cm-piece.foe{color:#ff8b8b;text-shadow:0 0 10px rgba(239,83,80,.9),0 2px 4px #000}
+.cm-piece.gone{opacity:0}
 .cm-piece.charged{animation:cmCharge .45s infinite alternate}
 @keyframes cmCharge{from{filter:brightness(1)}to{filter:brightness(1.9)}}
 .cm-piece.shielded::after{content:'🛡️';position:absolute;right:-9px;top:-11px;font-size:13px;text-shadow:none}
+.cm-piece.frozen::before{content:'❄️';position:absolute;left:-10px;top:-10px;font-size:13px;text-shadow:none}
 .cm-piece.hit{animation:cmHit .35s ease-out}
 @keyframes cmHit{0%{transform:translate(-50%,-50%) scale(1)}35%{transform:translate(-50%,-50%) scale(1.45)}100%{transform:translate(-50%,-50%) scale(1)}}
+.cm-piece.shake{animation:cmShake .4s ease-in-out}
+@keyframes cmShake{0%,100%{transform:translate(-50%,-50%)}25%{transform:translate(calc(-50% - 4px),-50%)}75%{transform:translate(calc(-50% + 4px),-50%)}}
+.cm-piece.appear{animation:cmAppear .45s ease-out}
+@keyframes cmAppear{from{transform:translate(-50%,-50%) scale(0);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
 .cm-float{position:absolute;z-index:6;transform:translate(-50%,-50%);font-size:12px;font-weight:900;color:#ffd447;text-shadow:0 1px 4px #000,0 0 10px rgba(255,212,71,.6);animation:cmFloat 1.5s ease-out forwards;pointer-events:none;white-space:nowrap}
 .cm-float.good{color:#43e97b;text-shadow:0 1px 4px #000,0 0 10px rgba(67,233,123,.7)}
 @keyframes cmFloat{0%{opacity:0;transform:translate(-50%,-40%) scale(.6)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-190%) scale(1.1)}}
@@ -164,7 +169,7 @@ body.dragging{cursor:grabbing}
 <div class="currency-row">
 <div class="currency">🪙 <span id="deck-coins">1250</span></div>
 <div class="currency">💎 <span id="deck-gems">50</span></div>
-<div class="deck-ver">v10</div>
+<div class="deck-ver">v11</div>
 </div>
 <div class="sub-tabs">
 <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
@@ -174,6 +179,7 @@ body.dragging{cursor:grabbing}
 
 <div id="screen-cards" class="screen active">
 <div class="deck-area">
+<div class="rule-banner">Карты <b>бесплатны</b>. В колоде 4 карты — каждые <b>30 сек</b> в руку выпадает одна из них. Используешь или пропускаешь — таймер запускается заново.</div>
 <div class="pager-note" id="pagerNote">Колоды 1–5 из 10</div>
 <div class="slot-bar">
 <button class="slot-nav" id="pPrev" onclick="pagePrev()">‹</button>
@@ -182,43 +188,6 @@ body.dragging{cursor:grabbing}
 </div>
 <div class="deck-note" id="deck-note">Выбери 4 карты</div>
 <div class="deck-picked" id="deck-picked"></div>
-<div class="elixir-row">
-<div class="elixir-badge">
-<svg class="elixir-drop" viewBox="0 0 44 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-<defs>
-<linearGradient id="df" x1="20%" y1="0%" x2="80%" y2="100%">
-<stop offset="0%" stop-color="#ffb0b0"/>
-<stop offset="14%" stop-color="#ff5c5c"/>
-<stop offset="40%" stop-color="#ee1f1f"/>
-<stop offset="66%" stop-color="#c00d0d"/>
-<stop offset="86%" stop-color="#8a0303"/>
-<stop offset="100%" stop-color="#520000"/>
-</linearGradient>
-<radialGradient id="dg" cx="42%" cy="38%" r="56%">
-<stop offset="0%" stop-color="#ffffff" stop-opacity=".98"/>
-<stop offset="42%" stop-color="#ffffff" stop-opacity=".5"/>
-<stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-</radialGradient>
-<radialGradient id="dr" cx="70%" cy="82%" r="52%">
-<stop offset="0%" stop-color="#ff9a9a" stop-opacity=".55"/>
-<stop offset="100%" stop-color="#ff9a9a" stop-opacity="0"/>
-</radialGradient>
-<clipPath id="dc">
-<path d="M22 2.6 C27 11 37.4 21.6 37.4 29.4 A15.4 15.4 0 0 1 6.6 29.4 C6.6 21.6 17 11 22 2.6 Z"/>
-</clipPath>
-</defs>
-<path d="M22 2.6 C27 11 37.4 21.6 37.4 29.4 A15.4 15.4 0 0 1 6.6 29.4 C6.6 21.6 17 11 22 2.6 Z" fill="url(#df)" stroke="#3a0000" stroke-width="2.4" stroke-linejoin="round"/>
-<g clip-path="url(#dc)">
-<ellipse cx="15.6" cy="27.4" rx="7.2" ry="11.6" fill="url(#dg)" transform="rotate(-12 15.6 27.4)"/>
-<ellipse cx="18.6" cy="12.6" rx="2.8" ry="4.4" fill="#ffffff" opacity=".92" transform="rotate(-20 18.6 12.6)"/>
-<ellipse cx="30" cy="34" rx="10" ry="11" fill="url(#dr)"/>
-<path d="M37 30 A15 15 0 0 1 24 44.4" fill="none" stroke="#ffc0c0" stroke-width="2.4" stroke-linecap="round" opacity=".6"/>
-</g>
-</svg>
-<span class="elixir-num" id="elixirAvg">—</span>
-</div>
-<div class="elixir-cap" id="elixirCap">Средние затраты<br>эликсира</div>
-</div>
 <div class="balance-line" id="balanceLine"></div>
 <div class="deck-grid" id="deck-grid"></div>
 </div>
@@ -247,7 +216,7 @@ body.dragging{cursor:grabbing}
   <div class="cm-sheet">
     <button class="cm-close" onclick="closeCardModal()">✕</button>
     <div class="cm-head">
-      <div class="cm-badge" id="cmBadge">6</div>
+      <div class="cm-badge" id="cmBadge">⚡</div>
       <div>
         <div class="cm-name" id="cmName">Карта</div>
         <div class="cm-rar" id="cmRar">Обычная</div>
@@ -264,7 +233,7 @@ body.dragging{cursor:grabbing}
 <div class="nav">
 <button class="nb" onclick="location.href='chess-shop.html'"><i>🎁</i><span>Магазин</span></button>
 <button class="nb on" onclick="location.href='chess-deck.html'"><i><span class="sp"><b></b><b></b><b>♠</b></span></i><span>Колода</span></button>
-<button class="nb" onclick="location.href='chess-main.html'"><i>⚔️</i><span>Бой</span></button>
+<button class="nb" onclick="location.href='chess-arena.html'"><i>⚔️</i><span>Бой</span></button>
 <button class="nb" onclick="location.href='chess-social.html'"><i>🛡️</i><span>Клан</span></button>
 <button class="nb" onclick="location.href='leaderboard.html'"><i>🏆</i><span>Рейтинг</span></button>
 </div>
@@ -284,67 +253,69 @@ if(tab==='cards'){document.getElementById('screen-cards').classList.add('active'
 else{document.getElementById('screen-setup').classList.add('active');document.getElementById('sub-tab-setup-btn').classList.add('active');renderSetupBoard();}
 }
 
+/* фигуры — только для расстановки */
 const PIECES={
 'p':{name:'Пешка',icon:'♟',cost:1},
-'n':{name:'Конь',icon:'♞',cost:2},
+'n':{name:'Конь',icon:'♞',cost:3},
 'b':{name:'Слон',icon:'♝',cost:3},
 'r':{name:'Ладья',icon:'♜',cost:4},
 'k':{name:'Король',icon:'♚',cost:5},
-'q':{name:'Ферзь',icon:'♛',cost:6},
-'f':{name:'Ярость',icon:'⚡',cost:2},
-'s':{name:'Щит',icon:'🛡️',cost:3},
-'c':{name:'Рокировка',icon:'🔄',cost:4},
-'u':{name:'Превращение',icon:'👑',cost:6}
+'q':{name:'Ферзь',icon:'♛',cost:6}
 };
 
-const PIECE_TYPES=['p','n','b','r','k','q','f','s','c','u'];
-const SPELL_TYPES=['f','s','c','u'];
-const ELIXIR={p:1,n:2,b:3,r:4,k:5,q:6,f:2,s:3,c:4,u:6};
+/* карты */
+const SPELL_TYPES=['f','s','c','u','g','x','z','l','b','e'];
 const HAND_SIZE=4;
 const SLOT_COUNT=10;
 const PER_PAGE=5;
 const DECKS_KEY='chessDecks';
 const ACTIVE_KEY='chessDeckActive';
-const LEGACY_KEY='chessHand';
+const DEFAULT_DECK=['f','s','c','u'];
 
-const RARITY_NAME={common:'Обычная',rare:'Редкая',epic:'Эпическая',spell:'Заклинание'};
+const RARITY_NAME={common:'Обычная',rare:'Редкая',epic:'Эпическая'};
 
 const DECK_CARDS=[
-{name:'Пешка',icon:'♟',elixir:1,level:1,rarity:'common',type:'p',role:'темп'},
-{name:'Конь',icon:'♞',elixir:2,level:1,rarity:'rare',type:'n',role:'прыжок'},
-{name:'Слон',icon:'♝',elixir:3,level:1,rarity:'rare',type:'b',role:'диагональ'},
-{name:'Ладья',icon:'♜',elixir:4,level:1,rarity:'epic',type:'r',role:'линия'},
-{name:'Король',icon:'♚',elixir:5,level:1,rarity:'epic',type:'k',role:'цель'},
-{name:'Ферзь',icon:'♛',elixir:6,level:1,rarity:'epic',type:'q',role:'урон'},
-{name:'Ярость',icon:'⚡',elixir:2,level:1,rarity:'spell',type:'f',role:'ускорение'},
-{name:'Щит',icon:'🛡️',elixir:3,level:1,rarity:'spell',type:'s',role:'защита'},
-{name:'Рокировка',icon:'🔄',elixir:4,level:1,rarity:'spell',type:'c',role:'побег'},
-{name:'Превращение',icon:'👑',elixir:6,level:1,rarity:'spell',type:'u',role:'финишер'},
-{name:'Телепорт',icon:'🌀',elixir:3,level:1,rarity:'common',soon:true,role:'скоро'},
-{name:'Обвал',icon:'🌋',elixir:6,level:1,rarity:'common',soon:true,role:'скоро'}
+{name:'Ярость',      icon:'⚡',  rarity:'rare',  type:'f', role:'темп'},
+{name:'Щит',         icon:'🛡️', rarity:'common',type:'s', role:'защита'},
+{name:'Рокировка',   icon:'🔄',  rarity:'epic',  type:'c', role:'побег'},
+{name:'Превращение', icon:'👑',  rarity:'epic',  type:'u', role:'финишер'},
+{name:'Подкрепление',icon:'➕',  rarity:'common',type:'g', role:'подмога'},
+{name:'Чистка',      icon:'🗡️', rarity:'rare',  type:'x', role:'атака'},
+{name:'Заморозка',   icon:'❄️',  rarity:'rare',  type:'z', role:'контроль'},
+{name:'Перевербовка',icon:'🤝',  rarity:'epic',  type:'l', role:'захват'},
+{name:'Блокада',     icon:'🧱',  rarity:'common',type:'b', role:'щит клетки'},
+{name:'Взрыв',       icon:'💣',  rarity:'epic',  type:'e', role:'разрыв'}
 ];
 
+const ROLE_OF={
+  attack:['x','z','l','e'],
+  defense:['s','b'],
+  tempo:['f','g','u'],
+  escape:['c']
+};
+const ROLE_TITLE={attack:'атака',defense:'оборона',tempo:'темп',escape:'побег'};
+
 const CARD_INFO={
-p:{desc:'Самая дешёвая карта в колоде. Один эликсир — один шаг вперёд. Пешкой платят за темп: закрыть дыру, разменяться, дойти до превращения.',
-   tips:['Ходит на одну клетку вперёд, бьёт по диагонали','Единственная карта за 1 — всегда есть чем занять паузу','Дошла до последнего ряда — становится ферзём']},
-n:{desc:'Прыгает буквой Г и перескакивает через фигуры. Единственная карта, которую нельзя заблокировать построением.',
-   tips:['Единственная фигура, которой не мешают чужие фигуры','Сильнее всего против ладьи и ферзя','Вилка — удар по двум целям сразу — его главный трюк']},
-b:{desc:'Ходит по диагонали на любое расстояние. Держит длинные диагонали и связывает фигуры соперника.',
-   tips:['Слабее всего на краю доски, сильнее всего в центре','Хорош против ладьи и ферзя на открытой диагонали','Два слона вместе сильнее ладьи и коня']},
-r:{desc:'Ходит по прямой на любое расстояние. Самая прямолинейная угроза: вскрывает линии и бьёт по вертикалям.',
-   tips:['Любит открытые линии без пешек','Ставь на седьмой ряд — там она ест пешки','В эндшпиле ладья решает больше, чем конь']},
-k:{desc:'Ходит на одну клетку в любую сторону. Его нельзя съесть — только поставить мат. Каждый мат снимает ему HP.',
-   tips:['Мат снимает 1 HP — второй мат заканчивает партию','Держи его за пешками, не выводи в центр','Рокировка спасает его, когда линия вскрыта']},
-q:{desc:'Самая сильная фигура на доске. Ходит как ладья и слон вместе, бьёт в восьми направлениях.',
-   tips:['Не выводи ферзя в первые ходы — его прогонят','Ферзь + ладья заканчивают партию матом','Терять ферзя на размен — почти всегда проигрыш']},
-f:{desc:'Следующий ход этой фигуры ничего не стоит. Ставишь за 2 эликсира, а ходишь ферзём за 6 — экономия четыре. Работает один ход.',
-   tips:['Ставь на ферзя или ладью — там экономия максимальна','На пешку не ставь: потратишь 2, сэкономишь 1','Срабатывает на следующий ход, потом исчезает']},
-s:{desc:'Фигура переживает одно взятие. Соперник бьёт, тратит свой эликсир, а фигура остаётся на доске. Ломает любой размен.',
-   tips:['Щит за 3 ломает атаку на 6 — чистый плюс','Накрывай ферзя или ладью, не пешку','Щит слетает после первого удара, второй убьёт']},
-c:{desc:'Король и ладья меняются местами за один тап. Мгновенный побег из-под удара, без потери темпа.',
+f:{desc:'Фигура, на которую легла Ярость, ходит в следующий раз бесплатно. Эликсир тратится только на обычные ходы, поэтому ферзь, сходивший по Ярости, не стоит ничего.',
+   tips:['Бей ферзём или ладьёй — там экономия максимальна','Работает на один ход, потом сгорает','Ставь перед решающим ходом, а не заранее']},
+s:{desc:'Фигура переживает одно взятие. Соперник бьёт, тратит свой ход, а фигура остаётся на месте. Щит снимается после первого удара.',
+   tips:['Накрывай ферзя или ладью, а не пешку','Ломает атаку, которая стоила сопернику ход','Второй удар уже снимет фигуру']},
+c:{desc:'Король и ладья меняются местами за один тап. Побег из-под удара без потери эликсира.',
    tips:['Работает один раз за партию','Не сработает, если король под шахом','Не сработает, если новое место под ударом']},
-u:{desc:'Пешка сразу становится ферзём, не доходя до последнего ряда. Дорого, но превращение в центре доски переворачивает партию.',
-   tips:['Работает только на своей пешке','За 6 эликсира получаешь фигуру стоимостью 6 навсегда','Лучше всего на шестом ряду — ферзь сразу бьёт']}
+u:{desc:'Своя пешка сразу становится ферзём, где бы она ни стояла. Дорого по смыслу: это почти бесплатный ферзь там, где он нужен.',
+   tips:['Лучше всего на шестом ряду — ферзь сразу бьёт','Жди, когда у соперника останется мало защитников','Работает только на своей пешке']},
+g:{desc:'В пустую клетку твоих двух последних рядов появляется пешка. Помогает закрыть дыру или поддержать атаку.',
+   tips:['Ставь туда, где враг собирается пройти','Пешка появляется без хода — можно сразу ходить','Клетка должна быть пустой']},
+x:{desc:'Вражеская пешка убирается с доски. Простой выбор, когда пешка мешает или угрожает превращением.',
+   tips:['Лучше всего против пешки, которая готовится пройти','Не работает на короля и на фигуры','Срочный ответ на угрозу превращения']},
+z:{desc:'Вражеская фигура не может ходить 10 секунд. Фигура остаётся на клетке и продолжает защищать или атаковать сверху.',
+   tips:['Лучшая цель — ферзь или ладья соперника','Не работает на короля','Заморозь атакующую фигуру перед её ходом']},
+l:{desc:'Вражеская пешка переходит на твою сторону. Она сохраняет клетку и становится твоей.',
+   tips:['Работает только на пешку','Не на последней линии соперника','Перевербованная пешка уже ходит твоим ходом']},
+b:{desc:'Пустая клетка закрыта на 12 секунд: в неё никто не может войти. Хорошо перекрывает путь к королю или фланг.',
+   tips:['Ставь на клетку, которую враг хочет занять','Не закрывает клетку, которая уже занята','Блокада не мешает тебе стоять на клетке']},
+e:{desc:'Взрыв на клетке и её соседях. Уничтожает вражеские пешки, кони и слоны. Ладьи, ферзь и король не страдают.',
+   tips:['Бей туда, где собрано 2 и больше лёгких фигур','Щит на пешке или коне спасает её от взрыва','Ферзь и ладья взрыв не трогает']}
 };
 
 let decks=[];
@@ -355,21 +326,10 @@ function sanitize(list){
   const out=[];
   if(!Array.isArray(list)) return out;
   for(let i=0;i<list.length;i++){
-    const t=list[i];
-    if(PIECE_TYPES.indexOf(t)>=0 && out.length<HAND_SIZE) out.push(t);
+    const t=String(list[i]||'').toLowerCase();
+    if(SPELL_TYPES.indexOf(t)>=0 && out.indexOf(t)<0 && out.length<HAND_SIZE) out.push(t);
   }
   return out;
-}
-
-function legacyDeck(){
-  let saved=null;
-  try{
-    const raw=JSON.parse(localStorage.getItem(LEGACY_KEY)||'null');
-    if(Array.isArray(raw)) saved=raw.filter(function(t){return PIECE_TYPES.indexOf(t)>=0;});
-  }catch(e){}
-  if(!saved||!saved.length) return ['p','n','b','r'];
-  while(saved.length<HAND_SIZE) saved.push('p');
-  return saved.slice(0,HAND_SIZE);
 }
 
 function loadDecks(){
@@ -382,7 +342,7 @@ function loadDecks(){
   for(let i=0;i<SLOT_COUNT;i++){ out.push((arr&&Array.isArray(arr[i]))?sanitize(arr[i]):[]); }
   let any=false;
   for(let i=0;i<out.length;i++){ if(out[i].length) any=true; }
-  if(!any) out[0]=legacyDeck();
+  if(!any) out[0]=DEFAULT_DECK.slice();
   return out;
 }
 
@@ -395,17 +355,9 @@ function loadActive(){
 function saveDecks(){
   try{ localStorage.setItem(DECKS_KEY, JSON.stringify(decks)); }catch(e){}
   try{ localStorage.setItem(ACTIVE_KEY, String(activeSlot)); }catch(e){}
-  try{ localStorage.setItem(LEGACY_KEY, JSON.stringify(decks[activeSlot]||[])); }catch(e){}
 }
 
 function currentDeck(){ return decks[activeSlot]||[]; }
-
-function deckElixir(d){
-  if(!d||!d.length) return 0;
-  let s=0;
-  for(let i=0;i<d.length;i++) s+=(ELIXIR[d[i]]||0);
-  return s/d.length;
-}
 
 function renderSlots(){
   const list=document.getElementById('slotList');
@@ -463,7 +415,7 @@ function pageNext(){ if(page>=Math.ceil(SLOT_COUNT/PER_PAGE)-1) return; page++; 
 
 function addCard(type){
   const d=currentDeck();
-  if(d.indexOf(type)>=0){ showToast(PIECES[type].name+' уже в колоде','#ffd447'); return false; }
+  if(d.indexOf(type)>=0){ showToast(cardName(type)+' уже в колоде','#ffd447'); return false; }
   if(d.length>=HAND_SIZE){ showToast('В колоде уже 4 карты — убери одну','#ffb300'); return false; }
   d.push(type);
   saveDecks();
@@ -486,6 +438,11 @@ function removeCard(type){
 function toggleCard(type){
   if(currentDeck().indexOf(type)>=0) removeCard(type);
   else addCard(type);
+}
+
+function cardName(t){
+  for(let i=0;i<DECK_CARDS.length;i++) if(DECK_CARDS[i].type===t) return DECK_CARDS[i].name;
+  return t;
 }
 
 /* ================= ПЕРЕТАСКИВАНИЕ ================= */
@@ -600,7 +557,7 @@ document.addEventListener('touchmove',function(e){
   if(dragState&&dragState.active&&e.cancelable) e.preventDefault();
 },{passive:false});
 
-/* ================= ОТРИСОВКА КАРТ ================= */
+/* ================= ОТРИСОВКА ================= */
 
 function renderDeck(){
   const d=currentDeck();
@@ -609,28 +566,22 @@ function renderDeck(){
 
   DECK_CARDS.forEach(function(card){
     const cardDiv=document.createElement('div');
-    const picked=card.type?d.indexOf(card.type):-1;
-    const isSoon=!!card.soon;
-    cardDiv.className='card '+card.rarity+(picked>=0?' picked':'')+(isSoon?' soon':'');
-    if(card.type) cardDiv.dataset.type=card.type;
+    const picked=d.indexOf(card.type);
+    cardDiv.className='card '+card.rarity+(picked>=0?' picked':'');
+    cardDiv.dataset.type=card.type;
 
-    let order='';
-    if(picked>=0) order='<div class="pick-order">'+(picked+1)+'</div>';
-
-    const infoBtn = (!isSoon&&card.type)
-      ? '<button class="card-info" data-info="'+card.type+'">i</button>' : '';
-
-    const addBtn = (!isSoon&&card.type)
-      ? '<button class="card-add'+(picked>=0?' off':'')+'" data-add="'+card.type+'">'+(picked>=0?'✓':'+')+'</button>' : '';
+    const order=(picked>=0)?'<div class="pick-order">'+(picked+1)+'</div>':'';
+    const addBtn='<button class="card-add'+(picked>=0?' off':'')+'" data-add="'+card.type+'">'+(picked>=0?'✓':'+')+'</button>';
+    const infoBtn='<button class="card-info" data-info="'+card.type+'">i</button>';
 
     cardDiv.innerHTML=
       infoBtn+
-      '<div class="card-elixir">'+card.elixir+'</div>'+
+      '<div class="card-free">0</div>'+
       order+
       '<div class="card-icon">'+card.icon+'</div>'+
       '<div class="card-name">'+card.name+'</div>'+
-      '<div class="card-role">'+(card.role||'')+'</div>'+
-      '<div class="card-level">'+(isSoon?'скоро':card.level+'-й ур.')+'</div>'+
+      '<div class="card-role">'+card.role+'</div>'+
+      '<div class="card-level">бесплатно</div>'+
       addBtn;
 
     const ib=cardDiv.querySelector('.card-info');
@@ -645,13 +596,11 @@ function renderDeck(){
       };
     }
 
-    if(!isSoon&&card.type){
-      cardDiv.addEventListener('pointerdown',cardPointerDown);
-      cardDiv.onclick=function(){
-        if(Date.now()<suppressClickUntil) return;
-        toggleCard(card.type);
-      };
-    }
+    cardDiv.addEventListener('pointerdown',cardPointerDown);
+    cardDiv.onclick=function(){
+      if(Date.now()<suppressClickUntil) return;
+      toggleCard(card.type);
+    };
 
     grid.appendChild(cardDiv);
   });
@@ -661,14 +610,14 @@ function renderDeck(){
   for(let i=0;i<HAND_SIZE;i++){
     const slot=document.createElement('div');
     const t=d[i];
-    if(t){ slot.className='deck-slot filled'; slot.textContent=PIECES[t]?PIECES[t].icon:''; }
+    if(t){ slot.className='deck-slot filled'; slot.textContent=DECK_CARDS.find(function(c){return c.type===t;}).icon; }
     else{ slot.className='deck-slot'; slot.textContent='—'; }
     pickedBox.appendChild(slot);
   }
 
   const note=document.getElementById('deck-note');
   if(d.length===HAND_SIZE){
-    const names=d.map(function(t){return PIECES[t].name;}).join(' · ');
+    const names=d.map(cardName).join(' · ');
     note.className='deck-note';
     note.innerHTML='Колода ' + (activeSlot+1) + ' готова: <b>'+names+'</b>';
   }else{
@@ -676,38 +625,24 @@ function renderDeck(){
     note.innerHTML='Колода ' + (activeSlot+1) + ': ' + d.length + ' из 4 — тапни «+» или перетащи карту вверх';
   }
 
-  const avgEl=document.getElementById('elixirAvg');
-  const capEl=document.getElementById('elixirCap');
-  if(!d.length){
-    avgEl.textContent='—';
-    capEl.innerHTML='Средние затраты<br>эликсира';
-  }else{
-    avgEl.textContent=deckElixir(d).toFixed(1);
-    capEl.innerHTML=(d.length===HAND_SIZE)
-      ? 'Средние затраты<br>эликсира'
-      : 'Средние затраты<br>эликсира (' + d.length + ' из 4)';
-  }
-
   const bl=document.getElementById('balanceLine');
   if(d.length<HAND_SIZE){
     bl.className='balance-line';
     bl.textContent='';
   }else{
-    const avg=deckElixir(d);
-    let cheap=0, heavy=0;
-    for(let i=0;i<d.length;i++){
-      const c=ELIXIR[d[i]]||0;
-      if(c<=2) cheap++;
-      if(c>=5) heavy++;
+    const covered=[];
+    const missing=[];
+    Object.keys(ROLE_OF).forEach(function(role){
+      const has=d.some(function(t){ return ROLE_OF[role].indexOf(t)>=0; });
+      if(has) covered.push(ROLE_TITLE[role]); else missing.push(ROLE_TITLE[role]);
+    });
+    if(!missing.length){
+      bl.className='balance-line good';
+      bl.textContent='Идеальный баланс: покрыты все роли';
+    }else{
+      bl.className='balance-line warn';
+      bl.textContent='Нет: '+missing.join(', ')+' · есть: '+(covered.join(', ')||'ничего');
     }
-    let cls, txt;
-    if(avg<2.8){ cls='warn'; txt='Слишком дёшево — нет тяжёлых угроз'; }
-    else if(avg>4.2){ cls='warn'; txt='Слишком дорого — будешь копить'; }
-    else if(!cheap){ cls='warn'; txt='Нет дешёвой карты для темпа'; }
-    else if(!heavy){ cls='warn'; txt='Нет тяжёлой карты для размена'; }
-    else { cls='good'; txt='Идеальный баланс'; }
-    bl.className='balance-line '+cls;
-    bl.textContent=txt+' · '+avg.toFixed(1)+' ⚡';
   }
 }
 
@@ -718,74 +653,83 @@ let demoTimers=[];
 let demoLoop=null;
 
 const DEMOS={
-p:function(a){
-  a.cap('Пешка идёт на одну клетку вперёд');
-  const p=a.piece('♟','mine',2,2);
-  a.at(250,function(){ a.move(p,2,1); });
-  a.at(900,function(){ a.fx(p,'1 ⚡'); });
-},
-n:function(a){
-  a.cap('Конь прыгает буквой Г — сквозь фигуры');
-  const p=a.piece('♞','mine',1,2);
-  a.at(250,function(){ a.move(p,1,1); });
-  a.at(520,function(){ a.move(p,2,0); });
-  a.at(1050,function(){ a.fx(p,'2 ⚡'); });
-},
-b:function(a){
-  a.cap('Слон режет по диагонали');
-  const p=a.piece('♝','mine',1,2);
-  a.at(250,function(){ a.move(p,3,0); });
-  a.at(1000,function(){ a.fx(p,'3 ⚡'); });
-},
-r:function(a){
-  a.cap('Ладья идёт по прямой');
-  const p=a.piece('♜','mine',0,1);
-  a.at(250,function(){ a.move(p,4,1); });
-  a.at(1000,function(){ a.fx(p,'4 ⚡'); });
-},
-k:function(a){
-  a.cap('Король уходит из-под удара');
-  const k=a.piece('♚','mine',2,1);
-  const e=a.piece('♜','foe',4,1);
-  a.at(300,function(){ a.move(e,3,1); });
-  a.at(650,function(){ a.move(k,2,0); a.fx(k,'спасён','good'); });
-},
-q:function(a){
-  a.cap('Ферзь бьёт по всей доске');
-  const p=a.piece('♛','mine',0,2);
-  a.at(250,function(){ a.move(p,4,0); });
-  a.at(1000,function(){ a.fx(p,'6 ⚡'); });
-},
 f:function(a){
-  a.cap('Ярость: следующий ход бесплатный');
-  const p=a.piece('♛','mine',1,1);
+  a.cap('Ярость: ход этой фигуры бесплатный');
+  const p=a.piece('♜','mine',0,1);
   a.at(200,function(){ p.classList.add('charged'); a.fx(p,'⚡'); });
-  a.at(800,function(){ a.move(p,3,1); });
-  a.at(1400,function(){ a.fx(p,'0 ⚡','good'); });
+  a.at(800,function(){ a.move(p,4,1); });
+  a.at(1300,function(){ a.fx(p,'0 ⚡','good'); });
 },
 s:function(a){
-  a.cap('Щит: фигура переживает удар');
-  const p=a.piece('♞','mine',2,1);
+  a.cap('Щит: фигура переживает одно взятие');
+  const k=a.piece('♞','mine',2,2);
   const e=a.piece('♝','foe',4,0);
-  a.at(200,function(){ p.classList.add('shielded'); a.fx(p,'🛡️'); });
-  a.at(800,function(){ a.move(e,3,1); });
-  a.at(1400,function(){ p.classList.remove('shielded'); p.classList.add('hit'); a.flash(); a.fx(p,'выжила','good'); });
-  a.at(1800,function(){ p.classList.remove('hit'); });
+  a.at(200,function(){ k.classList.add('shielded'); a.fx(k,'🛡️'); });
+  a.at(700,function(){ a.move(e,3,1); a.cap('Враг пошёл в атаку…'); });
+  a.at(1300,function(){
+    k.classList.remove('shielded'); k.classList.add('hit');
+    a.flash(); a.fx(k,'выжила','good');
+    a.cap('Щит снят, фигура на месте');
+  });
+  a.at(1900,function(){ k.classList.remove('hit'); });
 },
 c:function(a){
-  a.cap('Рокировка: король и ладья меняются');
+  a.cap('Рокировка: король и ладья меняются местами');
   const k=a.piece('♚','mine',1,1);
   const r=a.piece('♜','mine',3,1);
-  a.at(550,function(){ a.flash(); a.move(k,3,1); a.move(r,1,1); });
-  a.at(1450,function(){ a.fx(k,'раз за партию','good'); });
+  a.at(500,function(){ a.flash(); a.move(k,3,1); a.move(r,1,1); });
+  a.at(1300,function(){ a.fx(k,'раз за партию','good'); });
 },
 u:function(a){
-  a.cap('Превращение: пешка становится ферзём');
+  a.cap('Превращение: пешка сразу становится ферзём');
   const p=a.piece('♟','mine',2,2);
   a.at(250,function(){ a.move(p,2,1); });
   a.at(650,function(){ a.move(p,2,0); });
   a.at(1150,function(){ a.flash(); p.textContent='♛'; p.classList.add('charged'); a.fx(p,'ферзь!','good'); });
-  a.at(2000,function(){ p.textContent='♟'; p.classList.remove('charged'); });
+},
+g:function(a){
+  a.cap('Подкрепление: новая пешка в твоём ряду');
+  a.zone(0,2,4,2,'home',0);
+  a.at(600,function(){
+    const p=a.piece('♟','mine',1,2);
+    p.classList.add('appear');
+    a.fx(p,'+1 пешка','good');
+  });
+},
+x:function(a){
+  a.cap('Чистка: вражеская пешка убрана');
+  const t=a.piece('♟','foe',3,1);
+  a.at(300,function(){ a.zone(3,1,3,1,'tgt',600); });
+  a.at(800,function(){ a.kill(t); a.fx(t,'убрана','good'); });
+},
+z:function(a){
+  a.cap('Заморозка: фигура не ходит 10 секунд');
+  const t=a.piece('♜','foe',4,1);
+  a.at(250,function(){ t.classList.add('frozen'); a.fx(t,'❄️'); });
+  a.at(800,function(){ t.classList.add('shake'); a.cap('Попытка хода — не выходит'); });
+  a.at(1300,function(){ a.fx(t,'стоит','good'); });
+},
+l:function(a){
+  a.cap('Перевербовка: вражеская пешка становится твоей');
+  const t=a.piece('♟','foe',3,1);
+  a.at(300,function(){ a.zone(3,1,3,1,'tgt',600); });
+  a.at(800,function(){ t.className='cm-piece mine'; t.textContent='♟'; a.fx(t,'моя!','good'); });
+},
+b:function(a){
+  a.cap('Блокада: клетка закрыта на 12 секунд');
+  a.zone(2,1,2,1,'block',0);
+  const n=a.piece('♞','foe',4,0);
+  a.at(600,function(){ n.classList.add('shake'); a.fx(n,'нельзя','good'); a.cap('Враг не может войти в клетку'); });
+},
+e:function(a){
+  a.cap('Взрыв: 3×3 — враг теряет лёгкие фигуры');
+  const pawn=a.piece('♟','foe',1,0);
+  const bis=a.piece('♝','foe',3,2);
+  const q=a.piece('♛','foe',4,1);
+  a.piece('♞','mine',1,2);
+  a.at(300,function(){ a.zone(1,0,3,2,'boom',600); a.flash(); });
+  a.at(420,function(){ a.kill(pawn); a.kill(bis); });
+  a.at(900,function(){ a.fx(q,'ферзь цел'); a.cap('Ферзь и ладьи взрыв не трогает'); });
 }
 };
 
@@ -831,6 +775,18 @@ function runDemo(type){
       return el;
     },
     move:function(el,c,r){ el.style.left=px(c); el.style.top=py(r); },
+    kill:function(el){ el.classList.add('gone'); },
+    zone:function(c0,r0,c1,r1,kind,ms){
+      const z=document.createElement('div');
+      z.className='cm-zone '+kind;
+      z.style.left=(c0/5*100)+'%';
+      z.style.top=(r0/3*100)+'%';
+      z.style.width=((c1-c0+1)/5*100)+'%';
+      z.style.height=((r1-r0+1)/3*100)+'%';
+      st.appendChild(z);
+      if(ms) demoTimers.push(setTimeout(function(){ if(z.parentNode) z.parentNode.removeChild(z); },ms));
+      return z;
+    },
     fx:function(el,text,cls){
       const f=document.createElement('div');
       f.className='cm-float '+(cls||'');
@@ -852,7 +808,6 @@ function runDemo(type){
 }
 
 function openCardModal(type){
-  const card=null;
   let def=null;
   for(let i=0;i<DECK_CARDS.length;i++) if(DECK_CARDS[i].type===type) def=DECK_CARDS[i];
   if(!def) return;
@@ -860,9 +815,9 @@ function openCardModal(type){
   demoType=type;
   clearDemo();
 
-  document.getElementById('cmBadge').textContent=def.elixir;
+  document.getElementById('cmBadge').textContent=def.icon;
   document.getElementById('cmName').textContent=def.name;
-  document.getElementById('cmRar').textContent=RARITY_NAME[def.rarity]||'Обычная';
+  document.getElementById('cmRar').textContent=(RARITY_NAME[def.rarity]||'Обычная')+' · бесплатно · роль: '+def.role;
   document.getElementById('cmDesc').textContent=(CARD_INFO[type]&&CARD_INFO[type].desc)||'';
   document.getElementById('cmCaption').textContent='';
 
@@ -879,12 +834,12 @@ function openCardModal(type){
 
   document.getElementById('cardModal').classList.add('open');
   runDemo(type);
-  demoLoop=setInterval(function(){ runDemo(type); },3400);
+  demoLoop=setInterval(function(){ runDemo(type); },4200);
 }
 
 function updateModalAdd(){
   const btn=document.getElementById('cmAdd');
-  if(!demoType){ return; }
+  if(!demoType) return;
   const inDeck=currentDeck().indexOf(demoType)>=0;
   const full=currentDeck().length>=HAND_SIZE;
 
@@ -903,9 +858,8 @@ function updateModalAdd(){
 
 function modalAddTap(){
   if(!demoType) return;
-  const inDeck=currentDeck().indexOf(demoType)>=0;
-  if(inDeck){ removeCard(demoType); }
-  else { addCard(demoType); }
+  if(currentDeck().indexOf(demoType)>=0) removeCard(demoType);
+  else addCard(demoType);
   updateModalAdd();
 }
 
