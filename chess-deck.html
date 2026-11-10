@@ -10,30 +10,28 @@
 body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;padding-bottom:88px}
 body.dragging{cursor:grabbing}
 .top-bar{width:100%;padding:12px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;z-index:10}
-.currency-row{display:flex;justify-content:center;align-items:center;gap:8px}
-.currency{display:flex;align-items:center;gap:5px;padding:5px 14px;border-radius:10px;font-weight:900}
+.currency-row{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap}
+.currency{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:10px;font-weight:900}
+.unit-chip{color:#5ee0ff;background:linear-gradient(180deg,#132a4d,#0a1a33);border:2px solid #2f5aa0}
 .deck-ver{font-size:10px;font-weight:900;color:#3b1f00;background:linear-gradient(180deg,#ffe082,#ffb300);padding:3px 8px;border-radius:7px;border:2px solid #fff;box-shadow:0 2px 0 #b45309;letter-spacing:.5px}
 .sub-tabs{display:flex;gap:6px;margin-top:4px}
-.sub-tab-btn{flex:1;padding:10px;border-radius:10px;font-weight:900;cursor:pointer;font-size:12.5px}
+.sub-tab-btn{flex:1;padding:10px 4px;border-radius:10px;font-weight:900;cursor:pointer;font-size:12px;color:#fff;border:0;background:linear-gradient(180deg,#334155,#1e293b);box-shadow:0 3px 0 #0b1220}
+.sub-tab-btn.active{background:linear-gradient(180deg,#ffe082,#ffb300);color:#3b1f00;box-shadow:0 3px 0 #b45309}
 .screen{display:none;flex-direction:column;width:100%;align-items:center;flex:1;overflow-y:auto;padding-bottom:90px}
 .screen.active{display:flex}
 .deck-area{width:95vw;max-width:400px;padding:10px;display:flex;flex-direction:column;gap:10px}
 .pager-note{width:100%;text-align:center;font-size:11px;font-weight:900;color:#dbe9ff;letter-spacing:.4px}
 .slot-bar{display:flex;align-items:center;gap:6px;width:100%}
-.slot-nav{width:38px;height:46px;flex-shrink:0;border-radius:12px!important;padding:0;cursor:pointer;font-size:20px;font-weight:900;line-height:1;color:#fff!important;background:linear-gradient(180deg,#3b8ef0,#1c56b8)!important;border:3px solid #fff!important;box-shadow:0 4px 0 #123b7a!important}
-.slot-nav:active{transform:translateY(3px);box-shadow:0 1px 0 #123b7a!important}
+.slot-nav{width:38px;height:46px;flex-shrink:0;border-radius:12px;padding:0;cursor:pointer;font-size:20px;font-weight:900;color:#fff;background:linear-gradient(180deg,#3b8ef0,#1c56b8);border:3px solid #fff;box-shadow:0 4px 0 #123b7a}
+.slot-nav:active{transform:translateY(3px);box-shadow:0 1px 0 #123b7a}
 .slot-nav:disabled{opacity:.35;filter:grayscale(.6)}
 .slot-list{flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;touch-action:pan-y}
-.slot-btn{position:relative;height:46px;border-radius:12px!important;padding:0;cursor:pointer;font-size:16px;font-weight:900;color:#c6d8ff!important;background:linear-gradient(180deg,#22437f,#122a5e)!important;border:3px solid #4a72c0!important;box-shadow:0 4px 0 #0b1b45!important}
-.slot-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #0b1b45!important}
-.slot-btn.on{background:linear-gradient(180deg,#ffe082,#ffb300)!important;color:#3b1f00!important;border-color:#fff!important;box-shadow:0 4px 0 #b45309!important}
-.slot-btn.empty{color:#7b93bd!important}
-.slot-dot{position:absolute;top:3px;right:4px;width:7px;height:7px;border-radius:50%;background:#43e97b;box-shadow:0 0 6px rgba(67,233,123,.9)}
+.slot-btn{position:relative;height:46px;border-radius:12px;padding:0;cursor:pointer;font-size:16px;font-weight:900;color:#c6d8ff;background:linear-gradient(180deg,#22437f,#122a5e);border:3px solid #4a72c0;box-shadow:0 4px 0 #0b1b45}
+.slot-btn.on{background:linear-gradient(180deg,#ffe082,#ffb300);color:#3b1f00;border-color:#fff;box-shadow:0 4px 0 #b45309}
+.slot-dot{position:absolute;top:3px;right:4px;width:7px;height:7px;border-radius:50%;background:#43e97b}
 .slot-btn.part .slot-dot{background:#ffd447}
-
 .rule-banner{width:100%;box-sizing:border-box;text-align:center;font-size:11.5px;font-weight:800;line-height:1.45;color:#dbe9ff;padding:8px 10px;border-radius:12px;background:linear-gradient(180deg,#132a4d,#0a1a33);border:2px solid #2f5aa0;box-shadow:0 3px 0 #061225}
 .rule-banner b{color:#5ee0ff}
-
 .deck-note{width:100%;text-align:center;font-size:12px;color:#dbe9ff;font-weight:700;line-height:1.45;padding:0 6px}
 .deck-note b{color:#43e97b}
 .deck-note.warn{color:#ffd447}
@@ -42,9 +40,8 @@ body.dragging{cursor:grabbing}
 .deck-picked.drop-on .deck-slot{border-color:#43e97b;background:rgba(67,233,123,.2)}
 .deck-slot{flex:1;height:38px;border-radius:9px;border:2px dashed rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:17px;color:#c6d8ff;background:rgba(2,6,23,.35)}
 .deck-slot.filled{border-style:solid;border-color:#43e97b;color:#fff;background:linear-gradient(145deg,#0f6b3a,#064e26)}
-
-.balance-line{width:100%;text-align:center;font-size:11px;font-weight:900;letter-spacing:.3px;min-height:15px;margin-top:2px;line-height:1.35}
-.balance-line.good{color:#43e97b;text-shadow:0 0 10px rgba(67,233,123,.45)}
+.balance-line{width:100%;text-align:center;font-size:11px;font-weight:900;min-height:15px;margin-top:2px;line-height:1.35}
+.balance-line.good{color:#43e97b}
 .balance-line.warn{color:#ffd447}
 
 .deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:4px;padding:8px 6px 10px}
@@ -53,20 +50,31 @@ body.dragging{cursor:grabbing}
 .card.epic{border-color:#b06aff;background:linear-gradient(145deg,#2a2a48,#250f3e)}
 .card.common{border-color:#9aa7b8}
 .card.picked{border-color:#43e97b!important}
-
-.card-free{position:absolute;top:-7px;left:-7px;min-width:25px;height:25px;padding:0 4px;border-radius:12px;border:2px solid #fff;z-index:3;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px;color:#06301a;background:linear-gradient(180deg,#5ef08a,#1f9e42);box-shadow:0 3px 6px rgba(0,0,0,.65),inset 0 2px 3px rgba(255,255,255,.45)}
-.card-add{position:absolute;bottom:-7px;left:-7px;width:25px;height:25px;border-radius:50%;border:2px solid #fff;background:linear-gradient(180deg,#5ef08a,#1f9e42);color:#083b1c;font-size:17px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;z-index:4;padding:0;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,.6),inset 0 2px 3px rgba(255,255,255,.5)}
+.card-free{position:absolute;top:-7px;left:-7px;min-width:25px;height:25px;padding:0 4px;border-radius:12px;border:2px solid #fff;z-index:3;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px;color:#06301a;background:linear-gradient(180deg,#5ef08a,#1f9e42)}
+.card-add{position:absolute;bottom:-7px;left:-7px;width:25px;height:25px;border-radius:50%;border:2px solid #fff;background:linear-gradient(180deg,#5ef08a,#1f9e42);color:#083b1c;font-size:17px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;z-index:4;padding:0;cursor:pointer}
 .card-add:active{transform:scale(.88)}
 .card-add.off{background:linear-gradient(180deg,#94a3b8,#475569);color:#e2e8f0;font-size:15px}
-.card-info{position:absolute;top:-7px;right:-7px;width:23px;height:23px;border-radius:50%;border:2px solid #fff;background:linear-gradient(180deg,#5ea8ff,#1e63c8);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;z-index:4;padding:0;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,.6),inset 0 2px 3px rgba(255,255,255,.45)}
-.card-info:active{transform:scale(.9)}
+.card-info{position:absolute;top:-7px;right:-7px;width:23px;height:23px;border-radius:50%;border:2px solid #fff;background:linear-gradient(180deg,#5ea8ff,#1e63c8);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;z-index:4;padding:0;cursor:pointer}
 .pick-order{position:absolute;bottom:-6px;right:-6px;background:linear-gradient(145deg,#5ef08a,#1f9e42);color:#083b1c;font-weight:900;font-size:11px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:5}
-.card-icon{font-size:27px;margin-top:13px;color:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,.7));line-height:1}
-.card-name{font-size:9.5px;color:#fff;text-align:center;font-weight:900;line-height:1.1}
-.card-role{font-size:7.5px;color:#9fb6c4;text-align:center;font-weight:800;line-height:1.1;margin-top:1px;letter-spacing:.2px}
-.card-level{font-size:8px;color:#ffd447;background:rgba(0,0,0,.75);padding:2px 4px;border-radius:4px;width:92%;text-align:center;margin-top:4px;font-weight:800}
-
+.card-icon{font-size:27px;margin-top:13px;line-height:1}
+.card-name{font-size:9.5px;text-align:center;font-weight:900;line-height:1.1}
+.card-role{font-size:7.5px;color:#9fb6c4;text-align:center;font-weight:800;line-height:1.1;margin-top:1px}
+.card-lv{font-size:8px;color:#ffd447;background:rgba(0,0,0,.75);padding:2px 4px;border-radius:4px;width:92%;text-align:center;margin-top:4px;font-weight:800}
 .drag-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.95;transform:translate(-50%,-58%) scale(1.1) rotate(-4deg);filter:drop-shadow(0 14px 24px rgba(0,0,0,.8))}
+
+.pip{display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid #5ee0ff;margin-right:3px;vertical-align:middle}
+.pip.on{background:#5ee0ff;box-shadow:0 0 6px rgba(94,224,255,.8)}
+.piece-list{width:100%;display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.prow{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #334155}
+.prow .pi{font-size:28px;width:40px;text-align:center;color:#e2e8f0}
+.prow .pm{flex:1;min-width:0}
+.prow .pn{font-size:13px;font-weight:900}
+.prow .ps{font-size:11px;color:#9fb6c4;margin-top:3px;line-height:1.35}
+.prow button{padding:9px 10px;border-radius:10px;border:0;font-size:12px;font-weight:900;color:#3b1f00;background:linear-gradient(180deg,#ffe082,#ffb300);box-shadow:0 3px 0 #b45309;cursor:pointer;white-space:nowrap}
+.prow button:disabled{opacity:.45;box-shadow:none;background:#475569;color:#e2e8f0}
+.units-note{width:100%;text-align:center;font-size:11px;color:#9fb6c4;line-height:1.45;padding:0 6px}
+.units-note b{color:#5ee0ff}
+.lock-note{width:100%;box-sizing:border-box;text-align:center;font-size:11px;color:#dbe9ff;padding:8px;border-radius:10px;border:1px dashed #475569}
 
 .setup-area{width:95vw;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:10px}
 .setup-hint{text-align:center;color:#dbe9ff;font-size:12px;margin:0;min-height:18px;padding:0 10px;line-height:1.45;font-weight:700}
@@ -77,84 +85,79 @@ body.dragging{cursor:grabbing}
 .cell.black{background:linear-gradient(145deg,#4a5a6e,#3a4a5e 50%,#2a3a4e)}
 .cell.locked{filter:brightness(.42) saturate(.3)}
 .cell.setup-zone{background-color:rgba(255,212,71,.15)}
-.board.edit-mode .cell.setup-zone{cursor:pointer;background-color:rgba(255,212,71,.3);animation:zonePulse 2s infinite alternate}
-@keyframes zonePulse{from{background-color:rgba(255,212,71,.2)}to{background-color:rgba(255,212,71,.42)}}
-.cell.selected{background:linear-gradient(145deg,#4ade80,#22c55e 60%,#15803d)!important;box-shadow:inset 0 0 12px rgba(255,255,255,.7),0 0 15px rgba(74,222,128,.8)!important}
-.piece{position:relative;z-index:2;pointer-events:none;margin-bottom:8px;filter:drop-shadow(0 4px 5px rgba(0,0,0,.8))}
-.top-cost-badge{position:absolute;top:-4px;left:50%;transform:translateX(-50%);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1.5px solid #fff;z-index:10;background:radial-gradient(circle at 34% 26%,#ff7c7c 0%,#ef2b2b 42%,#c00d0d 72%,#7d0202 100%);box-shadow:0 2px 4px rgba(0,0,0,.6),inset 0 1px 2px rgba(255,255,255,.45)}
-.bottom-hp-bar{position:absolute;bottom:12px;left:5%;width:90%;height:11px;border-radius:4px;display:flex;justify-content:center;align-items:center;z-index:10;border:1px solid #000;background:linear-gradient(180deg,#34c759,#34c75999)}
+.board.edit-mode .cell.setup-zone{cursor:pointer;background-color:rgba(255,212,71,.32)}
+.cell.selected{background:linear-gradient(145deg,#4ade80,#22c55e 60%,#15803d)!important}
+.piece{position:relative;z-index:2;pointer-events:none;margin-bottom:8px}
+.top-cost-badge{position:absolute;top:-4px;left:50%;transform:translateX(-50%);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1.5px solid #fff;z-index:10;background:#c00d0d}
+.bottom-hp-bar{position:absolute;bottom:12px;left:5%;width:90%;height:11px;border-radius:4px;display:flex;justify-content:center;align-items:center;z-index:10;border:1px solid #000;background:#34c759}
 .lvl-num{font-size:9px;font-weight:900;color:#000;line-height:11px}
-.hp-text-below{position:absolute;bottom:1px;left:0;width:100%;text-align:center;font-size:8px;font-weight:bold;color:#fff;z-index:10;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000}
+.hp-text-below{position:absolute;bottom:1px;left:0;width:100%;text-align:center;font-size:8px;font-weight:bold;color:#fff;z-index:10}
 .army-counts{width:100%;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;padding:0 8px}
 .army-chip{border-radius:8px;padding:3px 8px;font-size:11px;font-weight:800;background:rgba(2,6,23,.6);border:2px solid #4a72c0;color:#c6d8ff}
 .army-chip.ok{border-color:#43e97b;color:#8cf0b0}
 .army-chip.bad{border-color:#f4665e;color:#ffc4c4}
-.btn-action{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer}
-.btn-edit{background:linear-gradient(180deg,#5ea8ff,#1e63c8);color:#fff}
-.btn-save{background:linear-gradient(180deg,#5ef08a,#1f9e42);color:#fff}
-.btn-cancel{background:linear-gradient(180deg,#8fa8cc,#33486b);color:#fff}
-.btn-reset{background:linear-gradient(180deg,#f0a35a,#a2560f);color:#fff}
+.btn-action{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;border:0;color:#fff}
+.btn-edit{background:linear-gradient(180deg,#5ea8ff,#1e63c8)}
+.btn-save{background:linear-gradient(180deg,#5ef08a,#1f9e42)}
+.btn-cancel{background:linear-gradient(180deg,#8fa8cc,#33486b)}
+.btn-reset{background:linear-gradient(180deg,#f0a35a,#a2560f)}
 .setup-buttons{width:100%;display:flex;flex-direction:column;gap:8px;padding:0 10px}
 .setup-buttons-row{display:flex;gap:8px;width:100%}
 .setup-buttons-row .btn-action{flex:1}
-.lock-badge{display:inline-block;background:linear-gradient(180deg,#475569,#1e293b);color:#ffd447;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;margin-left:6px}
+.lock-badge{display:inline-block;background:#1e293b;color:#ffd447;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;margin-left:6px}
 
-/* ===== МОДАЛКА КАРТЫ ===== */
 #cardModal{position:fixed;inset:0;z-index:9500;display:none;align-items:flex-end;justify-content:center}
 #cardModal.open{display:flex}
-.cm-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.86);backdrop-filter:blur(3px)}
-.cm-sheet{position:relative;width:100%;max-width:420px;max-height:92vh;overflow-y:auto;background:linear-gradient(180deg,#16233d,#0a1020);border:2px solid #2f4a78;border-bottom:0;border-radius:20px 20px 0 0;padding:14px 14px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(0,0,0,.85);animation:cmUp .25s ease-out}
-@keyframes cmUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.cm-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.86)}
+.cm-sheet{position:relative;width:100%;max-width:420px;max-height:92vh;overflow-y:auto;background:linear-gradient(180deg,#16233d,#0a1020);border:2px solid #2f4a78;border-bottom:0;border-radius:20px 20px 0 0;padding:14px 14px calc(16px + env(safe-area-inset-bottom))}
 .cm-close{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:2px solid #475569;background:rgba(2,6,23,.7);color:#cbd5e1;font-size:15px;font-weight:900;cursor:pointer;z-index:3}
 .cm-head{display:flex;align-items:center;gap:12px;padding-right:40px;margin-bottom:10px}
-.cm-badge{width:44px;height:44px;flex-shrink:0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;background:linear-gradient(180deg,#22c55e,#15803d);border:2px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 2px 3px rgba(255,255,255,.45)}
+.cm-badge{width:44px;height:44px;flex-shrink:0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;background:linear-gradient(180deg,#22c55e,#15803d);border:2px solid #fff}
 .cm-name{font-size:17px;font-weight:900;line-height:1.1}
 .cm-rar{font-size:11px;font-weight:800;color:#9fb6c4;margin-top:2px}
-.cm-stage{position:relative;width:100%;aspect-ratio:5/3;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,#0d1a2e,#060d18);border:2px solid #24446b;box-shadow:inset 0 0 30px rgba(0,0,0,.8)}
+.cm-stage{position:relative;width:100%;aspect-ratio:5/3;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,#0d1a2e,#060d18);border:2px solid #24446b}
 .cm-grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(3,1fr)}
 .cm-grid i{border:1px solid rgba(90,140,200,.13)}
 .cm-grid i.d{background:rgba(90,140,200,.075)}
 .cm-stage.flash::before{content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,.6),transparent 72%);z-index:4;animation:cmFlash .32s ease-out;pointer-events:none}
 @keyframes cmFlash{from{opacity:1}to{opacity:0}}
-.cm-zone{position:absolute;z-index:1;pointer-events:none;animation:cmZoneIn .3s ease-out}
-@keyframes cmZoneIn{from{opacity:0}to{opacity:1}}
+.cm-zone{position:absolute;z-index:1;pointer-events:none}
 .cm-zone.block{background:repeating-linear-gradient(45deg,rgba(148,163,184,.55) 0 6px,rgba(51,65,85,.75) 6px 12px);border:1px solid #94a3b8}
-.cm-zone.home{background:rgba(94,224,255,.18);border:1px dashed #5ee0ff;animation:cmHome 1s infinite alternate}
-@keyframes cmHome{from{background:rgba(94,224,255,.10)}to{background:rgba(94,224,255,.28)}}
+.cm-zone.home{background:rgba(94,224,255,.2);border:1px dashed #5ee0ff}
 .cm-zone.tgt{border:2px dashed #5ee0ff;box-shadow:inset 0 0 12px rgba(94,224,255,.5)}
 .cm-zone.boom{background:radial-gradient(circle,rgba(255,200,80,.95),rgba(239,68,68,.55) 55%,rgba(239,68,68,0) 75%);animation:cmBoom .6s ease-out forwards}
-@keyframes cmBoom{0%{opacity:0;transform:scale(.6)}30%{opacity:1;transform:scale(1.05)}100%{opacity:0;transform:scale(1)}}
-.cm-piece{position:absolute;z-index:3;transform:translate(-50%,-50%);font-size:clamp(20px,7.5vw,30px);line-height:1;transition:left .42s cubic-bezier(.3,1.2,.6,1),top .42s cubic-bezier(.3,1.2,.6,1),opacity .4s;will-change:left,top}
+@keyframes cmBoom{0%{opacity:0;transform:scale(.6)}30%{opacity:1}100%{opacity:0;transform:scale(1)}}
+.cm-piece{position:absolute;z-index:3;transform:translate(-50%,-50%);font-size:clamp(20px,7.5vw,30px);line-height:1;transition:left .42s,top .42s,opacity .4s}
 .cm-piece.mine{color:#7cc4ff;text-shadow:0 0 10px rgba(90,169,236,.9),0 2px 4px #000}
 .cm-piece.foe{color:#ff8b8b;text-shadow:0 0 10px rgba(239,83,80,.9),0 2px 4px #000}
 .cm-piece.gone{opacity:0}
 .cm-piece.charged{animation:cmCharge .45s infinite alternate}
 @keyframes cmCharge{from{filter:brightness(1)}to{filter:brightness(1.9)}}
-.cm-piece.shielded::after{content:'🛡️';position:absolute;right:-9px;top:-11px;font-size:13px;text-shadow:none}
-.cm-piece.frozen::before{content:'❄️';position:absolute;left:-10px;top:-10px;font-size:13px;text-shadow:none}
-.cm-piece.hit{animation:cmHit .35s ease-out}
-@keyframes cmHit{0%{transform:translate(-50%,-50%) scale(1)}35%{transform:translate(-50%,-50%) scale(1.45)}100%{transform:translate(-50%,-50%) scale(1)}}
+.cm-piece.shielded::after{content:'🛡️';position:absolute;right:-9px;top:-11px;font-size:13px}
+.cm-piece.frozen::before{content:'❄️';position:absolute;left:-10px;top:-10px;font-size:13px}
 .cm-piece.shake{animation:cmShake .4s ease-in-out}
 @keyframes cmShake{0%,100%{transform:translate(-50%,-50%)}25%{transform:translate(calc(-50% - 4px),-50%)}75%{transform:translate(calc(-50% + 4px),-50%)}}
 .cm-piece.appear{animation:cmAppear .45s ease-out}
 @keyframes cmAppear{from{transform:translate(-50%,-50%) scale(0);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
-.cm-float{position:absolute;z-index:6;transform:translate(-50%,-50%);font-size:12px;font-weight:900;color:#ffd447;text-shadow:0 1px 4px #000,0 0 10px rgba(255,212,71,.6);animation:cmFloat 1.5s ease-out forwards;pointer-events:none;white-space:nowrap}
-.cm-float.good{color:#43e97b;text-shadow:0 1px 4px #000,0 0 10px rgba(67,233,123,.7)}
+.cm-float{position:absolute;z-index:6;transform:translate(-50%,-50%);font-size:12px;font-weight:900;color:#ffd447;text-shadow:0 1px 4px #000;animation:cmFloat 1.5s ease-out forwards;pointer-events:none;white-space:nowrap}
+.cm-float.good{color:#43e97b}
 @keyframes cmFloat{0%{opacity:0;transform:translate(-50%,-40%) scale(.6)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-190%) scale(1.1)}}
-.cm-cap{width:100%;text-align:center;font-size:12px;font-weight:900;color:#5ee0ff;margin:10px 0 8px;min-height:16px;line-height:1.3}
+.cm-cap{width:100%;text-align:center;font-size:12px;font-weight:900;color:#5ee0ff;margin:10px 0 8px;min-height:16px}
 .cm-desc{font-size:12.5px;line-height:1.5;color:#dbe9ff;margin-bottom:10px}
-.cm-tips{margin:0 0 12px;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.cm-tips{margin:0 0 10px;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
 .cm-tips li{font-size:11.5px;line-height:1.4;color:#9fb6c4;padding-left:16px;position:relative}
 .cm-tips li::before{content:'▸';position:absolute;left:2px;color:#5ee0ff;font-weight:900}
+.cm-lv{font-size:11.5px;color:#dbe9ff;background:rgba(2,6,23,.6);border:1px solid #2f4a78;border-radius:10px;padding:8px 10px;margin-bottom:10px;line-height:1.45}
+.cm-up{width:100%;padding:12px;border:0;border-radius:12px;font-size:14px;font-weight:900;color:#3b1f00;background:linear-gradient(180deg,#ffe082,#ffb300);box-shadow:0 5px 0 #b45309;cursor:pointer;margin-bottom:10px}
+.cm-up:disabled{opacity:.45;box-shadow:none;background:#475569;color:#e2e8f0}
 .cm-add{width:100%;padding:14px;border:0;border-radius:12px;font-size:15px;font-weight:900;color:#06301a;background:linear-gradient(180deg,#5ef08a,#1f9e42);cursor:pointer;box-shadow:0 5px 0 #0e6b2c}
-.cm-add:active{transform:translateY(3px);box-shadow:0 2px 0 #0e6b2c}
 .cm-add.remove{background:linear-gradient(180deg,#ff8a8a,#b91c1c);color:#fff;box-shadow:0 5px 0 #7f1d1d}
 .cm-add.full{background:linear-gradient(180deg,#94a3b8,#475569);color:#fff;box-shadow:0 5px 0 #334155}
 
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120px);background:linear-gradient(135deg,#22437f,#122a5e);color:#fff;padding:14px 22px;border-radius:12px;font-weight:800;z-index:9999;border:3px solid #34c759;transition:transform .4s cubic-bezier(.4,0,.2,1);font-size:14px;text-align:center;max-width:80vw}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120px);background:linear-gradient(135deg,#22437f,#122a5e);color:#fff;padding:14px 22px;border-radius:12px;font-weight:800;z-index:9999;border:3px solid #34c759;transition:transform .4s;font-size:14px;text-align:center;max-width:80vw}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .nav{position:fixed;bottom:0;left:0;width:100%;height:68px;display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom)}
-.nb{background:transparent;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px}
+.nb{background:transparent;border:none;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px}
 .nb i{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-style:normal}
 .sp{width:24px;height:28px;position:relative}
 .sp b{position:absolute;width:16px;height:22px;border-radius:3px;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff}
@@ -166,49 +169,58 @@ body.dragging{cursor:grabbing}
 <body>
 
 <div class="top-bar">
-<div class="currency-row">
-<div class="currency">🪙 <span id="deck-coins">1250</span></div>
-<div class="currency">💎 <span id="deck-gems">50</span></div>
-<div class="deck-ver">v11</div>
-</div>
-<div class="sub-tabs">
-<button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
-<button class="sub-tab-btn" id="sub-tab-setup-btn" onclick="switchSubTab('setup')">⚙️ Расстановка</button>
-</div>
+  <div class="currency-row">
+    <div class="currency">🪙 <span id="deck-coins">1250</span></div>
+    <div class="currency">💎 <span id="deck-gems">50</span></div>
+    <div class="currency unit-chip">🔹 <span id="deck-units">0</span></div>
+    <div class="deck-ver">v12</div>
+  </div>
+  <div class="sub-tabs">
+    <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
+    <button class="sub-tab-btn" id="sub-tab-pieces-btn" onclick="switchSubTab('pieces')">♟ Фигуры</button>
+    <button class="sub-tab-btn" id="sub-tab-setup-btn" onclick="switchSubTab('setup')">⚙️ Расстановка</button>
+  </div>
 </div>
 
 <div id="screen-cards" class="screen active">
-<div class="deck-area">
-<div class="rule-banner">Карты <b>бесплатны</b>. В колоде 4 карты — каждые <b>30 сек</b> в руку выпадает одна из них. Используешь или пропускаешь — таймер запускается заново.</div>
-<div class="pager-note" id="pagerNote">Колоды 1–5 из 10</div>
-<div class="slot-bar">
-<button class="slot-nav" id="pPrev" onclick="pagePrev()">‹</button>
-<div class="slot-list" id="slotList"></div>
-<button class="slot-nav" id="pNext" onclick="pageNext()">›</button>
+  <div class="deck-area">
+    <div class="rule-banner">Карты <b>бесплатны</b>. В колоде 4 карты — каждые <b>30 сек</b> в руку выпадает одна из них. Используешь или пропускаешь — таймер запускается заново.</div>
+    <div class="pager-note" id="pagerNote"></div>
+    <div class="slot-bar">
+      <button class="slot-nav" id="pPrev" onclick="pagePrev()">‹</button>
+      <div class="slot-list" id="slotList"></div>
+      <button class="slot-nav" id="pNext" onclick="pageNext()">›</button>
+    </div>
+    <div class="deck-note" id="deck-note"></div>
+    <div class="deck-picked" id="deck-picked"></div>
+    <div class="balance-line" id="balanceLine"></div>
+    <div class="deck-grid" id="deck-grid"></div>
+  </div>
 </div>
-<div class="deck-note" id="deck-note">Выбери 4 карты</div>
-<div class="deck-picked" id="deck-picked"></div>
-<div class="balance-line" id="balanceLine"></div>
-<div class="deck-grid" id="deck-grid"></div>
-</div>
+
+<div id="screen-pieces" class="screen">
+  <div class="deck-area">
+    <div class="rule-banner">Шахматные фигуры <b>не входят</b> в колоду из 4 карт. Здесь они прокачиваются отдельно: уровень фигуры — это её <b>HP</b>. Ур.2 переживает один удар, ур.3 — два.</div>
+    <div class="units-note">🔹 Единицы: <b id="pieces-units">0</b> · 3% шанс за победу в бою с игроком</div>
+    <div class="piece-list" id="piece-list"></div>
+    <div class="lock-note">Короля не прокачиваем: его HP определяет мат, и это решает исход партии.</div>
+  </div>
 </div>
 
 <div id="screen-setup" class="screen">
-<div class="setup-area">
-<p class="setup-hint" id="setup-hint">Твоя расстановка</p>
-<div class="army-counts" id="army-counts"></div>
-<div class="board-container">
-<div class="board view-mode" id="setup-board"></div>
-</div>
-<div class="setup-buttons">
-<button id="btn-edit" class="btn-action btn-edit" onclick="enterEditMode()">✏️ Редактировать расстановку</button>
-<div id="edit-controls" class="setup-buttons-row" style="display:none">
-<button id="btn-reset" class="btn-action btn-reset" onclick="resetSetup()">↺ Сброс</button>
-<button id="btn-cancel" class="btn-action btn-cancel" onclick="cancelEdit()">✖ Отмена</button>
-<button id="btn-save" class="btn-action btn-save" onclick="saveSetup()">💾 Сохранить</button>
-</div>
-</div>
-</div>
+  <div class="setup-area">
+    <p class="setup-hint" id="setup-hint">Твоя расстановка</p>
+    <div class="army-counts" id="army-counts"></div>
+    <div class="board-container"><div class="board view-mode" id="setup-board"></div></div>
+    <div class="setup-buttons">
+      <button id="btn-edit" class="btn-action btn-edit" onclick="enterEditMode()">✏️ Редактировать расстановку</button>
+      <div id="edit-controls" class="setup-buttons-row" style="display:none">
+        <button class="btn-action btn-reset" onclick="resetSetup()">↺ Сброс</button>
+        <button class="btn-action btn-cancel" onclick="cancelEdit()">✖ Отмена</button>
+        <button class="btn-action btn-save" onclick="saveSetup()">💾 Сохранить</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="cardModal">
@@ -219,51 +231,51 @@ body.dragging{cursor:grabbing}
       <div class="cm-badge" id="cmBadge">⚡</div>
       <div>
         <div class="cm-name" id="cmName">Карта</div>
-        <div class="cm-rar" id="cmRar">Обычная</div>
+        <div class="cm-rar" id="cmRar"></div>
       </div>
     </div>
     <div class="cm-stage" id="cmStage"></div>
     <div class="cm-cap" id="cmCaption"></div>
     <div class="cm-desc" id="cmDesc"></div>
     <ul class="cm-tips" id="cmTips"></ul>
+    <div class="cm-lv" id="cmLv"></div>
+    <button class="cm-up" id="cmUp" onclick="modalUpTap()">Прокачать</button>
     <button class="cm-add" id="cmAdd" onclick="modalAddTap()">Добавить в колоду</button>
   </div>
 </div>
 
 <div class="nav">
-<button class="nb" onclick="location.href='chess-shop.html'"><i>🎁</i><span>Магазин</span></button>
-<button class="nb on" onclick="location.href='chess-deck.html'"><i><span class="sp"><b></b><b></b><b>♠</b></span></i><span>Колода</span></button>
-<button class="nb" onclick="location.href='chess-arena.html'"><i>⚔️</i><span>Бой</span></button>
-<button class="nb" onclick="location.href='chess-social.html'"><i>🛡️</i><span>Клан</span></button>
-<button class="nb" onclick="location.href='leaderboard.html'"><i>🏆</i><span>Рейтинг</span></button>
+  <button class="nb" onclick="location.href='chess-shop.html'"><i>🎁</i><span>Магазин</span></button>
+  <button class="nb on" onclick="location.href='chess-deck.html'"><i><span class="sp"><b></b><b></b><b>♠</b></span></i><span>Колода</span></button>
+  <button class="nb" onclick="location.href='chess-arena.html'"><i>⚔️</i><span>Бой</span></button>
+  <button class="nb" onclick="location.href='chess-social.html'"><i>🛡️</i><span>Клан</span></button>
+  <button class="nb" onclick="location.href='leaderboard.html'"><i>🏆</i><span>Рейтинг</span></button>
 </div>
 
 <script>
-let coins=parseInt(localStorage.getItem('cr_coins')||'1250');
-let gems=parseInt(localStorage.getItem('cr_gems')||'50');
-document.getElementById('deck-coins').innerText=coins;
-document.getElementById('deck-gems').innerText=gems;
+document.getElementById('deck-coins').textContent=parseInt(localStorage.getItem('cr_coins')||'1250',10);
+document.getElementById('deck-gems').textContent=parseInt(localStorage.getItem('cr_gems')||'50',10);
 
 function switchSubTab(tab){
-document.getElementById('screen-cards').classList.remove('active');
-document.getElementById('screen-setup').classList.remove('active');
-document.getElementById('sub-tab-cards-btn').classList.remove('active');
-document.getElementById('sub-tab-setup-btn').classList.remove('active');
-if(tab==='cards'){document.getElementById('screen-cards').classList.add('active');document.getElementById('sub-tab-cards-btn').classList.add('active');}
-else{document.getElementById('screen-setup').classList.add('active');document.getElementById('sub-tab-setup-btn').classList.add('active');renderSetupBoard();}
+  ['cards','pieces','setup'].forEach(function(k){
+    document.getElementById('screen-'+k).classList.toggle('active',k===tab);
+    document.getElementById('sub-tab-'+k+'-btn').classList.toggle('active',k===tab);
+  });
+  if(tab==='setup') renderSetupBoard();
+  if(tab==='pieces') renderPieces();
 }
 
-/* фигуры — только для расстановки */
+/* ================= КОНСТАНТЫ ================= */
+
 const PIECES={
-'p':{name:'Пешка',icon:'♟',cost:1},
-'n':{name:'Конь',icon:'♞',cost:3},
-'b':{name:'Слон',icon:'♝',cost:3},
-'r':{name:'Ладья',icon:'♜',cost:4},
-'k':{name:'Король',icon:'♚',cost:5},
-'q':{name:'Ферзь',icon:'♛',cost:6}
+  p:{name:'Пешка',icon:'♟',cost:1},
+  n:{name:'Конь',icon:'♞',cost:3},
+  b:{name:'Слон',icon:'♝',cost:3},
+  r:{name:'Ладья',icon:'♜',cost:4},
+  k:{name:'Король',icon:'♚',cost:5},
+  q:{name:'Ферзь',icon:'♛',cost:6}
 };
 
-/* карты */
 const SPELL_TYPES=['f','s','c','u','g','x','z','l','b','e'];
 const HAND_SIZE=4;
 const SLOT_COUNT=10;
@@ -272,51 +284,133 @@ const DECKS_KEY='chessDecks';
 const ACTIVE_KEY='chessDeckActive';
 const DEFAULT_DECK=['f','s','c','u'];
 
+const CARD_LV_KEY='chessCardLv';
+const PIECE_LV_KEY='chessPieceLv';
+const UNITS_KEY='chessUnits';
+const LV_COST={2:100,3:200};
+const LV_MAX=3;
+
+const UPGRADABLE_PIECES=[
+  {t:'pawn',  ru:'Пешка', icon:'♟', note:'Дешёвая фигура. Ур.2–3 держит удар дольше.'},
+  {t:'knight',ru:'Конь',  icon:'♞', note:'Прыгает через фигуры. С HP её трудно снять одним ударом.'},
+  {t:'bishop',ru:'Слон',  icon:'♝', note:'Длинные диагонали. Толстый слон — трудная цель.'},
+  {t:'rook',  ru:'Ладья', icon:'♜', note:'Линии и атака. Ладья с 3 HP — опора эндшпиля.'},
+  {t:'queen', ru:'Ферзь', icon:'♛', note:'Сильнейшая фигура. Ур.3 — три удара, чтобы её снять.'}
+];
+
 const RARITY_NAME={common:'Обычная',rare:'Редкая',epic:'Эпическая'};
 
 const DECK_CARDS=[
-{name:'Ярость',      icon:'⚡',  rarity:'rare',  type:'f', role:'темп'},
-{name:'Щит',         icon:'🛡️', rarity:'common',type:'s', role:'защита'},
-{name:'Рокировка',   icon:'🔄',  rarity:'epic',  type:'c', role:'побег'},
-{name:'Превращение', icon:'👑',  rarity:'epic',  type:'u', role:'финишер'},
-{name:'Подкрепление',icon:'➕',  rarity:'common',type:'g', role:'подмога'},
-{name:'Чистка',      icon:'🗡️', rarity:'rare',  type:'x', role:'атака'},
-{name:'Заморозка',   icon:'❄️',  rarity:'rare',  type:'z', role:'контроль'},
-{name:'Перевербовка',icon:'🤝',  rarity:'epic',  type:'l', role:'захват'},
-{name:'Блокада',     icon:'🧱',  rarity:'common',type:'b', role:'щит клетки'},
-{name:'Взрыв',       icon:'💣',  rarity:'epic',  type:'e', role:'разрыв'}
+  {name:'Ярость',       icon:'⚡',  rarity:'rare',  type:'f', role:'темп'},
+  {name:'Щит',          icon:'🛡️', rarity:'common',type:'s', role:'защита'},
+  {name:'Рокировка',    icon:'🔄',  rarity:'epic',  type:'c', role:'побег'},
+  {name:'Превращение',  icon:'👑',  rarity:'epic',  type:'u', role:'финишер'},
+  {name:'Подкрепление', icon:'➕',  rarity:'common',type:'g', role:'подмога'},
+  {name:'Чистка',       icon:'🗡️', rarity:'rare',  type:'x', role:'атака'},
+  {name:'Заморозка',    icon:'❄️',  rarity:'rare',  type:'z', role:'контроль'},
+  {name:'Перевербовка', icon:'🤝',  rarity:'epic',  type:'l', role:'захват'},
+  {name:'Блокада',      icon:'🧱',  rarity:'common',type:'b', role:'щит клетки'},
+  {name:'Взрыв',        icon:'💣',  rarity:'epic',  type:'e', role:'разрыв'}
 ];
 
-const ROLE_OF={
-  attack:['x','z','l','e'],
-  defense:['s','b'],
-  tempo:['f','g','u'],
-  escape:['c']
-};
+const ROLE_OF={attack:['x','z','l','e'],defense:['s','b'],tempo:['f','g','u'],escape:['c']};
 const ROLE_TITLE={attack:'атака',defense:'оборона',tempo:'темп',escape:'побег'};
 
-const CARD_INFO={
-f:{desc:'Фигура, на которую легла Ярость, ходит в следующий раз бесплатно. Эликсир тратится только на обычные ходы, поэтому ферзь, сходивший по Ярости, не стоит ничего.',
-   tips:['Бей ферзём или ладьёй — там экономия максимальна','Работает на один ход, потом сгорает','Ставь перед решающим ходом, а не заранее']},
-s:{desc:'Фигура переживает одно взятие. Соперник бьёт, тратит свой ход, а фигура остаётся на месте. Щит снимается после первого удара.',
-   tips:['Накрывай ферзя или ладью, а не пешку','Ломает атаку, которая стоила сопернику ход','Второй удар уже снимет фигуру']},
-c:{desc:'Король и ладья меняются местами за один тап. Побег из-под удара без потери эликсира.',
-   tips:['Работает один раз за партию','Не сработает, если король под шахом','Не сработает, если новое место под ударом']},
-u:{desc:'Своя пешка сразу становится ферзём, где бы она ни стояла. Дорого по смыслу: это почти бесплатный ферзь там, где он нужен.',
-   tips:['Лучше всего на шестом ряду — ферзь сразу бьёт','Жди, когда у соперника останется мало защитников','Работает только на своей пешке']},
-g:{desc:'В пустую клетку твоих двух последних рядов появляется пешка. Помогает закрыть дыру или поддержать атаку.',
-   tips:['Ставь туда, где враг собирается пройти','Пешка появляется без хода — можно сразу ходить','Клетка должна быть пустой']},
-x:{desc:'Вражеская пешка убирается с доски. Простой выбор, когда пешка мешает или угрожает превращением.',
-   tips:['Лучше всего против пешки, которая готовится пройти','Не работает на короля и на фигуры','Срочный ответ на угрозу превращения']},
-z:{desc:'Вражеская фигура не может ходить 10 секунд. Фигура остаётся на клетке и продолжает защищать или атаковать сверху.',
-   tips:['Лучшая цель — ферзь или ладья соперника','Не работает на короля','Заморозь атакующую фигуру перед её ходом']},
-l:{desc:'Вражеская пешка переходит на твою сторону. Она сохраняет клетку и становится твоей.',
-   tips:['Работает только на пешку','Не на последней линии соперника','Перевербованная пешка уже ходит твоим ходом']},
-b:{desc:'Пустая клетка закрыта на 12 секунд: в неё никто не может войти. Хорошо перекрывает путь к королю или фланг.',
-   tips:['Ставь на клетку, которую враг хочет занять','Не закрывает клетку, которая уже занята','Блокада не мешает тебе стоять на клетке']},
-e:{desc:'Взрыв на клетке и её соседях. Уничтожает вражеские пешки, кони и слоны. Ладьи, ферзь и король не страдают.',
-   tips:['Бей туда, где собрано 2 и больше лёгких фигур','Щит на пешке или коне спасает её от взрыва','Ферзь и ладья взрыв не трогает']}
+const LV_TEXT={
+  f:'Ходов без эликсира подряд: 1 / 2 / 3',
+  s:'Ударов, которые щит выдерживает: 1 / 2 / 3',
+  c:'Раз за партию: 1 / 2 / 3',
+  u:'Ферзь / ферзь со щитом 1 / ферзь со щитом 2',
+  g:'Прочность новой пешки: 1 / 2 / 3 HP',
+  x:'Можно убрать: пешку / + коня и слона / + ладью и ферзя',
+  z:'Длительность: 10 / 15 / 20 сек',
+  l:'Можно перевербовать: пешку / + коня и слона / + ладью и ферзя',
+  b:'Длительность: 12 / 18 / 24 сек',
+  e:'Взрыв бьёт: пешки, кони, слоны / + ладьи / + ферзя'
 };
+
+const CARD_INFO={
+  f:{desc:'Фигура, на которую легла Ярость, ходит бесплатно. Ферзь по Яростью не стоит ничего.',
+     tips:['Бей ферзём или ладьёй — там экономия максимальна','С уровнем — несколько бесплатных ходов подряд','Ставь перед решающим ходом']},
+  s:{desc:'Фигура переживает удары. Соперник бьёт, тратит ход, а фигура остаётся на месте.',
+     tips:['Накрывай ферзя или ладью, а не пешку','Ломает атаку, которая стоила сопернику хода','Со 2–3 уровнем держит длинную осаду']},
+  c:{desc:'Король и ладья меняются местами за один тап. Побег из-под удара без потери эликсира.',
+     tips:['Количество раз за партию зависит от уровня','Не сработает под шахом','Не сработает, если новое место под ударом']},
+  u:{desc:'Своя пешка сразу становится ферзём, где бы она ни стояла. Со 2 уровня ферзь получает щит.',
+     tips:['Лучше всего на шестом ряду','Работает только на своей пешке','Жди, когда у соперника мало защитников']},
+  g:{desc:'В пустую клетку твоих двух последних рядов появляется пешка. С уровнем её HP растёт.',
+     tips:['Ставь туда, где враг собирается пройти','Пешка ходит сразу','Клетка должна быть пустой']},
+  x:{desc:'Вражеская фигура убирается с доски. С уровнем список целей растёт.',
+     tips:['Против пешки, которая готовится пройти','Короля не трогает','Ответ на угрозу превращения']},
+  z:{desc:'Вражеская фигура не ходит, пока действует заморозка. Она продолжает закрывать поля.',
+     tips:['Лучшая цель — ферзь или ладья соперника','Не работает на короля','Заморозь атакующую фигуру перед ходом']},
+  l:{desc:'Вражеская фигура переходит на твою сторону. С уровнем список целей растёт.',
+     tips:['На пешке работает всегда','Не на последней линии соперника','Сразу ходит твоим ходом']},
+  b:{desc:'Пустая клетка закрыта на время: в неё никто не может войти.',
+     tips:['Ставь на клетку, которую враг хочет занять','Не закрывает занятую клетку','Тебе тоже туда нельзя']},
+  e:{desc:'Взрыв на клетке и её соседях. С уровнем бьёт всё более тяжёлые фигуры. Король не страдает.',
+     tips:['Бей туда, где собрано 2 и больше лёгких фигур','Щит спасает фигуру от взрыва','На 3 уровне взрыв добивает ферзя']}
+};
+
+/* ================= ХРАНИЛИЩЕ ================= */
+
+function readObj(key){
+  try{
+    const o=JSON.parse(localStorage.getItem(key)||'{}');
+    return (o&&typeof o==='object')?o:{};
+  }catch(e){ return {}; }
+}
+function writeObj(key,o){
+  try{ localStorage.setItem(key,JSON.stringify(o)); }catch(e){}
+}
+function clampLv(v){
+  const n=parseInt(v,10);
+  if(!(n>=1)) return 1;
+  return n>LV_MAX?LV_MAX:n;
+}
+function lvOfCard(t){ return clampLv(readObj(CARD_LV_KEY)[t]); }
+function lvOfPiece(t){ return clampLv(readObj(PIECE_LV_KEY)[t]); }
+
+function getUnits(){
+  const n=parseInt(localStorage.getItem(UNITS_KEY)||'0',10);
+  return (isFinite(n)&&n>0)?n:0;
+}
+function setUnits(n){
+  try{ localStorage.setItem(UNITS_KEY,String(n)); }catch(e){}
+}
+function updateUnitsUI(){
+  const u=getUnits();
+  document.getElementById('deck-units').textContent=u;
+  document.getElementById('pieces-units').textContent=u;
+}
+
+function pipsHtml(n){
+  let out='';
+  for(let i=1;i<=LV_MAX;i++) out+='<span class="pip'+(i<=n?' on':'')+'"></span>';
+  return out;
+}
+
+/* Общая покупка уровня для карт и фигур */
+function buyLevel(storeKey,id,label){
+  const cur=clampLv(readObj(storeKey)[id]);
+  if(cur>=LV_MAX){ showToast('Уже максимальный уровень','#ffd447'); return false; }
+  const cost=LV_COST[cur+1];
+  const units=getUnits();
+  if(units<cost){
+    showToast('Нужно '+cost+' 🔹, у тебя '+units,'#f4665e');
+    return false;
+  }
+  if(!confirm(label+': уровень '+cur+' → '+(cur+1)+' за '+cost+' 🔹 ?')) return false;
+  const o=readObj(storeKey);
+  o[id]=cur+1;
+  writeObj(storeKey,o);
+  setUnits(units-cost);
+  updateUnitsUI();
+  showToast('⬆ '+label+' теперь ур. '+(cur+1),'#43e97b');
+  return true;
+}
+
+/* ================= КОЛОДЫ ================= */
 
 let decks=[];
 let activeSlot=0;
@@ -331,7 +425,6 @@ function sanitize(list){
   }
   return out;
 }
-
 function loadDecks(){
   let arr=null;
   try{
@@ -339,24 +432,18 @@ function loadDecks(){
     if(Array.isArray(raw)) arr=raw;
   }catch(e){}
   const out=[];
-  for(let i=0;i<SLOT_COUNT;i++){ out.push((arr&&Array.isArray(arr[i]))?sanitize(arr[i]):[]); }
-  let any=false;
-  for(let i=0;i<out.length;i++){ if(out[i].length) any=true; }
-  if(!any) out[0]=DEFAULT_DECK.slice();
+  for(let i=0;i<SLOT_COUNT;i++) out.push((arr&&Array.isArray(arr[i]))?sanitize(arr[i]):[]);
+  if(!out.some(function(d){ return d.length; })) out[0]=DEFAULT_DECK.slice();
   return out;
 }
-
 function loadActive(){
   const v=parseInt(localStorage.getItem(ACTIVE_KEY)||'0',10);
-  if(!isFinite(v)||v<0||v>=SLOT_COUNT) return 0;
-  return v;
+  return (isFinite(v)&&v>=0&&v<SLOT_COUNT)?v:0;
 }
-
 function saveDecks(){
-  try{ localStorage.setItem(DECKS_KEY, JSON.stringify(decks)); }catch(e){}
-  try{ localStorage.setItem(ACTIVE_KEY, String(activeSlot)); }catch(e){}
+  try{ localStorage.setItem(DECKS_KEY,JSON.stringify(decks)); }catch(e){}
+  try{ localStorage.setItem(ACTIVE_KEY,String(activeSlot)); }catch(e){}
 }
-
 function currentDeck(){ return decks[activeSlot]||[]; }
 
 function renderSlots(){
@@ -368,81 +455,55 @@ function renderSlots(){
     const b=document.createElement('button');
     b.className='slot-btn';
     if(i===activeSlot) b.classList.add('on');
-    if(!d.length){ b.classList.add('empty'); }
-    else if(d.length>=HAND_SIZE){ b.classList.add('full'); }
-    else { b.classList.add('part'); }
+    if(d.length && d.length<HAND_SIZE) b.classList.add('part');
     b.innerHTML='<span>'+(i+1)+'</span>'+(d.length?'<i class="slot-dot"></i>':'');
     (function(idx){ b.onclick=function(){ selectSlot(idx); }; })(i);
     list.appendChild(b);
   }
   document.getElementById('pPrev').disabled=(page<=0);
   document.getElementById('pNext').disabled=(page>=Math.ceil(SLOT_COUNT/PER_PAGE)-1);
-  document.getElementById('pagerNote').textContent='Колоды ' + (start+1) + '–' + Math.min(start+PER_PAGE,SLOT_COUNT) + ' из ' + SLOT_COUNT;
+  document.getElementById('pagerNote').textContent='Колоды '+(start+1)+'–'+Math.min(start+PER_PAGE,SLOT_COUNT)+' из '+SLOT_COUNT;
 }
-
 function selectSlot(i){
   if(i<0||i>=SLOT_COUNT) return;
-  activeSlot=i;
-  saveDecks();
-  renderSlots();
-  renderDeck();
+  activeSlot=i; saveDecks(); renderSlots(); renderDeck();
 }
-
-function pagePrev(){ if(page<=0) return; page--; renderSlots(); }
-function pageNext(){ if(page>=Math.ceil(SLOT_COUNT/PER_PAGE)-1) return; page++; renderSlots(); }
+function pagePrev(){ if(page>0){ page--; renderSlots(); } }
+function pageNext(){ if(page<Math.ceil(SLOT_COUNT/PER_PAGE)-1){ page++; renderSlots(); } }
 
 (function initSwipe(){
   const el=document.getElementById('slotList');
-  if(!el) return;
-  let x0=null, y0=null;
-  el.addEventListener('touchstart',function(e){
-    if(!e.touches||!e.touches.length) return;
-    x0=e.touches[0].clientX; y0=e.touches[0].clientY;
-  },{passive:true});
+  let x0=null,y0=null;
+  el.addEventListener('touchstart',function(e){ x0=e.touches[0].clientX; y0=e.touches[0].clientY; },{passive:true});
   el.addEventListener('touchend',function(e){
     if(x0===null) return;
-    const t=(e.changedTouches&&e.changedTouches[0])||null;
-    if(!t) return;
+    const t=e.changedTouches[0];
     const dx=t.clientX-x0, dy=t.clientY-y0;
-    if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)){
-      if(dx<0) pageNext(); else pagePrev();
-    }
+    if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)){ if(dx<0) pageNext(); else pagePrev(); }
     x0=null; y0=null;
   },{passive:true});
 })();
 
-/* ================= ДОБАВЛЕНИЕ И УДАЛЕНИЕ ================= */
-
+function cardName(t){
+  for(let i=0;i<DECK_CARDS.length;i++) if(DECK_CARDS[i].type===t) return DECK_CARDS[i].name;
+  return t;
+}
 function addCard(type){
   const d=currentDeck();
   if(d.indexOf(type)>=0){ showToast(cardName(type)+' уже в колоде','#ffd447'); return false; }
   if(d.length>=HAND_SIZE){ showToast('В колоде уже 4 карты — убери одну','#ffb300'); return false; }
-  d.push(type);
-  saveDecks();
-  renderDeck();
-  renderSlots();
+  d.push(type); saveDecks(); renderDeck(); renderSlots();
   return true;
 }
-
 function removeCard(type){
   const d=currentDeck();
   const i=d.indexOf(type);
   if(i<0) return false;
-  d.splice(i,1);
-  saveDecks();
-  renderDeck();
-  renderSlots();
+  d.splice(i,1); saveDecks(); renderDeck(); renderSlots();
   return true;
 }
-
 function toggleCard(type){
-  if(currentDeck().indexOf(type)>=0) removeCard(type);
-  else addCard(type);
-}
-
-function cardName(t){
-  for(let i=0;i<DECK_CARDS.length;i++) if(DECK_CARDS[i].type===t) return DECK_CARDS[i].name;
-  return t;
+  if(currentDeck().indexOf(type)>=0) removeCard(type); else addCard(type);
 }
 
 /* ================= ПЕРЕТАСКИВАНИЕ ================= */
@@ -450,30 +511,19 @@ function cardName(t){
 let dragState=null;
 let suppressClickUntil=0;
 
-function deckRect(){
-  const el=document.getElementById('deck-picked');
-  if(!el) return null;
-  const r=el.getBoundingClientRect();
-  const pad=14;
-  return { left:r.left-pad, right:r.right+pad, top:r.top-pad, bottom:r.bottom+pad };
-}
-
 function isOverDeck(x,y){
-  const r=deckRect();
-  if(!r) return false;
-  return x>=r.left && x<=r.right && y>=r.top && y<=r.bottom;
+  const r=document.getElementById('deck-picked').getBoundingClientRect();
+  const pad=14;
+  return x>=r.left-pad && x<=r.right+pad && y>=r.top-pad && y<=r.bottom+pad;
 }
-
 function cleanupDrag(){
-  if(!dragState){ return; }
+  if(!dragState) return;
   clearTimeout(dragState.timer);
   if(dragState.ghost && dragState.ghost.parentNode) dragState.ghost.parentNode.removeChild(dragState.ghost);
-  const picked=document.getElementById('deck-picked');
-  if(picked) picked.classList.remove('drop-on');
+  document.getElementById('deck-picked').classList.remove('drop-on');
   document.body.classList.remove('dragging');
   dragState=null;
 }
-
 function activateDrag(){
   const d=dragState;
   if(!d||d.active) return;
@@ -488,76 +538,53 @@ function activateDrag(){
   g.style.top=d.y+'px';
   document.body.appendChild(g);
   d.ghost=g;
-  const picked=document.getElementById('deck-picked');
-  if(picked) picked.classList.add('drop-on');
+  document.getElementById('deck-picked').classList.add('drop-on');
   if(navigator.vibrate) try{ navigator.vibrate(12); }catch(e){}
 }
-
 function cardPointerDown(e){
   if(e.button && e.button!==0) return;
+  if(e.target.closest('.card-add')||e.target.closest('.card-info')) return;
   const card=e.currentTarget;
   const type=card.dataset.type;
-  if(!type) return;
-  if(e.target.closest('.card-add')||e.target.closest('.card-info')) return;
-
   cleanupDrag();
-  dragState={
-    type:type, card:card,
-    x0:e.clientX, y0:e.clientY,
-    x:e.clientX, y:e.clientY,
-    active:false, ghost:null, id:e.pointerId,
-    timer:setTimeout(activateDrag,190)
-  };
+  dragState={ type:type, card:card, x0:e.clientX, y0:e.clientY, x:e.clientX, y:e.clientY,
+    active:false, ghost:null, timer:setTimeout(activateDrag,190) };
   try{ card.setPointerCapture(e.pointerId); }catch(err){}
 }
-
 function cardPointerMove(e){
   const d=dragState;
   if(!d) return;
   d.x=e.clientX; d.y=e.clientY;
-
   if(!d.active){
-    const dx=e.clientX-d.x0, dy=e.clientY-d.y0;
-    if(Math.abs(dx)>12||Math.abs(dy)>12){
-      clearTimeout(d.timer);
-      dragState=null;
+    if(Math.abs(e.clientX-d.x0)>12||Math.abs(e.clientY-d.y0)>12){
+      clearTimeout(d.timer); dragState=null;
     }
     return;
   }
-
   if(e.cancelable) e.preventDefault();
-  if(d.ghost){
-    d.ghost.style.left=d.x+'px';
-    d.ghost.style.top=d.y+'px';
-  }
-  const picked=document.getElementById('deck-picked');
-  if(picked) picked.classList.toggle('drop-on', isOverDeck(d.x,d.y));
+  if(d.ghost){ d.ghost.style.left=d.x+'px'; d.ghost.style.top=d.y+'px'; }
+  document.getElementById('deck-picked').classList.toggle('drop-on',isOverDeck(d.x,d.y));
 }
-
 function cardPointerUp(e){
   const d=dragState;
   if(!d) return;
   clearTimeout(d.timer);
-
   if(d.active){
     const over=isOverDeck(e.clientX,e.clientY);
     const type=d.type;
     cleanupDrag();
     if(over) addCard(type);
     suppressClickUntil=Date.now()+450;
-  } else {
-    cleanupDrag();
-  }
+  } else cleanupDrag();
 }
-
 document.addEventListener('pointermove',cardPointerMove,{passive:false});
 document.addEventListener('pointerup',cardPointerUp);
-document.addEventListener('pointercancel',function(){ cleanupDrag(); });
+document.addEventListener('pointercancel',cleanupDrag);
 document.addEventListener('touchmove',function(e){
   if(dragState&&dragState.active&&e.cancelable) e.preventDefault();
 },{passive:false});
 
-/* ================= ОТРИСОВКА ================= */
+/* ================= ОТРИСОВКА КАРТ ================= */
 
 function renderDeck(){
   const d=currentDeck();
@@ -565,43 +592,28 @@ function renderDeck(){
   grid.innerHTML='';
 
   DECK_CARDS.forEach(function(card){
-    const cardDiv=document.createElement('div');
     const picked=d.indexOf(card.type);
+    const lv=lvOfCard(card.type);
+    const cardDiv=document.createElement('div');
     cardDiv.className='card '+card.rarity+(picked>=0?' picked':'');
     cardDiv.dataset.type=card.type;
-
-    const order=(picked>=0)?'<div class="pick-order">'+(picked+1)+'</div>':'';
-    const addBtn='<button class="card-add'+(picked>=0?' off':'')+'" data-add="'+card.type+'">'+(picked>=0?'✓':'+')+'</button>';
-    const infoBtn='<button class="card-info" data-info="'+card.type+'">i</button>';
-
     cardDiv.innerHTML=
-      infoBtn+
+      '<button class="card-info">i</button>'+
       '<div class="card-free">0</div>'+
-      order+
+      (picked>=0?'<div class="pick-order">'+(picked+1)+'</div>':'')+
       '<div class="card-icon">'+card.icon+'</div>'+
       '<div class="card-name">'+card.name+'</div>'+
       '<div class="card-role">'+card.role+'</div>'+
-      '<div class="card-level">бесплатно</div>'+
-      addBtn;
+      '<div class="card-lv">ур. '+lv+'/'+LV_MAX+'</div>'+
+      '<button class="card-add'+(picked>=0?' off':'')+'">'+(picked>=0?'✓':'+')+'</button>';
 
-    const ib=cardDiv.querySelector('.card-info');
-    if(ib){ ib.onclick=function(ev){ ev.stopPropagation(); openCardModal(card.type); }; }
-
-    const ab=cardDiv.querySelector('.card-add');
-    if(ab){
-      ab.onclick=function(ev){
-        ev.stopPropagation();
-        if(currentDeck().indexOf(card.type)>=0) removeCard(card.type);
-        else addCard(card.type);
-      };
-    }
-
+    cardDiv.querySelector('.card-info').onclick=function(ev){ ev.stopPropagation(); openCardModal(card.type); };
+    cardDiv.querySelector('.card-add').onclick=function(ev){ ev.stopPropagation(); toggleCard(card.type); };
     cardDiv.addEventListener('pointerdown',cardPointerDown);
     cardDiv.onclick=function(){
       if(Date.now()<suppressClickUntil) return;
       toggleCard(card.type);
     };
-
     grid.appendChild(cardDiv);
   });
 
@@ -610,136 +622,153 @@ function renderDeck(){
   for(let i=0;i<HAND_SIZE;i++){
     const slot=document.createElement('div');
     const t=d[i];
-    if(t){ slot.className='deck-slot filled'; slot.textContent=DECK_CARDS.find(function(c){return c.type===t;}).icon; }
-    else{ slot.className='deck-slot'; slot.textContent='—'; }
+    if(t){
+      slot.className='deck-slot filled';
+      slot.textContent=DECK_CARDS.find(function(c){ return c.type===t; }).icon;
+    } else {
+      slot.className='deck-slot';
+      slot.textContent='—';
+    }
     pickedBox.appendChild(slot);
   }
 
   const note=document.getElementById('deck-note');
   if(d.length===HAND_SIZE){
-    const names=d.map(cardName).join(' · ');
     note.className='deck-note';
-    note.innerHTML='Колода ' + (activeSlot+1) + ' готова: <b>'+names+'</b>';
-  }else{
+    note.innerHTML='Колода '+(activeSlot+1)+' готова: <b>'+d.map(cardName).join(' · ')+'</b>';
+  } else {
     note.className='deck-note warn';
-    note.innerHTML='Колода ' + (activeSlot+1) + ': ' + d.length + ' из 4 — тапни «+» или перетащи карту вверх';
+    note.textContent='Колода '+(activeSlot+1)+': '+d.length+' из 4 — тапни «+» или перетащи карту вверх';
   }
 
   const bl=document.getElementById('balanceLine');
   if(d.length<HAND_SIZE){
-    bl.className='balance-line';
-    bl.textContent='';
-  }else{
-    const covered=[];
-    const missing=[];
+    bl.className='balance-line'; bl.textContent='';
+  } else {
+    const missing=[], covered=[];
     Object.keys(ROLE_OF).forEach(function(role){
       const has=d.some(function(t){ return ROLE_OF[role].indexOf(t)>=0; });
-      if(has) covered.push(ROLE_TITLE[role]); else missing.push(ROLE_TITLE[role]);
+      (has?covered:missing).push(ROLE_TITLE[role]);
     });
     if(!missing.length){
       bl.className='balance-line good';
       bl.textContent='Идеальный баланс: покрыты все роли';
-    }else{
+    } else {
       bl.className='balance-line warn';
       bl.textContent='Нет: '+missing.join(', ')+' · есть: '+(covered.join(', ')||'ничего');
     }
   }
+  updateUnitsUI();
+}
+
+/* ================= ФИГУРЫ: ПРОКАЧКА ================= */
+
+function renderPieces(){
+  const box=document.getElementById('piece-list');
+  box.innerHTML='';
+  const store=readObj(PIECE_LV_KEY);
+  UPGRADABLE_PIECES.forEach(function(p){
+    const lv=clampLv(store[p.t]);
+    const row=document.createElement('div');
+    row.className='prow';
+    const cost=LV_COST[lv+1];
+    row.innerHTML=
+      '<div class="pi">'+p.icon+'</div>'+
+      '<div class="pm"><div class="pn">'+p.ru+' · ур. '+lv+'/'+LV_MAX+'</div>'+
+      '<div class="ps">'+pipsHtml(lv)+' '+p.note+'</div></div>'+
+      '<button'+(lv>=LV_MAX?' disabled':'')+'>'+(lv>=LV_MAX?'Макс':'⬆ '+cost+' 🔹')+'</button>';
+    row.querySelector('button').onclick=function(){
+      if(buyLevel(PIECE_LV_KEY,p.t,p.ru)) renderPieces();
+    };
+    box.appendChild(row);
+  });
 }
 
 /* ================= МОДАЛКА С ДЕМО ================= */
 
-let demoType=null;
-let demoTimers=[];
-let demoLoop=null;
+let demoType=null, demoTimers=[], demoLoop=null;
 
 const DEMOS={
-f:function(a){
-  a.cap('Ярость: ход этой фигуры бесплатный');
-  const p=a.piece('♜','mine',0,1);
-  a.at(200,function(){ p.classList.add('charged'); a.fx(p,'⚡'); });
-  a.at(800,function(){ a.move(p,4,1); });
-  a.at(1300,function(){ a.fx(p,'0 ⚡','good'); });
-},
-s:function(a){
-  a.cap('Щит: фигура переживает одно взятие');
-  const k=a.piece('♞','mine',2,2);
-  const e=a.piece('♝','foe',4,0);
-  a.at(200,function(){ k.classList.add('shielded'); a.fx(k,'🛡️'); });
-  a.at(700,function(){ a.move(e,3,1); a.cap('Враг пошёл в атаку…'); });
-  a.at(1300,function(){
-    k.classList.remove('shielded'); k.classList.add('hit');
-    a.flash(); a.fx(k,'выжила','good');
-    a.cap('Щит снят, фигура на месте');
-  });
-  a.at(1900,function(){ k.classList.remove('hit'); });
-},
-c:function(a){
-  a.cap('Рокировка: король и ладья меняются местами');
-  const k=a.piece('♚','mine',1,1);
-  const r=a.piece('♜','mine',3,1);
-  a.at(500,function(){ a.flash(); a.move(k,3,1); a.move(r,1,1); });
-  a.at(1300,function(){ a.fx(k,'раз за партию','good'); });
-},
-u:function(a){
-  a.cap('Превращение: пешка сразу становится ферзём');
-  const p=a.piece('♟','mine',2,2);
-  a.at(250,function(){ a.move(p,2,1); });
-  a.at(650,function(){ a.move(p,2,0); });
-  a.at(1150,function(){ a.flash(); p.textContent='♛'; p.classList.add('charged'); a.fx(p,'ферзь!','good'); });
-},
-g:function(a){
-  a.cap('Подкрепление: новая пешка в твоём ряду');
-  a.zone(0,2,4,2,'home',0);
-  a.at(600,function(){
-    const p=a.piece('♟','mine',1,2);
-    p.classList.add('appear');
-    a.fx(p,'+1 пешка','good');
-  });
-},
-x:function(a){
-  a.cap('Чистка: вражеская пешка убрана');
-  const t=a.piece('♟','foe',3,1);
-  a.at(300,function(){ a.zone(3,1,3,1,'tgt',600); });
-  a.at(800,function(){ a.kill(t); a.fx(t,'убрана','good'); });
-},
-z:function(a){
-  a.cap('Заморозка: фигура не ходит 10 секунд');
-  const t=a.piece('♜','foe',4,1);
-  a.at(250,function(){ t.classList.add('frozen'); a.fx(t,'❄️'); });
-  a.at(800,function(){ t.classList.add('shake'); a.cap('Попытка хода — не выходит'); });
-  a.at(1300,function(){ a.fx(t,'стоит','good'); });
-},
-l:function(a){
-  a.cap('Перевербовка: вражеская пешка становится твоей');
-  const t=a.piece('♟','foe',3,1);
-  a.at(300,function(){ a.zone(3,1,3,1,'tgt',600); });
-  a.at(800,function(){ t.className='cm-piece mine'; t.textContent='♟'; a.fx(t,'моя!','good'); });
-},
-b:function(a){
-  a.cap('Блокада: клетка закрыта на 12 секунд');
-  a.zone(2,1,2,1,'block',0);
-  const n=a.piece('♞','foe',4,0);
-  a.at(600,function(){ n.classList.add('shake'); a.fx(n,'нельзя','good'); a.cap('Враг не может войти в клетку'); });
-},
-e:function(a){
-  a.cap('Взрыв: 3×3 — враг теряет лёгкие фигуры');
-  const pawn=a.piece('♟','foe',1,0);
-  const bis=a.piece('♝','foe',3,2);
-  const q=a.piece('♛','foe',4,1);
-  a.piece('♞','mine',1,2);
-  a.at(300,function(){ a.zone(1,0,3,2,'boom',600); a.flash(); });
-  a.at(420,function(){ a.kill(pawn); a.kill(bis); });
-  a.at(900,function(){ a.fx(q,'ферзь цел'); a.cap('Ферзь и ладьи взрыв не трогает'); });
-}
+  f:function(a){
+    a.cap('Ярость: ход этой фигуры бесплатный');
+    const p=a.piece('♜','mine',0,1);
+    a.at(200,function(){ p.classList.add('charged'); a.fx(p,'⚡'); });
+    a.at(800,function(){ a.move(p,4,1); });
+    a.at(1300,function(){ a.fx(p,'0 ⚡','good'); });
+  },
+  s:function(a){
+    a.cap('Щит: фигура переживает удар');
+    const k=a.piece('♞','mine',2,2);
+    const e=a.piece('♝','foe',4,0);
+    a.at(200,function(){ k.classList.add('shielded'); });
+    a.at(700,function(){ a.move(e,3,1); a.cap('Враг пошёл в атаку…'); });
+    a.at(1300,function(){ a.flash(); a.fx(k,'выжила','good'); a.cap('Фигура на месте'); });
+  },
+  c:function(a){
+    a.cap('Рокировка: король и ладья меняются местами');
+    const k=a.piece('♚','mine',1,1);
+    const r=a.piece('♜','mine',3,1);
+    a.at(500,function(){ a.flash(); a.move(k,3,1); a.move(r,1,1); });
+    a.at(1300,function(){ a.fx(k,'за партию','good'); });
+  },
+  u:function(a){
+    a.cap('Превращение: пешка сразу становится ферзём');
+    const p=a.piece('♟','mine',2,2);
+    a.at(250,function(){ a.move(p,2,1); });
+    a.at(650,function(){ a.move(p,2,0); });
+    a.at(1150,function(){ a.flash(); p.textContent='♛'; p.classList.add('charged'); a.fx(p,'ферзь!','good'); });
+  },
+  g:function(a){
+    a.cap('Подкрепление: новая пешка в твоём ряду');
+    a.zone(0,2,4,2,'home',0);
+    a.at(600,function(){ const p=a.piece('♟','mine',1,2); p.classList.add('appear'); a.fx(p,'+1 пешка','good'); });
+  },
+  x:function(a){
+    a.cap('Чистка: вражеская фигура убрана');
+    const t=a.piece('♟','foe',3,1);
+    a.at(300,function(){ a.zone(3,1,3,1,'tgt',600); });
+    a.at(800,function(){ a.kill(t); a.fx(t,'убрана','good'); });
+  },
+  z:function(a){
+    a.cap('Заморозка: фигура не ходит');
+    const t=a.piece('♜','foe',4,1);
+    a.at(250,function(){ t.classList.add('frozen'); });
+    a.at(800,function(){ t.classList.add('shake'); a.cap('Попытка хода — не выходит'); });
+    a.at(1300,function(){ a.fx(t,'стоит','good'); });
+  },
+  l:function(a){
+    a.cap('Перевербовка: вражеская фигура становится твоей');
+    const t=a.piece('♟','foe',3,1);
+    a.at(300,function(){ a.zone(3,1,3,1,'tgt',600); });
+    a.at(800,function(){ t.className='cm-piece mine'; t.textContent='♟'; a.fx(t,'моя!','good'); });
+  },
+  b:function(a){
+    a.cap('Блокада: клетка закрыта на время');
+    a.zone(2,1,2,1,'block',0);
+    const n=a.piece('♞','foe',4,0);
+    a.at(600,function(){ n.classList.add('shake'); a.fx(n,'нельзя','good'); a.cap('Враг не входит в клетку'); });
+  },
+  e:function(a){
+    a.cap('Взрыв: 3×3 — враг теряет лёгкие фигуры');
+    const pawn=a.piece('♟','foe',1,0);
+    const bis=a.piece('♝','foe',3,2);
+    const q=a.piece('♛','foe',4,1);
+    a.piece('♞','mine',1,2);
+    a.at(300,function(){ a.zone(1,0,3,2,'boom',600); a.flash(); });
+    a.at(420,function(){ a.kill(pawn); a.kill(bis); });
+    a.at(900,function(){ a.fx(q,'ферзь цел'); a.cap('Ферзь и ладьи взрыв не трогает'); });
+  }
 };
 
 function clearDemo(){
-  for(let i=0;i<demoTimers.length;i++) clearTimeout(demoTimers[i]);
+  demoTimers.forEach(clearTimeout);
   demoTimers=[];
   if(demoLoop){ clearInterval(demoLoop); demoLoop=null; }
 }
 
-function buildStage(){
+function runDemo(type){
+  demoTimers.forEach(clearTimeout);
+  demoTimers=[];
   const st=document.getElementById('cmStage');
   st.classList.remove('flash');
   st.innerHTML='';
@@ -751,14 +780,7 @@ function buildStage(){
     g.appendChild(i);
   }
   st.appendChild(g);
-  return st;
-}
 
-function runDemo(type){
-  for(let i=0;i<demoTimers.length;i++) clearTimeout(demoTimers[i]);
-  demoTimers=[];
-
-  const st=buildStage();
   const px=function(c){ return ((c+0.5)/5*100)+'%'; };
   const py=function(r){ return ((r+0.5)/3*100)+'%'; };
 
@@ -769,8 +791,7 @@ function runDemo(type){
       const el=document.createElement('div');
       el.className='cm-piece '+cls;
       el.textContent=icon;
-      el.style.left=px(c);
-      el.style.top=py(r);
+      el.style.left=px(c); el.style.top=py(r);
       st.appendChild(el);
       return el;
     },
@@ -785,14 +806,12 @@ function runDemo(type){
       z.style.height=((r1-r0+1)/3*100)+'%';
       st.appendChild(z);
       if(ms) demoTimers.push(setTimeout(function(){ if(z.parentNode) z.parentNode.removeChild(z); },ms));
-      return z;
     },
     fx:function(el,text,cls){
       const f=document.createElement('div');
       f.className='cm-float '+(cls||'');
       f.textContent=text;
-      f.style.left=el.style.left;
-      f.style.top=el.style.top;
+      f.style.left=el.style.left; f.style.top=el.style.top;
       st.appendChild(f);
       demoTimers.push(setTimeout(function(){ if(f.parentNode) f.parentNode.removeChild(f); },1500));
     },
@@ -802,73 +821,72 @@ function runDemo(type){
     }
   };
 
-  const fn=DEMOS[type];
-  if(fn) fn(api);
+  if(DEMOS[type]) DEMOS[type](api);
   else api.cap('Демонстрация скоро появится');
 }
 
 function openCardModal(type){
-  let def=null;
-  for(let i=0;i<DECK_CARDS.length;i++) if(DECK_CARDS[i].type===type) def=DECK_CARDS[i];
+  const def=DECK_CARDS.find(function(c){ return c.type===type; });
   if(!def) return;
-
   demoType=type;
   clearDemo();
 
+  const lv=lvOfCard(type);
   document.getElementById('cmBadge').textContent=def.icon;
   document.getElementById('cmName').textContent=def.name;
-  document.getElementById('cmRar').textContent=(RARITY_NAME[def.rarity]||'Обычная')+' · бесплатно · роль: '+def.role;
-  document.getElementById('cmDesc').textContent=(CARD_INFO[type]&&CARD_INFO[type].desc)||'';
+  document.getElementById('cmRar').textContent=(RARITY_NAME[def.rarity]||'')+' · роль: '+def.role+' · ур. '+lv+'/'+LV_MAX;
+  document.getElementById('cmDesc').textContent=(CARD_INFO[type]||{}).desc||'';
   document.getElementById('cmCaption').textContent='';
 
   const tips=document.getElementById('cmTips');
   tips.innerHTML='';
-  const list=(CARD_INFO[type]&&CARD_INFO[type].tips)||[];
-  for(let i=0;i<list.length;i++){
-    const li=document.createElement('li');
-    li.textContent=list[i];
-    tips.appendChild(li);
-  }
+  ((CARD_INFO[type]||{}).tips||[]).forEach(function(t){
+    const li=document.createElement('li'); li.textContent=t; tips.appendChild(li);
+  });
 
-  updateModalAdd();
+  document.getElementById('cmLv').innerHTML=
+    '<div>'+pipsHtml(lv)+' <b>Сейчас:</b> '+(LV_TEXT[type]||'')+'</div>';
 
+  updateModalButtons();
   document.getElementById('cardModal').classList.add('open');
   runDemo(type);
   demoLoop=setInterval(function(){ runDemo(type); },4200);
 }
 
-function updateModalAdd(){
-  const btn=document.getElementById('cmAdd');
+function updateModalButtons(){
   if(!demoType) return;
+  const lv=lvOfCard(demoType);
+  const up=document.getElementById('cmUp');
+  if(lv>=LV_MAX){ up.textContent='Максимальный уровень'; up.disabled=true; }
+  else { up.textContent='⬆ Прокачать до ур. '+(lv+1)+' — '+LV_COST[lv+1]+' 🔹'; up.disabled=false; }
+
+  const btn=document.getElementById('cmAdd');
   const inDeck=currentDeck().indexOf(demoType)>=0;
   const full=currentDeck().length>=HAND_SIZE;
-
   btn.classList.remove('remove','full');
-
-  if(inDeck){
-    btn.textContent='Убрать из колоды';
-    btn.classList.add('remove');
-  }else if(full){
-    btn.textContent='Колода заполнена — убери карту';
-    btn.classList.add('full');
-  }else{
-    btn.textContent='Добавить в колоду';
-  }
+  if(inDeck){ btn.textContent='Убрать из колоды'; btn.classList.add('remove'); }
+  else if(full){ btn.textContent='Колода заполнена — убери карту'; btn.classList.add('full'); }
+  else btn.textContent='Добавить в колоду';
 }
 
+function modalUpTap(){
+  if(!demoType) return;
+  if(buyLevel(CARD_LV_KEY,demoType,cardName(demoType))){
+    renderDeck();
+    openCardModal(demoType);
+  }
+}
 function modalAddTap(){
   if(!demoType) return;
   if(currentDeck().indexOf(demoType)>=0) removeCard(demoType);
   else addCard(demoType);
-  updateModalAdd();
+  updateModalButtons();
 }
-
 function closeCardModal(){
   clearDemo();
   demoType=null;
   document.getElementById('cardModal').classList.remove('open');
-  const st=document.getElementById('cmStage');
-  if(st) st.innerHTML='';
+  document.getElementById('cmStage').innerHTML='';
 }
 
 /* ================= РАССТАНОВКА ================= */
@@ -879,140 +897,130 @@ const ARMY_MAX={p:8,r:2,n:2,b:2,q:1,k:1};
 const ARMY_ORDER=['p','n','b','r','q','k'];
 
 function defaultArmed(){
-  const empty=[null,null,null,null,null,null,null,null];
-  return [empty.slice(),empty.slice(),empty.slice(),empty.slice(),empty.slice(),empty.slice(),
-    ['P','P','P','P','P','P','P','P'],
-    ['R','N','B','Q','K','B','N','R']];
+  const e=[null,null,null,null,null,null,null,null];
+  return [e.slice(),e.slice(),e.slice(),e.slice(),e.slice(),e.slice(),
+    ['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
 }
+let setupBoard=[], selectedSetupCell=null, editMode=false, snapshotBeforeEdit=null;
 
-let setupBoard=[];
-let selectedSetupCell=null;
-let editMode=false;
-let snapshotBeforeEdit=null;
-
-function blankBoard(){return Array.from({length:8},function(){return Array(8).fill(null);});}
+function blankBoard(){ return Array.from({length:8},function(){ return Array(8).fill(null); }); }
 
 function armyCounts(board){
   const cnt={p:0,r:0,n:0,b:0,q:0,k:0};
-  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
-    const v=board[r][c];if(!v)continue;
-    const s=String(v);if(s!==s.toUpperCase())continue;
-    const t=s.toLowerCase();if(cnt[t]!==undefined)cnt[t]++;
+  for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+    const v=board[r][c]; if(!v) continue;
+    const s=String(v); if(s!==s.toUpperCase()) continue;
+    const t=s.toLowerCase(); if(cnt[t]!==undefined) cnt[t]++;
   }
   return cnt;
 }
 function armyExact(board){
   const cnt=armyCounts(board);
-  for(let i=0;i<ARMY_ORDER.length;i++){const t=ARMY_ORDER[i];if(cnt[t]!==ARMY_MAX[t])return false;}
-  return true;
+  return ARMY_ORDER.every(function(t){ return cnt[t]===ARMY_MAX[t]; });
 }
 function normalize(raw){
-  if(!Array.isArray(raw)||raw.length!==8)return null;
+  if(!Array.isArray(raw)||raw.length!==8) return null;
   const out=blankBoard();
-  for(let k=0;k<SETUP_ROWS.length;k++){
-    const r=SETUP_ROWS[k];
-    if(!Array.isArray(raw[r])||raw[r].length!==8)return null;
+  SETUP_ROWS.forEach(function(r){
+    if(!Array.isArray(raw[r])||raw[r].length!==8) return;
     for(let c=0;c<8;c++){
-      const v=raw[r][c];if(!v)continue;
-      const s=String(v);if(!/^[prnbqk]$/i.test(s))return null;
+      const v=raw[r][c]; if(!v) continue;
+      const s=String(v); if(!/^[prnbqk]$/i.test(s)) return;
       out[r][c]=s.toUpperCase();
     }
-  }
+  });
   return armyExact(out)?out:null;
 }
-
 function initSetup(){
   let data=null;
-  try{data=normalize(JSON.parse(localStorage.getItem(SETUP_KEY)||'null'));}catch(e){}
+  try{ data=normalize(JSON.parse(localStorage.getItem(SETUP_KEY)||'null')); }catch(e){}
   setupBoard=data||defaultArmed();
-  selectedSetupCell=null;editMode=false;
-  updateSetupUI();renderSetupBoard();renderArmyCounts();
+  selectedSetupCell=null; editMode=false;
+  updateSetupUI(); renderSetupBoard(); renderArmyCounts();
 }
-
 function renderArmyCounts(){
-  const box=document.getElementById('army-counts');if(!box)return;
-  const cnt=armyCounts(setupBoard);box.innerHTML='';
-  for(let i=0;i<ARMY_ORDER.length;i++){
-    const t=ARMY_ORDER[i];const chip=document.createElement('div');
-    const ok=(cnt[t]===ARMY_MAX[t]);
-    chip.className='army-chip '+(ok?'ok':'bad');
+  const box=document.getElementById('army-counts');
+  const cnt=armyCounts(setupBoard);
+  box.innerHTML='';
+  ARMY_ORDER.forEach(function(t){
+    const chip=document.createElement('div');
+    chip.className='army-chip '+(cnt[t]===ARMY_MAX[t]?'ok':'bad');
     chip.textContent=PIECES[t].icon+' '+cnt[t]+'/'+ARMY_MAX[t];
     box.appendChild(chip);
-  }
+  });
 }
-
 function updateSetupUI(){
   const hint=document.getElementById('setup-hint');
-  const btnEdit=document.getElementById('btn-edit');
-  const editControls=document.getElementById('edit-controls');
   const boardEl=document.getElementById('setup-board');
   if(editMode){
-    btnEdit.style.display='none';editControls.style.display='flex';
-    boardEl.classList.remove('view-mode');boardEl.classList.add('edit-mode');
-    hint.innerHTML='✏️ Тапни фигуру, потом другую — они поменяются местами. Только два нижних ряда.';
-  }else{
-    btnEdit.style.display='block';editControls.style.display='none';
-    boardEl.classList.remove('edit-mode');boardEl.classList.add('view-mode');
+    document.getElementById('btn-edit').style.display='none';
+    document.getElementById('edit-controls').style.display='flex';
+    boardEl.classList.remove('view-mode'); boardEl.classList.add('edit-mode');
+    hint.textContent='✏️ Тапни фигуру, потом другую — они поменяются местами. Только два нижних ряда.';
+  } else {
+    document.getElementById('btn-edit').style.display='block';
+    document.getElementById('edit-controls').style.display='none';
+    boardEl.classList.remove('edit-mode'); boardEl.classList.add('view-mode');
     hint.innerHTML='Эта расстановка пойдёт с тобой в бой <span class="lock-badge">🔒 Закреплено</span>';
   }
 }
-
 function renderSetupBoard(){
-  const boardEl=document.getElementById('setup-board');if(!boardEl)return;
+  const boardEl=document.getElementById('setup-board');
   boardEl.innerHTML='';
-  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+  for(let r=0;r<8;r++) for(let c=0;c<8;c++){
     const cell=document.createElement('div');
     cell.className='cell '+((r+c)%2===0?'white':'black');
-    const inZone=(r===6||r===7);
-    if(inZone)cell.classList.add('setup-zone');else cell.classList.add('locked');
-    if(selectedSetupCell&&selectedSetupCell.r===r&&selectedSetupCell.c===c)cell.classList.add('selected');
-    cell.onclick=(function(rr,cc){return function(){handleSetupClick(rr,cc);};})(r,c);
+    if(r===6||r===7) cell.classList.add('setup-zone'); else cell.classList.add('locked');
+    if(selectedSetupCell && selectedSetupCell.r===r && selectedSetupCell.c===c) cell.classList.add('selected');
+    cell.onclick=(function(rr,cc){ return function(){ handleSetupClick(rr,cc); }; })(r,c);
     const v=setupBoard[r][c];
     if(v){
-      const t=String(v).toLowerCase();const p=PIECES[t];
+      const p=PIECES[String(v).toLowerCase()];
       const pieceEl=document.createElement('div');
-      pieceEl.className='piece';pieceEl.innerText=p.icon;pieceEl.style.color='#fff';
-      pieceEl.style.textShadow='0 1px 0 #666,0 2px 0 #444,0 3px 4px rgba(0,0,0,.9)';
-      const costBadge=document.createElement('div');
-      costBadge.className='top-cost-badge';costBadge.innerText=p.cost;
-      const hpBar=document.createElement('div');
-      hpBar.className='bottom-hp-bar';hpBar.innerHTML='<span class="lvl-num">1</span>';
-      const hpText=document.createElement('div');
-      hpText.className='hp-text-below';hpText.innerText='1/1';
-      cell.appendChild(pieceEl);cell.appendChild(costBadge);cell.appendChild(hpBar);cell.appendChild(hpText);
+      pieceEl.className='piece';
+      pieceEl.textContent=p.icon;
+      pieceEl.style.color='#fff';
+      const cost=document.createElement('div');
+      cost.className='top-cost-badge'; cost.textContent=p.cost;
+      const hp=document.createElement('div');
+      hp.className='bottom-hp-bar'; hp.innerHTML='<span class="lvl-num">1</span>';
+      const hpt=document.createElement('div');
+      hpt.className='hp-text-below'; hpt.textContent='1/1';
+      cell.appendChild(pieceEl); cell.appendChild(cost); cell.appendChild(hp); cell.appendChild(hpt);
     }
     boardEl.appendChild(cell);
   }
 }
-
 function handleSetupClick(r,c){
-  if(!editMode)return;
-  if(r!==6&&r!==7){showToast('Только два нижних ряда','#ffb300');return;}
+  if(!editMode) return;
+  if(r!==6&&r!==7){ showToast('Только два нижних ряда','#ffb300'); return; }
   if(!selectedSetupCell){
-    if(!setupBoard[r][c]){showToast('Тут пусто — выбери фигуру','#ffb300');return;}
-    selectedSetupCell={r:r,c:c};renderSetupBoard();return;
+    if(!setupBoard[r][c]){ showToast('Тут пусто — выбери фигуру','#ffb300'); return; }
+    selectedSetupCell={r:r,c:c}; renderSetupBoard(); return;
   }
-  if(selectedSetupCell.r===r&&selectedSetupCell.c===c){selectedSetupCell=null;renderSetupBoard();return;}
+  if(selectedSetupCell.r===r && selectedSetupCell.c===c){ selectedSetupCell=null; renderSetupBoard(); return; }
   const a=setupBoard[selectedSetupCell.r][selectedSetupCell.c];
   const b=setupBoard[r][c];
-  setupBoard[r][c]=a;setupBoard[selectedSetupCell.r][selectedSetupCell.c]=b;
-  selectedSetupCell=null;renderSetupBoard();renderArmyCounts();
+  setupBoard[r][c]=a;
+  setupBoard[selectedSetupCell.r][selectedSetupCell.c]=b;
+  selectedSetupCell=null;
+  renderSetupBoard(); renderArmyCounts();
 }
-
 function enterEditMode(){
-  snapshotBeforeEdit=setupBoard.map(function(row){return row.slice();});
-  editMode=true;selectedSetupCell=null;updateSetupUI();renderSetupBoard();
+  snapshotBeforeEdit=setupBoard.map(function(row){ return row.slice(); });
+  editMode=true; selectedSetupCell=null;
+  updateSetupUI(); renderSetupBoard();
 }
 function cancelEdit(){
-  if(snapshotBeforeEdit)setupBoard=snapshotBeforeEdit.map(function(row){return row.slice();});
-  editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null;
-  updateSetupUI();renderSetupBoard();renderArmyCounts();
+  if(snapshotBeforeEdit) setupBoard=snapshotBeforeEdit.map(function(row){ return row.slice(); });
+  editMode=false; selectedSetupCell=null; snapshotBeforeEdit=null;
+  updateSetupUI(); renderSetupBoard(); renderArmyCounts();
   showToast('Изменения отменены','#ffb300');
 }
 function resetSetup(){
-  if(!editMode)return;
-  setupBoard=defaultArmed();selectedSetupCell=null;
-  renderSetupBoard();renderArmyCounts();
+  if(!editMode) return;
+  setupBoard=defaultArmed(); selectedSetupCell=null;
+  renderSetupBoard(); renderArmyCounts();
   showToast('Стандартная расстановка','#5ea8ff');
 }
 function saveSetup(){
@@ -1021,37 +1029,45 @@ function saveSetup(){
     return;
   }
   const save=blankBoard();
-  for(let c=0;c<8;c++){save[7][c]=setupBoard[7][c];save[6][c]=setupBoard[6][c];}
+  for(let c=0;c<8;c++){ save[7][c]=setupBoard[7][c]; save[6][c]=setupBoard[6][c]; }
   for(let c=0;c<8;c++){
-    const top=save[7][c],bot=save[6][c];
+    const top=save[7][c], bot=save[6][c];
     save[0][c]=top?String(top).toLowerCase():null;
     save[1][c]=bot?String(bot).toLowerCase():null;
   }
-  try{localStorage.setItem(SETUP_KEY,JSON.stringify(save));}
-  catch(e){showToast('Не удалось сохранить','#f4665e');return;}
-  setupBoard=save;editMode=false;selectedSetupCell=null;snapshotBeforeEdit=null;
-  updateSetupUI();renderSetupBoard();renderArmyCounts();
+  try{ localStorage.setItem(SETUP_KEY,JSON.stringify(save)); }
+  catch(e){ showToast('Не удалось сохранить','#f4665e'); return; }
+  setupBoard=save; editMode=false; selectedSetupCell=null; snapshotBeforeEdit=null;
+  updateSetupUI(); renderSetupBoard(); renderArmyCounts();
   showToast('✅ Расстановка сохранена!','#43e97b');
 }
 
+/* ================= ТОСТ ================= */
+
 function showToast(msg,color){
-  const toast=document.createElement('div');
-  toast.className='toast';toast.style.borderColor=color;
-  toast.style.boxShadow='0 10px 30px rgba(0,0,0,.8),0 0 20px '+color+'66';
-  toast.innerText=msg;document.body.appendChild(toast);
-  setTimeout(function(){toast.classList.add('show');},50);
-  setTimeout(function(){toast.classList.remove('show');setTimeout(function(){toast.remove();},400);},2400);
+  const t=document.createElement('div');
+  t.className='toast';
+  t.style.borderColor=color;
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.classList.add('show'); },50);
+  setTimeout(function(){
+    t.classList.remove('show');
+    setTimeout(function(){ t.remove(); },400);
+  },2400);
 }
+
+/* ================= СТАРТ ================= */
 
 decks=loadDecks();
 activeSlot=loadActive();
 page=Math.floor(activeSlot/PER_PAGE);
-
 saveDecks();
 renderSlots();
 renderDeck();
 initSetup();
-setTimeout(function(){switchSubTab('cards');},0);
+updateUnitsUI();
+switchSubTab('cards');
 </script>
 </body>
 </html>
