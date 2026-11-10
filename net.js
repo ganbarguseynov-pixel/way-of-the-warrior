@@ -1,7 +1,6 @@
 /* ============================================================
-   net.js — сеть: очередь, матч, бот, ничья, дружеский вызов (VER 21)
-   Добавлены карты: cast через Arena.cast, колоды в состоянии,
-   бот умеет Ярость, Щит, Рокировку и Превращение.
+   net.js — сеть: очередь, матч, бот, ничья, дружеский вызов (VER 22)
+   Карты бесплатны, рука по таймеру 30 сек. Бот разыгрывает карты.
    ============================================================ */
 (function (global) {
 'use strict';
@@ -30,8 +29,9 @@ const LOG_MAX = 700;
 
 const DRAW_OFFER_MAX = 2;
 
-const SPELL_TYPES = ['f', 's', 'c', 'u'];
-const BOT_DECK = ['f', 's', 'c', 'u'];
+const SPELL_TYPES = ['f','s','c','u','g','x','z','l','b','e'];
+const HAND_SIZE = 4;
+const DEFAULT_DECK = ['f','s','c','u'];
 
 const BOT_NAMES = [
   'Дмитрий','Алексей','Максим','Артём','Сергей','Кирилл','Иван','Никита',
@@ -105,11 +105,21 @@ function payloadOf(msg){
   return msg.payload !== undefined ? msg.payload : msg;
 }
 
+function shuffled(list){
+  const a = list.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
 function slimState(s){
   return {
     id: s.id, arena: s.arena, players: s.players,
     board: s.board, energy: s.energy, energyAcc: s.energyAcc,
     hand: s.hand, spellUsed: s.spellUsed,
+    deal: s.deal, blocked: s.blocked,
     traps: s.traps, returns: s.returns, elapsed: s.elapsed,
     phase: s.phase, timeLeft: s.timeLeft,
     nightMode: s.nightMode, nightUsed: s.nightUsed,
@@ -125,9 +135,14 @@ function ensureSpellFields(s){
   if (!s.spellUsed) s.spellUsed = { a:{}, b:{} };
   if (!s.spellUsed.a) s.spellUsed.a = {};
   if (!s.spellUsed.b) s.spellUsed.b = {};
-  if (!s.hand) s.hand = { a: SPELL_TYPES.slice(), b: SPELL_TYPES.slice() };
-  if (!Array.isArray(s.hand.a) || !s.hand.a.length) s.hand.a = SPELL_TYPES.slice();
-  if (!Array.isArray(s.hand.b) || !s.hand.b.length) s.hand.b = SPELL_TYPES.slice();
+  if (!s.hand) s.hand = { a: DEFAULT_DECK.slice(), b: DEFAULT_DECK.slice() };
+  if (!Array.isArray(s.hand.a) || !s.hand.a.length) s.hand.a = DEFAULT_DECK.slice();
+  if (!Array.isArray(s.hand.b) || !s.hand.b.length) s.hand.b = DEFAULT_DECK.slice();
+  if (!s.deal) s.deal = {
+    a: { hand: s.hand.a.slice(), cur: null, wait: 0, last: null },
+    b: { hand: s.hand.b.slice(), cur: null, wait: 0, last: null }
+  };
+  if (!s.blocked) s.blocked = {};
   if (!s.drawUsed) s.drawUsed = { a:0, b:0 };
   if (!s.drawOffer) s.drawOffer = { a:false, b:false };
   return s;
@@ -215,7 +230,7 @@ function sanitizeDeck(raw){
   const out = [];
   if (!Array.isArray(raw)) return out;
 
-  for (let i = 0; i < raw.length; i++){
+  for (let i = 0; i < raw.length && out.length < HAND_SIZE; i++){
     const t = String(raw[i] || '').toLowerCase();
     if (SPELL_TYPES.indexOf(t) >= 0 && out.indexOf(t) < 0) out.push(t);
   }
@@ -232,13 +247,7 @@ Net.myDeck = function (){
     }
   } catch (e){}
 
-  try {
-    const legacy = JSON.parse(localStorage.getItem('chessHand') || 'null');
-    const clean = sanitizeDeck(legacy);
-    if (clean.length) return clean;
-  } catch (e){}
-
-  return SPELL_TYPES.slice();
+  return DEFAULT_DECK.slice();
 };
 
 function decksFor(side, myDeck, oppDeck){
@@ -247,8 +256,8 @@ function decksFor(side, myDeck, oppDeck){
   const a = (side === 'a') ? mine : theirs;
   const b = (side === 'a') ? theirs : mine;
   return {
-    a: a.length ? a : SPELL_TYPES.slice(),
-    b: b.length ? b : SPELL_TYPES.slice()
+    a: a.length ? a : DEFAULT_DECK.slice(),
+    b: b.length ? b : DEFAULT_DECK.slice()
   };
 }
 
@@ -778,7 +787,7 @@ Net._startBotMatch = async function (){
     b: { key: rivalKey, name: rivalName, cups: rivalCups }
   };
   Net.setups = { a: Net.mySetup(), b: null };
-  Net.decks = { a: Net.myDeck(), b: BOT_DECK.slice() };
+  Net.decks = { a: Net.myDeck(), b: shuffled(SPELL_TYPES).slice(0, HAND_SIZE) };
 
   Net._writeRecord();
   Net._hostStart();
@@ -807,7 +816,7 @@ Net._botTick = function (){
       const accept = Net._botLosing(st, 'b');
       Net._applyIntent({ t: accept ? 'draw' : 'undraw' }, 'b');
     } else {
-      if (Net._botSpell(st)) Net._push();
+      if (Net._botCast(st)) Net._push();
       Net._botMove();
     }
 
@@ -857,71 +866,95 @@ Net._botLosing = function (s, side){
 
 /* ---------------- карты у бота ---------------- */
 
-function botFind(s, type, needFreeShield, needFreeRage){
-  for (let y = 0; y < 8; y++){
-    for (let x = 0; x < 8; x++){
-      const pc = s.board[y][x];
-      if (!pc || pc.side !== 'b' || pc.type !== type) continue;
-      if (needFreeShield && pc.shield) continue;
-      if (needFreeRage && pc.rage) continue;
-      return { x:x, y:y };
+/* Оценка цели для карты. null — карту сюда не тратим. */
+function botScore(s, card, x, y){
+  const pc = s.board[y][x];
+
+  switch (card){
+    case 'f':
+      if (!pc) return null;
+      return pc.type === 'queen' ? 10 : (pc.type === 'rook' ? 6 : null);
+
+    case 's':
+      if (!pc) return null;
+      return pc.type === 'queen' ? 9 : (pc.type === 'rook' ? 6 : (pc.type === 'pawn' ? null : 3));
+
+    case 'c':
+      return (s.check && s.check.b) ? 9 : null;
+
+    case 'u':
+      return (pc && pc.type === 'pawn' && y >= 4) ? y : null;
+
+    case 'g':
+      return 2;
+
+    case 'x':
+      return (pc && pc.type === 'pawn') ? 7 - y : null;
+
+    case 'l':
+      return (pc && pc.type === 'pawn' && y >= 2 && y <= 5) ? 5 : null;
+
+    case 'z': {
+      if (!pc) return null;
+      if (pc.type === 'queen') return 9;
+      if (pc.type === 'rook') return 7;
+      if (pc.type === 'knight' || pc.type === 'bishop') return 5;
+      return 2;
+    }
+
+    case 'b': {
+      const kp = Arena.kingPos(s, 'a');
+      if (!kp) return null;
+      const dist = Math.abs(x - kp.x) + Math.abs(y - kp.y);
+      return dist <= 2 ? 8 - dist : null;
+    }
+
+    case 'e': {
+      let n = 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){
+        const tx = x + dx, ty = y + dy;
+        if (tx < 0 || tx > 7 || ty < 0 || ty > 7) continue;
+        const t = s.board[ty][tx];
+        if (t && t.side === 'a' && (t.type === 'pawn' || t.type === 'knight' || t.type === 'bishop')) n++;
+      }
+      return n >= 2 ? n * 2 : null;
     }
   }
   return null;
 }
 
-Net._botSpell = function (s){
+Net._botCast = function (s){
   if (!s || s.over) return false;
-  if (!s.hand || !s.hand.b) return false;
 
-  const hand = s.hand.b;
-  const used = (s.spellUsed && s.spellUsed.b) || {};
-  const e = (typeof s.energy.b === 'number') ? s.energy.b : 0;
+  const d = s.deal && s.deal.b;
+  if (!d || !d.cur) return false;
 
-  /* Превращение: пешка уже глубоко — сразу ферзь */
-  if (hand.indexOf('u') >= 0 && e >= 6 && Math.random() < 0.9){
-    for (let y = 7; y >= 5; y--){
-      for (let x = 0; x < 8; x++){
-        const pc = s.board[y][x];
-        if (pc && pc.side === 'b' && pc.type === 'pawn'){
-          const r = Arena.cast(s, 'b', 'u', x, y);
-          if (r && r.ok) return true;
-        }
-      }
-    }
+  if (Math.random() < 0.3) return false;
+
+  const card = d.cur;
+  let best = null;
+
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++){
+    if (!Arena.cardTargetOk(s, 'b', card, x, y)) continue;
+    const sc = botScore(s, card, x, y);
+    if (sc === null) continue;
+    if (!best || sc > best.sc) best = { x: x, y: y, sc: sc };
   }
 
-  /* Щит: на ферзя, иначе на ладью */
-  if (hand.indexOf('s') >= 0 && e >= 3 && Math.random() < 0.45){
-    let t = botFind(s, 'queen', true, false);
-    if (!t) t = botFind(s, 'rook', true, false);
-    if (t){
-      const r = Arena.cast(s, 'b', 's', t.x, t.y);
-      if (r && r.ok) return true;
+  if (!best){
+    /* ничего полезного — иногда пропускает, чтобы не застрять */
+    if (Math.random() < 0.5){
+      Arena.skipCard(s, 'b');
+      return true;
     }
+    return false;
   }
 
-  /* Ярость: ферзь сходит бесплатно */
-  if (hand.indexOf('f') >= 0 && e >= 2 && Math.random() < 0.35){
-    let t = botFind(s, 'queen', false, true);
-    if (!t) t = botFind(s, 'rook', false, true);
-    if (t){
-      const r = Arena.cast(s, 'b', 'f', t.x, t.y);
-      if (r && r.ok) return true;
-    }
+  const r = Arena.cast(s, 'b', card, best.x, best.y);
+  if (r && r.ok){
+    Net._logCast('b', card, best.x, best.y, s);
+    return true;
   }
-
-  /* Рокировка: увести короля заранее */
-  if (hand.indexOf('c') >= 0 && !used.c && e >= 4 && Math.random() < 0.2){
-    if (!(s.check && s.check.b)){
-      const t = botFind(s, 'rook', false, false);
-      if (t){
-        const r = Arena.cast(s, 'b', 'c', t.x, t.y);
-        if (r && r.ok) return true;
-      }
-    }
-  }
-
   return false;
 };
 
@@ -1139,6 +1172,7 @@ Net._applyIntent = function (msg, side){
     switch (msg.t){
       case 'move':   res = Arena.move(s, side, msg.fx, msg.fy, msg.tx, msg.ty, msg.promo); break;
       case 'cast':   res = Arena.cast(s, side, msg.card, msg.x, msg.y); break;
+      case 'skip':   res = Arena.skipCard(s, side); break;
       case 'night':  res = Arena.castNight(s, side); break;
       case 'unlock': res = Arena.unlock(s, side, msg.x, msg.y); break;
       case 'resign': res = Arena.resign(s, side); break;
@@ -1472,6 +1506,7 @@ Net.leaveMatch = async function (){
 
 Net.DRAW_OFFER_MAX = DRAW_OFFER_MAX;
 Net.SPELL_TYPES = SPELL_TYPES;
+Net.HAND_SIZE = HAND_SIZE;
 
 global.Net = Net;
 
