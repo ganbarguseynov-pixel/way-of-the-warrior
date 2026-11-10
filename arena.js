@@ -1,11 +1,11 @@
 /* ============================================================
-   arena.js — правила и движок шахматных арен  (VER 20)
-   Добавлены карты: Ярость, Щит, Рокировка, Превращение.
+   arena.js — правила и движок шахматных арен  (VER 21)
+   Карты бесплатны. Рука: одна карта, выпадает каждые 30 сек.
    ============================================================ */
 (function (global) {
 'use strict';
 
-const VER = '20';
+const VER = '21';
 const STEP = 1000;
 const MAX_ARENA = 10;
 
@@ -19,6 +19,11 @@ const ENERGY_MAX = 10;
 const ENERGY_PER_SEC = 0.5;
 const ENERGY_FAST_MULT = 1.5;
 const ENERGY_OT_MULT = 2;
+
+const DEAL_WAIT = 30;
+const HAND_MAX  = 4;
+const FREEZE_SEC = 10;
+const BLOCK_SEC  = 12;
 
 const ARMY_MAX = { p:8, r:2, n:2, b:2, q:1, k:1 };
 
@@ -34,17 +39,29 @@ const PIECES = {
 /* ================= КАРТЫ ================= */
 
 const SPELLS = {
-  f: { cost:2, name:'Ярость',      icon:'⚡',  target:'own',
-       hint:'Фигура делает следующий ход бесплатно' },
-  s: { cost:3, name:'Щит',         icon:'🛡️', target:'own',
-       hint:'Фигура переживёт одно взятие' },
-  c: { cost:4, name:'Рокировка',   icon:'🔄',  target:'rook',
-       hint:'Король меняется местами с ладьёй. Раз за партию' },
-  u: { cost:6, name:'Превращение', icon:'👑',  target:'pawn',
-       hint:'Пешка сразу становится ферзём' }
+  f: { name:'Ярость',       icon:'⚡',  target:'own',
+       hint:'Тапни свою фигуру — её следующий ход не тратит эликсир' },
+  s: { name:'Щит',          icon:'🛡️', target:'own',
+       hint:'Тапни свою фигуру — переживёт одно взятие' },
+  c: { name:'Рокировка',    icon:'🔄',  target:'ownRook',
+       hint:'Тапни свою ладью — король и ладья поменяются. Раз за партию' },
+  u: { name:'Превращение',  icon:'👑',  target:'ownPawn',
+       hint:'Тапни свою пешку — станет ферзём' },
+  g: { name:'Подкрепление', icon:'➕',  target:'home',
+       hint:'Тапни пустую клетку в своих двух последних рядах — появится пешка' },
+  x: { name:'Чистка',       icon:'🗡️', target:'foePawn',
+       hint:'Тапни вражескую пешку — её уберут с доски' },
+  z: { name:'Заморозка',    icon:'❄️',  target:'foe',
+       hint:'Тапни вражескую фигуру — 10 секунд она не ходит' },
+  l: { name:'Перевербовка', icon:'🤝',  target:'foePawn',
+       hint:'Тапни вражескую пешку — она станет твоей' },
+  b: { name:'Блокада',      icon:'🧱',  target:'empty',
+       hint:'Тапни пустую клетку — 12 секунд в неё никто не войдёт' },
+  e: { name:'Взрыв',        icon:'💣',  target:'any',
+       hint:'Тапни клетку — взрыв уничтожит вражеские пешки, коней и слонов в 3×3' }
 };
 
-const SPELL_ORDER = ['f', 's', 'c', 'u'];
+const SPELL_ORDER = ['f','s','c','u','g','x','z','l','b','e'];
 
 const TYPE_BY_LETTER = {
   p:'pawn', n:'knight', b:'bishop', r:'rook', q:'queen', k:'king'
@@ -78,6 +95,7 @@ const KNIGHT = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
 const inside = (x, y) => x >= 0 && x < 8 && y >= 0 && y < 8;
 const coord  = (x, y) => 'abcdefgh'[x] + (8 - y);
 const foeOf  = (side) => side === 'a' ? 'b' : 'a';
+const homeRows = (side) => side === 'a' ? [6, 7] : [0, 1];
 
 function arenaOf(c){ return Math.min(MAX_ARENA, Math.floor(Math.max(0, c) / STEP) + 1); }
 function floorOf(c){ return (arenaOf(c) - 1) * STEP; }
@@ -97,6 +115,8 @@ function log(s, text){
   s.log.unshift(text);
   if (s.log.length > 40) s.log.length = 40;
 }
+
+function err(text){ return { ok:false, error:text }; }
 
 /* ================= ЭЛИКСИР ================= */
 
@@ -156,6 +176,17 @@ function boardSig(s){
     }
   }
   return sig;
+}
+
+function isBlocked(s, x, y){
+  const b = s.blocked;
+  if (!b) return false;
+  const until = b[x + ':' + y];
+  return typeof until === 'number' && until > (s.elapsed || 0);
+}
+
+function isFrozen(s, pc){
+  return !!(pc && typeof pc.frozenUntil === 'number' && pc.frozenUntil > (s.elapsed || 0));
 }
 
 /* ================= РАССТАНОВКА ================= */
@@ -337,6 +368,7 @@ function selfCheckAfter(s, fx, fy, tx, ty){
 function legalMoves(s, x, y){
   const pc = s.board[y] && s.board[y][x];
   if (!pc) return [];
+  if (isFrozen(s, pc)) return [];
 
   const raw = pseudoMoves(s, x, y);
   const out = [];
@@ -346,6 +378,7 @@ function legalMoves(s, x, y){
     const tgt = s.board[ty][tx];
 
     if (tgt && tgt.type === 'king') continue;
+    if (isBlocked(s, tx, ty)) continue;
     if (selfCheckAfter(s, x, y, tx, ty)) continue;
 
     out.push(raw[i]);
@@ -429,18 +462,63 @@ function updateStatus(s, force){
   }
 }
 
-/* ================= КОЛОДА КАРТ ================= */
+/* ================= КОЛОДА И РУКА ================= */
 
 function normHand(list){
   const out = [];
-  if (!Array.isArray(list)) return SPELL_ORDER.slice();
-
-  for (let i = 0; i < list.length; i++){
-    const t = String(list[i] || '').toLowerCase();
-    if (SPELLS[t] && out.indexOf(t) < 0) out.push(t);
+  if (Array.isArray(list)){
+    for (let i = 0; i < list.length; i++){
+      const t = String(list[i] || '').toLowerCase();
+      if (SPELLS[t] && out.indexOf(t) < 0 && out.length < HAND_MAX) out.push(t);
+    }
   }
-  if (!out.length) return SPELL_ORDER.slice();
+  if (!out.length) return SPELL_ORDER.slice(0, HAND_MAX);
   return out;
+}
+
+function homeRowsFor(side){ return homeRows(side); }
+
+/* Цель карты: проверка без побочных эффектов */
+function cardTargetOk(s, side, card, x, y){
+  const sp = SPELLS[card];
+  if (!sp || !inside(x, y)) return false;
+
+  const pc = s.board[y][x];
+  const mine = !!(pc && pc.side === side);
+  const foe  = !!(pc && pc.side !== side && pc.type !== 'king');
+
+  switch (sp.target){
+    case 'own':     return mine;
+    case 'ownRook': return mine && pc.type === 'rook';
+    case 'ownPawn': return mine && pc.type === 'pawn';
+    case 'foe':     return foe;
+    case 'foePawn': return !!(pc && pc.side !== side && pc.type === 'pawn');
+    case 'empty':   return !pc;
+    case 'home':    return !pc && homeRowsFor(side).indexOf(y) >= 0;
+    case 'any':     return true;
+  }
+  return false;
+}
+
+/* Рука: одна карта. Выпадает случайная из колоды, не та же подряд. */
+function dealTick(s, side, dt){
+  const d = s.deal && s.deal[side];
+  if (!d || d.cur || !d.hand || !d.hand.length) return;
+
+  d.wait = (typeof d.wait === 'number' ? d.wait : 0) - dt;
+  if (d.wait <= 0){
+    d.wait = 0;
+    let pool = d.hand.slice();
+    if (pool.length > 1 && d.last) pool = pool.filter(function (c){ return c !== d.last; });
+    d.cur = pool[Math.floor(Math.random() * pool.length)];
+  }
+}
+
+function spendDeal(s, side, card){
+  const d = s.deal[side];
+  d.cur = null;
+  d.wait = DEAL_WAIT;
+  d.last = card;
 }
 
 /* ================= СОЗДАНИЕ БОЯ ================= */
@@ -470,6 +548,11 @@ function create(opts){
 
     hand: { a: normHand(decks.a), b: normHand(decks.b) },
     spellUsed: { a:{}, b:{} },
+    deal: {
+      a: { hand: normHand(decks.a), cur: null, wait: 0, last: null },
+      b: { hand: normHand(decks.b), cur: null, wait: 0, last: null }
+    },
+    blocked: {},
 
     traps: [], returns: [],
 
@@ -499,6 +582,9 @@ function create(opts){
 
   log(s, 'Арена «' + ARENAS[s.arena - 1].name + '». Короля не съесть — ставь мат.');
 
+  dealTick(s, 'a', 0);
+  dealTick(s, 'b', 0);
+
   updateStatus(s, true);
   return s;
 }
@@ -506,7 +592,7 @@ function create(opts){
 /* ================= ДЕЙСТВИЯ ================= */
 
 function place(s, side, type, x, y){
-  return { ok:false, error:'Доска уже собрана до боя' };
+  return err('Доска уже собрана до боя');
 }
 
 function spendRage(pc){
@@ -515,15 +601,16 @@ function spendRage(pc){
 }
 
 function move(s, side, fx, fy, tx, ty, promo){
-  if (s.over) return { ok:false, error:'Бой окончен' };
-  if (!inside(fx, fy) || !inside(tx, ty)) return { ok:false, error:'Мимо доски' };
+  if (s.over) return err('Бой окончен');
+  if (!inside(fx, fy) || !inside(tx, ty)) return err('Мимо доски');
 
   const pc = s.board[fy][fx];
-  if (!pc) return { ok:false, error:'Пустая клетка' };
-  if (pc.side !== side) return { ok:false, error:'Не твоя фигура' };
+  if (!pc) return err('Пустая клетка');
+  if (pc.side !== side) return err('Не твоя фигура');
+  if (isFrozen(s, pc)) return err('Фигура заморожена');
 
   const tgt = s.board[ty][tx];
-  if (tgt && tgt.type === 'king') return { ok:false, error:'Короля нельзя съесть — ставь мат' };
+  if (tgt && tgt.type === 'king') return err('Короля нельзя съесть — ставь мат');
 
   const allowed = legalMoves(s, fx, fy);
   let ok = false;
@@ -531,15 +618,16 @@ function move(s, side, fx, fy, tx, ty, promo){
     if (allowed[i][0] === tx && allowed[i][1] === ty){ ok = true; break; }
   }
   if (!ok){
-    if (kingAttacked(s, side)) return { ok:false, error:'Шах! Уходи из-под удара' };
-    return { ok:false, error:'Так ходить нельзя' };
+    if (isBlocked(s, tx, ty)) return err('Клетка заблокирована');
+    if (kingAttacked(s, side)) return err('Шах! Уходи из-под удара');
+    return err('Так ходить нельзя');
   }
 
   const cost = moveCost(s, pc);
 
   let have = s.energy[side];
   if (typeof have !== 'number' || !isFinite(have)) have = 0;
-  if (have < cost) return { ok:false, error:'Мало эликсира' };
+  if (have < cost) return err('Мало эликсира');
 
   s.energy[side] = Math.max(0, have - cost);
   s.energyAcc[side] = s.energy[side];
@@ -599,95 +687,138 @@ function capture(s, attacker, tx, ty){
   return 'killed';
 }
 
-/* ================= ПРИМЕНЕНИЕ КАРТ ================= */
+/* ================= КАРТЫ: ПРИМЕНЕНИЕ ================= */
 
 function cast(s, side, card, x, y){
-  if (s.over) return { ok:false, error:'Бой окончен' };
+  if (s.over) return err('Бой окончен');
 
   const sp = SPELLS[card];
-  if (!sp) return { ok:false, error:'Нет такой карты' };
+  if (!sp) return err('Нет такой карты');
 
-  const hand = (s.hand && s.hand[side]) || [];
-  if (hand.indexOf(card) < 0) return { ok:false, error:'Этой карты нет в колоде' };
+  const d = s.deal && s.deal[side];
+  if (!d || d.cur !== card) return err('Эта карта сейчас не у тебя на руке');
+
+  const cx = Math.round(x), cy = Math.round(y);
+  if (!inside(cx, cy)) return err('Мимо доски');
+  if (!cardTargetOk(s, side, card, cx, cy)) return err(sp.hint);
 
   if (!s.spellUsed) s.spellUsed = { a:{}, b:{} };
   if (!s.spellUsed[side]) s.spellUsed[side] = {};
 
-  if (card === 'c' && s.spellUsed[side].c)
-    return { ok:false, error:'Рокировка — раз за партию' };
-
-  let e = s.energy[side];
-  if (typeof e !== 'number' || !isFinite(e)) e = 0;
-  if (e < sp.cost) return { ok:false, error:'Мало эликсира: нужно ' + sp.cost };
-
-  const cx = Math.round(x);
-  const cy = Math.round(y);
-  if (!inside(cx, cy)) return { ok:false, error:'Мимо доски' };
-
   const pc = s.board[cy][cx];
+  const now = s.elapsed || 0;
 
-  if (card === 'f'){
-    if (!pc || pc.side !== side) return { ok:false, error:'Ткни в свою фигуру' };
-    if (typeof pc.rage === 'number' && pc.rage > 0) return { ok:false, error:'Уже в ярости' };
+  switch (card){
 
-    pc.rage = 1;
-    log(s, '⚡ Ярость: ' + PIECES[pc.type].name + ' ' + nameOf(s, side) +
-           ' сходит бесплатно');
-  }
+    case 'f':
+      pc.rage = 1;
+      log(s, '⚡ Ярость: ' + PIECES[pc.type].name + ' ' + nameOf(s, side) +
+             ' ходит без эликсира');
+      break;
 
-  else if (card === 's'){
-    if (!pc || pc.side !== side) return { ok:false, error:'Ткни в свою фигуру' };
-    if (typeof pc.shield === 'number' && pc.shield > 0) return { ok:false, error:'Щит уже стоит' };
+    case 's':
+      if (pc.shield) return err('Щит уже стоит');
+      pc.shield = 1;
+      log(s, '🛡️ Щит: ' + PIECES[pc.type].name + ' ' + nameOf(s, side) +
+             ' переживёт одно взятие');
+      break;
 
-    pc.shield = 1;
-    log(s, '🛡️ Щит: ' + PIECES[pc.type].name + ' ' + nameOf(s, side) +
-           ' переживёт одно взятие');
-  }
+    case 'c': {
+      if (s.spellUsed[side].c) return err('Рокировка — раз за партию');
+      if (kingAttacked(s, side)) return err('Из-под шаха не рокируются');
 
-  else if (card === 'u'){
-    if (!pc || pc.side !== side) return { ok:false, error:'Ткни в свою фигуру' };
-    if (pc.type !== 'pawn') return { ok:false, error:'Только пешку' };
+      const kp = kingPos(s, side);
+      if (!kp) return err('Нет короля');
 
-    pc.type = 'queen';
-    log(s, '👑 Превращение: пешка ' + nameOf(s, side) + ' стала ферзём');
-  }
+      const king = s.board[kp.y][kp.x];
+      s.board[kp.y][kp.x] = pc;
+      s.board[cy][cx] = king;
 
-  else if (card === 'c'){
-    if (s.check && s.check[side]) return { ok:false, error:'Из-под шаха не рокируются' };
+      if (isSquareAttacked(s, cx, cy, foeOf(side))){
+        s.board[kp.y][kp.x] = king;
+        s.board[cy][cx] = pc;
+        return err('Король попадёт под удар');
+      }
 
-    const kp = kingPos(s, side);
-    if (!kp) return { ok:false, error:'Нет короля' };
-    if (!pc || pc.side !== side || pc.type !== 'rook')
-      return { ok:false, error:'Ткни в свою ладью' };
-
-    const king = s.board[kp.y][kp.x];
-
-    s.board[kp.y][kp.x] = pc;
-    s.board[cy][cx] = king;
-
-    if (isSquareAttacked(s, cx, cy, foeOf(side))){
-      s.board[kp.y][kp.x] = king;
-      s.board[cy][cx] = pc;
-      return { ok:false, error:'Король попадёт под удар' };
+      s.spellUsed[side].c = true;
+      log(s, '🔄 Рокировка: король ' + nameOf(s, side) + ' ушёл к ладье');
+      break;
     }
 
-    s.spellUsed[side].c = true;
-    log(s, '🔄 Рокировка: король ' + nameOf(s, side) + ' ушёл к ладье');
+    case 'u':
+      pc.type = 'queen';
+      log(s, '👑 Превращение: пешка ' + nameOf(s, side) + ' стала ферзём');
+      break;
+
+    case 'g':
+      s.board[cy][cx] = { type:'pawn', side:side };
+      log(s, '➕ Подкрепление: пешка ' + nameOf(s, side) + ' на поле');
+      break;
+
+    case 'x':
+      s.board[cy][cx] = null;
+      log(s, '🗡️ Чистка: вражеская пешка убрана с доски');
+      break;
+
+    case 'z':
+      pc.frozenUntil = now + FREEZE_SEC;
+      log(s, '❄️ Заморозка: ' + PIECES[pc.type].name + ' не ходит ' + FREEZE_SEC + ' сек');
+      break;
+
+    case 'l': {
+      const newPromo = (side === 'a') ? 0 : 7;
+      if (cy === newPromo) return err('Пешка на последней линии не переходит');
+      pc.side = side;
+      delete pc.shield;
+      delete pc.rage;
+      log(s, '🤝 Перевербовка: пешка перешла к ' + nameOf(s, side));
+      break;
+    }
+
+    case 'b':
+      if (!s.blocked) s.blocked = {};
+      s.blocked[cx + ':' + cy] = now + BLOCK_SEC;
+      log(s, '🧱 Блокада: клетка ' + coord(cx, cy) + ' закрыта на ' + BLOCK_SEC + ' сек');
+      break;
+
+    case 'e': {
+      let killed = 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){
+        const tx = cx + dx, ty = cy + dy;
+        if (!inside(tx, ty)) continue;
+        const t = s.board[ty][tx];
+        if (!t || t.side === side || t.type === 'king') continue;
+        if (t.type !== 'pawn' && t.type !== 'knight' && t.type !== 'bishop') continue;
+        if (t.shield){ delete t.shield; continue; }
+        s.board[ty][tx] = null;
+        killed++;
+      }
+      log(s, '💣 Взрыв на ' + coord(cx, cy) + ': уничтожено ' + killed);
+      break;
+    }
   }
 
-  s.energy[side] = Math.max(0, e - sp.cost);
-  s.energyAcc[side] = s.energy[side];
+  spendDeal(s, side, card);
 
   if (!s.over) updateStatus(s, true);
-  return { ok:true, cost: sp.cost };
+  return { ok:true };
+}
+
+/* Пропуск карты: убрать из руки, запустить таймер */
+function skipCard(s, side){
+  if (s.over) return err('Бой окончен');
+  const d = s.deal && s.deal[side];
+  if (!d || !d.cur) return err('Сейчас нет карты');
+  spendDeal(s, side, d.cur);
+  return { ok:true };
 }
 
 function castNight(s, side){
-  return { ok:false, error:'Этого действия нет' };
+  return err('Этого действия нет');
 }
 
 function unlock(s, side, x, y){
-  return { ok:false, error:'Этого действия нет' };
+  return err('Этого действия нет');
 }
 
 function resign(s, side){
@@ -727,6 +858,9 @@ function tick(s, dt){
 
   growEnergy(s, 'a', dt);
   growEnergy(s, 'b', dt);
+
+  dealTick(s, 'a', dt);
+  dealTick(s, 'b', dt);
 
   s.timeLeft -= dt;
 
@@ -781,6 +915,10 @@ global.Arena = {
   ENERGY_PER_SEC: ENERGY_PER_SEC,
   ENERGY_FAST_MULT: ENERGY_FAST_MULT,
   ENERGY_OT_MULT: ENERGY_OT_MULT,
+  DEAL_WAIT: DEAL_WAIT,
+  HAND_MAX: HAND_MAX,
+  FREEZE_SEC: FREEZE_SEC,
+  BLOCK_SEC: BLOCK_SEC,
   ARMY_MAX: ARMY_MAX,
   PIECES: PIECES,
   SPELLS: SPELLS,
@@ -797,9 +935,13 @@ global.Arena = {
   legalMoves: legalMoves,
   pseudoMoves: pseudoMoves,
   isPromotion: isPromotion,
+  isBlocked: isBlocked,
+  isFrozen: isFrozen,
   place: place,
   move: move,
   cast: cast,
+  cardTargetOk: cardTargetOk,
+  skipCard: skipCard,
   moveCost: moveCost,
   castNight: castNight,
   unlock: unlock,
