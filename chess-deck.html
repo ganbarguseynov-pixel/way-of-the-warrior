@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Chess Royale - Колода</title>
-<link rel="stylesheet" href="royale.css?v=3">
+<link rel="stylesheet" href="royale.css?v=4">
 <style>
 body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;padding-bottom:88px}
+body.dragging{cursor:grabbing}
 .top-bar{width:100%;padding:12px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;z-index:10}
 .currency-row{display:flex;justify-content:center;align-items:center;gap:8px}
 .currency{display:flex;align-items:center;gap:5px;padding:5px 14px;border-radius:10px;font-weight:900}
@@ -32,39 +33,50 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 .deck-note{width:100%;text-align:center;font-size:12px;color:#dbe9ff;font-weight:700;line-height:1.45;padding:0 6px}
 .deck-note b{color:#43e97b}
 .deck-note.warn{color:#ffd447}
-.deck-picked{display:flex;gap:6px;justify-content:center;margin-top:2px}
+.deck-picked{display:flex;gap:6px;justify-content:center;margin-top:2px;padding:5px;border-radius:12px;border:2px dashed transparent;transition:border-color .15s,background .15s}
+.deck-picked.drop-on{border-color:#43e97b;background:rgba(67,233,123,.12)}
+.deck-picked.drop-on .deck-slot{border-color:#43e97b;background:rgba(67,233,123,.2)}
 .deck-slot{flex:1;height:38px;border-radius:9px;border:2px dashed rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:19px;color:#c6d8ff;background:rgba(2,6,23,.35)}
 .deck-slot.filled{border-style:solid;border-color:#43e97b;color:#fff;background:linear-gradient(145deg,#0f6b3a,#064e26)}
 
-/* ===== ЗНАЧОК ЭЛИКСИРА: глянцевая красная капля ===== */
+/* ===== ЗНАЧОК ЭЛИКСИРА ===== */
 .elixir-row{display:flex;align-items:center;gap:10px;width:100%;margin-top:4px}
 .elixir-badge{display:flex;align-items:center;gap:8px;padding:5px 16px 5px 5px;border-radius:12px;background:linear-gradient(180deg,#1b3563,#0a1430);border:2px solid #4d7fc4;box-shadow:0 4px 0 rgba(3,8,22,.9),inset 0 2px 0 rgba(127,180,255,.35);line-height:1}
 .elixir-drop{width:38px;height:41px;display:block;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(0,0,0,.85))}
 .elixir-num{font-size:23px;font-weight:900;color:#fff;letter-spacing:.3px;text-shadow:0 2px 0 rgba(60,0,0,.9),0 3px 5px rgba(0,0,0,.85),0 0 14px rgba(255,70,70,.75)}
 .elixir-cap{font-size:11px;font-weight:800;color:#eaf3ff;line-height:1.3}
 
-/* ===== ИНДИКАТОР БАЛАНСА КОЛОДЫ ===== */
 .balance-line{width:100%;text-align:center;font-size:11px;font-weight:900;letter-spacing:.3px;min-height:15px;margin-top:2px}
 .balance-line.good{color:#43e97b;text-shadow:0 0 10px rgba(67,233,123,.45)}
 .balance-line.warn{color:#ffd447}
 .balance-line.bad{color:#ff7b72}
 
-.deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
-.card{border-radius:11px;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:space-between;align-items:center;position:relative;padding:5px}
+.deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:4px;padding:8px 6px 10px}
+.card{border-radius:11px;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:space-between;align-items:center;position:relative;padding:4px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .card.common{border-color:#9aa7b8}
 .card.rare{border-color:#ffb300;background:linear-gradient(145deg,#2a2a48,#2a1a00)}
 .card.epic{border-color:#b06aff;background:linear-gradient(145deg,#2a2a48,#250f3e)}
-.card.spell{border-color:#5ee0ff;background:linear-gradient(145deg,#0e2a3d,#071e2c);box-shadow:inset 0 0 18px rgba(94,224,255,.14),0 0 0 1px rgba(94,224,255,.12)}
+.card.spell{border-color:#5ee0ff;background:linear-gradient(145deg,#0e2a3d,#071e2c);box-shadow:inset 0 0 18px rgba(94,224,255,.14)}
 .card.picked{border-color:#43e97b!important}
 .card.soon{opacity:.45}
 
-/* стоимость карты — красный кружок */
-.card-elixir{position:absolute;top:-7px;left:-7px;width:25px;height:25px;border-radius:50%;border:2px solid #fff;z-index:2;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff;background:radial-gradient(circle at 34% 26%,#ff7c7c 0%,#ef2b2b 42%,#c00d0d 72%,#7d0202 100%);box-shadow:0 3px 6px rgba(0,0,0,.65),inset 0 2px 3px rgba(255,255,255,.45),inset 0 -3px 5px rgba(90,0,0,.6);text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.card-elixir{position:absolute;top:-7px;left:-7px;width:25px;height:25px;border-radius:50%;border:2px solid #fff;z-index:3;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff;background:radial-gradient(circle at 34% 26%,#ff7c7c 0%,#ef2b2b 42%,#c00d0d 72%,#7d0202 100%);box-shadow:0 3px 6px rgba(0,0,0,.65),inset 0 2px 3px rgba(255,255,255,.45),inset 0 -3px 5px rgba(90,0,0,.6);text-shadow:0 1px 2px rgba(0,0,0,.7)}
 
-.pick-order{position:absolute;bottom:-6px;right:-6px;background:linear-gradient(145deg,#5ef08a,#1f9e42);color:#083b1c;font-weight:900;font-size:11px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:3}
-.card-icon{font-size:30px;margin-top:16px;color:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,.7))}
-.card-name{font-size:10px;color:#fff;text-align:center;font-weight:900;line-height:1.15}
-.card-level{font-size:9px;color:#ffd447;background:rgba(0,0,0,.75);padding:2px 5px;border-radius:4px;width:90%;text-align:center;margin-top:5px;font-weight:800}
+.card-add{position:absolute;bottom:-7px;left:-7px;width:25px;height:25px;border-radius:50%;border:2px solid #fff;background:linear-gradient(180deg,#5ef08a,#1f9e42);color:#083b1c;font-size:17px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;z-index:4;padding:0;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,.6),inset 0 2px 3px rgba(255,255,255,.5)}
+.card-add:active{transform:scale(.88)}
+.card-add.off{background:linear-gradient(180deg,#94a3b8,#475569);color:#e2e8f0;font-size:15px}
+
+.card-info{position:absolute;top:-7px;right:-7px;width:23px;height:23px;border-radius:50%;border:2px solid #fff;background:linear-gradient(180deg,#5ea8ff,#1e63c8);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;z-index:4;padding:0;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,.6),inset 0 2px 3px rgba(255,255,255,.45)}
+.card-info:active{transform:scale(.9)}
+
+.pick-order{position:absolute;bottom:-6px;right:-6px;background:linear-gradient(145deg,#5ef08a,#1f9e42);color:#083b1c;font-weight:900;font-size:11px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:5}
+.card-icon{font-size:27px;margin-top:13px;color:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,.7));line-height:1}
+.card-name{font-size:9.5px;color:#fff;text-align:center;font-weight:900;line-height:1.1}
+.card-role{font-size:7.5px;color:#9fb6c4;text-align:center;font-weight:800;line-height:1.1;margin-top:1px;letter-spacing:.2px}
+.card-level{font-size:8px;color:#ffd447;background:rgba(0,0,0,.75);padding:2px 4px;border-radius:4px;width:92%;text-align:center;margin-top:4px;font-weight:800}
+
+.drag-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.95;transform:translate(-50%,-58%) scale(1.1) rotate(-4deg);filter:drop-shadow(0 14px 24px rgba(0,0,0,.8))}
+
 .setup-area{width:95vw;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:10px}
 .setup-hint{text-align:center;color:#dbe9ff;font-size:12px;margin:0;min-height:18px;padding:0 10px;line-height:1.45;font-weight:700}
 .board-container{position:relative;width:100%;aspect-ratio:1/1;border:4px solid #ffd447;border-radius:14px;overflow:hidden;box-shadow:0 10px 0 #b45309,0 18px 40px rgba(0,0,0,.6);background:linear-gradient(145deg,#1a1f2e,#0f1420)}
@@ -78,7 +90,7 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 @keyframes zonePulse{from{background-color:rgba(255,212,71,.2)}to{background-color:rgba(255,212,71,.42)}}
 .cell.selected{background:linear-gradient(145deg,#4ade80,#22c55e 60%,#15803d)!important;box-shadow:inset 0 0 12px rgba(255,255,255,.7),0 0 15px rgba(74,222,128,.8)!important}
 .piece{position:relative;z-index:2;pointer-events:none;margin-bottom:8px;filter:drop-shadow(0 4px 5px rgba(0,0,0,.8))}
-.top-cost-badge{position:absolute;top:-4px;left:50%;transform:translateX(-50%);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1.5px solid #fff;z-index:10;background:radial-gradient(circle at 34% 26%,#ff7c7c 0%,#ef2b2b 42%,#c00d0d 72%,#7d0202 100%);box-shadow:0 2px 4px rgba(0,0,0,.6),inset 0 1px 2px rgba(255,255,255,.45);text-shadow:0 1px 1px rgba(0,0,0,.7)}
+.top-cost-badge{position:absolute;top:-4px;left:50%;transform:translateX(-50%);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1.5px solid #fff;z-index:10;background:radial-gradient(circle at 34% 26%,#ff7c7c 0%,#ef2b2b 42%,#c00d0d 72%,#7d0202 100%);box-shadow:0 2px 4px rgba(0,0,0,.6),inset 0 1px 2px rgba(255,255,255,.45)}
 .bottom-hp-bar{position:absolute;bottom:12px;left:5%;width:90%;height:11px;border-radius:4px;display:flex;justify-content:center;align-items:center;z-index:10;border:1px solid #000;background:linear-gradient(180deg,#34c759,#34c75999)}
 .lvl-num{font-size:9px;font-weight:900;color:#000;line-height:11px}
 .hp-text-below{position:absolute;bottom:1px;left:0;width:100%;text-align:center;font-size:8px;font-weight:bold;color:#fff;z-index:10;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000}
@@ -95,6 +107,45 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 .setup-buttons-row{display:flex;gap:8px;width:100%}
 .setup-buttons-row .btn-action{flex:1}
 .lock-badge{display:inline-block;background:linear-gradient(180deg,#475569,#1e293b);color:#ffd447;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;margin-left:6px}
+
+/* ===== МОДАЛКА КАРТЫ ===== */
+#cardModal{position:fixed;inset:0;z-index:9500;display:none;align-items:flex-end;justify-content:center}
+#cardModal.open{display:flex}
+.cm-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.86);backdrop-filter:blur(3px)}
+.cm-sheet{position:relative;width:100%;max-width:420px;max-height:92vh;overflow-y:auto;background:linear-gradient(180deg,#16233d,#0a1020);border:2px solid #2f4a78;border-bottom:0;border-radius:20px 20px 0 0;padding:14px 14px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(0,0,0,.85);animation:cmUp .25s ease-out}
+@keyframes cmUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.cm-close{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:2px solid #475569;background:rgba(2,6,23,.7);color:#cbd5e1;font-size:15px;font-weight:900;cursor:pointer;z-index:3}
+.cm-head{display:flex;align-items:center;gap:12px;padding-right:40px;margin-bottom:10px}
+.cm-badge{width:44px;height:44px;flex-shrink:0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;background:radial-gradient(circle at 34% 26%,#ff7c7c 0%,#ef2b2b 42%,#c00d0d 72%,#7d0202 100%);border:2px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 2px 3px rgba(255,255,255,.45)}
+.cm-name{font-size:17px;font-weight:900;line-height:1.1}
+.cm-rar{font-size:11px;font-weight:800;color:#9fb6c4;margin-top:2px}
+.cm-stage{position:relative;width:100%;aspect-ratio:5/3;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,#0d1a2e,#060d18);border:2px solid #24446b;box-shadow:inset 0 0 30px rgba(0,0,0,.8)}
+.cm-grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(3,1fr)}
+.cm-grid i{border:1px solid rgba(90,140,200,.13)}
+.cm-grid i.d{background:rgba(90,140,200,.075)}
+.cm-stage.flash::before{content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,.6),transparent 72%);z-index:4;animation:cmFlash .32s ease-out;pointer-events:none}
+@keyframes cmFlash{from{opacity:1}to{opacity:0}}
+.cm-piece{position:absolute;z-index:3;transform:translate(-50%,-50%);font-size:clamp(20px,7.5vw,30px);line-height:1;transition:left .42s cubic-bezier(.3,1.2,.6,1),top .42s cubic-bezier(.3,1.2,.6,1);will-change:left,top}
+.cm-piece.mine{color:#7cc4ff;text-shadow:0 0 10px rgba(90,169,236,.9),0 2px 4px #000}
+.cm-piece.foe{color:#ff8b8b;text-shadow:0 0 10px rgba(239,83,80,.9),0 2px 4px #000}
+.cm-piece.charged{animation:cmCharge .45s infinite alternate}
+@keyframes cmCharge{from{filter:brightness(1)}to{filter:brightness(1.9)}}
+.cm-piece.shielded::after{content:'🛡️';position:absolute;right:-9px;top:-11px;font-size:13px;text-shadow:none}
+.cm-piece.hit{animation:cmHit .35s ease-out}
+@keyframes cmHit{0%{transform:translate(-50%,-50%) scale(1)}35%{transform:translate(-50%,-50%) scale(1.45)}100%{transform:translate(-50%,-50%) scale(1)}}
+.cm-float{position:absolute;z-index:6;transform:translate(-50%,-50%);font-size:12px;font-weight:900;color:#ffd447;text-shadow:0 1px 4px #000,0 0 10px rgba(255,212,71,.6);animation:cmFloat 1.5s ease-out forwards;pointer-events:none;white-space:nowrap}
+.cm-float.good{color:#43e97b;text-shadow:0 1px 4px #000,0 0 10px rgba(67,233,123,.7)}
+@keyframes cmFloat{0%{opacity:0;transform:translate(-50%,-40%) scale(.6)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-190%) scale(1.1)}}
+.cm-cap{width:100%;text-align:center;font-size:12px;font-weight:900;color:#5ee0ff;margin:10px 0 8px;min-height:16px;line-height:1.3}
+.cm-desc{font-size:12.5px;line-height:1.5;color:#dbe9ff;margin-bottom:10px}
+.cm-tips{margin:0 0 12px;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.cm-tips li{font-size:11.5px;line-height:1.4;color:#9fb6c4;padding-left:16px;position:relative}
+.cm-tips li::before{content:'▸';position:absolute;left:2px;color:#5ee0ff;font-weight:900}
+.cm-add{width:100%;padding:14px;border:0;border-radius:12px;font-size:15px;font-weight:900;color:#06301a;background:linear-gradient(180deg,#5ef08a,#1f9e42);cursor:pointer;box-shadow:0 5px 0 #0e6b2c}
+.cm-add:active{transform:translateY(3px);box-shadow:0 2px 0 #0e6b2c}
+.cm-add.remove{background:linear-gradient(180deg,#ff8a8a,#b91c1c);color:#fff;box-shadow:0 5px 0 #7f1d1d}
+.cm-add.full{background:linear-gradient(180deg,#94a3b8,#475569);color:#fff;box-shadow:0 5px 0 #334155}
+
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120px);background:linear-gradient(135deg,#22437f,#122a5e);color:#fff;padding:14px 22px;border-radius:12px;font-weight:800;z-index:9999;border:3px solid #34c759;transition:transform .4s cubic-bezier(.4,0,.2,1);font-size:14px;text-align:center;max-width:80vw}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .nav{position:fixed;bottom:0;left:0;width:100%;height:68px;display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom)}
@@ -113,7 +164,7 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 <div class="currency-row">
 <div class="currency">🪙 <span id="deck-coins">1250</span></div>
 <div class="currency">💎 <span id="deck-gems">50</span></div>
-<div class="deck-ver">v9</div>
+<div class="deck-ver">v10</div>
 </div>
 <div class="sub-tabs">
 <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
@@ -191,6 +242,25 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 </div>
 </div>
 
+<div id="cardModal">
+  <div class="cm-backdrop" onclick="closeCardModal()"></div>
+  <div class="cm-sheet">
+    <button class="cm-close" onclick="closeCardModal()">✕</button>
+    <div class="cm-head">
+      <div class="cm-badge" id="cmBadge">6</div>
+      <div>
+        <div class="cm-name" id="cmName">Карта</div>
+        <div class="cm-rar" id="cmRar">Обычная</div>
+      </div>
+    </div>
+    <div class="cm-stage" id="cmStage"></div>
+    <div class="cm-cap" id="cmCaption"></div>
+    <div class="cm-desc" id="cmDesc"></div>
+    <ul class="cm-tips" id="cmTips"></ul>
+    <button class="cm-add" id="cmAdd" onclick="modalAddTap()">Добавить в колоду</button>
+  </div>
+</div>
+
 <div class="nav">
 <button class="nb" onclick="location.href='chess-shop.html'"><i>🎁</i><span>Магазин</span></button>
 <button class="nb on" onclick="location.href='chess-deck.html'"><i><span class="sp"><b></b><b></b><b>♠</b></span></i><span>Колода</span></button>
@@ -228,6 +298,7 @@ const PIECES={
 };
 
 const PIECE_TYPES=['p','n','b','r','k','q','f','s','c','u'];
+const SPELL_TYPES=['f','s','c','u'];
 const ELIXIR={p:1,n:2,b:3,r:4,k:5,q:6,f:2,s:3,c:4,u:6};
 const HAND_SIZE=4;
 const SLOT_COUNT=10;
@@ -236,20 +307,45 @@ const DECKS_KEY='chessDecks';
 const ACTIVE_KEY='chessDeckActive';
 const LEGACY_KEY='chessHand';
 
+const RARITY_NAME={common:'Обычная',rare:'Редкая',epic:'Эпическая',spell:'Заклинание'};
+
 const DECK_CARDS=[
-{name:'Пешка',icon:'♟',elixir:1,level:1,rarity:'common',type:'p'},
-{name:'Конь',icon:'♞',elixir:2,level:1,rarity:'rare',type:'n'},
-{name:'Слон',icon:'♝',elixir:3,level:1,rarity:'rare',type:'b'},
-{name:'Ладья',icon:'♜',elixir:4,level:1,rarity:'epic',type:'r'},
-{name:'Король',icon:'♚',elixir:5,level:1,rarity:'epic',type:'k'},
-{name:'Ферзь',icon:'♛',elixir:6,level:1,rarity:'epic',type:'q'},
-{name:'Ярость',icon:'⚡',elixir:2,level:1,rarity:'spell',type:'f'},
-{name:'Щит',icon:'🛡️',elixir:3,level:1,rarity:'spell',type:'s'},
-{name:'Рокировка',icon:'🔄',elixir:4,level:1,rarity:'spell',type:'c'},
-{name:'Превращение',icon:'👑',elixir:6,level:1,rarity:'spell',type:'u'},
-{name:'Телепорт',icon:'🌀',elixir:3,level:1,rarity:'common',soon:true},
-{name:'Обвал',icon:'🌋',elixir:6,level:1,rarity:'common',soon:true}
+{name:'Пешка',icon:'♟',elixir:1,level:1,rarity:'common',type:'p',role:'темп'},
+{name:'Конь',icon:'♞',elixir:2,level:1,rarity:'rare',type:'n',role:'прыжок'},
+{name:'Слон',icon:'♝',elixir:3,level:1,rarity:'rare',type:'b',role:'диагональ'},
+{name:'Ладья',icon:'♜',elixir:4,level:1,rarity:'epic',type:'r',role:'линия'},
+{name:'Король',icon:'♚',elixir:5,level:1,rarity:'epic',type:'k',role:'цель'},
+{name:'Ферзь',icon:'♛',elixir:6,level:1,rarity:'epic',type:'q',role:'урон'},
+{name:'Ярость',icon:'⚡',elixir:2,level:1,rarity:'spell',type:'f',role:'ускорение'},
+{name:'Щит',icon:'🛡️',elixir:3,level:1,rarity:'spell',type:'s',role:'защита'},
+{name:'Рокировка',icon:'🔄',elixir:4,level:1,rarity:'spell',type:'c',role:'побег'},
+{name:'Превращение',icon:'👑',elixir:6,level:1,rarity:'spell',type:'u',role:'финишер'},
+{name:'Телепорт',icon:'🌀',elixir:3,level:1,rarity:'common',soon:true,role:'скоро'},
+{name:'Обвал',icon:'🌋',elixir:6,level:1,rarity:'common',soon:true,role:'скоро'}
 ];
+
+const CARD_INFO={
+p:{desc:'Самая дешёвая карта в колоде. Один эликсир — один шаг вперёд. Пешкой платят за темп: закрыть дыру, разменяться, дойти до превращения.',
+   tips:['Ходит на одну клетку вперёд, бьёт по диагонали','Единственная карта за 1 — всегда есть чем занять паузу','Дошла до последнего ряда — становится ферзём']},
+n:{desc:'Прыгает буквой Г и перескакивает через фигуры. Единственная карта, которую нельзя заблокировать построением.',
+   tips:['Единственная фигура, которой не мешают чужие фигуры','Сильнее всего против ладьи и ферзя','Вилка — удар по двум целям сразу — его главный трюк']},
+b:{desc:'Ходит по диагонали на любое расстояние. Держит длинные диагонали и связывает фигуры соперника.',
+   tips:['Слабее всего на краю доски, сильнее всего в центре','Хорош против ладьи и ферзя на открытой диагонали','Два слона вместе сильнее ладьи и коня']},
+r:{desc:'Ходит по прямой на любое расстояние. Самая прямолинейная угроза: вскрывает линии и бьёт по вертикалям.',
+   tips:['Любит открытые линии без пешек','Ставь на седьмой ряд — там она ест пешки','В эндшпиле ладья решает больше, чем конь']},
+k:{desc:'Ходит на одну клетку в любую сторону. Его нельзя съесть — только поставить мат. Каждый мат снимает ему HP.',
+   tips:['Мат снимает 1 HP — второй мат заканчивает партию','Держи его за пешками, не выводи в центр','Рокировка спасает его, когда линия вскрыта']},
+q:{desc:'Самая сильная фигура на доске. Ходит как ладья и слон вместе, бьёт в восьми направлениях.',
+   tips:['Не выводи ферзя в первые ходы — его прогонят','Ферзь + ладья заканчивают партию матом','Терять ферзя на размен — почти всегда проигрыш']},
+f:{desc:'Следующий ход этой фигуры ничего не стоит. Ставишь за 2 эликсира, а ходишь ферзём за 6 — экономия четыре. Работает один ход.',
+   tips:['Ставь на ферзя или ладью — там экономия максимальна','На пешку не ставь: потратишь 2, сэкономишь 1','Срабатывает на следующий ход, потом исчезает']},
+s:{desc:'Фигура переживает одно взятие. Соперник бьёт, тратит свой эликсир, а фигура остаётся на доске. Ломает любой размен.',
+   tips:['Щит за 3 ломает атаку на 6 — чистый плюс','Накрывай ферзя или ладью, не пешку','Щит слетает после первого удара, второй убьёт']},
+c:{desc:'Король и ладья меняются местами за один тап. Мгновенный побег из-под удара, без потери темпа.',
+   tips:['Работает один раз за партию','Не сработает, если король под шахом','Не сработает, если новое место под ударом']},
+u:{desc:'Пешка сразу становится ферзём, не доходя до последнего ряда. Дорого, но превращение в центре доски переворачивает партию.',
+   tips:['Работает только на своей пешке','За 6 эликсира получаешь фигуру стоимостью 6 навсегда','Лучше всего на шестом ряду — ферзь сразу бьёт']}
+};
 
 let decks=[];
 let activeSlot=0;
@@ -363,35 +459,200 @@ function pageNext(){ if(page>=Math.ceil(SLOT_COUNT/PER_PAGE)-1) return; page++; 
   },{passive:true});
 })();
 
-function toggleCard(type){
+/* ================= ДОБАВЛЕНИЕ И УДАЛЕНИЕ ================= */
+
+function addCard(type){
   const d=currentDeck();
-  const i=d.indexOf(type);
-  if(i>=0){ d.splice(i,1); }
-  else{
-    if(d.length>=HAND_SIZE){ showToast('В колоде уже 4 карты — убери одну','#ffb300'); return; }
-    d.push(type);
-  }
+  if(d.indexOf(type)>=0){ showToast(PIECES[type].name+' уже в колоде','#ffd447'); return false; }
+  if(d.length>=HAND_SIZE){ showToast('В колоде уже 4 карты — убери одну','#ffb300'); return false; }
+  d.push(type);
   saveDecks();
   renderDeck();
   renderSlots();
+  return true;
 }
+
+function removeCard(type){
+  const d=currentDeck();
+  const i=d.indexOf(type);
+  if(i<0) return false;
+  d.splice(i,1);
+  saveDecks();
+  renderDeck();
+  renderSlots();
+  return true;
+}
+
+function toggleCard(type){
+  if(currentDeck().indexOf(type)>=0) removeCard(type);
+  else addCard(type);
+}
+
+/* ================= ПЕРЕТАСКИВАНИЕ ================= */
+
+let dragState=null;
+let suppressClickUntil=0;
+
+function deckRect(){
+  const el=document.getElementById('deck-picked');
+  if(!el) return null;
+  const r=el.getBoundingClientRect();
+  const pad=14;
+  return { left:r.left-pad, right:r.right+pad, top:r.top-pad, bottom:r.bottom+pad };
+}
+
+function isOverDeck(x,y){
+  const r=deckRect();
+  if(!r) return false;
+  return x>=r.left && x<=r.right && y>=r.top && y<=r.bottom;
+}
+
+function cleanupDrag(){
+  if(!dragState){ return; }
+  clearTimeout(dragState.timer);
+  if(dragState.ghost && dragState.ghost.parentNode) dragState.ghost.parentNode.removeChild(dragState.ghost);
+  const picked=document.getElementById('deck-picked');
+  if(picked) picked.classList.remove('drop-on');
+  document.body.classList.remove('dragging');
+  dragState=null;
+}
+
+function activateDrag(){
+  const d=dragState;
+  if(!d||d.active) return;
+  d.active=true;
+  document.body.classList.add('dragging');
+  const r=d.card.getBoundingClientRect();
+  const g=d.card.cloneNode(true);
+  g.className=d.card.className+' drag-ghost';
+  g.style.width=r.width+'px';
+  g.style.height=r.height+'px';
+  g.style.left=d.x+'px';
+  g.style.top=d.y+'px';
+  document.body.appendChild(g);
+  d.ghost=g;
+  const picked=document.getElementById('deck-picked');
+  if(picked) picked.classList.add('drop-on');
+  if(navigator.vibrate) try{ navigator.vibrate(12); }catch(e){}
+}
+
+function cardPointerDown(e){
+  if(e.button && e.button!==0) return;
+  const card=e.currentTarget;
+  const type=card.dataset.type;
+  if(!type) return;
+  if(e.target.closest('.card-add')||e.target.closest('.card-info')) return;
+
+  cleanupDrag();
+  dragState={
+    type:type, card:card,
+    x0:e.clientX, y0:e.clientY,
+    x:e.clientX, y:e.clientY,
+    active:false, ghost:null, id:e.pointerId,
+    timer:setTimeout(activateDrag,190)
+  };
+  try{ card.setPointerCapture(e.pointerId); }catch(err){}
+}
+
+function cardPointerMove(e){
+  const d=dragState;
+  if(!d) return;
+  d.x=e.clientX; d.y=e.clientY;
+
+  if(!d.active){
+    const dx=e.clientX-d.x0, dy=e.clientY-d.y0;
+    if(Math.abs(dx)>12||Math.abs(dy)>12){
+      clearTimeout(d.timer);
+      dragState=null;
+    }
+    return;
+  }
+
+  if(e.cancelable) e.preventDefault();
+  if(d.ghost){
+    d.ghost.style.left=d.x+'px';
+    d.ghost.style.top=d.y+'px';
+  }
+  const picked=document.getElementById('deck-picked');
+  if(picked) picked.classList.toggle('drop-on', isOverDeck(d.x,d.y));
+}
+
+function cardPointerUp(e){
+  const d=dragState;
+  if(!d) return;
+  clearTimeout(d.timer);
+
+  if(d.active){
+    const over=isOverDeck(e.clientX,e.clientY);
+    const type=d.type;
+    cleanupDrag();
+    if(over) addCard(type);
+    suppressClickUntil=Date.now()+450;
+  } else {
+    cleanupDrag();
+  }
+}
+
+document.addEventListener('pointermove',cardPointerMove,{passive:false});
+document.addEventListener('pointerup',cardPointerUp);
+document.addEventListener('pointercancel',function(){ cleanupDrag(); });
+document.addEventListener('touchmove',function(e){
+  if(dragState&&dragState.active&&e.cancelable) e.preventDefault();
+},{passive:false});
+
+/* ================= ОТРИСОВКА КАРТ ================= */
 
 function renderDeck(){
   const d=currentDeck();
   const grid=document.getElementById('deck-grid');
   grid.innerHTML='';
+
   DECK_CARDS.forEach(function(card){
     const cardDiv=document.createElement('div');
     const picked=card.type?d.indexOf(card.type):-1;
     const isSoon=!!card.soon;
     cardDiv.className='card '+card.rarity+(picked>=0?' picked':'')+(isSoon?' soon':'');
+    if(card.type) cardDiv.dataset.type=card.type;
+
     let order='';
     if(picked>=0) order='<div class="pick-order">'+(picked+1)+'</div>';
-    cardDiv.innerHTML='<div class="card-elixir">'+card.elixir+'</div>'+order+
+
+    const infoBtn = (!isSoon&&card.type)
+      ? '<button class="card-info" data-info="'+card.type+'">i</button>' : '';
+
+    const addBtn = (!isSoon&&card.type)
+      ? '<button class="card-add'+(picked>=0?' off':'')+'" data-add="'+card.type+'">'+(picked>=0?'✓':'+')+'</button>' : '';
+
+    cardDiv.innerHTML=
+      infoBtn+
+      '<div class="card-elixir">'+card.elixir+'</div>'+
+      order+
       '<div class="card-icon">'+card.icon+'</div>'+
       '<div class="card-name">'+card.name+'</div>'+
-      '<div class="card-level">'+(isSoon?'скоро':card.level+'-й ур.')+'</div>';
-    if(!isSoon&&card.type) cardDiv.onclick=function(){ toggleCard(card.type); };
+      '<div class="card-role">'+(card.role||'')+'</div>'+
+      '<div class="card-level">'+(isSoon?'скоро':card.level+'-й ур.')+'</div>'+
+      addBtn;
+
+    const ib=cardDiv.querySelector('.card-info');
+    if(ib){ ib.onclick=function(ev){ ev.stopPropagation(); openCardModal(card.type); }; }
+
+    const ab=cardDiv.querySelector('.card-add');
+    if(ab){
+      ab.onclick=function(ev){
+        ev.stopPropagation();
+        if(currentDeck().indexOf(card.type)>=0) removeCard(card.type);
+        else addCard(card.type);
+      };
+    }
+
+    if(!isSoon&&card.type){
+      cardDiv.addEventListener('pointerdown',cardPointerDown);
+      cardDiv.onclick=function(){
+        if(Date.now()<suppressClickUntil) return;
+        toggleCard(card.type);
+      };
+    }
+
     grid.appendChild(cardDiv);
   });
 
@@ -412,7 +673,7 @@ function renderDeck(){
     note.innerHTML='Колода ' + (activeSlot+1) + ' готова: <b>'+names+'</b>';
   }else{
     note.className='deck-note warn';
-    note.innerHTML='Колода ' + (activeSlot+1) + ': выбрано ' + d.length + ' из 4 — добери карты';
+    note.innerHTML='Колода ' + (activeSlot+1) + ': ' + d.length + ' из 4 — тапни «+» или перетащи карту вверх';
   }
 
   const avgEl=document.getElementById('elixirAvg');
@@ -449,6 +710,214 @@ function renderDeck(){
     bl.textContent=txt+' · '+avg.toFixed(1)+' ⚡';
   }
 }
+
+/* ================= МОДАЛКА С ДЕМО ================= */
+
+let demoType=null;
+let demoTimers=[];
+let demoLoop=null;
+
+const DEMOS={
+p:function(a){
+  a.cap('Пешка идёт на одну клетку вперёд');
+  const p=a.piece('♟','mine',2,2);
+  a.at(250,function(){ a.move(p,2,1); });
+  a.at(900,function(){ a.fx(p,'1 ⚡'); });
+},
+n:function(a){
+  a.cap('Конь прыгает буквой Г — сквозь фигуры');
+  const p=a.piece('♞','mine',1,2);
+  a.at(250,function(){ a.move(p,1,1); });
+  a.at(520,function(){ a.move(p,2,0); });
+  a.at(1050,function(){ a.fx(p,'2 ⚡'); });
+},
+b:function(a){
+  a.cap('Слон режет по диагонали');
+  const p=a.piece('♝','mine',1,2);
+  a.at(250,function(){ a.move(p,3,0); });
+  a.at(1000,function(){ a.fx(p,'3 ⚡'); });
+},
+r:function(a){
+  a.cap('Ладья идёт по прямой');
+  const p=a.piece('♜','mine',0,1);
+  a.at(250,function(){ a.move(p,4,1); });
+  a.at(1000,function(){ a.fx(p,'4 ⚡'); });
+},
+k:function(a){
+  a.cap('Король уходит из-под удара');
+  const k=a.piece('♚','mine',2,1);
+  const e=a.piece('♜','foe',4,1);
+  a.at(300,function(){ a.move(e,3,1); });
+  a.at(650,function(){ a.move(k,2,0); a.fx(k,'спасён','good'); });
+},
+q:function(a){
+  a.cap('Ферзь бьёт по всей доске');
+  const p=a.piece('♛','mine',0,2);
+  a.at(250,function(){ a.move(p,4,0); });
+  a.at(1000,function(){ a.fx(p,'6 ⚡'); });
+},
+f:function(a){
+  a.cap('Ярость: следующий ход бесплатный');
+  const p=a.piece('♛','mine',1,1);
+  a.at(200,function(){ p.classList.add('charged'); a.fx(p,'⚡'); });
+  a.at(800,function(){ a.move(p,3,1); });
+  a.at(1400,function(){ a.fx(p,'0 ⚡','good'); });
+},
+s:function(a){
+  a.cap('Щит: фигура переживает удар');
+  const p=a.piece('♞','mine',2,1);
+  const e=a.piece('♝','foe',4,0);
+  a.at(200,function(){ p.classList.add('shielded'); a.fx(p,'🛡️'); });
+  a.at(800,function(){ a.move(e,3,1); });
+  a.at(1400,function(){ p.classList.remove('shielded'); p.classList.add('hit'); a.flash(); a.fx(p,'выжила','good'); });
+  a.at(1800,function(){ p.classList.remove('hit'); });
+},
+c:function(a){
+  a.cap('Рокировка: король и ладья меняются');
+  const k=a.piece('♚','mine',1,1);
+  const r=a.piece('♜','mine',3,1);
+  a.at(550,function(){ a.flash(); a.move(k,3,1); a.move(r,1,1); });
+  a.at(1450,function(){ a.fx(k,'раз за партию','good'); });
+},
+u:function(a){
+  a.cap('Превращение: пешка становится ферзём');
+  const p=a.piece('♟','mine',2,2);
+  a.at(250,function(){ a.move(p,2,1); });
+  a.at(650,function(){ a.move(p,2,0); });
+  a.at(1150,function(){ a.flash(); p.textContent='♛'; p.classList.add('charged'); a.fx(p,'ферзь!','good'); });
+  a.at(2000,function(){ p.textContent='♟'; p.classList.remove('charged'); });
+}
+};
+
+function clearDemo(){
+  for(let i=0;i<demoTimers.length;i++) clearTimeout(demoTimers[i]);
+  demoTimers=[];
+  if(demoLoop){ clearInterval(demoLoop); demoLoop=null; }
+}
+
+function buildStage(){
+  const st=document.getElementById('cmStage');
+  st.classList.remove('flash');
+  st.innerHTML='';
+  const g=document.createElement('div');
+  g.className='cm-grid';
+  for(let r=0;r<3;r++) for(let c=0;c<5;c++){
+    const i=document.createElement('i');
+    if((r+c)%2===0) i.className='d';
+    g.appendChild(i);
+  }
+  st.appendChild(g);
+  return st;
+}
+
+function runDemo(type){
+  for(let i=0;i<demoTimers.length;i++) clearTimeout(demoTimers[i]);
+  demoTimers=[];
+
+  const st=buildStage();
+  const px=function(c){ return ((c+0.5)/5*100)+'%'; };
+  const py=function(r){ return ((r+0.5)/3*100)+'%'; };
+
+  const api={
+    cap:function(t){ document.getElementById('cmCaption').textContent=t||''; },
+    at:function(ms,fn){ demoTimers.push(setTimeout(fn,ms)); },
+    piece:function(icon,cls,c,r){
+      const el=document.createElement('div');
+      el.className='cm-piece '+cls;
+      el.textContent=icon;
+      el.style.left=px(c);
+      el.style.top=py(r);
+      st.appendChild(el);
+      return el;
+    },
+    move:function(el,c,r){ el.style.left=px(c); el.style.top=py(r); },
+    fx:function(el,text,cls){
+      const f=document.createElement('div');
+      f.className='cm-float '+(cls||'');
+      f.textContent=text;
+      f.style.left=el.style.left;
+      f.style.top=el.style.top;
+      st.appendChild(f);
+      demoTimers.push(setTimeout(function(){ if(f.parentNode) f.parentNode.removeChild(f); },1500));
+    },
+    flash:function(){
+      st.classList.add('flash');
+      demoTimers.push(setTimeout(function(){ st.classList.remove('flash'); },330));
+    }
+  };
+
+  const fn=DEMOS[type];
+  if(fn) fn(api);
+  else api.cap('Демонстрация скоро появится');
+}
+
+function openCardModal(type){
+  const card=null;
+  let def=null;
+  for(let i=0;i<DECK_CARDS.length;i++) if(DECK_CARDS[i].type===type) def=DECK_CARDS[i];
+  if(!def) return;
+
+  demoType=type;
+  clearDemo();
+
+  document.getElementById('cmBadge').textContent=def.elixir;
+  document.getElementById('cmName').textContent=def.name;
+  document.getElementById('cmRar').textContent=RARITY_NAME[def.rarity]||'Обычная';
+  document.getElementById('cmDesc').textContent=(CARD_INFO[type]&&CARD_INFO[type].desc)||'';
+  document.getElementById('cmCaption').textContent='';
+
+  const tips=document.getElementById('cmTips');
+  tips.innerHTML='';
+  const list=(CARD_INFO[type]&&CARD_INFO[type].tips)||[];
+  for(let i=0;i<list.length;i++){
+    const li=document.createElement('li');
+    li.textContent=list[i];
+    tips.appendChild(li);
+  }
+
+  updateModalAdd();
+
+  document.getElementById('cardModal').classList.add('open');
+  runDemo(type);
+  demoLoop=setInterval(function(){ runDemo(type); },3400);
+}
+
+function updateModalAdd(){
+  const btn=document.getElementById('cmAdd');
+  if(!demoType){ return; }
+  const inDeck=currentDeck().indexOf(demoType)>=0;
+  const full=currentDeck().length>=HAND_SIZE;
+
+  btn.classList.remove('remove','full');
+
+  if(inDeck){
+    btn.textContent='Убрать из колоды';
+    btn.classList.add('remove');
+  }else if(full){
+    btn.textContent='Колода заполнена — убери карту';
+    btn.classList.add('full');
+  }else{
+    btn.textContent='Добавить в колоду';
+  }
+}
+
+function modalAddTap(){
+  if(!demoType) return;
+  const inDeck=currentDeck().indexOf(demoType)>=0;
+  if(inDeck){ removeCard(demoType); }
+  else { addCard(demoType); }
+  updateModalAdd();
+}
+
+function closeCardModal(){
+  clearDemo();
+  demoType=null;
+  document.getElementById('cardModal').classList.remove('open');
+  const st=document.getElementById('cmStage');
+  if(st) st.innerHTML='';
+}
+
+/* ================= РАССТАНОВКА ================= */
 
 const SETUP_KEY='chessSetup';
 const SETUP_ROWS=[6,7];
@@ -616,8 +1085,8 @@ function showToast(msg,color){
   toast.className='toast';toast.style.borderColor=color;
   toast.style.boxShadow='0 10px 30px rgba(0,0,0,.8),0 0 20px '+color+'66';
   toast.innerText=msg;document.body.appendChild(toast);
-  setTimeout(()=>toast.classList.add('show'),50);
-  setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),400);},2400);
+  setTimeout(function(){toast.classList.add('show');},50);
+  setTimeout(function(){toast.classList.remove('show');setTimeout(function(){toast.remove();},400);},2400);
 }
 
 decks=loadDecks();
