@@ -1046,4 +1046,4 @@ global.Arena = {
   defaultSetup: defaultSetup
 };
 
-})(window);
+})(window);u
