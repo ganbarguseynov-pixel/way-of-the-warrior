@@ -1,11 +1,12 @@
 /* ============================================================
-   arena.js — правила и движок шахматных арен  (VER 21)
-   Карты бесплатны. Рука: одна карта, выпадает каждые 30 сек.
+   arena.js — правила и движок шахматных арен  (VER 22)
+   Карты бесплатны, рука по таймеру. Уровни карт и фигур (1–3).
+   Фигура: HP = уровень. Удар по фигуре с HP>1 снимает HP, не взятие.
    ============================================================ */
 (function (global) {
 'use strict';
 
-const VER = '21';
+const VER = '22';
 const STEP = 1000;
 const MAX_ARENA = 10;
 
@@ -22,8 +23,23 @@ const ENERGY_OT_MULT = 2;
 
 const DEAL_WAIT = 30;
 const HAND_MAX  = 4;
-const FREEZE_SEC = 10;
-const BLOCK_SEC  = 12;
+
+/* ===== УРОВНИ ===== */
+const LV_MAX = 3;
+const LV_COST = { 2: 100, 3: 200 };
+const FREEZE_BY_LV = [0, 10, 15, 20];
+const BLOCK_BY_LV  = [0, 12, 18, 24];
+const TARGET_BY_LV = {
+  1: ['pawn'],
+  2: ['pawn','knight','bishop'],
+  3: ['pawn','knight','bishop','rook','queen']
+};
+const BLAST_BY_LV = {
+  1: ['pawn','knight','bishop'],
+  2: ['pawn','knight','bishop','rook'],
+  3: ['pawn','knight','bishop','rook','queen']
+};
+const UPGRADABLE = ['pawn','knight','bishop','rook','queen'];
 
 const ARMY_MAX = { p:8, r:2, n:2, b:2, q:1, k:1 };
 
@@ -40,25 +56,25 @@ const PIECES = {
 
 const SPELLS = {
   f: { name:'Ярость',       icon:'⚡',  target:'own',
-       hint:'Тапни свою фигуру — её следующий ход не тратит эликсир' },
+       hint:'Тапни свою фигуру — её ход (или ходы) не тратят эликсир' },
   s: { name:'Щит',          icon:'🛡️', target:'own',
-       hint:'Тапни свою фигуру — переживёт одно взятие' },
+       hint:'Тапни свою фигуру — выдержит удары по уровню карты' },
   c: { name:'Рокировка',    icon:'🔄',  target:'ownRook',
-       hint:'Тапни свою ладью — король и ладья поменяются. Раз за партию' },
+       hint:'Тапни свою ладью — король и ладья поменяются местами' },
   u: { name:'Превращение',  icon:'👑',  target:'ownPawn',
        hint:'Тапни свою пешку — станет ферзём' },
   g: { name:'Подкрепление', icon:'➕',  target:'home',
        hint:'Тапни пустую клетку в своих двух последних рядах — появится пешка' },
-  x: { name:'Чистка',       icon:'🗡️', target:'foePawn',
-       hint:'Тапни вражескую пешку — её уберут с доски' },
+  x: { name:'Чистка',       icon:'🗡️', target:'foeLv',
+       hint:'Тапни вражескую фигуру — её уберут с доски' },
   z: { name:'Заморозка',    icon:'❄️',  target:'foe',
-       hint:'Тапни вражескую фигуру — 10 секунд она не ходит' },
-  l: { name:'Перевербовка', icon:'🤝',  target:'foePawn',
-       hint:'Тапни вражескую пешку — она станет твоей' },
+       hint:'Тапни вражескую фигуру — она не ходит какое-то время' },
+  l: { name:'Перевербовка', icon:'🤝',  target:'foeLv',
+       hint:'Тапни вражескую фигуру — она станет твоей' },
   b: { name:'Блокада',      icon:'🧱',  target:'empty',
-       hint:'Тапни пустую клетку — 12 секунд в неё никто не войдёт' },
+       hint:'Тапни пустую клетку — в неё никто не сможет войти' },
   e: { name:'Взрыв',        icon:'💣',  target:'any',
-       hint:'Тапни клетку — взрыв уничтожит вражеские пешки, коней и слонов в 3×3' }
+       hint:'Тапни клетку — взрыв ударит по 3×3' }
 };
 
 const SPELL_ORDER = ['f','s','c','u','g','x','z','l','b','e'];
@@ -118,6 +134,46 @@ function log(s, text){
 
 function err(text){ return { ok:false, error:text }; }
 
+/* ================= УРОВНИ ================= */
+
+function clampLv(v){
+  const n = parseInt(v, 10);
+  if (!(n >= 1)) return 1;
+  return n > LV_MAX ? LV_MAX : n;
+}
+
+/* raw: { cards:{f:2,...}, pieces:{pawn:1,...} } */
+function normLevels(raw){
+  const cards = {}, pieces = {};
+  const sc = (raw && raw.cards) || {};
+  const sp = (raw && raw.pieces) || {};
+  for (let i = 0; i < SPELL_ORDER.length; i++){
+    const k = SPELL_ORDER[i];
+    cards[k] = clampLv(sc[k]);
+  }
+  for (let i = 0; i < UPGRADABLE.length; i++){
+    const t = UPGRADABLE[i];
+    pieces[t] = clampLv(sp[t]);
+  }
+  return { cards: cards, pieces: pieces };
+}
+
+function cardLv(s, side, card){
+  const L = s.lv && s.lv[side];
+  return (L && L.cards && L.cards[card]) || 1;
+}
+
+function pieceLv(s, side, type){
+  if (type === 'king') return 1;
+  const L = s.lv && s.lv[side];
+  return (L && L.pieces && L.pieces[type]) || 1;
+}
+
+/* Цена перехода на следующий уровень (или null, если уже максимум) */
+function nextLvCost(cur){
+  return LV_COST[cur + 1] || null;
+}
+
 /* ================= ЭЛИКСИР ================= */
 
 function energyRate(s){
@@ -170,8 +226,8 @@ function boardSig(s){
       if (!pc){ sig += '.'; continue; }
       sig += pc.type + pc.side;
       if (pc.type === 'king') sig += 'h' + (pc.hp || 0);
-      if (pc.shield) sig += 'S';
-      if (pc.rage) sig += 'R';
+      if (pc.shield) sig += 'S' + pc.shield;
+      if (pc.rage) sig += 'R' + pc.rage;
       sig += ',';
     }
   }
@@ -251,7 +307,12 @@ function placeList(s, side, army){
     if (s.board[row][col]) continue;
 
     const pc = { type: a.type, side: side };
-    if (a.type === 'king'){ pc.hp = KING_HP; pc.maxHp = KING_HP; }
+    if (a.type === 'king'){
+      pc.hp = KING_HP; pc.maxHp = KING_HP;
+    } else {
+      const h = pieceLv(s, side, a.type);
+      pc.hp = h; pc.maxHp = h;
+    }
 
     s.board[row][col] = pc;
   }
@@ -492,7 +553,11 @@ function cardTargetOk(s, side, card, x, y){
     case 'ownRook': return mine && pc.type === 'rook';
     case 'ownPawn': return mine && pc.type === 'pawn';
     case 'foe':     return foe;
-    case 'foePawn': return !!(pc && pc.side !== side && pc.type === 'pawn');
+    case 'foeLv': {
+      if (!pc || pc.side === side || pc.type === 'king') return false;
+      const list = TARGET_BY_LV[cardLv(s, side, card)] || TARGET_BY_LV[1];
+      return list.indexOf(pc.type) >= 0;
+    }
     case 'empty':   return !pc;
     case 'home':    return !pc && homeRowsFor(side).indexOf(y) >= 0;
     case 'any':     return true;
@@ -528,6 +593,7 @@ function create(opts){
   const players = opts.players || {};
   const setups  = opts.setups || {};
   const decks   = opts.decks || {};
+  const lvls    = opts.levels || {};
 
   const s = {
     id: opts.id || 'local',
@@ -545,6 +611,8 @@ function create(opts){
     board: Array.from({ length:8 }, () => Array(8).fill(null)),
     energy: { a:5, b:5 },
     energyAcc: { a:5, b:5 },
+
+    lv: { a: normLevels(lvls.a), b: normLevels(lvls.b) },
 
     hand: { a: normHand(decks.a), b: normHand(decks.b) },
     spellUsed: { a:{}, b:{} },
@@ -632,13 +700,19 @@ function move(s, side, fx, fy, tx, ty, promo){
   s.energy[side] = Math.max(0, have - cost);
   s.energyAcc[side] = s.energy[side];
 
-  /* Щит поглощает удар: атакующий остаётся на месте, жертва жива */
-  if (tgt && typeof tgt.shield === 'number' && tgt.shield > 0){
-    delete tgt.shield;
+  /* Удар по фигуре с щитом или HP>1: атакующий стоит на месте */
+  if (tgt && (tgt.shield > 0 || (tgt.hp || 1) > 1)){
+    if (tgt.shield > 0){
+      tgt.shield -= 1;
+      if (tgt.shield <= 0) delete tgt.shield;
+      log(s, '🛡️ Щит поглотил удар. ' + PIECES[tgt.type].name +
+             ' ' + nameOf(s, tgt.side) + ' выжила');
+    } else {
+      tgt.hp -= 1;
+      log(s, PIECES[tgt.type].name + ' ' + nameOf(s, tgt.side) +
+             ' ранена. HP ' + tgt.hp + '/' + (tgt.maxHp || tgt.hp + 1));
+    }
     spendRage(pc);
-
-    log(s, '🛡️ Щит поглотил удар. ' + PIECES[tgt.type].name +
-           ' ' + nameOf(s, tgt.side) + ' выжила');
     updateStatus(s);
     return { ok:true, cost: cost, blocked: true };
   }
@@ -705,26 +779,29 @@ function cast(s, side, card, x, y){
   if (!s.spellUsed) s.spellUsed = { a:{}, b:{} };
   if (!s.spellUsed[side]) s.spellUsed[side] = {};
 
+  const lv = cardLv(s, side, card);
   const pc = s.board[cy][cx];
   const now = s.elapsed || 0;
 
   switch (card){
 
     case 'f':
-      pc.rage = 1;
+      pc.rage = lv;
       log(s, '⚡ Ярость: ' + PIECES[pc.type].name + ' ' + nameOf(s, side) +
-             ' ходит без эликсира');
+             ' ходит без эликсира ×' + lv);
       break;
 
     case 's':
       if (pc.shield) return err('Щит уже стоит');
-      pc.shield = 1;
+      pc.shield = lv;
       log(s, '🛡️ Щит: ' + PIECES[pc.type].name + ' ' + nameOf(s, side) +
-             ' переживёт одно взятие');
+             ' выдержит ударов: ' + lv);
       break;
 
     case 'c': {
-      if (s.spellUsed[side].c) return err('Рокировка — раз за партию');
+      const used = s.spellUsed[side].c || 0;
+      if (used >= lv) return err(lv === 1 ? 'Рокировка — раз за партию' :
+                                   'Рокировка: лимит ' + lv + ' за партию исчерпан');
       if (kingAttacked(s, side)) return err('Из-под шаха не рокируются');
 
       const kp = kingPos(s, side);
@@ -740,56 +817,60 @@ function cast(s, side, card, x, y){
         return err('Король попадёт под удар');
       }
 
-      s.spellUsed[side].c = true;
+      s.spellUsed[side].c = used + 1;
       log(s, '🔄 Рокировка: король ' + nameOf(s, side) + ' ушёл к ладье');
       break;
     }
 
     case 'u':
       pc.type = 'queen';
+      if (lv >= 2) pc.shield = lv - 1;
       log(s, '👑 Превращение: пешка ' + nameOf(s, side) + ' стала ферзём');
       break;
 
     case 'g':
-      s.board[cy][cx] = { type:'pawn', side:side };
-      log(s, '➕ Подкрепление: пешка ' + nameOf(s, side) + ' на поле');
+      s.board[cy][cx] = { type:'pawn', side:side, hp:lv, maxHp:lv };
+      log(s, '➕ Подкрепление: пешка ' + nameOf(s, side) + ' на поле' +
+             (lv > 1 ? ' (HP ' + lv + ')' : ''));
       break;
 
     case 'x':
       s.board[cy][cx] = null;
-      log(s, '🗡️ Чистка: вражеская пешка убрана с доски');
+      log(s, '🗡️ Чистка: ' + PIECES[pc.type].name.toLowerCase() + ' убрана с доски');
       break;
 
     case 'z':
-      pc.frozenUntil = now + FREEZE_SEC;
-      log(s, '❄️ Заморозка: ' + PIECES[pc.type].name + ' не ходит ' + FREEZE_SEC + ' сек');
+      pc.frozenUntil = now + FREEZE_BY_LV[lv];
+      log(s, '❄️ Заморозка: ' + PIECES[pc.type].name + ' не ходит ' + FREEZE_BY_LV[lv] + ' сек');
       break;
 
     case 'l': {
       const newPromo = (side === 'a') ? 0 : 7;
-      if (cy === newPromo) return err('Пешка на последней линии не переходит');
+      if (cy === newPromo) return err('Фигура на последней линии не переходит');
       pc.side = side;
       delete pc.shield;
       delete pc.rage;
-      log(s, '🤝 Перевербовка: пешка перешла к ' + nameOf(s, side));
+      log(s, '🤝 Перевербовка: ' + PIECES[pc.type].name.toLowerCase() + ' перешла к ' + nameOf(s, side));
       break;
     }
 
     case 'b':
       if (!s.blocked) s.blocked = {};
-      s.blocked[cx + ':' + cy] = now + BLOCK_SEC;
-      log(s, '🧱 Блокада: клетка ' + coord(cx, cy) + ' закрыта на ' + BLOCK_SEC + ' сек');
+      s.blocked[cx + ':' + cy] = now + BLOCK_BY_LV[lv];
+      log(s, '🧱 Блокада: клетка ' + coord(cx, cy) + ' закрыта на ' + BLOCK_BY_LV[lv] + ' сек');
       break;
 
     case 'e': {
+      const hit = BLAST_BY_LV[lv] || BLAST_BY_LV[1];
       let killed = 0;
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){
         const tx = cx + dx, ty = cy + dy;
         if (!inside(tx, ty)) continue;
         const t = s.board[ty][tx];
         if (!t || t.side === side || t.type === 'king') continue;
-        if (t.type !== 'pawn' && t.type !== 'knight' && t.type !== 'bishop') continue;
+        if (hit.indexOf(t.type) < 0) continue;
         if (t.shield){ delete t.shield; continue; }
+        if (t.hp > 1){ t.hp -= 1; continue; }
         s.board[ty][tx] = null;
         killed++;
       }
@@ -801,7 +882,7 @@ function cast(s, side, card, x, y){
   spendDeal(s, side, card);
 
   if (!s.over) updateStatus(s, true);
-  return { ok:true };
+  return { ok:true, lv:lv };
 }
 
 /* Пропуск карты: убрать из руки, запустить таймер */
@@ -917,8 +998,9 @@ global.Arena = {
   ENERGY_OT_MULT: ENERGY_OT_MULT,
   DEAL_WAIT: DEAL_WAIT,
   HAND_MAX: HAND_MAX,
-  FREEZE_SEC: FREEZE_SEC,
-  BLOCK_SEC: BLOCK_SEC,
+  LV_MAX: LV_MAX,
+  LV_COST: LV_COST,
+  UPGRADABLE: UPGRADABLE,
   ARMY_MAX: ARMY_MAX,
   PIECES: PIECES,
   SPELLS: SPELLS,
@@ -930,6 +1012,11 @@ global.Arena = {
   deltaFor: deltaFor,
   lossFor: lossFor,
   coord: coord,
+  clampLv: clampLv,
+  normLevels: normLevels,
+  cardLv: cardLv,
+  pieceLv: pieceLv,
+  nextLvCost: nextLvCost,
   create: create,
   tick: tick,
   legalMoves: legalMoves,
