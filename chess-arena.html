@@ -45,7 +45,6 @@ body.battle-mode .bottom-nav,body.battle-mode #verTag{display:none!important}
 #checkBar.on{visibility:visible;opacity:1;animation:barPulse .8s infinite alternate}
 @keyframes barPulse{from{opacity:.72}to{opacity:1}}
 
-/* ===== ЭЛИКСИР: маджента как в Clash Royale ===== */
 .elix-wrap{position:relative;width:min(95vw,420px);height:50px;padding:5px 6px 5px 70px;margin-top:8px;border-radius:15px;background:linear-gradient(180deg,#1b2a52,#101a34 55%,#080e1f);border:2px solid #3f5c9e;box-shadow:0 5px 0 #060c1c,0 12px 24px rgba(0,0,0,.75),inset 0 2px 0 rgba(140,180,255,.35)}
 .elix-wrap.bump{animation:elixBump .3s ease-out}
 @keyframes elixBump{0%{transform:translateY(0)}35%{transform:translateY(-3px) scale(1.012)}100%{transform:translateY(0)}}
@@ -65,27 +64,33 @@ body.battle-mode .bottom-nav,body.battle-mode #verTag{display:none!important}
 .elix-spark{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;z-index:6;pointer-events:none;background:radial-gradient(circle,#fff,rgba(255,110,225,.6) 45%,transparent 72%);animation:elixSpark .55s ease-out forwards}
 @keyframes elixSpark{0%{transform:scale(.3);opacity:1}60%{transform:scale(2.4);opacity:.7}100%{transform:scale(3.2);opacity:0}}
 
-/* ===== ПАНЕЛЬ КАРТ ===== */
-#spellRow{width:min(95vw,420px);display:flex;gap:8px;margin-top:8px;justify-content:center}
-#spellRow:empty{display:none}
-.spell-btn{flex:1;max-width:96px;position:relative;padding:6px 2px 5px;border-radius:11px;border:2px solid #5ee0ff;background:linear-gradient(180deg,#0e2a3d,#071e2c);color:#e6fbff;font-size:10px;font-weight:800;line-height:1.2;cursor:pointer;box-shadow:0 3px 0 #03131e}
-.spell-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #03131e}
-.spell-btn .ic{display:block;font-size:19px;line-height:1.1}
-.spell-btn .nm{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.spell-btn .co{position:absolute;top:-7px;right:-7px;width:21px;height:21px;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;background:radial-gradient(circle at 34% 26%,#ff7ce6 0%,#ea2ecb 42%,#a50fa6 72%,#5e0668 100%);box-shadow:0 2px 4px rgba(0,0,0,.7)}
-.spell-btn.armed{border-color:#fff;background:linear-gradient(180deg,#1b5470,#0b3247);box-shadow:0 0 14px rgba(94,224,255,.9),0 3px 0 #03131e}
-.spell-btn.dim{opacity:.35;filter:grayscale(.5)}
-.spell-btn.used{opacity:.25;filter:grayscale(1)}
+#handPanel{width:min(95vw,420px);display:flex;gap:10px;align-items:center;margin-top:8px}
+.hc{position:relative;width:104px;height:72px;flex-shrink:0;border-radius:12px;border:2px solid #5ee0ff;background:linear-gradient(180deg,#0e2a3d,#071e2c);color:#e6fbff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;box-shadow:0 4px 0 #03131e;padding:0}
+.hc:active{transform:translateY(2px)}
+.hc.empty{border-color:#334155;background:linear-gradient(180deg,#1e293b,#0f172a);color:#64748b;box-shadow:0 4px 0 #050b16}
+.hc.armed{border-color:#fff;box-shadow:0 0 14px rgba(94,224,255,.9),0 4px 0 #03131e}
+.hc-free{position:absolute;top:-8px;right:-6px;font-size:9px;font-weight:900;color:#06301a;background:linear-gradient(180deg,#5ef08a,#1f9e42);border:2px solid #fff;border-radius:8px;padding:1px 5px}
+.hc-ic{font-size:22px;line-height:1}
+.hc-nm{font-size:10px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px}
+#handInfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+#handTitle{font-size:12px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hand-bar{height:6px;border-radius:3px;background:#020617;overflow:hidden}
+#handFill{height:100%;width:0;background:linear-gradient(90deg,#5ee0ff,#3b8ef0);transition:width .2s linear}
+#handFill.ready{background:linear-gradient(90deg,#5ef08a,#1f9e42)}
+#handTimer{font-size:11px;color:#94a3b8;font-weight:700}
+#skipBtn{align-self:flex-start;padding:6px 12px;border-radius:9px;border:1px solid #475569;background:linear-gradient(145deg,#475569,#1e293b);color:#fff;font-size:11px;font-weight:800;cursor:pointer}
+#skipBtn:disabled{opacity:.35}
 #castHint{width:min(95vw,420px);text-align:center;font-size:12px;font-weight:800;color:#5ee0ff;min-height:16px;margin-top:4px;line-height:1.3}
 
-#board{--side:min(95vw,420px,calc(100dvh - 262px));width:var(--side);height:var(--side);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border:3px solid #334155;border-radius:12px;overflow:hidden;background:var(--dark);box-shadow:0 12px 34px rgba(0,0,0,.85);position:relative;contain:layout paint}
+#board{--side:min(95vw,420px,calc(100dvh - 326px));width:var(--side);height:var(--side);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border:3px solid #334155;border-radius:12px;overflow:hidden;background:var(--dark);box-shadow:0 12px 34px rgba(0,0,0,.85);position:relative;contain:layout paint}
 .cell{position:relative;display:flex;align-items:center;justify-content:center;font-size:clamp(15px,5vw,26px);cursor:pointer;overflow:hidden}
 .cell.light{background:var(--light)}
 .cell.dark{background:var(--dark)}
 .cell.sel{outline:3px solid #4ade80;outline-offset:-3px}
-.cell.cast-target{outline:3px dashed #5ee0ff;outline-offset:-3px}
-.cell.move::after{content:'';position:absolute;width:24%;height:24%;border-radius:50%;background:radial-gradient(circle,#ffcc00,#b8860b)}
-.cell.cap::after{content:'';position:absolute;inset:6%;border:3px solid #ef4444;border-radius:50%}
+.cell.cast-target{outline:3px dashed #5ee0ff;outline-offset:-3px;background-image:radial-gradient(circle,rgba(94,224,255,.28),transparent 70%)}
+.cell.blocked::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(45deg,rgba(148,163,184,.42) 0 5px,rgba(15,23,42,.6) 5px 10px)}
+.cell.move::after{content:'';position:absolute;width:24%;height:24%;border-radius:50%;background:radial-gradient(circle,#ffcc00,#b8860b);z-index:2}
+.cell.cap::after{content:'';position:absolute;inset:6%;border:3px solid #ef4444;border-radius:50%;z-index:2}
 .cell.check{box-shadow:inset 0 0 0 3px #ef4444,inset 0 0 20px rgba(239,68,68,.8)}
 .cell.check .piece{animation:checkPulse .65s infinite alternate}
 @keyframes checkPulse{from{filter:brightness(1)}to{filter:brightness(1.9)}}
@@ -94,6 +99,7 @@ body.battle-mode .bottom-nav,body.battle-mode #verTag{display:none!important}
 .piece.theirs{color:#ef5350;text-shadow:0 0 6px rgba(239,83,80,.75),0 2px 4px rgba(0,0,0,.95)}
 .piece.shielded::before{content:'🛡️';position:absolute;right:-10px;top:-8px;font-size:10px;z-index:4}
 .piece.raging::before{content:'⚡';position:absolute;right:-10px;top:-8px;font-size:10px;z-index:4}
+.piece.frozen::after{content:'❄️';position:absolute;left:-10px;top:-8px;font-size:10px;z-index:4}
 .cost-badge{position:absolute;top:0;right:0;width:36%;height:36%;max-width:15px;max-height:15px;border-radius:50%;background:linear-gradient(145deg,#ff6ee0,#a50fa6);color:#fff;font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;border:1px solid #fff;z-index:9;pointer-events:none}
 .hp-bar{position:absolute;bottom:7px;left:8%;width:84%;height:7px;border-radius:3px;background:#000;z-index:8;display:flex;align-items:center;justify-content:center;overflow:hidden;pointer-events:none}
 .hp-fill{position:absolute;left:0;top:0;height:100%;background:linear-gradient(180deg,#34c759,#34c759aa);z-index:1}
@@ -146,7 +152,7 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
 </style>
 </head>
 <body data-arena="1">
-<div id="verTag">v34</div>
+<div id="verTag">v35</div>
 
 <div id="lobby">
   <div class="card">
@@ -181,7 +187,19 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
     </div>
     <div class="elix-num" id="myElixNum">5</div>
   </div>
-  <div id="spellRow"></div>
+  <div id="handPanel">
+    <button id="handCard" class="hc empty">
+      <span class="hc-free">FREE</span>
+      <span class="hc-ic" id="hcIc">⏳</span>
+      <span class="hc-nm" id="hcNm">Жди карту</span>
+    </button>
+    <div id="handInfo">
+      <div id="handTitle">Следующая карта скоро</div>
+      <div class="hand-bar"><div id="handFill"></div></div>
+      <div id="handTimer">—</div>
+      <button id="skipBtn" disabled>Пропустить</button>
+    </div>
+  </div>
   <div id="castHint"></div>
   <div id="tools">
     <button id="drawBtn">🤝 Ничья (2)</button>
@@ -229,19 +247,23 @@ body[data-arena="10"] .piece.theirs{color:#a01818;text-shadow:0 0 4px rgba(255,2
   <button class="nav-btn" onclick="location.href='leaderboard.html'"><div class="icon-wrap"><span class="icon">🏆</span></div><span>Рейтинг</span></button>
 </div>
 
-<script src="arena.js?v=20"></script>
+<script src="arena.js?v=21"></script>
 <script src="friends.js?v=3"></script>
-<script src="net.js?v=20"></script>
+<script src="net.js?v=22"></script>
 <script>
 const sb = supabase.createClient('https://qnpriwfxzuoymoumdtrl.supabase.co','sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF');
 const tg = window.Telegram.WebApp;
 try { tg.ready(); tg.expand(); } catch(e){}
 const $ = function(id){ return document.getElementById(id); };
 const DRAW_MAX = 2;
+const SP = Arena.SPELLS;
 
-let sel=null, cells=[], cellSig=[], lastTimeTxt='', lastSpeedTxt='', searching=false, checkState=-1, drawState='', promoPending=null;
-let castCard=null;
-let spellSig='';
+let sel=null, cells=[], cellSig=[], lastTimeTxt='', lastSpeedTxt='', searching=false;
+let checkState=-1, drawState='', promoPending=null;
+let armed=null;
+let handSig='';
+let stateAt=Date.now();
+let handLoop=null;
 
 let toastTimer=null;
 function toast(text){
@@ -259,82 +281,77 @@ function playerKey(){
 }
 function playerName(){ return localStorage.getItem('userName')||'Игрок'; }
 
-/* ================= КАРТЫ ИЗ КОЛОДЫ ================= */
+/* ================= РУКА ================= */
 
-const SPELL_UI = {
-  f:{ name:'Ярость',      icon:'⚡', cost:2, hint:'Тапни свою фигуру — её следующий ход бесплатно' },
-  s:{ name:'Щит',         icon:'🛡️', cost:3, hint:'Тапни свою фигуру — переживёт одно взятие' },
-  c:{ name:'Рокировка',   icon:'🔄', cost:4, hint:'Тапни свою ладью — король и ладья поменяются. Раз за партию' },
-  u:{ name:'Превращение', icon:'👑', cost:6, hint:'Тапни свою пешку — станет ферзём' }
-};
-const SPELL_TYPES = ['f','s','c','u'];
-
-function myHand(){
-  try{
-    const d=JSON.parse(localStorage.getItem('chessDecks')||'null');
-    const a=parseInt(localStorage.getItem('chessDeckActive')||'0',10);
-    const list=(Array.isArray(d)&&Array.isArray(d[a]))?d[a]:[];
-    const out=[];
-    for(let i=0;i<list.length;i++){
-      if(SPELL_TYPES.indexOf(list[i])>=0 && out.indexOf(list[i])<0) out.push(list[i]);
-    }
-    return out;
-  }catch(e){ return []; }
+function myDeal(s){
+  return (s && s.deal && s.deal[Net.mySide]) || null;
 }
 
-function renderSpells(s, my){
-  const hand=myHand();
-  const used=(s.spellUsed && s.spellUsed[my]) || {};
-  const energy=(s.energy && typeof s.energy[my]==='number') ? s.energy[my] : 0;
+function renderHand(s){
+  const d=myDeal(s);
+  const cur=(d && d.cur) ? d.cur : null;
+  if(armed && armed!==cur) armed=null;
 
-  const sig=hand.join('')+'|'+Math.floor(energy)+'|'+(castCard||'-')+'|'+(used.c?'c':'');
-  if(sig===spellSig) return;
-  spellSig=sig;
+  const sig=(cur||'-')+'|'+(armed?'A':'')+'|'+(s.over?'X':'');
+  if(sig===handSig) return;
+  handSig=sig;
 
-  const row=$('spellRow');
-  row.innerHTML='';
-  for(let i=0;i<hand.length;i++){
-    const t=hand[i], def=SPELL_UI[t];
-    const b=document.createElement('button');
-    b.className='spell-btn';
-    if(castCard===t) b.classList.add('armed');
-    const isUsed=(t==='c' && used.c);
-    if(isUsed) b.classList.add('used');
-    else if(energy<def.cost) b.classList.add('dim');
-    b.innerHTML='<span class="co">'+def.cost+'</span><span class="ic">'+def.icon+'</span><span class="nm">'+def.name+'</span>';
-    (function(card){ b.onclick=function(){ onSpellTap(card); }; })(t);
-    row.appendChild(b);
+  const btn=$('handCard');
+  btn.className='hc'+(cur?'':' empty')+(armed?' armed':'');
+
+  if(cur){
+    $('hcIc').textContent=SP[cur].icon;
+    $('hcNm').textContent=SP[cur].name;
+    $('handTitle').textContent='На руке: '+SP[cur].name;
+    $('handFill').className='ready';
+    $('handFill').style.width='100%';
+    $('handTimer').textContent='Тапни карту, потом цель';
+    $('castHint').textContent=armed?SP[cur].hint:'';
+  }else{
+    $('hcIc').textContent='⏳';
+    $('hcNm').textContent='Жди карту';
+    $('handTitle').textContent='Следующая карта скоро';
+    $('handFill').className='';
+    $('castHint').textContent='';
   }
-
-  const hint=$('castHint');
-  if(castCard){ hint.textContent=SPELL_UI[castCard].hint; }
-  else { hint.textContent=''; }
+  $('skipBtn').disabled=!cur||!!s.over;
 }
 
-function onSpellTap(card){
+function handTick(){
   const s=Net.state;
-  if(!s||s.over) return;
-  const my=Net.mySide;
+  if(!s||!document.body.classList.contains('battle-mode')) return;
+  const d=myDeal(s); if(!d) return;
+  if(d.cur) return;
 
-  if(castCard===card){ castCard=null; spellSig=''; render(s); return; }
+  const T=Arena.DEAL_WAIT||30;
+  const left=Math.max(0,(d.wait||0)-(Date.now()-stateAt)/1000);
+  $('handFill').style.width=(((T-left)/T)*100).toFixed(1)+'%';
+  $('handTimer').textContent='Новая карта через '+Math.ceil(left)+' с';
+}
+function handStart(){
+  if(handLoop) return;
+  handLoop=setInterval(handTick,200);
+}
+function handStop(){
+  if(handLoop){ clearInterval(handLoop); handLoop=null; }
+}
 
-  const def=SPELL_UI[card];
-  const used=(s.spellUsed && s.spellUsed[my]) || {};
-  if(card==='c' && used.c){ toast('Рокировка — раз за партию'); return; }
-  if(s.energy[my] < def.cost){ toast('Нужно '+def.cost+' эликсира'); return; }
-
-  castCard=card;
-  sel=null;
-  spellSig='';
+$('handCard').onclick=function(){
+  const s=Net.state; if(!s||s.over) return;
+  const d=myDeal(s);
+  if(!d||!d.cur){ toast('Карта ещё не выпала'); return; }
+  if(armed===d.cur){ armed=null; }
+  else { armed=d.cur; sel=null; }
+  handSig='';
   render(s);
-}
+};
 
-function spellTargetOk(s, my, card, x, y){
-  const pc=s.board[y][x];
-  if(card==='c') return !!(pc && pc.side===my && pc.type==='rook');
-  if(card==='u') return !!(pc && pc.side===my && pc.type==='pawn');
-  return !!(pc && pc.side===my);
-}
+$('skipBtn').onclick=function(){
+  const s=Net.state; if(!s||s.over) return;
+  const d=myDeal(s); if(!d||!d.cur) return;
+  armed=null; handSig='';
+  Net.intent({ t:'skip' });
+};
 
 /* ================= ЭЛИКСИР ================= */
 
@@ -463,12 +480,13 @@ Net.on('start',function(info){
   $('bootErr').classList.add('hidden');
   $('drawPanel').classList.add('hidden');
   $('promoPanel').classList.add('hidden');
-  sel=null; promoPending=null; castCard=null; spellSig=''; checkState=-1; drawState='';
+  sel=null; promoPending=null; armed=null; checkState=-1; drawState=''; handSig='';
   lastTimeTxt=''; lastSpeedTxt='';
+  stateAt=Date.now();
   document.body.dataset.arena=info.arena;
   buildBoard();
   for(let i=0;i<cellSig.length;i++) cellSig[i]='';
-  elixReset(); elixBuildBubbles();
+  elixReset(); elixBuildBubbles(); handStart();
   const myCups=Net.me?Net.me.cups:0;
   const oppCups=(info.opponent&&info.opponent.cups)||0;
   const diff=myCups-oppCups;
@@ -486,6 +504,7 @@ Net.on('state',function(s){ render(s); });
 
 Net.on('resumeFailed',function(){
   toast('Соперник не вернулся. Засчитано поражение.');
+  handStop();
   document.body.classList.remove('battle-mode');
   $('battle').classList.add('hidden');
   $('promoPanel').classList.add('hidden');
@@ -495,13 +514,14 @@ Net.on('resumeFailed',function(){
 
 Net.on('result',function(r){
   stopSearch();
+  handStop();
   document.body.classList.remove('battle-mode');
   $('battle').classList.add('hidden');
   $('checkBar').classList.remove('on');
   $('drawPanel').classList.add('hidden');
   $('promoPanel').classList.add('hidden');
   $('overlay').classList.remove('hidden');
-  promoPending=null; castCard=null; elixLoopOn=false;
+  promoPending=null; armed=null; elixLoopOn=false;
   const won=r.winner===r.mySide, draw=r.winner==='draw';
   $('ovTitle').textContent=draw?'НИЧЬЯ':(won?'ПОБЕДА':'ПОРАЖЕНИЕ');
   $('ovTitle').style.color=draw?'#9fb6c4':(won?'#ffcc00':'#ef4444');
@@ -520,6 +540,7 @@ Net.on('result',function(r){
 });
 
 $('ovBtn').onclick=function(){
+  handStop();
   document.body.classList.remove('battle-mode');
   $('overlay').classList.add('hidden');
   $('battle').classList.add('hidden');
@@ -549,14 +570,13 @@ function onCell(dx,dy){
   const xy=toCanon(dx,dy);
   const x=xy[0], y=xy[1];
 
-  /* режим карты: ждём цель */
-  if(castCard){
-    if(!spellTargetOk(s,my,castCard,x,y)){
-      toast(SPELL_UI[castCard].hint);
+  if(armed){
+    if(!Arena.cardTargetOk(s,my,armed,x,y)){
+      toast(SP[armed].hint);
       return;
     }
-    const card=castCard;
-    castCard=null; spellSig='';
+    const card=armed;
+    armed=null; handSig='';
     Net.intent({ t:'cast', card:card, x:x, y:y });
     render(s);
     return;
@@ -630,12 +650,13 @@ function pieceHp(pc){
 
 function render(s){
   if(!s) return;
+  stateAt=Date.now();
   const my=Net.mySide, opp=(my==='a')?'b':'a', rot=(my==='b');
+  const now=s.elapsed||0;
+
   let myCheck=false, opCheck=false;
   if(s.check){ myCheck=!!s.check[my]; opCheck=!!s.check[opp]; }
-  else if(Arena && typeof Arena.kingAttacked==='function'){
-    myCheck=Arena.kingAttacked(s,my); opCheck=Arena.kingAttacked(s,opp);
-  }
+  else { myCheck=Arena.kingAttacked(s,my); opCheck=Arena.kingAttacked(s,opp); }
   const nowState=myCheck?1:(opCheck?2:0);
   if(nowState!==checkState){
     checkState=nowState;
@@ -645,6 +666,7 @@ function render(s){
     else { bar.classList.remove('on'); }
   }
   updateDrawUI(s,my,opp);
+
   if(sel){
     const p0=s.board[sel.y] && s.board[sel.y][sel.x];
     if(!p0||p0.side!==my) sel=null;
@@ -654,6 +676,7 @@ function render(s){
     const legal=Arena.legalMoves(s, sel.x, sel.y);
     for(let i=0;i<legal.length;i++) moveSet[legal[i][0]+':'+legal[i][1]]=true;
   }
+
   for(let dy=0;dy<8;dy++) for(let dx=0;dx<8;dx++){
     const idx=dy*8+dx;
     const x=rot?7-dx:dx, y=rot?7-dy:dy;
@@ -661,27 +684,34 @@ function render(s){
     const pc=s.board[y] && s.board[y][x];
     const isLight=((x+y)%2===0);
     const isSel=!!(sel && sel.x===x && sel.y===y);
-    const isTgt=!!(castCard && pc && pc.side===my && spellTargetOk(s,my,castCard,x,y));
+    const isTgt=!!(armed && Arena.cardTargetOk(s,my,armed,x,y));
     const key=x+':'+y;
     const isMove=!!moveSet[key];
     const isCap=isMove && !!pc;
     const kingChk=!!(pc && pc.type==='king' && ((pc.side===my)?myCheck:opCheck));
+    const blk=!!(s.blocked && (s.blocked[key]||0) > now);
+    const frozen=!!(pc && typeof pc.frozenUntil==='number' && pc.frozenUntil > now);
+
     let sig=(isLight?'L':'D');
-    if(pc){ const hp1=pieceHp(pc); sig+=pc.type+pc.side+'h'+hp1.hp+'/'+hp1.max+(pc.shield?'S':'')+(pc.rage?'R':''); }
+    if(pc){ const h=pieceHp(pc); sig+=pc.type+pc.side+'h'+h.hp+'/'+h.max+(pc.shield?'S':'')+(pc.rage?'R':'')+(frozen?'F':''); }
+    if(blk) sig+='B';
     if(kingChk) sig+='K';
     if(isSel) sig+='S';
     if(isTgt) sig+='T';
     if(isMove) sig+=(isCap?'C':'M');
     if(cellSig[idx]===sig) continue;
     cellSig[idx]=sig;
+
     el.className='cell '+(isLight?'light':'dark');
     el.textContent='';
+    if(blk) el.classList.add('blocked');
     if(kingChk) el.classList.add('check');
+
     if(pc){
       const mine=(pc.side===my);
       const def=Arena.PIECES[pc.type];
       const sp=document.createElement('span');
-      sp.className='piece '+(mine?'mine':'theirs')+(pc.shield?' shielded':'')+(pc.rage?' raging':'');
+      sp.className='piece '+(mine?'mine':'theirs')+(pc.shield?' shielded':'')+(pc.rage?' raging':'')+(frozen?' frozen':'');
       sp.textContent=def?(mine?def.w:def.b):'?';
       el.appendChild(sp);
       if(def && typeof def.cost==='number'){
@@ -689,8 +719,8 @@ function render(s){
         cb.className='cost-badge'; cb.textContent=def.cost;
         el.appendChild(cb);
       }
-      const hh=pieceHp(pc);
-      const pct=Math.max(0,Math.min(100,(hh.hp/hh.max)*100));
+      const h=pieceHp(pc);
+      const pct=Math.max(0,Math.min(100,(h.hp/h.max)*100));
       let cls='hp-fill';
       if(pct<=30) cls+=' low'; else if(pct<=60) cls+=' mid';
       const bar2=document.createElement('div'); bar2.className='hp-bar';
@@ -699,15 +729,18 @@ function render(s){
       const lvl=document.createElement('span'); lvl.className='hp-lvl'; lvl.textContent='1';
       bar2.appendChild(lvl);
       el.appendChild(bar2);
-      const txt=document.createElement('div'); txt.className='hp-text'; txt.textContent=hh.hp+'/'+hh.max;
+      const txt=document.createElement('div'); txt.className='hp-text'; txt.textContent=h.hp+'/'+h.max;
       el.appendChild(txt);
     }
+
     if(isSel) el.classList.add('sel');
     if(isTgt) el.classList.add('cast-target');
     if(isMove) el.classList.add(isCap?'cap':'move');
   }
+
   renderElix(s,my);
-  renderSpells(s,my);
+  renderHand(s);
+  handTick();
 
   const base=(Arena && Arena.ENERGY_PER_SEC)?Arena.ENERGY_PER_SEC:0.5;
   const rate=elixRate(), mult=rate/base;
@@ -721,6 +754,7 @@ function render(s){
     st.textContent=speedTxt;
     st.classList.toggle('hidden',!speedTxt);
   }
+
   const tl=$('timeLabel');
   let timeTxt='', timeColor='';
   let left=s.timeLeft;
