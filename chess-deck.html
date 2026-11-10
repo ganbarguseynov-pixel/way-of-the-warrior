@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Chess Royale - Колода</title>
-<link rel="stylesheet" href="royale.css?v=2">
+<link rel="stylesheet" href="royale.css?v=3">
 <style>
 body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;padding-bottom:88px}
 .top-bar{width:100%;padding:12px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;z-index:10}
@@ -43,11 +43,18 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 .elixir-num{font-size:23px;font-weight:900;color:#fff;letter-spacing:.3px;text-shadow:0 2px 0 rgba(60,0,0,.9),0 3px 5px rgba(0,0,0,.85),0 0 14px rgba(255,70,70,.75)}
 .elixir-cap{font-size:11px;font-weight:800;color:#eaf3ff;line-height:1.3}
 
+/* ===== ИНДИКАТОР БАЛАНСА КОЛОДЫ ===== */
+.balance-line{width:100%;text-align:center;font-size:11px;font-weight:900;letter-spacing:.3px;min-height:15px;margin-top:2px}
+.balance-line.good{color:#43e97b;text-shadow:0 0 10px rgba(67,233,123,.45)}
+.balance-line.warn{color:#ffd447}
+.balance-line.bad{color:#ff7b72}
+
 .deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
 .card{border-radius:11px;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:space-between;align-items:center;position:relative;padding:5px}
 .card.common{border-color:#9aa7b8}
 .card.rare{border-color:#ffb300;background:linear-gradient(145deg,#2a2a48,#2a1a00)}
 .card.epic{border-color:#b06aff;background:linear-gradient(145deg,#2a2a48,#250f3e)}
+.card.spell{border-color:#5ee0ff;background:linear-gradient(145deg,#0e2a3d,#071e2c);box-shadow:inset 0 0 18px rgba(94,224,255,.14),0 0 0 1px rgba(94,224,255,.12)}
 .card.picked{border-color:#43e97b!important}
 .card.soon{opacity:.45}
 
@@ -56,7 +63,7 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 
 .pick-order{position:absolute;bottom:-6px;right:-6px;background:linear-gradient(145deg,#5ef08a,#1f9e42);color:#083b1c;font-weight:900;font-size:11px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:3}
 .card-icon{font-size:30px;margin-top:16px;color:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,.7))}
-.card-name{font-size:10px;color:#fff;text-align:center;font-weight:900}
+.card-name{font-size:10px;color:#fff;text-align:center;font-weight:900;line-height:1.15}
 .card-level{font-size:9px;color:#ffd447;background:rgba(0,0,0,.75);padding:2px 5px;border-radius:4px;width:90%;text-align:center;margin-top:5px;font-weight:800}
 .setup-area{width:95vw;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:10px}
 .setup-hint{text-align:center;color:#dbe9ff;font-size:12px;margin:0;min-height:18px;padding:0 10px;line-height:1.45;font-weight:700}
@@ -106,7 +113,7 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 <div class="currency-row">
 <div class="currency">🪙 <span id="deck-coins">1250</span></div>
 <div class="currency">💎 <span id="deck-gems">50</span></div>
-<div class="deck-ver">v8</div>
+<div class="deck-ver">v9</div>
 </div>
 <div class="sub-tabs">
 <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
@@ -161,6 +168,7 @@ body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI"
 </div>
 <div class="elixir-cap" id="elixirCap">Средние затраты<br>эликсира</div>
 </div>
+<div class="balance-line" id="balanceLine"></div>
 <div class="deck-grid" id="deck-grid"></div>
 </div>
 </div>
@@ -206,9 +214,21 @@ if(tab==='cards'){document.getElementById('screen-cards').classList.add('active'
 else{document.getElementById('screen-setup').classList.add('active');document.getElementById('sub-tab-setup-btn').classList.add('active');renderSetupBoard();}
 }
 
-const PIECES={'p':{name:'Пешка',icon:'♟',cost:1},'n':{name:'Конь',icon:'♞',cost:2},'b':{name:'Слон',icon:'♝',cost:3},'r':{name:'Ладья',icon:'♜',cost:4},'k':{name:'Король',icon:'♚',cost:5},'q':{name:'Ферзь',icon:'♛',cost:6}};
-const PIECE_TYPES=['p','n','b','r','k','q'];
-const ELIXIR={p:1,n:2,b:3,r:4,k:5,q:6};
+const PIECES={
+'p':{name:'Пешка',icon:'♟',cost:1},
+'n':{name:'Конь',icon:'♞',cost:2},
+'b':{name:'Слон',icon:'♝',cost:3},
+'r':{name:'Ладья',icon:'♜',cost:4},
+'k':{name:'Король',icon:'♚',cost:5},
+'q':{name:'Ферзь',icon:'♛',cost:6},
+'f':{name:'Ярость',icon:'⚡',cost:2},
+'s':{name:'Щит',icon:'🛡️',cost:3},
+'c':{name:'Рокировка',icon:'🔄',cost:4},
+'u':{name:'Превращение',icon:'👑',cost:6}
+};
+
+const PIECE_TYPES=['p','n','b','r','k','q','f','s','c','u'];
+const ELIXIR={p:1,n:2,b:3,r:4,k:5,q:6,f:2,s:3,c:4,u:6};
 const HAND_SIZE=4;
 const SLOT_COUNT=10;
 const PER_PAGE=5;
@@ -223,8 +243,12 @@ const DECK_CARDS=[
 {name:'Ладья',icon:'♜',elixir:4,level:1,rarity:'epic',type:'r'},
 {name:'Король',icon:'♚',elixir:5,level:1,rarity:'epic',type:'k'},
 {name:'Ферзь',icon:'♛',elixir:6,level:1,rarity:'epic',type:'q'},
-{name:'Ярость',icon:'⚡',elixir:2,level:1,rarity:'common',soon:true},
-{name:'Щит',icon:'🛡️',elixir:3,level:1,rarity:'common',soon:true}
+{name:'Ярость',icon:'⚡',elixir:2,level:1,rarity:'spell',type:'f'},
+{name:'Щит',icon:'🛡️',elixir:3,level:1,rarity:'spell',type:'s'},
+{name:'Рокировка',icon:'🔄',elixir:4,level:1,rarity:'spell',type:'c'},
+{name:'Превращение',icon:'👑',elixir:6,level:1,rarity:'spell',type:'u'},
+{name:'Телепорт',icon:'🌀',elixir:3,level:1,rarity:'common',soon:true},
+{name:'Обвал',icon:'🌋',elixir:6,level:1,rarity:'common',soon:true}
 ];
 
 let decks=[];
@@ -401,6 +425,28 @@ function renderDeck(){
     capEl.innerHTML=(d.length===HAND_SIZE)
       ? 'Средние затраты<br>эликсира'
       : 'Средние затраты<br>эликсира (' + d.length + ' из 4)';
+  }
+
+  const bl=document.getElementById('balanceLine');
+  if(d.length<HAND_SIZE){
+    bl.className='balance-line';
+    bl.textContent='';
+  }else{
+    const avg=deckElixir(d);
+    let cheap=0, heavy=0;
+    for(let i=0;i<d.length;i++){
+      const c=ELIXIR[d[i]]||0;
+      if(c<=2) cheap++;
+      if(c>=5) heavy++;
+    }
+    let cls, txt;
+    if(avg<2.8){ cls='warn'; txt='Слишком дёшево — нет тяжёлых угроз'; }
+    else if(avg>4.2){ cls='warn'; txt='Слишком дорого — будешь копить'; }
+    else if(!cheap){ cls='warn'; txt='Нет дешёвой карты для темпа'; }
+    else if(!heavy){ cls='warn'; txt='Нет тяжёлой карты для размена'; }
+    else { cls='good'; txt='Идеальный баланс'; }
+    bl.className='balance-line '+cls;
+    bl.textContent=txt+' · '+avg.toFixed(1)+' ⚡';
   }
 }
 
