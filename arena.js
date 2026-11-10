@@ -1,10 +1,11 @@
 /* ============================================================
-   arena.js — правила и движок шахматных арен  (VER 19)
+   arena.js — правила и движок шахматных арен  (VER 20)
+   Добавлены карты: Ярость, Щит, Рокировка, Превращение.
    ============================================================ */
 (function (global) {
 'use strict';
 
-const VER = '19';
+const VER = '20';
 const STEP = 1000;
 const MAX_ARENA = 10;
 
@@ -29,6 +30,21 @@ const PIECES = {
   king:   { cost:5, name:'Король', w:'♔', b:'♚', val:0 },
   queen:  { cost:6, name:'Ферзь',  w:'♕', b:'♛', val:8 }
 };
+
+/* ================= КАРТЫ ================= */
+
+const SPELLS = {
+  f: { cost:2, name:'Ярость',      icon:'⚡',  target:'own',
+       hint:'Фигура делает следующий ход бесплатно' },
+  s: { cost:3, name:'Щит',         icon:'🛡️', target:'own',
+       hint:'Фигура переживёт одно взятие' },
+  c: { cost:4, name:'Рокировка',   icon:'🔄',  target:'rook',
+       hint:'Король меняется местами с ладьёй. Раз за партию' },
+  u: { cost:6, name:'Превращение', icon:'👑',  target:'pawn',
+       hint:'Пешка сразу становится ферзём' }
+};
+
+const SPELL_ORDER = ['f', 's', 'c', 'u'];
 
 const TYPE_BY_LETTER = {
   p:'pawn', n:'knight', b:'bishop', r:'rook', q:'queen', k:'king'
@@ -95,6 +111,7 @@ function energyRate(s){
 
 function moveCost(s, pc){
   if (!pc) return 1;
+  if (typeof pc.rage === 'number' && pc.rage > 0) return 0;
   const def = PIECES[pc.type];
   if (def && typeof def.cost === 'number') return def.cost;
   return 1;
@@ -133,6 +150,8 @@ function boardSig(s){
       if (!pc){ sig += '.'; continue; }
       sig += pc.type + pc.side;
       if (pc.type === 'king') sig += 'h' + (pc.hp || 0);
+      if (pc.shield) sig += 'S';
+      if (pc.rage) sig += 'R';
       sig += ',';
     }
   }
@@ -410,12 +429,27 @@ function updateStatus(s, force){
   }
 }
 
+/* ================= КОЛОДА КАРТ ================= */
+
+function normHand(list){
+  const out = [];
+  if (!Array.isArray(list)) return SPELL_ORDER.slice();
+
+  for (let i = 0; i < list.length; i++){
+    const t = String(list[i] || '').toLowerCase();
+    if (SPELLS[t] && out.indexOf(t) < 0) out.push(t);
+  }
+  if (!out.length) return SPELL_ORDER.slice();
+  return out;
+}
+
 /* ================= СОЗДАНИЕ БОЯ ================= */
 
 function create(opts){
   opts = opts || {};
   const players = opts.players || {};
   const setups  = opts.setups || {};
+  const decks   = opts.decks || {};
 
   const s = {
     id: opts.id || 'local',
@@ -433,19 +467,15 @@ function create(opts){
     board: Array.from({ length:8 }, () => Array(8).fill(null)),
     energy: { a:5, b:5 },
     energyAcc: { a:5, b:5 },
-    hand:   { a:[], b:[] },
-    deck:   { a:[], b:[] },
-    placed: { a:0, b:0 },
+
+    hand: { a: normHand(decks.a), b: normHand(decks.b) },
+    spellUsed: { a:{}, b:{} },
 
     traps: [], returns: [],
 
     elapsed: 0,
     phase: 'main',
     timeLeft: MAIN_TIME,
-    nightMode: 0,
-    nightUsed: { a:false, b:false },
-    spawnTimer: 0,
-    idle: 0,
 
     check:   { a:false, b:false },
     mate:    { a:false, b:false },
@@ -479,6 +509,11 @@ function place(s, side, type, x, y){
   return { ok:false, error:'Доска уже собрана до боя' };
 }
 
+function spendRage(pc){
+  if (pc && typeof pc.rage === 'number' && pc.rage > 0) pc.rage -= 1;
+  if (pc && pc.rage === 0) delete pc.rage;
+}
+
 function move(s, side, fx, fy, tx, ty, promo){
   if (s.over) return { ok:false, error:'Бой окончен' };
   if (!inside(fx, fy) || !inside(tx, ty)) return { ok:false, error:'Мимо доски' };
@@ -509,6 +544,17 @@ function move(s, side, fx, fy, tx, ty, promo){
   s.energy[side] = Math.max(0, have - cost);
   s.energyAcc[side] = s.energy[side];
 
+  /* Щит поглощает удар: атакующий остаётся на месте, жертва жива */
+  if (tgt && typeof tgt.shield === 'number' && tgt.shield > 0){
+    delete tgt.shield;
+    spendRage(pc);
+
+    log(s, '🛡️ Щит поглотил удар. ' + PIECES[tgt.type].name +
+           ' ' + nameOf(s, tgt.side) + ' выжила');
+    updateStatus(s);
+    return { ok:true, cost: cost, blocked: true };
+  }
+
   if (tgt){
     capture(s, pc, tx, ty);
     if (s.over) return { ok:true, cost: cost };
@@ -516,6 +562,8 @@ function move(s, side, fx, fy, tx, ty, promo){
   } else {
     relocate(s, fx, fy, tx, ty, promo);
   }
+
+  spendRage(pc);
 
   if (!s.over) updateStatus(s);
   return { ok:true, cost: cost };
@@ -549,6 +597,89 @@ function capture(s, attacker, tx, ty){
 
   log(s, nameOf(s, attacker.side) + ' бьёт ' + PIECES[victim.type].name.toLowerCase());
   return 'killed';
+}
+
+/* ================= ПРИМЕНЕНИЕ КАРТ ================= */
+
+function cast(s, side, card, x, y){
+  if (s.over) return { ok:false, error:'Бой окончен' };
+
+  const sp = SPELLS[card];
+  if (!sp) return { ok:false, error:'Нет такой карты' };
+
+  const hand = (s.hand && s.hand[side]) || [];
+  if (hand.indexOf(card) < 0) return { ok:false, error:'Этой карты нет в колоде' };
+
+  if (!s.spellUsed) s.spellUsed = { a:{}, b:{} };
+  if (!s.spellUsed[side]) s.spellUsed[side] = {};
+
+  if (card === 'c' && s.spellUsed[side].c)
+    return { ok:false, error:'Рокировка — раз за партию' };
+
+  let e = s.energy[side];
+  if (typeof e !== 'number' || !isFinite(e)) e = 0;
+  if (e < sp.cost) return { ok:false, error:'Мало эликсира: нужно ' + sp.cost };
+
+  const cx = Math.round(x);
+  const cy = Math.round(y);
+  if (!inside(cx, cy)) return { ok:false, error:'Мимо доски' };
+
+  const pc = s.board[cy][cx];
+
+  if (card === 'f'){
+    if (!pc || pc.side !== side) return { ok:false, error:'Ткни в свою фигуру' };
+    if (typeof pc.rage === 'number' && pc.rage > 0) return { ok:false, error:'Уже в ярости' };
+
+    pc.rage = 1;
+    log(s, '⚡ Ярость: ' + PIECES[pc.type].name + ' ' + nameOf(s, side) +
+           ' сходит бесплатно');
+  }
+
+  else if (card === 's'){
+    if (!pc || pc.side !== side) return { ok:false, error:'Ткни в свою фигуру' };
+    if (typeof pc.shield === 'number' && pc.shield > 0) return { ok:false, error:'Щит уже стоит' };
+
+    pc.shield = 1;
+    log(s, '🛡️ Щит: ' + PIECES[pc.type].name + ' ' + nameOf(s, side) +
+           ' переживёт одно взятие');
+  }
+
+  else if (card === 'u'){
+    if (!pc || pc.side !== side) return { ok:false, error:'Ткни в свою фигуру' };
+    if (pc.type !== 'pawn') return { ok:false, error:'Только пешку' };
+
+    pc.type = 'queen';
+    log(s, '👑 Превращение: пешка ' + nameOf(s, side) + ' стала ферзём');
+  }
+
+  else if (card === 'c'){
+    if (s.check && s.check[side]) return { ok:false, error:'Из-под шаха не рокируются' };
+
+    const kp = kingPos(s, side);
+    if (!kp) return { ok:false, error:'Нет короля' };
+    if (!pc || pc.side !== side || pc.type !== 'rook')
+      return { ok:false, error:'Ткни в свою ладью' };
+
+    const king = s.board[kp.y][kp.x];
+
+    s.board[kp.y][kp.x] = pc;
+    s.board[cy][cx] = king;
+
+    if (isSquareAttacked(s, cx, cy, foeOf(side))){
+      s.board[kp.y][kp.x] = king;
+      s.board[cy][cx] = pc;
+      return { ok:false, error:'Король попадёт под удар' };
+    }
+
+    s.spellUsed[side].c = true;
+    log(s, '🔄 Рокировка: король ' + nameOf(s, side) + ' ушёл к ладье');
+  }
+
+  s.energy[side] = Math.max(0, e - sp.cost);
+  s.energyAcc[side] = s.energy[side];
+
+  if (!s.over) updateStatus(s, true);
+  return { ok:true, cost: sp.cost };
 }
 
 function castNight(s, side){
@@ -652,6 +783,8 @@ global.Arena = {
   ENERGY_OT_MULT: ENERGY_OT_MULT,
   ARMY_MAX: ARMY_MAX,
   PIECES: PIECES,
+  SPELLS: SPELLS,
+  SPELL_ORDER: SPELL_ORDER,
   ARENAS: ARENAS,
   PROMO_CHOICES: PROMO_CHOICES,
   arenaOf: arenaOf,
@@ -666,6 +799,7 @@ global.Arena = {
   isPromotion: isPromotion,
   place: place,
   move: move,
+  cast: cast,
   moveCost: moveCost,
   castNight: castNight,
   unlock: unlock,
