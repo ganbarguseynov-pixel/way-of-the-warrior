@@ -62,7 +62,7 @@ function rnd(range){
 /* ---------- логика ---------- */
 
 function toast(msg, color){
-  if (typeof global.showToastChest === 'function'){ global.showToastChest(msg, color); return; }
+  if (typeof global.showToast === 'function'){ global.showToast(msg, color); return; }
   let t = document.getElementById('chToast');
   if (!t){
     t = document.createElement('div');
