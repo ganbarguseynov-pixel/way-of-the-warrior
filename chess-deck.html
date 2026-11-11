@@ -91,9 +91,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.5;
 /* окно карты */
 #cardModal{position:fixed;inset:0;z-index:9500;display:none;align-items:flex-end;justify-content:center;background:rgba(3,10,30,.7)}
 #cardModal.open{display:flex}
-.cm-sheet{position:relative;width:100%;max-width:440px;max-height:94vh;overflow-y:auto;padding:14px 14px calc(18px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0;background:linear-gradient(180deg,#1f4a94,#0f2656);border:2px solid #4b78c8;border-bottom:0;box-shadow:0 -10px 40px rgba(0,0,0,.6);animation:up .25s ease-out;touch-action:pan-y}
+.cm-wrap{position:relative;width:100%;max-width:440px}
+.cm-sheet{position:relative;width:100%;max-height:94vh;overflow-y:auto;padding:14px 14px calc(18px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0;background:linear-gradient(180deg,#1f4a94,#0f2656);border:2px solid #4b78c8;border-bottom:0;box-shadow:0 -10px 40px rgba(0,0,0,.6);animation:up .25s ease-out;touch-action:pan-y}
 @keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
-.cm-x{position:absolute;top:-14px;right:-6px;width:40px;height:40px;border-radius:12px;border:3px solid #fff;background:linear-gradient(180deg,#ff6b6b,#c81e1e);color:#fff;font-size:18px;font-weight:900;cursor:pointer;z-index:3;box-shadow:0 4px 0 #6b1111}
+.cm-x{position:absolute;top:-18px;right:10px;width:44px;height:44px;border-radius:50%;border:3px solid #fff;padding:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 30%,#ff9a9a,#e11d1d 55%,#991b1b);cursor:pointer;z-index:10;box-shadow:0 4px 0 #5c0d0d,0 6px 12px rgba(0,0,0,.45)}
+.cm-x:active{transform:translateY(2px);box-shadow:0 2px 0 #5c0d0d}
+.cm-x svg{width:18px;height:18px;display:block}
 .cm-top{display:flex;gap:10px;align-items:flex-start;padding-right:30px}
 .cm-thumb{width:96px;height:124px;flex-shrink:0;border-radius:12px;border:3px solid #b7c2d3;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#3b6fbf,#17386f);box-shadow:0 4px 0 #061433}
 .cm-thumb.rare{border-color:#ffb020;background:linear-gradient(180deg,#5a4aa0,#2a1f5c)}
@@ -199,7 +202,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.5;
     <div class="chip">🪙 <span id="deck-coins">0</span></div>
     <div class="chip">💎 <span id="deck-gems">0</span></div>
     <div class="chip units">🔹 <span id="deck-units">0</span></div>
-    <div class="chip ver">v15</div>
+    <div class="chip ver">v16</div>
   </div>
 
   <div class="tabs">
@@ -261,26 +264,30 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.5;
 
 <!-- ОКНО КАРТЫ -->
 <div id="cardModal">
-  <div class="cm-sheet">
-    <button class="cm-x" onclick="closeCardModal()">✕</button>
-    <div class="cm-top">
-      <div class="cm-thumb" id="cmThumb"></div>
-      <div class="cm-title">
-        <div class="cm-name" id="cmName">Карта</div>
-        <div class="cm-sub" id="cmSub"></div>
+  <div class="cm-wrap">
+    <button class="cm-x" onclick="closeCardModal()" aria-label="Закрыть">
+      <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4L14 14M14 4L4 14" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/></svg>
+    </button>
+    <div class="cm-sheet">
+      <div class="cm-top">
+        <div class="cm-thumb" id="cmThumb"></div>
+        <div class="cm-title">
+          <div class="cm-name" id="cmName">Карта</div>
+          <div class="cm-sub" id="cmSub"></div>
+        </div>
       </div>
-    </div>
-    <div class="cm-tiles">
-      <div class="tile"><div class="tile-h">РЕДКОСТЬ</div><div class="tile-b" id="cmRar"></div></div>
-      <div class="tile"><div class="tile-h">ТИП</div><div class="tile-b">Заклинание</div></div>
-    </div>
-    <div class="cm-stage" id="cmStage"></div>
-    <div class="cm-cap" id="cmCaption"></div>
-    <div class="dots" id="cmDots"></div>
-    <div class="cm-btns">
-      <button class="cb-up" id="cbUp"><span id="cbUpTop">Улучшить</span><b id="cbUpCost"></b></button>
-      <button class="cb-rep" id="cbRep" title="Демонстрация">🎬</button>
-      <button class="cb-pick" id="cbPick">В колоду</button>
+      <div class="cm-tiles">
+        <div class="tile"><div class="tile-h">РЕДКОСТЬ</div><div class="tile-b" id="cmRar"></div></div>
+        <div class="tile"><div class="tile-h">ТИП</div><div class="tile-b">Заклинание</div></div>
+      </div>
+      <div class="cm-stage" id="cmStage"></div>
+      <div class="cm-cap" id="cmCaption"></div>
+      <div class="dots" id="cmDots"></div>
+      <div class="cm-btns">
+        <button class="cb-up" id="cbUp"><span id="cbUpTop">Улучшить</span><b id="cbUpCost"></b></button>
+        <button class="cb-rep" id="cbRep" title="Демонстрация">🎬</button>
+        <button class="cb-pick" id="cbPick">В колоду</button>
+      </div>
     </div>
   </div>
 </div>
