@@ -7,329 +7,345 @@
 <title>Chess Royale - Колода</title>
 <link rel="stylesheet" href="royale.css?v=5">
 <style>
-body{margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;padding-bottom:88px}
-body.dragging{cursor:grabbing}
-.top-bar{width:100%;padding:12px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;z-index:10}
-.currency-row{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap}
-.currency{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:10px;font-weight:900}
-.unit-chip{color:#5ee0ff;background:linear-gradient(180deg,#132a4d,#0a1a33);border:2px solid #2f5aa0}
-.deck-ver{font-size:10px;font-weight:900;color:#3b1f00;background:linear-gradient(180deg,#ffe082,#ffb300);padding:3px 8px;border-radius:7px;border:2px solid #fff;box-shadow:0 2px 0 #b45309;letter-spacing:.5px}
-.sub-tabs{display:flex;gap:6px;margin-top:4px}
-.sub-tab-btn{flex:1;padding:10px 4px;border-radius:10px;font-weight:900;cursor:pointer;font-size:12px;color:#fff;border:0;background:linear-gradient(180deg,#334155,#1e293b);box-shadow:0 3px 0 #0b1220}
-.sub-tab-btn.active{background:linear-gradient(180deg,#ffe082,#ffb300);color:#3b1f00;box-shadow:0 3px 0 #b45309}
-.screen{display:none;flex-direction:column;width:100%;align-items:center;flex:1;overflow-y:auto;padding-bottom:90px}
-.screen.active{display:flex}
-.deck-area{width:95vw;max-width:400px;padding:10px;display:flex;flex-direction:column;gap:10px}
-.pager-note{width:100%;text-align:center;font-size:11px;font-weight:900;color:#dbe9ff;letter-spacing:.4px}
-.slot-bar{display:flex;align-items:center;gap:6px;width:100%}
-.slot-nav{width:38px;height:46px;flex-shrink:0;border-radius:12px;padding:0;cursor:pointer;font-size:20px;font-weight:900;color:#fff;background:linear-gradient(180deg,#3b8ef0,#1c56b8);border:3px solid #fff;box-shadow:0 4px 0 #123b7a}
-.slot-nav:active{transform:translateY(3px);box-shadow:0 1px 0 #123b7a}
-.slot-nav:disabled{opacity:.35;filter:grayscale(.6)}
-.slot-list{flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;touch-action:pan-y}
-.slot-btn{position:relative;height:46px;border-radius:12px;padding:0;cursor:pointer;font-size:16px;font-weight:900;color:#c6d8ff;background:linear-gradient(180deg,#22437f,#122a5e);border:3px solid #4a72c0;box-shadow:0 4px 0 #0b1b45}
-.slot-btn.on{background:linear-gradient(180deg,#ffe082,#ffb300);color:#3b1f00;border-color:#fff;box-shadow:0 4px 0 #b45309}
-.slot-dot{position:absolute;top:3px;right:4px;width:7px;height:7px;border-radius:50%;background:#43e97b}
-.slot-btn.part .slot-dot{background:#ffd447}
-.rule-banner{width:100%;box-sizing:border-box;text-align:center;font-size:11.5px;font-weight:800;line-height:1.45;color:#dbe9ff;padding:8px 10px;border-radius:12px;background:linear-gradient(180deg,#132a4d,#0a1a33);border:2px solid #2f5aa0;box-shadow:0 3px 0 #061225}
-.rule-banner b{color:#5ee0ff}
-.deck-note{width:100%;text-align:center;font-size:12px;color:#dbe9ff;font-weight:700;line-height:1.45;padding:0 6px}
-.deck-note b{color:#43e97b}
-.deck-note.warn{color:#ffd447}
-.deck-picked{display:flex;gap:6px;justify-content:center;margin-top:2px;padding:5px;border-radius:12px;border:2px dashed transparent;transition:border-color .15s,background .15s}
-.deck-picked.drop-on{border-color:#43e97b;background:rgba(67,233,123,.12)}
-.deck-picked.drop-on .deck-slot{border-color:#43e97b;background:rgba(67,233,123,.2)}
-.deck-slot{flex:1;height:38px;border-radius:9px;border:2px dashed rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:17px;color:#c6d8ff;background:rgba(2,6,23,.35)}
-.deck-slot.filled{border-style:solid;border-color:#43e97b;color:#fff;background:linear-gradient(145deg,#0f6b3a,#064e26)}
-.balance-line{width:100%;text-align:center;font-size:11px;font-weight:900;min-height:15px;margin-top:2px;line-height:1.35}
-.balance-line.good{color:#43e97b}
-.balance-line.warn{color:#ffd447}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;user-select:none;padding-bottom:92px;overflow-x:hidden;
+  background:radial-gradient(ellipse at 50% 0%,#2a6bd0 0%,#123b84 45%,#0a2358 100%)}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.5;
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.035) 0 12px,transparent 12px 24px)}
+.wrap{position:relative;width:100%;max-width:440px;margin:0 auto;padding:10px}
 
-.deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:4px;padding:8px 6px 10px}
-.card{border-radius:11px;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:space-between;align-items:center;position:relative;padding:4px;touch-action:pan-y;user-select:none;-webkit-user-select:none;background:linear-gradient(145deg,#0e2a3d,#071e2c);border:2px solid #5ee0ff}
-.card.rare{border-color:#ffb300;background:linear-gradient(145deg,#2a2a48,#2a1a00)}
-.card.epic{border-color:#b06aff;background:linear-gradient(145deg,#2a2a48,#250f3e)}
-.card.common{border-color:#9aa7b8}
-.card.picked{border-color:#43e97b!important}
-.card-free{position:absolute;top:-7px;left:-7px;min-width:25px;height:25px;padding:0 4px;border-radius:12px;border:2px solid #fff;z-index:3;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px;color:#06301a;background:linear-gradient(180deg,#5ef08a,#1f9e42)}
-.card-add{position:absolute;bottom:-7px;left:-7px;width:25px;height:25px;border-radius:50%;border:2px solid #fff;background:linear-gradient(180deg,#5ef08a,#1f9e42);color:#083b1c;font-size:17px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;z-index:4;padding:0;cursor:pointer}
-.card-add:active{transform:scale(.88)}
-.card-add.off{background:linear-gradient(180deg,#94a3b8,#475569);color:#e2e8f0;font-size:15px}
-.card-info{position:absolute;top:-7px;right:-7px;width:23px;height:23px;border-radius:50%;border:2px solid #fff;background:linear-gradient(180deg,#5ea8ff,#1e63c8);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;z-index:4;padding:0;cursor:pointer}
-.pick-order{position:absolute;bottom:-6px;right:-6px;background:linear-gradient(145deg,#5ef08a,#1f9e42);color:#083b1c;font-weight:900;font-size:11px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid #fff;z-index:5}
-.card-icon{font-size:27px;margin-top:13px;line-height:1}
-.card-name{font-size:9.5px;text-align:center;font-weight:900;line-height:1.1}
-.card-role{font-size:7.5px;color:#9fb6c4;text-align:center;font-weight:800;line-height:1.1;margin-top:1px}
-.card-lv{font-size:8px;color:#ffd447;background:rgba(0,0,0,.75);padding:2px 4px;border-radius:4px;width:92%;text-align:center;margin-top:4px;font-weight:800}
-.card-up{width:92%;padding:4px 0;margin-bottom:6px;border:0;border-radius:6px;font-size:8.5px;font-weight:900;color:#3b1f00;background:linear-gradient(180deg,#ffe082,#ffb300);box-shadow:0 2px 0 #b45309;cursor:pointer}
-.card-up:active{transform:translateY(1px)}
-.card-up:disabled{background:#475569;color:#e2e8f0;box-shadow:none;opacity:.7}
-.drag-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.95;transform:translate(-50%,-58%) scale(1.1) rotate(-4deg);filter:drop-shadow(0 14px 24px rgba(0,0,0,.8))}
+/* верхняя панель */
+.topbar{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
+.chip{display:flex;align-items:center;gap:6px;min-width:70px;height:34px;padding:0 12px;border-radius:12px;font-weight:900;font-size:15px;
+  background:linear-gradient(180deg,#22417e,#122a5a);border:2px solid #3f67b8;box-shadow:0 3px 0 #061433,inset 0 1px 0 rgba(255,255,255,.25)}
+.chip.units{color:#7ee8ff;border-color:#2f8fd0}
+.chip.ver{font-size:10px;color:#3b1f00;background:linear-gradient(180deg,#ffe082,#ffb300);border-color:#fff;min-width:0}
 
-.pip{display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid #5ee0ff;margin-right:3px;vertical-align:middle}
-.pip.on{background:#5ee0ff;box-shadow:0 0 6px rgba(94,224,255,.8)}
-.piece-list{width:100%;display:flex;flex-direction:column;gap:8px;margin-top:4px}
-.prow{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid #334155}
-.prow .pi{font-size:28px;width:40px;text-align:center;color:#e2e8f0}
+.tabs{display:flex;gap:6px;margin:12px 0 4px}
+.tab{flex:1;height:42px;border:0;border-radius:12px;font-weight:900;font-size:13px;color:#dbe9ff;cursor:pointer;
+  background:linear-gradient(180deg,#34568f,#1b3366);box-shadow:0 4px 0 #0a1a40}
+.tab.on{color:#3b1f00;background:linear-gradient(180deg,#ffe27a,#ffb300);box-shadow:0 4px 0 #b45309}
+.screen{display:none}
+.screen.on{display:block}
+
+/* колода */
+.panel{background:linear-gradient(180deg,#1f4a94,#122c63);border:2px solid #4b78c8;border-radius:16px;padding:10px;box-shadow:0 6px 0 #061433;margin-top:10px}
+.pager{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.pager-note{flex:1;text-align:center;font-size:11px;font-weight:900;color:#cfe3ff}
+.pnav{width:34px;height:36px;border:0;border-radius:10px;font-size:18px;font-weight:900;color:#fff;background:linear-gradient(180deg,#3b8ef0,#1c56b8);box-shadow:0 3px 0 #123b7a;cursor:pointer}
+.pnav:disabled{opacity:.35}
+.slots{flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.sbtn{position:relative;height:38px;border-radius:10px;border:2px solid #4a72c0;color:#c6d8ff;font-weight:900;font-size:14px;cursor:pointer;background:linear-gradient(180deg,#22437f,#122a5e);box-shadow:0 3px 0 #0b1b45}
+.sbtn.on{color:#3b1f00;background:linear-gradient(180deg,#ffe082,#ffb300);border-color:#fff;box-shadow:0 3px 0 #b45309}
+.sbtn .dot{position:absolute;top:3px;right:4px;width:7px;height:7px;border-radius:50%;background:#43e97b}
+.deck-row{display:flex;gap:6px;margin:6px 0}
+.deck-slot{flex:1;height:44px;border-radius:10px;border:2px dashed rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:20px;color:#9fb6d8;background:rgba(2,6,23,.35);cursor:pointer}
+.deck-slot.filled{border-style:solid;border-color:#43e97b;background:linear-gradient(145deg,#0f6b3a,#064e26);color:#fff}
+.note{text-align:center;font-size:12px;font-weight:800;color:#dbe9ff;line-height:1.4;min-height:17px}
+.note b{color:#43e97b}
+.note.warn{color:#ffd447}
+.balance{text-align:center;font-size:11px;font-weight:900;min-height:15px;margin-top:4px}
+.balance.good{color:#43e97b}
+.balance.warn{color:#ffd447}
+
+/* коллекция */
+.coll-head{display:flex;align-items:center;gap:8px;margin:14px 2px 6px}
+.coll-title{flex:1}
+.coll-title h2{margin:0;font-size:22px;font-weight:900;text-shadow:0 3px 0 #0a1a40,0 0 14px rgba(120,190,255,.35)}
+.coll-title p{margin:2px 0 0;font-size:13px;font-weight:900;color:#ff9be8;text-shadow:0 2px 0 #3a0d33}
+.sortbtn{height:40px;padding:0 12px;border:0;border-radius:10px;font-size:12px;font-weight:900;color:#fff;cursor:pointer;background:linear-gradient(180deg,#3d6cc0,#22468d);box-shadow:0 3px 0 #0a1a40}
+.sec{display:flex;align-items:center;gap:8px;margin:12px 0 6px;font-size:14px;font-weight:900;color:#ff9be8;text-shadow:0 2px 0 #3a0d33}
+.sec::before,.sec::after{content:'';flex:1;height:2px;border-radius:2px;background:rgba(160,200,255,.22)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px 8px;padding:0 2px}
+
+.cc{position:relative;aspect-ratio:3/4.2;border-radius:12px;border:3px solid #b7c2d3;background:linear-gradient(180deg,#3b6fbf,#17386f);box-shadow:0 4px 0 #061433;display:flex;flex-direction:column;align-items:center;cursor:pointer;overflow:visible}
+.cc.rare{border-color:#ffb020;background:linear-gradient(180deg,#5a4aa0,#2a1f5c)}
+.cc.epic{border-color:#b06aff;background:linear-gradient(180deg,#5a3aa0,#2a1450)}
+.cc-cap{width:100%;height:14px;border-radius:9px 9px 0 0;background:linear-gradient(180deg,#7a8aa6,#34425c)}
+.cc-ic{font-size:32px;margin-top:8px;line-height:1;filter:drop-shadow(0 3px 3px rgba(0,0,0,.6))}
+.cc-band{margin-top:auto;width:100%;padding:4px 0 3px;text-align:center;font-size:9.5px;font-weight:900;color:#fff;text-shadow:0 1px 2px #000;border-radius:0 0 9px 9px;background:linear-gradient(180deg,#a855f7,#6d28d9)}
+.cc.lv2 .cc-band{background:linear-gradient(180deg,#34d058,#15803d)}
+.cc.lv3 .cc-band{background:linear-gradient(180deg,#ffd447,#d97706)}
+.cc-prog{position:relative;width:94%;height:15px;margin:4px 0 6px;border-radius:8px;background:#071433;overflow:hidden;box-shadow:inset 0 2px 3px #000}
+.cc-prog i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(180deg,#7dd3fc,#2563eb)}
+.cc-prog.ok i{background:linear-gradient(180deg,#86efac,#16a34a)}
+.cc-prog.max i{background:linear-gradient(180deg,#ffe27a,#d97706)}
+.cc-prog span{position:relative;display:block;font-size:8.5px;font-weight:900;line-height:15px;text-align:center;color:#fff;text-shadow:0 1px 2px #000}
+.cc-arrow{position:absolute;top:-10px;right:-8px;width:30px;height:30px;border:0;padding:0;border-radius:50%;font-size:17px;font-weight:900;color:#fff;background:linear-gradient(180deg,#ff8ae6,#c026d3);border:2px solid #fff;box-shadow:0 3px 0 #6b0f5e;cursor:pointer;z-index:4;animation:bob 1.2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.cc-pos{position:absolute;top:-8px;left:-8px;width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#5ef08a,#1f9e42);border:2px solid #fff;color:#06301a;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;z-index:4}
+
+/* пиктограммы фигур */
+.prow{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:linear-gradient(180deg,#1f4a94,#122c63);border:2px solid #4b78c8;box-shadow:0 4px 0 #061433;margin-bottom:8px}
+.prow .pi{font-size:30px;width:40px;text-align:center}
 .prow .pm{flex:1;min-width:0}
 .prow .pn{font-size:13px;font-weight:900}
-.prow .ps{font-size:11px;color:#9fb6c4;margin-top:3px;line-height:1.35}
-.prow button{padding:9px 10px;border-radius:10px;border:0;font-size:12px;font-weight:900;color:#3b1f00;background:linear-gradient(180deg,#ffe082,#ffb300);box-shadow:0 3px 0 #b45309;cursor:pointer;white-space:nowrap}
-.prow button:disabled{opacity:.45;box-shadow:none;background:#475569;color:#e2e8f0}
-.units-note{width:100%;text-align:center;font-size:11px;color:#9fb6c4;line-height:1.45;padding:0 6px}
-.units-note b{color:#5ee0ff}
-.lock-note{width:100%;box-sizing:border-box;text-align:center;font-size:11px;color:#dbe9ff;padding:8px;border-radius:10px;border:1px dashed #475569}
+.prow .ps{font-size:11px;color:#cfe3ff;margin-top:3px;line-height:1.35}
+.pips{display:inline-flex;gap:3px;margin-right:4px;vertical-align:middle}
+.pip{width:10px;height:10px;border-radius:50%;border:1.5px solid #7ee8ff;background:transparent}
+.pip.on{background:#7ee8ff;box-shadow:0 0 6px rgba(126,232,255,.8)}
+.prow button{padding:9px 10px;border:0;border-radius:10px;font-size:12px;font-weight:900;color:#3b1f00;background:linear-gradient(180deg,#ffe27a,#ffb300);box-shadow:0 3px 0 #b45309;cursor:pointer;white-space:nowrap}
+.prow button:disabled{background:#475569;color:#e2e8f0;box-shadow:none;opacity:.7}
+.lock-note{text-align:center;font-size:11px;color:#cfe3ff;padding:8px;border-radius:10px;border:1px dashed #4b78c8;margin-top:8px}
 
-.setup-area{width:95vw;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:10px}
-.setup-hint{text-align:center;color:#dbe9ff;font-size:12px;margin:0;min-height:18px;padding:0 10px;line-height:1.45;font-weight:700}
-.board-container{position:relative;width:100%;aspect-ratio:1/1;border:4px solid #ffd447;border-radius:14px;overflow:hidden;box-shadow:0 10px 0 #b45309,0 18px 40px rgba(0,0,0,.6);background:linear-gradient(145deg,#1a1f2e,#0f1420)}
-.board{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:100%;height:100%}
-.cell{position:relative;display:flex;justify-content:center;align-items:center;font-size:32px}
-.cell.white{background:linear-gradient(145deg,#b8c4d4,#94a3b8 50%,#7a8ba0)}
-.cell.black{background:linear-gradient(145deg,#4a5a6e,#3a4a5e 50%,#2a3a4e)}
-.cell.locked{filter:brightness(.42) saturate(.3)}
-.cell.setup-zone{background-color:rgba(255,212,71,.15)}
-.board.edit-mode .cell.setup-zone{cursor:pointer;background-color:rgba(255,212,71,.32)}
-.cell.selected{background:linear-gradient(145deg,#4ade80,#22c55e 60%,#15803d)!important}
-.piece{position:relative;z-index:2;pointer-events:none;margin-bottom:8px}
-.top-cost-badge{position:absolute;top:-4px;left:50%;transform:translateX(-50%);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:900;display:flex;justify-content:center;align-items:center;border:1.5px solid #fff;z-index:10;background:#c00d0d}
-.bottom-hp-bar{position:absolute;bottom:12px;left:5%;width:90%;height:11px;border-radius:4px;display:flex;justify-content:center;align-items:center;z-index:10;border:1px solid #000;background:#34c759}
-.lvl-num{font-size:9px;font-weight:900;color:#000;line-height:11px}
-.hp-text-below{position:absolute;bottom:1px;left:0;width:100%;text-align:center;font-size:8px;font-weight:bold;color:#fff;z-index:10}
-.army-counts{width:100%;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;padding:0 8px}
+/* окно карты */
+#cardModal{position:fixed;inset:0;z-index:9500;display:none;align-items:flex-end;justify-content:center;background:rgba(3,10,30,.7)}
+#cardModal.open{display:flex}
+.cm-sheet{position:relative;width:100%;max-width:440px;max-height:94vh;overflow-y:auto;padding:14px 14px calc(18px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0;background:linear-gradient(180deg,#1f4a94,#0f2656);border:2px solid #4b78c8;border-bottom:0;box-shadow:0 -10px 40px rgba(0,0,0,.6);animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.cm-x{position:absolute;top:-14px;right:-6px;width:40px;height:40px;border-radius:12px;border:3px solid #fff;background:linear-gradient(180deg,#ff6b6b,#c81e1e);color:#fff;font-size:18px;font-weight:900;cursor:pointer;z-index:3;box-shadow:0 4px 0 #6b1111}
+.cm-top{display:flex;gap:10px;align-items:flex-start;padding-right:30px}
+.cm-thumb{width:96px;height:124px;flex-shrink:0;border-radius:12px;border:3px solid #b7c2d3;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#3b6fbf,#17386f);box-shadow:0 4px 0 #061433}
+.cm-thumb.rare{border-color:#ffb020;background:linear-gradient(180deg,#5a4aa0,#2a1f5c)}
+.cm-thumb.epic{border-color:#b06aff;background:linear-gradient(180deg,#5a3aa0,#2a1450)}
+.cm-thumb-ic{font-size:50px;filter:drop-shadow(0 4px 4px rgba(0,0,0,.6))}
+.cm-title{flex:1;text-align:center;padding-top:6px}
+.cm-name{font-size:24px;font-weight:900;line-height:1.05;text-shadow:0 3px 0 #0a1a40,0 0 12px rgba(120,190,255,.4)}
+.cm-sub{margin-top:6px;font-size:16px;font-weight:900;color:#ffc84a;text-shadow:0 2px 0 #3d2400}
+.cm-tiles{display:flex;gap:8px;margin:12px 0}
+.tile{flex:1;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#24508f,#132d5e);border:2px solid #3f67b8;box-shadow:0 3px 0 #061433}
+.tile-h{padding:4px 0;text-align:center;font-size:11px;font-weight:900;color:#fff;background:linear-gradient(180deg,#ff9d3a,#e0650c);letter-spacing:.5px}
+.tile-b{padding:8px 0;text-align:center;font-size:15px;font-weight:900;color:#fff;text-shadow:0 2px 0 #061433}
+.cm-stage{position:relative;height:232px;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,#8fd0ff,#2d7bd0);border:3px solid #cfe6ff;box-shadow:inset 0 0 26px rgba(0,30,80,.45)}
+.cm-grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(3,1fr)}
+.cm-grid i{border:1px solid rgba(255,255,255,.12)}
+.cm-grid i.d{background:rgba(255,255,255,.07)}
+.cm-zone{position:absolute;z-index:1;pointer-events:none}
+.cm-zone.block{background:repeating-linear-gradient(45deg,rgba(148,163,184,.6) 0 6px,rgba(51,65,85,.8) 6px 12px);border:1px solid #94a3b8}
+.cm-zone.home{background:rgba(255,255,255,.3);border:1px dashed #fff}
+.cm-zone.tgt{border:2px dashed #fff;box-shadow:inset 0 0 12px rgba(255,255,255,.6)}
+.cm-zone.boom{background:radial-gradient(circle,rgba(255,220,90,.95),rgba(239,68,68,.6) 55%,rgba(239,68,68,0) 75%);animation:boom .6s ease-out forwards}
+@keyframes boom{0%{opacity:0;transform:scale(.6)}30%{opacity:1}100%{opacity:0;transform:scale(1)}}
+.cm-piece{position:absolute;z-index:3;transform:translate(-50%,-50%);font-size:clamp(20px,7.5vw,30px);line-height:1;transition:left .42s,top .42s,opacity .4s;text-shadow:0 2px 3px rgba(0,0,0,.6)}
+.cm-piece.mine{color:#e0f2ff}
+.cm-piece.foe{color:#ff9b9b}
+.cm-piece.gone{opacity:0}
+.cm-piece.charged{animation:charge .45s infinite alternate}
+@keyframes charge{from{filter:brightness(1)}to{filter:brightness(1.8)}}
+.cm-piece.shielded::after{content:'🛡️';position:absolute;right:-9px;top:-11px;font-size:13px}
+.cm-piece.frozen::before{content:'❄️';position:absolute;left:-10px;top:-10px;font-size:13px}
+.cm-piece.shake{animation:shake .4s ease-in-out}
+@keyframes shake{0%,100%{transform:translate(-50%,-50%)}25%{transform:translate(calc(-50% - 4px),-50%)}75%{transform:translate(calc(-50% + 4px),-50%)}}
+.cm-piece.appear{animation:appear .45s ease-out}
+@keyframes appear{from{transform:translate(-50%,-50%) scale(0);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.cm-float{position:absolute;z-index:6;transform:translate(-50%,-50%);font-size:12px;font-weight:900;color:#ffd447;text-shadow:0 1px 4px #000;animation:floaty 1.5s ease-out forwards;pointer-events:none;white-space:nowrap}
+.cm-float.good{color:#86efac}
+@keyframes floaty{0%{opacity:0;transform:translate(-50%,-40%) scale(.6)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-190%) scale(1.1)}}
+.cm-stage.flash::before{content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,.7),transparent 72%);z-index:4;animation:flash .32s ease-out;pointer-events:none}
+@keyframes flash{from{opacity:1}to{opacity:0}}
+.cm-text{position:absolute;inset:0;overflow-y:auto;padding:14px;color:#0b2350;font-size:13px;font-weight:700;line-height:1.45}
+.cm-text p{margin:0 0 10px}
+.cm-text ul{margin:0;padding-left:18px}
+.cm-text li{margin-bottom:5px}
+.lvrow{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,.55);border:2px solid #7fb4e8}
+.lvrow b{min-width:92px;color:#0b2350}
+.lvrow.cur{background:rgba(255,236,150,.9);border-color:#e0a000}
+.lvrow.lock{opacity:.6}
+.cm-cap{text-align:center;font-size:12px;font-weight:900;color:#ffe27a;min-height:16px;margin:8px 0 2px;text-shadow:0 2px 0 #3d2400}
+.dots{display:flex;justify-content:center;gap:8px;margin:8px 0 12px}
+.dot{width:12px;height:12px;border-radius:50%;background:#7a9bd0;border:2px solid #fff;cursor:pointer}
+.dot.on{background:#ffd447}
+.cm-btns{display:flex;gap:8px;align-items:stretch}
+.cb-up{flex:1.6;border:0;border-radius:12px;padding:8px 6px;color:#fff;cursor:pointer;background:linear-gradient(180deg,#5ef08a,#1f9e42);box-shadow:0 4px 0 #0e6b2c;text-shadow:0 2px 0 #0b4a1f}
+.cb-up:disabled{background:linear-gradient(180deg,#94a3b8,#475569);box-shadow:0 4px 0 #334155;opacity:.8}
+.cb-up span{display:block;font-size:14px;font-weight:900}
+.cb-up b{display:block;font-size:12px;font-weight:900;margin-top:2px}
+.cb-rep{width:52px;border:0;border-radius:12px;font-size:22px;color:#fff;cursor:pointer;background:linear-gradient(180deg,#c084fc,#7e22ce);box-shadow:0 4px 0 #4c1d7a}
+.cb-pick{flex:1.2;border:0;border-radius:12px;font-size:14px;font-weight:900;color:#3b1f00;cursor:pointer;background:linear-gradient(180deg,#ffe27a,#ffb300);box-shadow:0 4px 0 #b45309}
+.cb-pick.rm{color:#fff;background:linear-gradient(180deg,#ff8a8a,#b91c1c);box-shadow:0 4px 0 #7f1d1d}
+.cb-pick:disabled{background:#475569;color:#e2e8f0;box-shadow:0 4px 0 #334155}
+
+.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-120px);background:linear-gradient(135deg,#22437f,#122a5e);color:#fff;padding:12px 20px;border-radius:12px;font-weight:800;z-index:9999;border:3px solid #34c759;transition:transform .35s;font-size:13.5px;text-align:center;max-width:86vw}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* настройка расстановки */
+.setup-hint{text-align:center;font-size:12px;font-weight:700;color:#dbe9ff;min-height:18px;margin:6px 0}
+.army{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:6px 0}
 .army-chip{border-radius:8px;padding:3px 8px;font-size:11px;font-weight:800;background:rgba(2,6,23,.6);border:2px solid #4a72c0;color:#c6d8ff}
 .army-chip.ok{border-color:#43e97b;color:#8cf0b0}
 .army-chip.bad{border-color:#f4665e;color:#ffc4c4}
-.btn-action{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;border:0;color:#fff}
-.btn-edit{background:linear-gradient(180deg,#5ea8ff,#1e63c8)}
-.btn-save{background:linear-gradient(180deg,#5ef08a,#1f9e42)}
-.btn-cancel{background:linear-gradient(180deg,#8fa8cc,#33486b)}
-.btn-reset{background:linear-gradient(180deg,#f0a35a,#a2560f)}
-.setup-buttons{width:100%;display:flex;flex-direction:column;gap:8px;padding:0 10px}
-.setup-buttons-row{display:flex;gap:8px;width:100%}
-.setup-buttons-row .btn-action{flex:1}
-.lock-badge{display:inline-block;background:#1e293b;color:#ffd447;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;margin-left:6px}
+.board-box{position:relative;width:100%;aspect-ratio:1/1;border:4px solid #ffd447;border-radius:14px;overflow:hidden;box-shadow:0 8px 0 #b45309;background:#1a1f2e}
+.board{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:100%;height:100%}
+.cell{position:relative;display:flex;justify-content:center;align-items:center;font-size:clamp(16px,5vw,26px)}
+.cell.white{background:linear-gradient(145deg,#b8c4d4,#94a3b8)}
+.cell.black{background:linear-gradient(145deg,#4a5a6e,#2a3a4e)}
+.cell.locked{filter:brightness(.42) saturate(.3)}
+.cell.setup-zone{background-color:rgba(255,212,71,.2)}
+.board.edit-mode .cell.setup-zone{cursor:pointer;background-color:rgba(255,212,71,.4)}
+.cell.selected{background:linear-gradient(145deg,#4ade80,#15803d)!important}
+.cell .pc{position:relative;z-index:2;margin-bottom:7px;color:#fff;pointer-events:none}
+.cost-b{position:absolute;top:-3px;left:50%;transform:translateX(-50%);width:16px;height:16px;border-radius:50%;font-size:9px;font-weight:900;color:#fff;display:flex;align-items:center;justify-content:center;background:#c00d0d;border:1.5px solid #fff;z-index:10}
+.hp-b{position:absolute;bottom:12px;left:5%;width:90%;height:11px;border-radius:4px;background:#34c759;border:1px solid #000;z-index:10}
+.hp-t{position:absolute;bottom:1px;left:0;width:100%;text-align:center;font-size:8px;font-weight:bold;color:#fff;z-index:10}
+.setup-btns{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.setup-row{display:flex;gap:8px}
+.setup-row button{flex:1}
+.bt{width:100%;padding:13px;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;border:0;color:#fff}
+.bt-edit{background:linear-gradient(180deg,#5ea8ff,#1e63c8);box-shadow:0 4px 0 #0f3a8a}
+.bt-save{background:linear-gradient(180deg,#5ef08a,#1f9e42);box-shadow:0 4px 0 #0e6b2c}
+.bt-cancel{background:linear-gradient(180deg,#8fa8cc,#33486b);box-shadow:0 4px 0 #1e2b44}
+.bt-reset{background:linear-gradient(180deg,#f0a35a,#a2560f);box-shadow:0 4px 0 #6b3606}
 
-#cardModal{position:fixed;inset:0;z-index:9500;display:none;align-items:flex-end;justify-content:center}
-#cardModal.open{display:flex}
-.cm-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.86)}
-.cm-sheet{position:relative;width:100%;max-width:420px;max-height:92vh;overflow-y:auto;background:linear-gradient(180deg,#16233d,#0a1020);border:2px solid #2f4a78;border-bottom:0;border-radius:20px 20px 0 0;padding:14px 14px calc(16px + env(safe-area-inset-bottom))}
-.cm-close{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:2px solid #475569;background:rgba(2,6,23,.7);color:#cbd5e1;font-size:15px;font-weight:900;cursor:pointer;z-index:3}
-.cm-head{display:flex;align-items:center;gap:12px;padding-right:40px;margin-bottom:10px}
-.cm-badge{width:44px;height:44px;flex-shrink:0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;background:linear-gradient(180deg,#22c55e,#15803d);border:2px solid #fff}
-.cm-name{font-size:17px;font-weight:900;line-height:1.1}
-.cm-rar{font-size:11px;font-weight:800;color:#9fb6c4;margin-top:2px}
-.cm-stage{position:relative;width:100%;aspect-ratio:5/3;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,#0d1a2e,#060d18);border:2px solid #24446b}
-.cm-grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(3,1fr)}
-.cm-grid i{border:1px solid rgba(90,140,200,.13)}
-.cm-grid i.d{background:rgba(90,140,200,.075)}
-.cm-stage.flash::before{content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,.6),transparent 72%);z-index:4;animation:cmFlash .32s ease-out;pointer-events:none}
-@keyframes cmFlash{from{opacity:1}to{opacity:0}}
-.cm-zone{position:absolute;z-index:1;pointer-events:none}
-.cm-zone.block{background:repeating-linear-gradient(45deg,rgba(148,163,184,.55) 0 6px,rgba(51,65,85,.75) 6px 12px);border:1px solid #94a3b8}
-.cm-zone.home{background:rgba(94,224,255,.2);border:1px dashed #5ee0ff}
-.cm-zone.tgt{border:2px dashed #5ee0ff;box-shadow:inset 0 0 12px rgba(94,224,255,.5)}
-.cm-zone.boom{background:radial-gradient(circle,rgba(255,200,80,.95),rgba(239,68,68,.55) 55%,rgba(239,68,68,0) 75%);animation:cmBoom .6s ease-out forwards}
-@keyframes cmBoom{0%{opacity:0;transform:scale(.6)}30%{opacity:1}100%{opacity:0;transform:scale(1)}}
-.cm-piece{position:absolute;z-index:3;transform:translate(-50%,-50%);font-size:clamp(20px,7.5vw,30px);line-height:1;transition:left .42s,top .42s,opacity .4s}
-.cm-piece.mine{color:#7cc4ff;text-shadow:0 0 10px rgba(90,169,236,.9),0 2px 4px #000}
-.cm-piece.foe{color:#ff8b8b;text-shadow:0 0 10px rgba(239,83,80,.9),0 2px 4px #000}
-.cm-piece.gone{opacity:0}
-.cm-piece.charged{animation:cmCharge .45s infinite alternate}
-@keyframes cmCharge{from{filter:brightness(1)}to{filter:brightness(1.9)}}
-.cm-piece.shielded::after{content:'🛡️';position:absolute;right:-9px;top:-11px;font-size:13px}
-.cm-piece.frozen::before{content:'❄️';position:absolute;left:-10px;top:-10px;font-size:13px}
-.cm-piece.shake{animation:cmShake .4s ease-in-out}
-@keyframes cmShake{0%,100%{transform:translate(-50%,-50%)}25%{transform:translate(calc(-50% - 4px),-50%)}75%{transform:translate(calc(-50% + 4px),-50%)}}
-.cm-piece.appear{animation:cmAppear .45s ease-out}
-@keyframes cmAppear{from{transform:translate(-50%,-50%) scale(0);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
-.cm-float{position:absolute;z-index:6;transform:translate(-50%,-50%);font-size:12px;font-weight:900;color:#ffd447;text-shadow:0 1px 4px #000;animation:cmFloat 1.5s ease-out forwards;pointer-events:none;white-space:nowrap}
-.cm-float.good{color:#43e97b}
-@keyframes cmFloat{0%{opacity:0;transform:translate(-50%,-40%) scale(.6)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-190%) scale(1.1)}}
-.cm-cap{width:100%;text-align:center;font-size:12px;font-weight:900;color:#5ee0ff;margin:10px 0 8px;min-height:16px}
-.cm-desc{font-size:12.5px;line-height:1.5;color:#dbe9ff;margin-bottom:10px}
-.cm-tips{margin:0 0 10px;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
-.cm-tips li{font-size:11.5px;line-height:1.4;color:#9fb6c4;padding-left:16px;position:relative}
-.cm-tips li::before{content:'▸';position:absolute;left:2px;color:#5ee0ff;font-weight:900}
-.cm-lv{font-size:11.5px;color:#dbe9ff;background:rgba(2,6,23,.6);border:1px solid #2f4a78;border-radius:10px;padding:8px 10px;margin-bottom:10px;line-height:1.45}
-.cm-up{width:100%;padding:12px;border:0;border-radius:12px;font-size:14px;font-weight:900;color:#3b1f00;background:linear-gradient(180deg,#ffe082,#ffb300);box-shadow:0 5px 0 #b45309;cursor:pointer;margin-bottom:10px}
-.cm-up:disabled{opacity:.45;box-shadow:none;background:#475569;color:#e2e8f0}
-.cm-add{width:100%;padding:14px;border:0;border-radius:12px;font-size:15px;font-weight:900;color:#06301a;background:linear-gradient(180deg,#5ef08a,#1f9e42);cursor:pointer;box-shadow:0 5px 0 #0e6b2c}
-.cm-add.remove{background:linear-gradient(180deg,#ff8a8a,#b91c1c);color:#fff;box-shadow:0 5px 0 #7f1d1d}
-.cm-add.full{background:linear-gradient(180deg,#94a3b8,#475569);color:#fff;box-shadow:0 5px 0 #334155}
-
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120px);background:linear-gradient(135deg,#22437f,#122a5e);color:#fff;padding:14px 22px;border-radius:12px;font-weight:800;z-index:9999;border:3px solid #34c759;transition:transform .4s;font-size:14px;text-align:center;max-width:80vw}
-.toast.show{transform:translateX(-50%) translateY(0)}
-.nav{position:fixed;bottom:0;left:0;width:100%;height:68px;display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom)}
+.nav{position:fixed;bottom:0;left:0;width:100%;height:68px;display:flex;justify-content:space-around;align-items:center;z-index:999;padding-bottom:env(safe-area-inset-bottom);background:linear-gradient(180deg,#1a1a2e,#0f0f1e);border-top:1px solid rgba(255,255,255,.08)}
 .nb{background:transparent;border:none;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;flex:1;height:100%;gap:3px}
-.nb i{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-style:normal}
-.sp{width:24px;height:28px;position:relative}
-.sp b{position:absolute;width:16px;height:22px;border-radius:3px;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff}
-.sp b:nth-child(1){left:0;top:6px;transform:rotate(-18deg);background:linear-gradient(135deg,#f093fb,#f5576c)}
-.sp b:nth-child(2){left:4px;top:3px;transform:rotate(-8deg);background:linear-gradient(135deg,#4facfe,#00f2fe)}
-.sp b:nth-child(3){left:8px;top:0;transform:rotate(4deg);background:linear-gradient(135deg,#43e97b,#38f9d7)}
+.nb i{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-style:normal;background:linear-gradient(145deg,#2a2a3e,#15151f)}
+.nb.on i{box-shadow:0 0 0 2px #ffd447}
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<div class="top-bar">
-  <div class="currency-row">
-    <div class="currency">🪙 <span id="deck-coins">1250</span></div>
-    <div class="currency">💎 <span id="deck-gems">50</span></div>
-    <div class="currency unit-chip">🔹 <span id="deck-units">0</span></div>
-    <div class="deck-ver">v13</div>
+  <div class="topbar">
+    <div class="chip">🪙 <span id="deck-coins">0</span></div>
+    <div class="chip">💎 <span id="deck-gems">0</span></div>
+    <div class="chip units">🔹 <span id="deck-units">0</span></div>
+    <div class="chip ver">v14</div>
   </div>
-  <div class="sub-tabs">
-    <button class="sub-tab-btn active" id="sub-tab-cards-btn" onclick="switchSubTab('cards')">🃏 Карты</button>
-    <button class="sub-tab-btn" id="sub-tab-pieces-btn" onclick="switchSubTab('pieces')">♟ Фигуры</button>
-    <button class="sub-tab-btn" id="sub-tab-setup-btn" onclick="switchSubTab('setup')">⚙️ Расстановка</button>
-  </div>
-</div>
 
-<div id="screen-cards" class="screen active">
-  <div class="deck-area">
-    <div class="rule-banner">Карты <b>бесплатны</b>. В колоде 4 карты — каждые <b>30 сек</b> в руку выпадает одна из них. Используешь или пропускаешь — таймер запускается заново.<br>Прокачка: ур.2 — <b>100 🔹</b>, ур.3 — <b>200 🔹</b>.</div>
-    <div class="pager-note" id="pagerNote"></div>
-    <div class="slot-bar">
-      <button class="slot-nav" id="pPrev" onclick="pagePrev()">‹</button>
-      <div class="slot-list" id="slotList"></div>
-      <button class="slot-nav" id="pNext" onclick="pageNext()">›</button>
+  <div class="tabs">
+    <button class="tab on" id="tab-cards" onclick="switchTab('cards')">🃏 Карты</button>
+    <button class="tab" id="tab-pieces" onclick="switchTab('pieces')">♟ Фигуры</button>
+    <button class="tab" id="tab-setup" onclick="switchTab('setup')">⚙️ Расстановка</button>
+  </div>
+
+  <!-- КАРТЫ -->
+  <div id="screen-cards" class="screen on">
+    <div class="panel">
+      <div class="pager">
+        <button class="pnav" id="pPrev" onclick="pagePrev()">‹</button>
+        <div class="slots" id="slotList"></div>
+        <button class="pnav" id="pNext" onclick="pageNext()">›</button>
+      </div>
+      <div class="pager-note" id="pagerNote" style="margin:-2px 0 6px"></div>
+      <div class="note" id="deckNote"></div>
+      <div class="deck-row" id="deck-picked"></div>
+      <div class="balance" id="balanceLine"></div>
     </div>
-    <div class="deck-note" id="deck-note"></div>
-    <div class="deck-picked" id="deck-picked"></div>
-    <div class="balance-line" id="balanceLine"></div>
-    <div class="deck-grid" id="deck-grid"></div>
-  </div>
-</div>
 
-<div id="screen-pieces" class="screen">
-  <div class="deck-area">
-    <div class="rule-banner">Шахматные фигуры <b>не входят</b> в колоду из 4 карт. Здесь они прокачиваются отдельно: уровень фигуры — это её <b>HP</b>. Ур.2 переживает один удар, ур.3 — два.<br>Прокачка: ур.2 — <b>100 🔹</b>, ур.3 — <b>200 🔹</b>.</div>
-    <div class="units-note">🔹 Единицы: <b id="pieces-units">0</b> · 3% шанс за победу в бою с игроком</div>
-    <div class="piece-list" id="piece-list"></div>
+    <div class="coll-head">
+      <div class="coll-title">
+        <h2>Коллекция карт</h2>
+        <p id="collCount">Найдено: 10/10</p>
+      </div>
+      <button class="sortbtn" id="collSort">По порядку</button>
+    </div>
+    <div id="collGrid"></div>
+  </div>
+
+  <!-- ФИГУРЫ -->
+  <div id="screen-pieces" class="screen">
+    <div class="panel">
+      <div class="note">🔹 Единицы: <b id="pieces-units">0</b> · 3% шанс за победу в бою с игроком</div>
+      <div class="note" style="margin-top:6px;font-weight:700;font-size:11.5px">Шахматные фигуры не входят в колоду из 4 карт. Уровень фигуры — это её HP: ур.2 держит один удар, ур.3 — два.</div>
+    </div>
+    <div id="piece-list" style="margin-top:10px"></div>
     <div class="lock-note">Короля не прокачиваем: его HP определяет мат, и это решает исход партии.</div>
   </div>
-</div>
 
-<div id="screen-setup" class="screen">
-  <div class="setup-area">
+  <!-- РАССТАНОВКА -->
+  <div id="screen-setup" class="screen">
     <p class="setup-hint" id="setup-hint">Твоя расстановка</p>
-    <div class="army-counts" id="army-counts"></div>
-    <div class="board-container"><div class="board view-mode" id="setup-board"></div></div>
-    <div class="setup-buttons">
-      <button id="btn-edit" class="btn-action btn-edit" onclick="enterEditMode()">✏️ Редактировать расстановку</button>
-      <div id="edit-controls" class="setup-buttons-row" style="display:none">
-        <button class="btn-action btn-reset" onclick="resetSetup()">↺ Сброс</button>
-        <button class="btn-action btn-cancel" onclick="cancelEdit()">✖ Отмена</button>
-        <button class="btn-action btn-save" onclick="saveSetup()">💾 Сохранить</button>
+    <div class="army" id="army-counts"></div>
+    <div class="board-box"><div class="board view-mode" id="setup-board"></div></div>
+    <div class="setup-btns">
+      <button id="btn-edit" class="bt bt-edit" onclick="enterEditMode()">✏️ Редактировать расстановку</button>
+      <div id="edit-controls" class="setup-row" style="display:none">
+        <button class="bt bt-reset" onclick="resetSetup()">↺ Сброс</button>
+        <button class="bt bt-cancel" onclick="cancelEdit()">✖ Отмена</button>
+        <button class="bt bt-save" onclick="saveSetup()">💾 Сохранить</button>
       </div>
     </div>
   </div>
+
 </div>
 
+<!-- ОКНО КАРТЫ -->
 <div id="cardModal">
-  <div class="cm-backdrop" onclick="closeCardModal()"></div>
   <div class="cm-sheet">
-    <button class="cm-close" onclick="closeCardModal()">✕</button>
-    <div class="cm-head">
-      <div class="cm-badge" id="cmBadge">⚡</div>
-      <div>
+    <button class="cm-x" onclick="closeCardModal()">✕</button>
+    <div class="cm-top">
+      <div class="cm-thumb" id="cmThumb"></div>
+      <div class="cm-title">
         <div class="cm-name" id="cmName">Карта</div>
-        <div class="cm-rar" id="cmRar"></div>
+        <div class="cm-sub" id="cmSub"></div>
       </div>
+    </div>
+    <div class="cm-tiles">
+      <div class="tile"><div class="tile-h">РЕДКОСТЬ</div><div class="tile-b" id="cmRar"></div></div>
+      <div class="tile"><div class="tile-h">ТИП</div><div class="tile-b">Заклинание</div></div>
     </div>
     <div class="cm-stage" id="cmStage"></div>
     <div class="cm-cap" id="cmCaption"></div>
-    <div class="cm-desc" id="cmDesc"></div>
-    <ul class="cm-tips" id="cmTips"></ul>
-    <div class="cm-lv" id="cmLv"></div>
-    <button class="cm-up" id="cmUp" onclick="modalUpTap()">Прокачать</button>
-    <button class="cm-add" id="cmAdd" onclick="modalAddTap()">Добавить в колоду</button>
+    <div class="dots" id="cmDots"></div>
+    <div class="cm-btns">
+      <button class="cb-up" id="cbUp"><span id="cbUpTop">Улучшить</span><b id="cbUpCost"></b></button>
+      <button class="cb-rep" id="cbRep" title="Демонстрация">🎬</button>
+      <button class="cb-pick" id="cbPick">В колоду</button>
+    </div>
   </div>
 </div>
 
 <div class="nav">
   <button class="nb" onclick="location.href='chess-shop.html'"><i>🎁</i><span>Магазин</span></button>
-  <button class="nb on" onclick="location.href='chess-deck.html'"><i><span class="sp"><b></b><b></b><b>♠</b></span></i><span>Колода</span></button>
+  <button class="nb on" onclick="location.href='chess-deck.html'"><i>🃏</i><span>Колода</span></button>
   <button class="nb" onclick="location.href='chess-arena.html'"><i>⚔️</i><span>Бой</span></button>
   <button class="nb" onclick="location.href='chess-social.html'"><i>🛡️</i><span>Клан</span></button>
   <button class="nb" onclick="location.href='leaderboard.html'"><i>🏆</i><span>Рейтинг</span></button>
 </div>
 
 <script>
-document.getElementById('deck-coins').textContent=parseInt(localStorage.getItem('cr_coins')||'1250',10);
-document.getElementById('deck-gems').textContent=parseInt(localStorage.getItem('cr_gems')||'50',10);
-
-function switchSubTab(tab){
-  ['cards','pieces','setup'].forEach(function(k){
-    document.getElementById('screen-'+k).classList.toggle('active',k===tab);
-    document.getElementById('sub-tab-'+k+'-btn').classList.toggle('active',k===tab);
-  });
-  if(tab==='setup') renderSetupBoard();
-  if(tab==='pieces') renderPieces();
-}
+const $=function(id){ return document.getElementById(id); };
 
 /* ================= КОНСТАНТЫ ================= */
 
 const PIECES={
-  p:{name:'Пешка',icon:'♟',cost:1},
-  n:{name:'Конь',icon:'♞',cost:3},
-  b:{name:'Слон',icon:'♝',cost:3},
-  r:{name:'Ладья',icon:'♜',cost:4},
-  k:{name:'Король',icon:'♚',cost:5},
-  q:{name:'Ферзь',icon:'♛',cost:6}
+  p:{name:'Пешка',icon:'♟',cost:1}, n:{name:'Конь',icon:'♞',cost:3}, b:{name:'Слон',icon:'♝',cost:3},
+  r:{name:'Ладья',icon:'♜',cost:4}, k:{name:'Король',icon:'♚',cost:5}, q:{name:'Ферзь',icon:'♛',cost:6}
 };
-
 const SPELL_TYPES=['f','s','c','u','g','x','z','l','b','e'];
-const HAND_SIZE=4;
-const SLOT_COUNT=10;
-const PER_PAGE=5;
-const DECKS_KEY='chessDecks';
-const ACTIVE_KEY='chessDeckActive';
-const DEFAULT_DECK=['f','s','c','u'];
-
-const CARD_LV_KEY='chessCardLv';
-const PIECE_LV_KEY='chessPieceLv';
-const UNITS_KEY='chessUnits';
-const LV_COST={2:100,3:200};
-const LV_MAX=3;
+const HAND_SIZE=4, SLOT_COUNT=10, PER_PAGE=5;
+const DECKS_KEY='chessDecks', ACTIVE_KEY='chessDeckActive', DEFAULT_DECK=['f','s','c','u'];
+const CARD_LV_KEY='chessCardLv', PIECE_LV_KEY='chessPieceLv', UNITS_KEY='chessUnits';
+const LV_COST={2:100,3:200}, LV_MAX=3;
 
 const UPGRADABLE_PIECES=[
-  {t:'pawn',  ru:'Пешка', icon:'♟', note:'Дешёвая фигура. Ур.2–3 держит удар дольше.'},
-  {t:'knight',ru:'Конь',  icon:'♞', note:'Прыгает через фигуры. С HP её трудно снять одним ударом.'},
-  {t:'bishop',ru:'Слон',  icon:'♝', note:'Длинные диагонали. Толстый слон — трудная цель.'},
-  {t:'rook',  ru:'Ладья', icon:'♜', note:'Линии и атака. Ладья с 3 HP — опора эндшпиля.'},
-  {t:'queen', ru:'Ферзь', icon:'♛', note:'Сильнейшая фигура. Ур.3 — три удара, чтобы её снять.'}
+  {t:'pawn',ru:'Пешка',icon:'♟',note:'Дешёвая фигура. Ур.2–3 держит удар дольше.'},
+  {t:'knight',ru:'Конь',icon:'♞',note:'Прыгает через фигуры. С HP её трудно снять одним ударом.'},
+  {t:'bishop',ru:'Слон',icon:'♝',note:'Длинные диагонали. Толстый слон — трудная цель.'},
+  {t:'rook',ru:'Ладья',icon:'♜',note:'Линии и атака. Ладья с 3 HP — опора эндшпиля.'},
+  {t:'queen',ru:'Ферзь',icon:'♛',note:'Сильнейшая фигура. Ур.3 — три удара, чтобы её снять.'}
 ];
 
 const RARITY_NAME={common:'Обычная',rare:'Редкая',epic:'Эпическая'};
 
 const DECK_CARDS=[
-  {name:'Ярость',       icon:'⚡',  rarity:'rare',  type:'f', role:'темп'},
-  {name:'Щит',          icon:'🛡️', rarity:'common',type:'s', role:'защита'},
-  {name:'Рокировка',    icon:'🔄',  rarity:'epic',  type:'c', role:'побег'},
-  {name:'Превращение',  icon:'👑',  rarity:'epic',  type:'u', role:'финишер'},
-  {name:'Подкрепление', icon:'➕',  rarity:'common',type:'g', role:'подмога'},
-  {name:'Чистка',       icon:'🗡️', rarity:'rare',  type:'x', role:'атака'},
-  {name:'Заморозка',    icon:'❄️',  rarity:'rare',  type:'z', role:'контроль'},
-  {name:'Перевербовка', icon:'🤝',  rarity:'epic',  type:'l', role:'захват'},
-  {name:'Блокада',      icon:'🧱',  rarity:'common',type:'b', role:'щит клетки'},
-  {name:'Взрыв',        icon:'💣',  rarity:'epic',  type:'e', role:'разрыв'}
+  {name:'Ярость',type:'f',icon:'⚡',rarity:'rare',role:'темп'},
+  {name:'Щит',type:'s',icon:'🛡️',rarity:'common',role:'защита'},
+  {name:'Рокировка',type:'c',icon:'🔄',rarity:'epic',role:'побег'},
+  {name:'Превращение',type:'u',icon:'👑',rarity:'epic',role:'финишер'},
+  {name:'Подкрепление',type:'g',icon:'➕',rarity:'common',role:'подмога'},
+  {name:'Чистка',type:'x',icon:'🗡️',rarity:'rare',role:'атака'},
+  {name:'Заморозка',type:'z',icon:'❄️',rarity:'rare',role:'контроль'},
+  {name:'Перевербовка',type:'l',icon:'🤝',rarity:'epic',role:'захват'},
+  {name:'Блокада',type:'b',icon:'🧱',rarity:'common',role:'щит клетки'},
+  {name:'Взрыв',type:'e',icon:'💣',rarity:'epic',role:'разрыв'}
 ];
 
 const ROLE_OF={attack:['x','z','l','e'],defense:['s','b'],tempo:['f','g','u'],escape:['c']};
 const ROLE_TITLE={attack:'атака',defense:'оборона',tempo:'темп',escape:'побег'};
 
-const LV_TEXT={
-  f:'Ходов без эликсира подряд: 1 / 2 / 3',
-  s:'Ударов, которые щит выдерживает: 1 / 2 / 3',
-  c:'Раз за партию: 1 / 2 / 3',
-  u:'Ферзь / ферзь со щитом 1 / ферзь со щитом 2',
-  g:'Прочность новой пешки: 1 / 2 / 3 HP',
-  x:'Можно убрать: пешку / + коня и слона / + ладью и ферзя',
-  z:'Длительность: 10 / 15 / 20 сек',
-  l:'Можно перевербовать: пешку / + коня и слона / + ладью и ферзя',
-  b:'Длительность: 12 / 18 / 24 сек',
-  e:'Взрыв бьёт: пешки, кони, слоны / + ладьи / + ферзя'
+/* три уровня: что именно даёт каждый */
+const LV_ROWS={
+  f:['1 ход без эликсира','2 хода подряд','3 хода подряд'],
+  s:['Выдерживает 1 удар','Выдерживает 2 удара','Выдерживает 3 удара'],
+  c:['1 раз за партию','2 раза за партию','3 раза за партию'],
+  u:['Пешка становится ферзём','Ферзь со щитом 1','Ферзь со щитом 2'],
+  g:['Пешка с 1 HP','Пешка с 2 HP','Пешка с 3 HP'],
+  x:['Пешка','Пешка, конь, слон','Пешка, конь, слон, ладья, ферзь'],
+  z:['Заморозка 10 секунд','Заморозка 15 секунд','Заморозка 20 секунд'],
+  l:['Пешка','Пешка, конь, слон','Пешка, конь, слон, ладья, ферзь'],
+  b:['Блокада 12 секунд','Блокада 18 секунд','Блокада 24 секунды'],
+  e:['Бьёт пешку, коня, слона','+ ладью','+ ферзя']
 };
 
 const CARD_INFO={
@@ -358,66 +374,41 @@ const CARD_INFO={
 /* ================= ХРАНИЛИЩЕ ================= */
 
 function readObj(key){
-  try{
-    const o=JSON.parse(localStorage.getItem(key)||'{}');
-    return (o&&typeof o==='object')?o:{};
-  }catch(e){ return {}; }
+  try{ const o=JSON.parse(localStorage.getItem(key)||'{}'); return (o&&typeof o==='object')?o:{}; }
+  catch(e){ return {}; }
 }
-function writeObj(key,o){
-  try{ localStorage.setItem(key,JSON.stringify(o)); }catch(e){}
-}
-function clampLv(v){
-  const n=parseInt(v,10);
-  if(!(n>=1)) return 1;
-  return n>LV_MAX?LV_MAX:n;
-}
+function writeObj(key,o){ try{ localStorage.setItem(key,JSON.stringify(o)); }catch(e){} }
+function clampLv(v){ const n=parseInt(v,10); if(!(n>=1)) return 1; return n>LV_MAX?LV_MAX:n; }
 function lvOfCard(t){ return clampLv(readObj(CARD_LV_KEY)[t]); }
-function lvOfPiece(t){ return clampLv(readObj(PIECE_LV_KEY)[t]); }
-
-function getUnits(){
-  const n=parseInt(localStorage.getItem(UNITS_KEY)||'0',10);
-  return (isFinite(n)&&n>0)?n:0;
-}
-function setUnits(n){
-  try{ localStorage.setItem(UNITS_KEY,String(n)); }catch(e){}
-}
+function getUnits(){ const n=parseInt(localStorage.getItem(UNITS_KEY)||'0',10); return (isFinite(n)&&n>0)?n:0; }
+function setUnits(n){ try{ localStorage.setItem(UNITS_KEY,String(n)); }catch(e){} }
 function updateUnitsUI(){
-  const u=getUnits();
-  document.getElementById('deck-units').textContent=u;
-  document.getElementById('pieces-units').textContent=u;
+  $('deck-units').textContent=getUnits();
+  $('pieces-units').textContent=getUnits();
+  $('deck-coins').textContent=parseInt(localStorage.getItem('cr_coins')||'0',10);
+  $('deck-gems').textContent=parseInt(localStorage.getItem('cr_gems')||'0',10);
 }
-
 function pipsHtml(n){
-  let out='';
+  let out='<span class="pips">';
   for(let i=1;i<=LV_MAX;i++) out+='<span class="pip'+(i<=n?' on':'')+'"></span>';
-  return out;
+  return out+'</span>';
 }
 
-/* Общая покупка уровня для карт и фигур */
+/* покупка уровня: общая для карт и фигур */
 function buyLevel(storeKey,id,label){
   const cur=clampLv(readObj(storeKey)[id]);
   if(cur>=LV_MAX){ showToast('Уже максимальный уровень','#ffd447'); return false; }
-  const cost=LV_COST[cur+1];
-  const units=getUnits();
-  if(units<cost){
-    showToast('Нужно '+cost+' 🔹, у тебя '+units,'#f4665e');
-    return false;
-  }
-  if(!confirm(label+': уровень '+cur+' → '+(cur+1)+' за '+cost+' 🔹 ?')) return false;
-  const o=readObj(storeKey);
-  o[id]=cur+1;
-  writeObj(storeKey,o);
+  const cost=LV_COST[cur+1], units=getUnits();
+  if(units<cost){ showToast('Нужно '+cost+' 🔹, у тебя '+units,'#f4665e'); return false; }
+  const o=readObj(storeKey); o[id]=cur+1; writeObj(storeKey,o);
   setUnits(units-cost);
-  updateUnitsUI();
-  showToast('⬆ '+label+' теперь ур. '+(cur+1),'#43e97b');
+  showToast('⬆ '+label+': '+(cur+1)+'-й уровень','#43e97b');
   return true;
 }
 
 /* ================= КОЛОДЫ ================= */
 
-let decks=[];
-let activeSlot=0;
-let page=0;
+let decks=[], activeSlot=0, page=0;
 
 function sanitize(list){
   const out=[];
@@ -430,359 +421,273 @@ function sanitize(list){
 }
 function loadDecks(){
   let arr=null;
-  try{
-    const raw=JSON.parse(localStorage.getItem(DECKS_KEY)||'null');
-    if(Array.isArray(raw)) arr=raw;
-  }catch(e){}
+  try{ const raw=JSON.parse(localStorage.getItem(DECKS_KEY)||'null'); if(Array.isArray(raw)) arr=raw; }catch(e){}
   const out=[];
   for(let i=0;i<SLOT_COUNT;i++) out.push((arr&&Array.isArray(arr[i]))?sanitize(arr[i]):[]);
   if(!out.some(function(d){ return d.length; })) out[0]=DEFAULT_DECK.slice();
   return out;
-}
-function loadActive(){
-  const v=parseInt(localStorage.getItem(ACTIVE_KEY)||'0',10);
-  return (isFinite(v)&&v>=0&&v<SLOT_COUNT)?v:0;
 }
 function saveDecks(){
   try{ localStorage.setItem(DECKS_KEY,JSON.stringify(decks)); }catch(e){}
   try{ localStorage.setItem(ACTIVE_KEY,String(activeSlot)); }catch(e){}
 }
 function currentDeck(){ return decks[activeSlot]||[]; }
+function cardName(t){ const c=DECK_CARDS.find(function(x){ return x.type===t; }); return c?c.name:t; }
 
 function renderSlots(){
-  const list=document.getElementById('slotList');
-  list.innerHTML='';
+  const list=$('slotList'); list.innerHTML='';
   const start=page*PER_PAGE;
   for(let i=start;i<start+PER_PAGE && i<SLOT_COUNT;i++){
     const d=decks[i]||[];
     const b=document.createElement('button');
-    b.className='slot-btn';
-    if(i===activeSlot) b.classList.add('on');
-    if(d.length && d.length<HAND_SIZE) b.classList.add('part');
-    b.innerHTML='<span>'+(i+1)+'</span>'+(d.length?'<i class="slot-dot"></i>':'');
+    b.className='sbtn'+(i===activeSlot?' on':'');
+    b.innerHTML=(i+1)+(d.length?'<i class="dot"></i>':'');
     (function(idx){ b.onclick=function(){ selectSlot(idx); }; })(i);
     list.appendChild(b);
   }
-  document.getElementById('pPrev').disabled=(page<=0);
-  document.getElementById('pNext').disabled=(page>=Math.ceil(SLOT_COUNT/PER_PAGE)-1);
-  document.getElementById('pagerNote').textContent='Колоды '+(start+1)+'–'+Math.min(start+PER_PAGE,SLOT_COUNT)+' из '+SLOT_COUNT;
+  $('pPrev').disabled=(page<=0);
+  $('pNext').disabled=(page>=Math.ceil(SLOT_COUNT/PER_PAGE)-1);
+  $('pagerNote').textContent='Колоды '+(start+1)+'–'+Math.min(start+PER_PAGE,SLOT_COUNT)+' из '+SLOT_COUNT;
 }
-function selectSlot(i){
-  if(i<0||i>=SLOT_COUNT) return;
-  activeSlot=i; saveDecks(); renderSlots(); renderDeck();
-}
+function selectSlot(i){ if(i<0||i>=SLOT_COUNT) return; activeSlot=i; saveDecks(); renderDeck(); renderSlots(); }
 function pagePrev(){ if(page>0){ page--; renderSlots(); } }
 function pageNext(){ if(page<Math.ceil(SLOT_COUNT/PER_PAGE)-1){ page++; renderSlots(); } }
 
-(function initSwipe(){
-  const el=document.getElementById('slotList');
-  let x0=null,y0=null;
-  el.addEventListener('touchstart',function(e){ x0=e.touches[0].clientX; y0=e.touches[0].clientY; },{passive:true});
-  el.addEventListener('touchend',function(e){
-    if(x0===null) return;
-    const t=e.changedTouches[0];
-    const dx=t.clientX-x0, dy=t.clientY-y0;
-    if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)){ if(dx<0) pageNext(); else pagePrev(); }
-    x0=null; y0=null;
-  },{passive:true});
-})();
-
-function cardName(t){
-  for(let i=0;i<DECK_CARDS.length;i++) if(DECK_CARDS[i].type===t) return DECK_CARDS[i].name;
-  return t;
-}
 function addCard(type){
   const d=currentDeck();
   if(d.indexOf(type)>=0){ showToast(cardName(type)+' уже в колоде','#ffd447'); return false; }
   if(d.length>=HAND_SIZE){ showToast('В колоде уже 4 карты — убери одну','#ffb300'); return false; }
-  d.push(type); saveDecks(); renderDeck(); renderSlots();
-  return true;
+  d.push(type); saveDecks(); renderDeck(); return true;
 }
 function removeCard(type){
-  const d=currentDeck();
-  const i=d.indexOf(type);
+  const d=currentDeck(), i=d.indexOf(type);
   if(i<0) return false;
-  d.splice(i,1); saveDecks(); renderDeck(); renderSlots();
-  return true;
+  d.splice(i,1); saveDecks(); renderDeck(); return true;
 }
-function toggleCard(type){
-  if(currentDeck().indexOf(type)>=0) removeCard(type); else addCard(type);
-}
+function toggleCard(type){ if(currentDeck().indexOf(type)>=0) removeCard(type); else addCard(type); }
 
-/* ================= ПЕРЕТАСКИВАНИЕ ================= */
-
-let dragState=null;
-let suppressClickUntil=0;
-
-function isOverDeck(x,y){
-  const r=document.getElementById('deck-picked').getBoundingClientRect();
-  const pad=14;
-  return x>=r.left-pad && x<=r.right+pad && y>=r.top-pad && y<=r.bottom+pad;
-}
-function cleanupDrag(){
-  if(!dragState) return;
-  clearTimeout(dragState.timer);
-  if(dragState.ghost && dragState.ghost.parentNode) dragState.ghost.parentNode.removeChild(dragState.ghost);
-  document.getElementById('deck-picked').classList.remove('drop-on');
-  document.body.classList.remove('dragging');
-  dragState=null;
-}
-function activateDrag(){
-  const d=dragState;
-  if(!d||d.active) return;
-  d.active=true;
-  document.body.classList.add('dragging');
-  const r=d.card.getBoundingClientRect();
-  const g=d.card.cloneNode(true);
-  g.className=d.card.className+' drag-ghost';
-  g.style.width=r.width+'px';
-  g.style.height=r.height+'px';
-  g.style.left=d.x+'px';
-  g.style.top=d.y+'px';
-  document.body.appendChild(g);
-  d.ghost=g;
-  document.getElementById('deck-picked').classList.add('drop-on');
-  if(navigator.vibrate) try{ navigator.vibrate(12); }catch(e){}
-}
-function cardPointerDown(e){
-  if(e.button && e.button!==0) return;
-  if(e.target.closest('.card-add')||e.target.closest('.card-info')||e.target.closest('.card-up')) return;
-  const card=e.currentTarget;
-  const type=card.dataset.type;
-  cleanupDrag();
-  dragState={ type:type, card:card, x0:e.clientX, y0:e.clientY, x:e.clientX, y:e.clientY,
-    active:false, ghost:null, timer:setTimeout(activateDrag,190) };
-  try{ card.setPointerCapture(e.pointerId); }catch(err){}
-}
-function cardPointerMove(e){
-  const d=dragState;
-  if(!d) return;
-  d.x=e.clientX; d.y=e.clientY;
-  if(!d.active){
-    if(Math.abs(e.clientX-d.x0)>12||Math.abs(e.clientY-d.y0)>12){
-      clearTimeout(d.timer); dragState=null;
-    }
-    return;
-  }
-  if(e.cancelable) e.preventDefault();
-  if(d.ghost){ d.ghost.style.left=d.x+'px'; d.ghost.style.top=d.y+'px'; }
-  document.getElementById('deck-picked').classList.toggle('drop-on',isOverDeck(d.x,d.y));
-}
-function cardPointerUp(e){
-  const d=dragState;
-  if(!d) return;
-  clearTimeout(d.timer);
-  if(d.active){
-    const over=isOverDeck(e.clientX,e.clientY);
-    const type=d.type;
-    cleanupDrag();
-    if(over) addCard(type);
-    suppressClickUntil=Date.now()+450;
-  } else cleanupDrag();
-}
-document.addEventListener('pointermove',cardPointerMove,{passive:false});
-document.addEventListener('pointerup',cardPointerUp);
-document.addEventListener('pointercancel',cleanupDrag);
-document.addEventListener('touchmove',function(e){
-  if(dragState&&dragState.active&&e.cancelable) e.preventDefault();
-},{passive:false});
-
-/* ================= ОТРИСОВКА КАРТ ================= */
+/* ================= ОТРИСОВКА КОЛОДЫ ================= */
 
 function renderDeck(){
-  const d=currentDeck();
-  const grid=document.getElementById('deck-grid');
-  grid.innerHTML='';
+  renderDeckBox();
+  renderCollection();
+  updateUnitsUI();
+  if(mType) renderModal();
+}
 
-  DECK_CARDS.forEach(function(card){
-    const picked=d.indexOf(card.type);
-    const lv=lvOfCard(card.type);
-    const cardDiv=document.createElement('div');
-    cardDiv.className='card '+card.rarity+(picked>=0?' picked':'');
-    cardDiv.dataset.type=card.type;
-    cardDiv.innerHTML=
-      '<button class="card-info">i</button>'+
-      '<div class="card-free">0</div>'+
-      (picked>=0?'<div class="pick-order">'+(picked+1)+'</div>':'')+
-      '<div class="card-icon">'+card.icon+'</div>'+
-      '<div class="card-name">'+card.name+'</div>'+
-      '<div class="card-role">'+card.role+'</div>'+
-      '<div class="card-lv">ур. '+lv+'/'+LV_MAX+'</div>'+
-      '<button class="card-up"'+(lv>=LV_MAX?' disabled':'')+'>'+
-        (lv>=LV_MAX?'MAX':'⬆ '+LV_COST[lv+1]+' 🔹')+
-      '</button>'+
-      '<button class="card-add'+(picked>=0?' off':'')+'">'+(picked>=0?'✓':'+')+'</button>';
-
-    cardDiv.querySelector('.card-info').onclick=function(ev){ ev.stopPropagation(); openCardModal(card.type); };
-    cardDiv.querySelector('.card-add').onclick=function(ev){ ev.stopPropagation(); toggleCard(card.type); };
-    cardDiv.querySelector('.card-up').onclick=function(ev){
-      ev.stopPropagation();
-      if(buyLevel(CARD_LV_KEY,card.type,card.name)) renderDeck();
-    };
-    cardDiv.addEventListener('pointerdown',cardPointerDown);
-    cardDiv.onclick=function(){
-      if(Date.now()<suppressClickUntil) return;
-      toggleCard(card.type);
-    };
-    grid.appendChild(cardDiv);
-  });
-
-  const pickedBox=document.getElementById('deck-picked');
-  pickedBox.innerHTML='';
+function renderDeckBox(){
+  const d=currentDeck(), box=$('deck-picked');
+  box.innerHTML='';
   for(let i=0;i<HAND_SIZE;i++){
-    const slot=document.createElement('div');
+    const s=document.createElement('div');
     const t=d[i];
     if(t){
-      slot.className='deck-slot filled';
-      slot.textContent=DECK_CARDS.find(function(c){ return c.type===t; }).icon;
-    } else {
-      slot.className='deck-slot';
-      slot.textContent='—';
-    }
-    pickedBox.appendChild(slot);
+      s.className='deck-slot filled';
+      s.textContent=DECK_CARDS.find(function(c){ return c.type===t; }).icon;
+      (function(tt){ s.onclick=function(){ removeCard(tt); }; })(t);
+    } else { s.className='deck-slot'; s.textContent='+'; }
+    box.appendChild(s);
   }
-
-  const note=document.getElementById('deck-note');
+  const note=$('deckNote');
   if(d.length===HAND_SIZE){
-    note.className='deck-note';
+    note.className='note';
     note.innerHTML='Колода '+(activeSlot+1)+' готова: <b>'+d.map(cardName).join(' · ')+'</b>';
   } else {
-    note.className='deck-note warn';
-    note.textContent='Колода '+(activeSlot+1)+': '+d.length+' из 4 — тапни «+» или перетащи карту вверх';
+    note.className='note warn';
+    note.textContent='Колода '+(activeSlot+1)+': '+d.length+' из 4. Нажми карту, чтобы открыть её';
   }
-
-  const bl=document.getElementById('balanceLine');
-  if(d.length<HAND_SIZE){
-    bl.className='balance-line'; bl.textContent='';
-  } else {
+  const bl=$('balanceLine');
+  if(d.length<HAND_SIZE){ bl.className='balance'; bl.textContent=''; }
+  else{
     const missing=[], covered=[];
     Object.keys(ROLE_OF).forEach(function(role){
       const has=d.some(function(t){ return ROLE_OF[role].indexOf(t)>=0; });
       (has?covered:missing).push(ROLE_TITLE[role]);
     });
-    if(!missing.length){
-      bl.className='balance-line good';
-      bl.textContent='Идеальный баланс: покрыты все роли';
-    } else {
-      bl.className='balance-line warn';
-      bl.textContent='Нет: '+missing.join(', ')+' · есть: '+(covered.join(', ')||'ничего');
-    }
+    if(!missing.length){ bl.className='balance good'; bl.textContent='Идеальный баланс: покрыты все роли'; }
+    else { bl.className='balance warn'; bl.textContent='Нет: '+missing.join(', ')+' · есть: '+(covered.join(', ')||'ничего'); }
   }
-  updateUnitsUI();
 }
 
-/* ================= ФИГУРЫ: ПРОКАЧКА ================= */
+/* коллекция: как в Clash Royale */
+let sortByLevel=false;
 
-function renderPieces(){
-  const box=document.getElementById('piece-list');
-  box.innerHTML='';
-  const store=readObj(PIECE_LV_KEY);
-  UPGRADABLE_PIECES.forEach(function(p){
-    const lv=clampLv(store[p.t]);
-    const row=document.createElement('div');
-    row.className='prow';
-    row.innerHTML=
-      '<div class="pi">'+p.icon+'</div>'+
-      '<div class="pm"><div class="pn">'+p.ru+' · ур. '+lv+'/'+LV_MAX+'</div>'+
-      '<div class="ps">'+pipsHtml(lv)+' '+p.note+'</div></div>'+
-      '<button'+(lv>=LV_MAX?' disabled':'')+'>'+(lv>=LV_MAX?'Макс':'⬆ '+LV_COST[lv+1]+' 🔹')+'</button>';
-    row.querySelector('button').onclick=function(){
-      if(buyLevel(PIECE_LV_KEY,p.t,p.ru)) renderPieces();
-    };
-    box.appendChild(row);
-  });
+function cardHtml(c){
+  const d=currentDeck(), lv=lvOfCard(c.type), pos=d.indexOf(c.type);
+  const units=getUnits(), max=lv>=LV_MAX;
+  const cost=LV_COST[lv+1];
+  const can=!max && units>=cost;
+  const pct=max?100:Math.min(100,units/cost*100);
+  const text=max?'МАКС':(units+' / '+cost+' 🔹');
+  return '<div class="cc '+c.rarity+' lv'+lv+'" data-type="'+c.type+'">'+
+    (pos>=0?'<div class="cc-pos">'+(pos+1)+'</div>':'')+
+    (can?'<button class="cc-arrow" data-up="'+c.type+'">⬆</button>':'')+
+    '<div class="cc-cap"></div>'+
+    '<div class="cc-ic">'+c.icon+'</div>'+
+    '<div class="cc-band">'+lv+'-й уровень</div>'+
+    '<div class="cc-prog'+(max?' max':(can?' ok':''))+'"><i style="width:'+pct+'%"></i><span>'+text+'</span></div>'+
+    '</div>';
 }
 
-/* ================= МОДАЛКА С ДЕМО ================= */
+function renderCollection(){
+  const list=DECK_CARDS.map(function(c,i){ return {c:c,i:i,lv:lvOfCard(c.type)}; });
+  if(sortByLevel) list.sort(function(a,b){ return (b.lv-a.lv)||(a.i-b.i); });
+  const up=list.filter(function(x){ return x.lv>1; });
+  const fresh=list.filter(function(x){ return x.lv<=1; });
+  $('collCount').textContent='Найдено: '+DECK_CARDS.length+'/'+DECK_CARDS.length;
+  $('collSort').textContent=sortByLevel?'По уровню':'По порядку';
+  let html='';
+  if(up.length) html+='<div class="sec">Усилено</div><div class="grid">'+up.map(function(x){ return cardHtml(x.c); }).join('')+'</div>';
+  if(fresh.length) html+='<div class="sec">Найдено</div><div class="grid">'+fresh.map(function(x){ return cardHtml(x.c); }).join('')+'</div>';
+  $('collGrid').innerHTML=html;
+}
 
-let demoType=null, demoTimers=[], demoLoop=null;
-
-const DEMOS={
-  f:function(a){
-    a.cap('Ярость: ход этой фигуры бесплатный');
-    const p=a.piece('♜','mine',0,1);
-    a.at(200,function(){ p.classList.add('charged'); a.fx(p,'⚡'); });
-    a.at(800,function(){ a.move(p,4,1); });
-    a.at(1300,function(){ a.fx(p,'0 ⚡','good'); });
-  },
-  s:function(a){
-    a.cap('Щит: фигура переживает удар');
-    const k=a.piece('♞','mine',2,2);
-    const e=a.piece('♝','foe',4,0);
-    a.at(200,function(){ k.classList.add('shielded'); });
-    a.at(700,function(){ a.move(e,3,1); a.cap('Враг пошёл в атаку…'); });
-    a.at(1300,function(){ a.flash(); a.fx(k,'выжила','good'); a.cap('Фигура на месте'); });
-  },
-  c:function(a){
-    a.cap('Рокировка: король и ладья меняются местами');
-    const k=a.piece('♚','mine',1,1);
-    const r=a.piece('♜','mine',3,1);
-    a.at(500,function(){ a.flash(); a.move(k,3,1); a.move(r,1,1); });
-    a.at(1300,function(){ a.fx(k,'за партию','good'); });
-  },
-  u:function(a){
-    a.cap('Превращение: пешка сразу становится ферзём');
-    const p=a.piece('♟','mine',2,2);
-    a.at(250,function(){ a.move(p,2,1); });
-    a.at(650,function(){ a.move(p,2,0); });
-    a.at(1150,function(){ a.flash(); p.textContent='♛'; p.classList.add('charged'); a.fx(p,'ферзь!','good'); });
-  },
-  g:function(a){
-    a.cap('Подкрепление: новая пешка в твоём ряду');
-    a.zone(0,2,4,2,'home',0);
-    a.at(600,function(){ const p=a.piece('♟','mine',1,2); p.classList.add('appear'); a.fx(p,'+1 пешка','good'); });
-  },
-  x:function(a){
-    a.cap('Чистка: вражеская фигура убрана');
-    const t=a.piece('♟','foe',3,1);
-    a.at(300,function(){ a.zone(3,1,3,1,'tgt',600); });
-    a.at(800,function(){ a.kill(t); a.fx(t,'убрана','good'); });
-  },
-  z:function(a){
-    a.cap('Заморозка: фигура не ходит');
-    const t=a.piece('♜','foe',4,1);
-    a.at(250,function(){ t.classList.add('frozen'); });
-    a.at(800,function(){ t.classList.add('shake'); a.cap('Попытка хода — не выходит'); });
-    a.at(1300,function(){ a.fx(t,'стоит','good'); });
-  },
-  l:function(a){
-    a.cap('Перевербовка: вражеская фигура становится твоей');
-    const t=a.piece('♟','foe',3,1);
-    a.at(300,function(){ a.zone(3,1,3,1,'tgt',600); });
-    a.at(800,function(){ t.className='cm-piece mine'; t.textContent='♟'; a.fx(t,'моя!','good'); });
-  },
-  b:function(a){
-    a.cap('Блокада: клетка закрыта на время');
-    a.zone(2,1,2,1,'block',0);
-    const n=a.piece('♞','foe',4,0);
-    a.at(600,function(){ n.classList.add('shake'); a.fx(n,'нельзя','good'); a.cap('Враг не входит в клетку'); });
-  },
-  e:function(a){
-    a.cap('Взрыв: 3×3 — враг теряет лёгкие фигуры');
-    const pawn=a.piece('♟','foe',1,0);
-    const bis=a.piece('♝','foe',3,2);
-    const q=a.piece('♛','foe',4,1);
-    a.piece('♞','mine',1,2);
-    a.at(300,function(){ a.zone(1,0,3,2,'boom',600); a.flash(); });
-    a.at(420,function(){ a.kill(pawn); a.kill(bis); });
-    a.at(900,function(){ a.fx(q,'ферзь цел'); a.cap('Ферзь и ладьи взрыв не трогает'); });
+$('collSort').onclick=function(){ sortByLevel=!sortByLevel; renderCollection(); };
+$('collGrid').onclick=function(e){
+  const up=e.target.closest('[data-up]');
+  if(up){
+    e.stopPropagation();
+    const t=up.getAttribute('data-up');
+    if(buyLevel(CARD_LV_KEY,t,cardName(t))) renderDeck();
+    return;
   }
+  const card=e.target.closest('.cc');
+  if(card) openCardModal(card.getAttribute('data-type'));
 };
 
-function clearDemo(){
-  demoTimers.forEach(clearTimeout);
-  demoTimers=[];
+/* ================= ОКНО КАРТЫ ================= */
+
+let mType=null, mPage=0, demoTimers=[], demoLoop=null;
+
+function openCardModal(type){
+  mType=type; mPage=0;
+  $('cardModal').classList.add('open');
+  renderModal();
+}
+function closeCardModal(){
+  stopDemo();
+  mType=null;
+  $('cardModal').classList.remove('open');
+  $('cmStage').innerHTML='';
+}
+function stopDemo(){
+  demoTimers.forEach(clearTimeout); demoTimers=[];
   if(demoLoop){ clearInterval(demoLoop); demoLoop=null; }
 }
 
+function renderModal(){
+  const c=DECK_CARDS.find(function(x){ return x.type===mType; });
+  if(!c) return;
+  const lv=lvOfCard(c.type), info=CARD_INFO[c.type]||{desc:'',tips:[]};
+  const inDeck=currentDeck().indexOf(c.type)>=0, full=currentDeck().length>=HAND_SIZE;
+
+  $('cmThumb').className='cm-thumb '+c.rarity;
+  $('cmThumb').innerHTML='<div class="cm-thumb-ic">'+c.icon+'</div>';
+  $('cmName').textContent=c.name;
+  $('cmSub').textContent=lv+'-й уровень';
+  $('cmRar').textContent=RARITY_NAME[c.rarity];
+  $('cmDots').innerHTML=[0,1,2].map(function(i){ return '<i class="dot'+(i===mPage?' on':'')+'" data-p="'+i+'"></i>'; }).join('');
+
+  stopDemo();
+  const st=$('cmStage');
+  if(mPage===0){
+    $('cmCaption').style.display='';
+    runDemo(c.type);
+    demoLoop=setInterval(function(){ runDemo(c.type); },4200);
+  } else {
+    $('cmCaption').style.display='none';
+    if(mPage===1){
+      st.innerHTML='<div class="cm-text"><p>'+info.desc+'</p><ul>'+info.tips.map(function(t){ return '<li>'+t+'</li>'; }).join('')+'</ul></div>';
+    } else {
+      st.innerHTML='<div class="cm-text">'+LV_ROWS[c.type].map(function(t,i){
+        const n=i+1;
+        return '<div class="lvrow'+(n===lv?' cur':'')+(n>lv?' lock':'')+'"><b>'+n+'-й уровень</b><span>'+t+'</span></div>';
+      }).join('')+'</div>';
+    }
+  }
+
+  const max=lv>=LV_MAX;
+  $('cbUp').disabled=max;
+  $('cbUpTop').textContent=max?'Максимум':'Улучшить';
+  $('cbUpCost').textContent=max?'—':(LV_COST[lv+1]+' 🔹 (у тебя '+getUnits()+')');
+  const pick=$('cbPick');
+  pick.textContent=inDeck?'Убрать из колоды':'В колоду';
+  pick.className='cb-pick'+(inDeck?' rm':'');
+  pick.disabled=!inDeck && full;
+}
+
+$('cmDots').onclick=function(e){
+  const d=e.target.closest('[data-p]');
+  if(!d) return;
+  mPage=parseInt(d.getAttribute('data-p'),10);
+  renderModal();
+};
+$('cbRep').onclick=function(){ mPage=0; renderModal(); };
+$('cbUp').onclick=function(){
+  if(!mType) return;
+  if(buyLevel(CARD_LV_KEY,mType,cardName(mType))) renderDeck();
+};
+$('cbPick').onclick=function(){
+  if(!mType) return;
+  toggleCard(mType);
+};
+
+/* ================= ДЕМОНСТРАЦИИ ================= */
+
+const DEMOS={
+  f:function(a){ a.cap('Ярость: ход этой фигуры бесплатный');
+    const p=a.piece('♜','mine',0,1);
+    a.at(200,function(){ p.classList.add('charged'); a.fx(p,'⚡'); });
+    a.at(800,function(){ a.move(p,4,1); });
+    a.at(1300,function(){ a.fx(p,'0 ⚡','good'); }); },
+  s:function(a){ a.cap('Щит: фигура переживает удар');
+    const k=a.piece('♞','mine',2,2); const e=a.piece('♝','foe',4,0);
+    a.at(200,function(){ k.classList.add('shielded'); });
+    a.at(700,function(){ a.move(e,3,1); a.cap('Враг пошёл в атаку…'); });
+    a.at(1300,function(){ a.flash(); a.fx(k,'выжила','good'); a.cap('Фигура на месте'); }); },
+  c:function(a){ a.cap('Рокировка: король и ладья меняются местами');
+    const k=a.piece('♚','mine',1,1); const r=a.piece('♜','mine',3,1);
+    a.at(500,function(){ a.flash(); a.move(k,3,1); a.move(r,1,1); });
+    a.at(1300,function(){ a.fx(k,'за партию','good'); }); },
+  u:function(a){ a.cap('Превращение: пешка сразу становится ферзём');
+    const p=a.piece('♟','mine',2,2);
+    a.at(250,function(){ a.move(p,2,1); });
+    a.at(650,function(){ a.move(p,2,0); });
+    a.at(1150,function(){ a.flash(); p.textContent='♛'; p.classList.add('charged'); a.fx(p,'ферзь!','good'); }); },
+  g:function(a){ a.cap('Подкрепление: новая пешка в твоём ряду');
+    a.zone(0,2,4,2,'home',0);
+    a.at(600,function(){ const p=a.piece('♟','mine',1,2); p.classList.add('appear'); a.fx(p,'+1 пешка','good'); }); },
+  x:function(a){ a.cap('Чистка: вражеская фигура убрана');
+    const t=a.piece('♟','foe',3,1);
+    a.at(300,function(){ a.zone(3,1,3,1,'tgt',600); });
+    a.at(800,function(){ a.kill(t); a.fx(t,'убрана','good'); }); },
+  z:function(a){ a.cap('Заморозка: фигура не ходит');
+    const t=a.piece('♜','foe',4,1);
+    a.at(250,function(){ t.classList.add('frozen'); });
+    a.at(800,function(){ t.classList.add('shake'); a.cap('Попытка хода — не выходит'); });
+    a.at(1300,function(){ a.fx(t,'стоит','good'); }); },
+  l:function(a){ a.cap('Перевербовка: вражеская фигура становится твоей');
+    const t=a.piece('♟','foe',3,1);
+    a.at(300,function(){ a.zone(3,1,3,1,'tgt',600); });
+    a.at(800,function(){ t.className='cm-piece mine'; t.textContent='♟'; a.fx(t,'моя!','good'); }); },
+  b:function(a){ a.cap('Блокада: клетка закрыта на время');
+    a.zone(2,1,2,1,'block',0);
+    const n=a.piece('♞','foe',4,0);
+    a.at(600,function(){ n.classList.add('shake'); a.fx(n,'нельзя','good'); a.cap('Враг не входит в клетку'); }); },
+  e:function(a){ a.cap('Взрыв: 3×3 — враг теряет лёгкие фигуры');
+    const pawn=a.piece('♟','foe',1,0); const bis=a.piece('♝','foe',3,2); const q=a.piece('♛','foe',4,1);
+    a.piece('♞','mine',1,2);
+    a.at(300,function(){ a.zone(1,0,3,2,'boom',600); a.flash(); });
+    a.at(420,function(){ a.kill(pawn); a.kill(bis); });
+    a.at(900,function(){ a.fx(q,'ферзь цел'); a.cap('Ферзь и ладьи взрыв не трогает'); }); }
+};
+
 function runDemo(type){
-  demoTimers.forEach(clearTimeout);
-  demoTimers=[];
-  const st=document.getElementById('cmStage');
+  demoTimers.forEach(clearTimeout); demoTimers=[];
+  const st=$('cmStage');
   st.classList.remove('flash');
   st.innerHTML='';
-  const g=document.createElement('div');
-  g.className='cm-grid';
+  const g=document.createElement('div'); g.className='cm-grid';
   for(let r=0;r<3;r++) for(let c=0;c<5;c++){
     const i=document.createElement('i');
     if((r+c)%2===0) i.className='d';
@@ -792,34 +697,28 @@ function runDemo(type){
 
   const px=function(c){ return ((c+0.5)/5*100)+'%'; };
   const py=function(r){ return ((r+0.5)/3*100)+'%'; };
-
   const api={
-    cap:function(t){ document.getElementById('cmCaption').textContent=t||''; },
+    cap:function(t){ $('cmCaption').textContent=t||''; },
     at:function(ms,fn){ demoTimers.push(setTimeout(fn,ms)); },
     piece:function(icon,cls,c,r){
       const el=document.createElement('div');
-      el.className='cm-piece '+cls;
-      el.textContent=icon;
+      el.className='cm-piece '+cls; el.textContent=icon;
       el.style.left=px(c); el.style.top=py(r);
-      st.appendChild(el);
-      return el;
+      st.appendChild(el); return el;
     },
     move:function(el,c,r){ el.style.left=px(c); el.style.top=py(r); },
     kill:function(el){ el.classList.add('gone'); },
     zone:function(c0,r0,c1,r1,kind,ms){
       const z=document.createElement('div');
       z.className='cm-zone '+kind;
-      z.style.left=(c0/5*100)+'%';
-      z.style.top=(r0/3*100)+'%';
-      z.style.width=((c1-c0+1)/5*100)+'%';
-      z.style.height=((r1-r0+1)/3*100)+'%';
+      z.style.left=(c0/5*100)+'%'; z.style.top=(r0/3*100)+'%';
+      z.style.width=((c1-c0+1)/5*100)+'%'; z.style.height=((r1-r0+1)/3*100)+'%';
       st.appendChild(z);
       if(ms) demoTimers.push(setTimeout(function(){ if(z.parentNode) z.parentNode.removeChild(z); },ms));
     },
     fx:function(el,text,cls){
       const f=document.createElement('div');
-      f.className='cm-float '+(cls||'');
-      f.textContent=text;
+      f.className='cm-float '+(cls||''); f.textContent=text;
       f.style.left=el.style.left; f.style.top=el.style.top;
       st.appendChild(f);
       demoTimers.push(setTimeout(function(){ if(f.parentNode) f.parentNode.removeChild(f); },1500));
@@ -829,91 +728,44 @@ function runDemo(type){
       demoTimers.push(setTimeout(function(){ st.classList.remove('flash'); },330));
     }
   };
-
   if(DEMOS[type]) DEMOS[type](api);
   else api.cap('Демонстрация скоро появится');
 }
 
-function openCardModal(type){
-  const def=DECK_CARDS.find(function(c){ return c.type===type; });
-  if(!def) return;
-  demoType=type;
-  clearDemo();
+/* ================= ФИГУРЫ ================= */
 
-  const lv=lvOfCard(type);
-  document.getElementById('cmBadge').textContent=def.icon;
-  document.getElementById('cmName').textContent=def.name;
-  document.getElementById('cmRar').textContent=(RARITY_NAME[def.rarity]||'')+' · роль: '+def.role+' · ур. '+lv+'/'+LV_MAX;
-  document.getElementById('cmDesc').textContent=(CARD_INFO[type]||{}).desc||'';
-  document.getElementById('cmCaption').textContent='';
+function buyPiece(t){ return buyLevel(PIECE_LV_KEY,t,PIECES[t]?PIECES[t].name:t); }
 
-  const tips=document.getElementById('cmTips');
-  tips.innerHTML='';
-  ((CARD_INFO[type]||{}).tips||[]).forEach(function(t){
-    const li=document.createElement('li'); li.textContent=t; tips.appendChild(li);
+function renderPieces(){
+  const box=$('piece-list'); box.innerHTML='';
+  const store=readObj(PIECE_LV_KEY);
+  UPGRADABLE_PIECES.forEach(function(p){
+    const lv=clampLv(store[p.t]);
+    const row=document.createElement('div');
+    row.className='prow';
+    row.innerHTML=
+      '<div class="pi">'+p.icon+'</div>'+
+      '<div class="pm"><div class="pn">'+p.ru+' · '+lv+'-й уровень</div>'+
+      '<div class="ps">'+pipsHtml(lv)+p.note+'</div></div>'+
+      '<button'+(lv>=LV_MAX?' disabled':'')+'>'+(lv>=LV_MAX?'МАКС':'⬆ '+LV_COST[lv+1]+' 🔹')+'</button>';
+    row.querySelector('button').onclick=function(){ if(buyPiece(p.t)) renderPieces(); };
+    box.appendChild(row);
   });
-
-  document.getElementById('cmLv').innerHTML=
-    '<div>'+pipsHtml(lv)+' <b>Сейчас:</b> '+(LV_TEXT[type]||'')+'</div>';
-
-  updateModalButtons();
-  document.getElementById('cardModal').classList.add('open');
-  runDemo(type);
-  demoLoop=setInterval(function(){ runDemo(type); },4200);
-}
-
-function updateModalButtons(){
-  if(!demoType) return;
-  const lv=lvOfCard(demoType);
-  const up=document.getElementById('cmUp');
-  if(lv>=LV_MAX){ up.textContent='Максимальный уровень'; up.disabled=true; }
-  else { up.textContent='⬆ Прокачать до ур. '+(lv+1)+' — '+LV_COST[lv+1]+' 🔹'; up.disabled=false; }
-
-  const btn=document.getElementById('cmAdd');
-  const inDeck=currentDeck().indexOf(demoType)>=0;
-  const full=currentDeck().length>=HAND_SIZE;
-  btn.classList.remove('remove','full');
-  if(inDeck){ btn.textContent='Убрать из колоды'; btn.classList.add('remove'); }
-  else if(full){ btn.textContent='Колода заполнена — убери карту'; btn.classList.add('full'); }
-  else btn.textContent='Добавить в колоду';
-}
-
-function modalUpTap(){
-  if(!demoType) return;
-  if(buyLevel(CARD_LV_KEY,demoType,cardName(demoType))){
-    renderDeck();
-    openCardModal(demoType);
-  }
-}
-function modalAddTap(){
-  if(!demoType) return;
-  if(currentDeck().indexOf(demoType)>=0) removeCard(demoType);
-  else addCard(demoType);
-  updateModalButtons();
-}
-function closeCardModal(){
-  clearDemo();
-  demoType=null;
-  document.getElementById('cardModal').classList.remove('open');
-  document.getElementById('cmStage').innerHTML='';
+  updateUnitsUI();
 }
 
 /* ================= РАССТАНОВКА ================= */
 
-const SETUP_KEY='chessSetup';
-const SETUP_ROWS=[6,7];
-const ARMY_MAX={p:8,r:2,n:2,b:2,q:1,k:1};
-const ARMY_ORDER=['p','n','b','r','q','k'];
+const SETUP_KEY='chessSetup', SETUP_ROWS=[6,7];
+const ARMY_MAX={p:8,r:2,n:2,b:2,q:1,k:1}, ARMY_ORDER=['p','n','b','r','q','k'];
+let setupBoard=[], selectedSetupCell=null, editMode=false, snapshotBeforeEdit=null;
 
 function defaultArmed(){
   const e=[null,null,null,null,null,null,null,null];
   return [e.slice(),e.slice(),e.slice(),e.slice(),e.slice(),e.slice(),
     ['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
 }
-let setupBoard=[], selectedSetupCell=null, editMode=false, snapshotBeforeEdit=null;
-
 function blankBoard(){ return Array.from({length:8},function(){ return Array(8).fill(null); }); }
-
 function armyCounts(board){
   const cnt={p:0,r:0,n:0,b:0,q:0,k:0};
   for(let r=0;r<8;r++) for(let c=0;c<8;c++){
@@ -948,8 +800,7 @@ function initSetup(){
   updateSetupUI(); renderSetupBoard(); renderArmyCounts();
 }
 function renderArmyCounts(){
-  const box=document.getElementById('army-counts');
-  const cnt=armyCounts(setupBoard);
+  const box=$('army-counts'), cnt=armyCounts(setupBoard);
   box.innerHTML='';
   ARMY_ORDER.forEach(function(t){
     const chip=document.createElement('div');
@@ -959,22 +810,21 @@ function renderArmyCounts(){
   });
 }
 function updateSetupUI(){
-  const hint=document.getElementById('setup-hint');
-  const boardEl=document.getElementById('setup-board');
+  const hint=$('setup-hint'), boardEl=$('setup-board');
   if(editMode){
-    document.getElementById('btn-edit').style.display='none';
-    document.getElementById('edit-controls').style.display='flex';
+    $('btn-edit').style.display='none';
+    $('edit-controls').style.display='flex';
     boardEl.classList.remove('view-mode'); boardEl.classList.add('edit-mode');
-    hint.textContent='✏️ Тапни фигуру, потом другую — они поменяются местами. Только два нижних ряда.';
+    hint.textContent='Тапни фигуру, потом другую — они поменяются местами. Только два нижних ряда.';
   } else {
-    document.getElementById('btn-edit').style.display='block';
-    document.getElementById('edit-controls').style.display='none';
+    $('btn-edit').style.display='block';
+    $('edit-controls').style.display='none';
     boardEl.classList.remove('edit-mode'); boardEl.classList.add('view-mode');
-    hint.innerHTML='Эта расстановка пойдёт с тобой в бой <span class="lock-badge">🔒 Закреплено</span>';
+    hint.textContent='Эта расстановка пойдёт с тобой в бой. Закреплено.';
   }
 }
 function renderSetupBoard(){
-  const boardEl=document.getElementById('setup-board');
+  const boardEl=$('setup-board');
   boardEl.innerHTML='';
   for(let r=0;r<8;r++) for(let c=0;c<8;c++){
     const cell=document.createElement('div');
@@ -985,17 +835,11 @@ function renderSetupBoard(){
     const v=setupBoard[r][c];
     if(v){
       const p=PIECES[String(v).toLowerCase()];
-      const pieceEl=document.createElement('div');
-      pieceEl.className='piece';
-      pieceEl.textContent=p.icon;
-      pieceEl.style.color='#fff';
-      const cost=document.createElement('div');
-      cost.className='top-cost-badge'; cost.textContent=p.cost;
-      const hp=document.createElement('div');
-      hp.className='bottom-hp-bar'; hp.innerHTML='<span class="lvl-num">1</span>';
-      const hpt=document.createElement('div');
-      hpt.className='hp-text-below'; hpt.textContent='1/1';
-      cell.appendChild(pieceEl); cell.appendChild(cost); cell.appendChild(hp); cell.appendChild(hpt);
+      const pc=document.createElement('div'); pc.className='pc'; pc.textContent=p.icon;
+      const cost=document.createElement('div'); cost.className='cost-b'; cost.textContent=p.cost;
+      const hp=document.createElement('div'); hp.className='hp-b';
+      const hpt=document.createElement('div'); hpt.className='hp-t'; hpt.textContent='1/1';
+      cell.appendChild(pc); cell.appendChild(cost); cell.appendChild(hp); cell.appendChild(hpt);
     }
     boardEl.appendChild(cell);
   }
@@ -1048,35 +892,59 @@ function saveSetup(){
   catch(e){ showToast('Не удалось сохранить','#f4665e'); return; }
   setupBoard=save; editMode=false; selectedSetupCell=null; snapshotBeforeEdit=null;
   updateSetupUI(); renderSetupBoard(); renderArmyCounts();
-  showToast('✅ Расстановка сохранена!','#43e97b');
+  showToast('Расстановка сохранена','#43e97b');
 }
 
-/* ================= ТОСТ ================= */
+/* ================= ВКЛАДКИ И ТОСТ ================= */
 
+function switchTab(tab){
+  ['cards','pieces','setup'].forEach(function(k){
+    $('screen-'+k).classList.toggle('on',k===tab);
+    $('tab-'+k).classList.toggle('on',k===tab);
+  });
+  if(tab==='pieces') renderPieces();
+  if(tab==='setup') renderSetupBoard();
+}
+
+let toastTimer=null;
 function showToast(msg,color){
-  const t=document.createElement('div');
-  t.className='toast';
-  t.style.borderColor=color;
+  let t=document.querySelector('.toast');
+  if(!t){ t=document.createElement('div'); t.className='toast'; document.body.appendChild(t); }
   t.textContent=msg;
-  document.body.appendChild(t);
-  setTimeout(function(){ t.classList.add('show'); },50);
-  setTimeout(function(){
-    t.classList.remove('show');
-    setTimeout(function(){ t.remove(); },400);
-  },2400);
+  t.style.borderColor=color||'#34c759';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){ t.classList.remove('show'); },2200);
 }
+
+/* ================= ПЕРЕЛИСТЫВАНИЕ СВАЙПОМ ================= */
+
+(function initSwipe(){
+  const el=$('slotList');
+  let x0=null, y0=null;
+  el.addEventListener('touchstart',function(e){ x0=e.touches[0].clientX; y0=e.touches[0].clientY; },{passive:true});
+  el.addEventListener('touchend',function(e){
+    if(x0===null) return;
+    const t=e.changedTouches[0];
+    const dx=t.clientX-x0, dy=t.clientY-y0;
+    if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)){ if(dx<0) pageNext(); else pagePrev(); }
+    x0=null; y0=null;
+  },{passive:true});
+})();
 
 /* ================= СТАРТ ================= */
 
 decks=loadDecks();
-activeSlot=loadActive();
+activeSlot=(function(){
+  const v=parseInt(localStorage.getItem(ACTIVE_KEY)||'0',10);
+  return (isFinite(v)&&v>=0&&v<SLOT_COUNT)?v:0;
+})();
 page=Math.floor(activeSlot/PER_PAGE);
 saveDecks();
 renderSlots();
 renderDeck();
 initSetup();
 updateUnitsUI();
-switchSubTab('cards');
 </script>
 </body>
 </html>
