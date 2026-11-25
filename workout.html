@@ -1474,12 +1474,15 @@ let trainerRun = null, trainerSteps = null, stepIdx = 0, repsCount = 0;
 function buildTrainerSteps(run){
   const steps = [];
   (run.items || []).forEach(function(it){
+    const base = {
+      name: it.name, icon: it.icon, photo: it.photo, video: it.video,
+      mode: it.mode, reps: it.reps, sets: it.sets
+    };
+    if (it.prepSec > 0) steps.push(Object.assign({}, base, { kind: 'prep', sec: it.prepSec, set: 1 }));
     for (let s = 1; s <= it.sets; s++){
-      steps.push({
-        kind: 'work', name: it.name, icon: it.icon, photo: it.photo, video: it.video,
-        mode: it.mode, sec: it.mode === 'reps' ? 0 : it.timeSec, reps: it.reps,
-        set: s, sets: it.sets
-      });
+      steps.push(Object.assign({}, base, {
+        kind: 'work', sec: it.mode === 'reps' ? 0 : it.timeSec, set: s
+      }));
       if (it.restSec > 0) steps.push({ kind: 'rest', sec: it.restSec });
     }
   });
@@ -1498,6 +1501,7 @@ function nextWorkStep(from){
 }
 
 function startTrainer(){
+  ac();
   finished = false;
   locked = false;
   xpEarned = 0;
@@ -1517,15 +1521,18 @@ function enterTrainerStep(){
   if (!st){ finishSession(); return; }
 
   repsCount = 0;
-  phase = st.kind === 'rest' ? 'rest' : 'work';
+  prepCued = false;
+  restEndFired = false;
+  phase = st.kind;
   const run = $('run');
   run.classList.remove('prep', 'work', 'rest');
   run.classList.add(phase);
-  $('phaseLabel').textContent = st.kind === 'rest' ? 'Отдых' : 'Тренировка';
-  EXERCISE = st.kind === 'rest' ? nextWorkStep(stepIdx) : st;
+  $('phaseLabel').textContent =
+    st.kind === 'rest' ? 'Отдых' : (st.kind === 'prep' ? 'Подготовка' : 'Тренировка');
+  EXERCISE = st.kind === 'work' ? st : nextWorkStep(stepIdx);
   renderExercise();
 
-  const timed = st.kind === 'rest' || st.mode !== 'reps';
+  const timed = st.kind !== 'work' || st.mode !== 'reps';
   totalMs = timed ? st.sec * 1000 : 0;
   remainingMs = totalMs;
   running = timed;
@@ -1534,7 +1541,27 @@ function enterTrainerStep(){
     endAt = Date.now() + remainingMs;
     iv = setInterval(tick, 100);
   }
+  if (st.kind === 'rest'){
+    cue('rest');
+    scheduleEndingAt('workAfterRest', totalMs, TIMING.restEndShift, 'rest');
+  }
   render();
+}
+
+function showTrainerGate(run){
+  const g = document.createElement('div');
+  g.style.cssText = 'position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;' +
+    'align-items:center;justify-content:center;gap:18px;background:#0b0b0d;color:#fff;padding:24px;text-align:center';
+  const title = document.createElement('div');
+  title.style.cssText = 'font-size:20px;font-weight:700';
+  title.textContent = run.name || 'Тренировка';
+  const btn = document.createElement('button');
+  btn.textContent = '▶ Начать тренировку';
+  btn.style.cssText = 'padding:18px 36px;border-radius:16px;border:0;font-size:20px;font-weight:700;background:#34c759;color:#fff';
+  btn.onclick = function(){ g.remove(); startTrainer(); };
+  g.appendChild(title);
+  g.appendChild(btn);
+  document.body.appendChild(g);
 }
 
 function trainerStepDone(){
@@ -1585,7 +1612,7 @@ updateLockIcon();
   if (!run || !run.items || !run.items.length) return;
   trainerRun = run;
   trainerSteps = buildTrainerSteps(run);
-  startTrainer();
+  showTrainerGate(run);
 })();
 </script>
 </body>

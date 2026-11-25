@@ -739,6 +739,10 @@
                 '<input class="srx-input" style="padding:7px 8px" type="number" min="1" max="20" ' +
                 'data-act="itemField" data-id="' + esc(list.id) + '" data-idx="' + idx + '" data-field="sets" ' +
                 'value="' + (num(it.sets) || 3) + '"></div>' +
+              '<div><div class="srx-muted" style="font-size:10.5px">ПОДГОТОВКА, с</div>' +
+                '<input class="srx-input" style="padding:7px 8px" type="number" min="0" max="300" step="5" ' +
+                'data-act="itemField" data-id="' + esc(list.id) + '" data-idx="' + idx + '" data-field="prepSec" ' +
+                'value="' + (it.prepSec === undefined ? 5 : num(it.prepSec)) + '"></div>' +
               (hasTimer
                 ? '<div><div class="srx-muted" style="font-size:10.5px">ТАЙМЕР, с</div>' +
                   '<input class="srx-input" style="padding:7px 8px" type="number" min="5" max="1200" step="5" ' +
@@ -839,6 +843,7 @@
         video: ex ? ex.video : null,
         mode: it.mode === 'reps' || it.mode === 'both' ? it.mode : 'time',
         sets: Math.max(1, num(it.sets) || 1),
+        prepSec: it.prepSec === undefined ? 5 : Math.max(0, num(it.prepSec)),
         timeSec: Math.max(5, num(it.timeSec) || 40),
         reps: Math.max(1, num(it.reps) || 10),
         restSec: Math.max(0, num(it.restSec))
@@ -1602,7 +1607,7 @@
         exId: ex.id, name: ex.name,
         mode: d.mode,
         sets: 3,
-        timeSec: d.timeSec,
+        prepSec: 5,
         reps: d.reps,
         restSec: ex.group === 'Кардио' ? 0 : 60
       });
