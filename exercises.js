@@ -660,6 +660,9 @@
       '<button class="srx-btn primary srx-grow" data-act="newList">＋ Создать свою тренировку</button>' +
       '</div>' +
       '<div class="srx-row" style="margin-bottom:12px">' +
+      '<button class="srx-btn ghost srx-grow" data-act="listFromPick">🧩 Тренировка из упражнения</button>' +
+      '</div>' +
+      '<div class="srx-row" style="margin-bottom:12px">' +
       '<button class="srx-btn ghost srx-grow" data-act="openCommunity">🌍 Тренировки сообщества</button>' +
       '</div>';
     if (lists.length) {
@@ -926,7 +929,10 @@
           '<div class="srx-name" style="font-size:13.5px">' + esc(e.name) + '</div>' +
           '<div class="srx-sub">' + esc(e.group) + ' · MET ' + e.met +
             (e.custom ? ' · своё' : '') + '</div>' +
-        '<button class="srx-btn sm" style="margin-top:6px" data-act="basketAdd" data-id="' + esc(e.id) + '">＋ в корзину</button>' +
+        '<div class="srx-row" style="margin-top:6px;gap:6px">' +
+          '<button class="srx-btn sm" data-act="chooseListForEx" data-ex="' + esc(e.id) + '">＋ в комплекс</button>' +
+          '<button class="srx-btn sm green" data-act="startSingle" data-id="' + esc(e.id) + '">▶ Начать</button>' +
+        '</div>' +
         '</div></div>';
     });
     html += '</div>';
@@ -967,10 +973,13 @@
     for (var i = 0; i < lists.length; i++) if (lists[i].id === listId) list = lists[i];
     if (!list) { toast('Список не найден'); return; }
     if (!(list.items || []).length) { toast('В списке нет упражнений'); return; }
+    runItems(list.name, list.items);
+  }
 
-    var items = trainerItems(list);
+  function runItems(name, rawItems) {
+    var items = trainerItems({ items: rawItems });
     try {
-      localStorage.setItem('wkTrainerRun', JSON.stringify({ name: list.name || 'Тренировка', items: items }));
+      localStorage.setItem('wkTrainerRun', JSON.stringify({ name: name || 'Тренировка', items: items }));
     } catch (e) {
       toast('Не хватает места: удали большие фото или видео');
       return;
@@ -1716,7 +1725,8 @@
   function showExerciseDone(ex) {
     openSheet('Упражнение создано', '<div class="srx-muted" style="margin-bottom:14px">' + esc(ex.name) +
       ' сохранено в библиотеку. Что дальше?</div>' +
-      '<button class="srx-btn primary" style="width:100%;margin-bottom:8px" data-act="chooseListForEx" data-ex="' + esc(ex.id) + '">📋 Добавить в комплекс</button>' +
+      '<button class="srx-btn primary" style="width:100%;margin-bottom:8px" data-act="startSingle" data-id="' + esc(ex.id) + '">▶ Начать тренировку</button>' +
+      '<button class="srx-btn" style="width:100%;margin-bottom:8px" data-act="chooseListForEx" data-ex="' + esc(ex.id) + '">📋 Добавить в комплекс</button>' +
       '<button class="srx-btn" style="width:100%;margin-bottom:8px" data-act="newExercise">＋ Создать ещё одно упражнение</button>' +
       '<button class="srx-btn" style="width:100%" data-act="sheetClose">Готово</button>');
   }
@@ -1861,6 +1871,30 @@
       case 'startList':
         startWorkout(el.getAttribute('data-id'));
         break;
+
+      case 'startSingle': {
+        var sx = findExercise(el.getAttribute('data-id'));
+        if (!sx) { toast('Упражнение не найдено'); break; }
+        var sd = exDefaults(sx);
+        closeSheet();
+        runItems(sx.name, [{
+          exId: sx.id, name: sx.name, mode: sd.mode, sets: 3, prepSec: 5,
+          timeSec: sd.timeSec, reps: sd.reps, restSec: 0
+        }]);
+        break;
+      }
+
+      case 'listFromPick': {
+        var pick = allExercises();
+        var ph = pick.length ? '' : '<div class="srx-muted">Упражнений пока нет.</div>';
+        pick.forEach(function (pe) {
+          ph += '<div class="srx-list-item" data-act="pickAddNew" data-ex="' + esc(pe.id) + '">' +
+            '<div class="srx-grow"><div class="srx-name">' + esc(pe.name) + '</div>' +
+            '<div class="srx-sub">' + esc(pe.group) + '</div></div><div class="srx-sub">＋</div></div>';
+        });
+        openSheet('Тренировка из упражнения', '<div class="srx-muted" style="margin-bottom:10px">Выбери упражнение — оно станет первым в новой тренировке.</div>' + ph);
+        break;
+      }
 
       case 'delList': {
         var id = el.getAttribute('data-id');
