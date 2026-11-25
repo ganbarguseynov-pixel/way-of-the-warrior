@@ -352,7 +352,7 @@
 
 <!-- ================== НАСТРОЙКА ================== -->
 <div id="setup" class="inner-screen">
-<button class="back-btn" onclick="window.location.href='index.html'">← Назад в приложение</button>
+<button class="back-btn" onclick="goBackToMain()">← Назад в приложение</button>
 <h1>Тренировка</h1>
 
 <div class="tabs">
@@ -1593,6 +1593,7 @@ function updateSoundIcon(){
 }
 
 function goBackToMain(){
+  if (trainerRun) { try { localStorage.setItem('srx_open_trainer', '1'); } catch (e) {} }
   setTimeout(function(){ window.location.href = 'index.html'; }, 100);
 }
 

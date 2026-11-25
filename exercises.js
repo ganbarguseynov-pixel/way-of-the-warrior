@@ -1565,11 +1565,20 @@
 
   function readMedia(file, cb) {
     if (file.type.indexOf('video/') === 0) {
-      if (file.size > 2 * 1024 * 1024) { cb('Видео больше 2 МБ — выбери короче'); return; }
-      var fr = new FileReader();
-      fr.onload = function () { cb(null, { video: fr.result }); };
-      fr.onerror = function () { cb('Не удалось прочитать видео'); };
-      fr.readAsDataURL(file);
+      if (file.size > 8 * 1024 * 1024) { cb('Видео больше 8 МБ — выбери короче или в меньшем качестве'); return; }
+      var probeUrl = URL.createObjectURL(file);
+      var probe = document.createElement('video');
+      probe.preload = 'metadata';
+      probe.onerror = function () { URL.revokeObjectURL(probeUrl); cb('Не удалось прочитать видео'); };
+      probe.onloadedmetadata = function () {
+        URL.revokeObjectURL(probeUrl);
+        if (isFinite(probe.duration) && probe.duration > 10.05) { cb('Видео длиннее 10 секунд — выбери короче'); return; }
+        var fr = new FileReader();
+        fr.onload = function () { cb(null, { video: fr.result }); };
+        fr.onerror = function () { cb('Не удалось прочитать видео'); };
+        fr.readAsDataURL(file);
+      };
+      probe.src = probeUrl;
       return;
     }
     var url = URL.createObjectURL(file);
@@ -1928,6 +1937,11 @@
       }
     }, 700);
     setTimeout(function () { clearInterval(tryMerge); }, 20000);
+
+    if (localStorage.getItem('srx_open_trainer')) {
+      localStorage.removeItem('srx_open_trainer');
+      openRoot('lists');
+    }
 
     window.addEventListener('beforeunload', function () {
       if (T.active) {
