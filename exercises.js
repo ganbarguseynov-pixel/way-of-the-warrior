@@ -624,6 +624,7 @@
     if (v === 'lists') return renderLists();
     if (v === 'library') return renderLibrary();
     if (v === 'listEdit') return renderListEdit(state.params.id);
+    if (v === 'community') return renderCommunity();
     if (v === 'run') return renderRun();
     if (v === 'analysis') return renderAnalysis();
     if (v === 'session') return renderSession(state.params.id);
@@ -643,8 +644,11 @@
       '<div><span>Списков</span><b>' + lists.length + '</b></div>' +
       '</div>';
 
-    html += '<div class="srx-row" style="margin-bottom:12px">' +
+    html += '<div class="srx-row" style="margin-bottom:8px">' +
       '<button class="srx-btn primary srx-grow" data-act="newList">＋ Создать свою тренировку</button>' +
+      '</div>' +
+      '<div class="srx-row" style="margin-bottom:12px">' +
+      '<button class="srx-btn ghost srx-grow" data-act="openCommunity">🌍 Тренировки сообщества</button>' +
       '</div>';
 
     if (!lists.length) {
@@ -696,6 +700,41 @@
   /* ==========================================================================
      13. ЭКРАН: РЕДАКТОР СПИСКА
      ========================================================================== */
+  function renderCommunity() {
+    setTitle('Сообщество');
+    var q = state.params.q || '';
+    bodyEl.innerHTML = '<div class="srx-card">' +
+      '<button class="srx-btn ghost sm" data-act="lists" style="margin-bottom:12px">← Назад</button>' +
+      '<label class="srx-label">Поиск по названию или автору</label>' +
+      '<div class="srx-row">' +
+        '<input class="srx-input srx-grow" data-ref="commQ" value="' + esc(q) + '" placeholder="Например: Ноги">' +
+        '<button class="srx-btn primary" data-act="commSearch">Найти</button>' +
+      '</div></div>' +
+      '<div id="commResults" class="srx-muted" style="padding:12px 0">Загрузка…</div>';
+
+    var box = $('#commResults', bodyEl);
+    SRXCommunity.search(q).then(function (res) {
+      if (state.view !== 'community' || !box) return;
+      if (!res.rows.length) { box.innerHTML = '<div class="srx-empty">Ничего не найдено. Попробуй другое название.</div>'; return; }
+      box.innerHTML = res.rows.map(function (w) {
+        var mine = res.mine[w.id] || 0;
+        var n = (w.items || []).length;
+        var id = esc(w.id);
+        return '<div class="srx-card"><h3>' + esc(w.title) + '</h3>' +
+          '<div class="srx-sub">Автор: ' + esc(w.author_name) + ' · ' + n + ' упр. · рейтинг ' + w.score + '</div>' +
+          '<div class="srx-row" style="margin-top:10px">' +
+            '<button class="srx-btn sm ' + (mine === 1 ? 'green' : 'ghost') + '" data-act="commVote" data-id="' + id +
+              '" data-v="1" data-cur="' + mine + '">👍 ' + w.likes + '</button>' +
+            '<button class="srx-btn sm ' + (mine === -1 ? 'danger' : 'ghost') + '" data-act="commVote" data-id="' + id +
+              '" data-v="-1" data-cur="' + mine + '">👎 ' + w.dislikes + '</button>' +
+            '<button class="srx-btn sm primary srx-grow" data-act="commImport" data-id="' + id + '">＋ В мои</button>' +
+          '</div></div>';
+      }).join('');
+    }).catch(function (err) {
+      if (box) box.innerHTML = '<div class="srx-empty">Не удалось загрузить: ' + esc(err && err.message || 'ошибка') + '</div>';
+    });
+  }
+
   function renderListEdit(id) {
     var lists = workoutLists();
     var list = null;
@@ -774,10 +813,12 @@
     html += '<button class="srx-btn ghost" style="width:100%;margin-top:12px" data-act="pickerOpen" data-id="' +
       esc(list.id) + '">＋ Добавить упражнение</button></div>';
 
-    html += '<div class="srx-row" style="margin-bottom:20px">' +
+    html += '<div class="srx-row" style="margin-bottom:12px">' +
       '<button class="srx-btn green srx-grow" data-act="startList" data-id="' + esc(list.id) + '">▶ Начать</button>' +
       '<button class="srx-btn danger" data-act="delList" data-id="' + esc(list.id) + '">Удалить</button>' +
-      '</div>';
+      '</div>' +
+      '<button class="srx-btn ghost" style="width:100%;margin-bottom:20px" data-act="publishList" data-id="' +
+      esc(list.id) + '">🌍 Опубликовать в сообщество</button>';
 
     bodyEl.innerHTML = html;
   }
@@ -832,14 +873,8 @@
     startedAt: null, tick: null, restAfterLast: false
   };
 
-  function startWorkout(listId) {
-    var lists = workoutLists();
-    var list = null;
-    for (var i = 0; i < lists.length; i++) if (lists[i].id === listId) list = lists[i];
-    if (!list) { toast('Список не найден'); return; }
-    if (!(list.items || []).length) { toast('В списке нет упражнений'); return; }
-
-    var items = list.items.map(function (it) {
+  function trainerItems(list) {
+    return (list.items || []).map(function (it) {
       var ex = findExercise(it.exId);
       return {
         name: it.name || (ex && ex.name) || 'Упражнение',
@@ -854,6 +889,16 @@
         restSec: Math.max(0, num(it.restSec))
       };
     });
+  }
+
+  function startWorkout(listId) {
+    var lists = workoutLists();
+    var list = null;
+    for (var i = 0; i < lists.length; i++) if (lists[i].id === listId) list = lists[i];
+    if (!list) { toast('Список не найден'); return; }
+    if (!(list.items || []).length) { toast('В списке нет упражнений'); return; }
+
+    var items = trainerItems(list);
     try {
       localStorage.setItem('wkTrainerRun', JSON.stringify({ name: list.name || 'Тренировка', items: items }));
     } catch (e) {
@@ -1658,6 +1703,65 @@
       case 'newList':
         go('listEdit', { id: null });
         break;
+
+      case 'openCommunity':
+        go('community', { q: '' });
+        break;
+
+      case 'commSearch': {
+        var qInput = $('[data-ref="commQ"]', bodyEl);
+        go('community', { q: qInput ? qInput.value.trim() : '' });
+        break;
+      }
+
+      case 'commVote': {
+        var wid = el.getAttribute('data-id');
+        var vVal = num(el.getAttribute('data-v'));
+        var vCur = num(el.getAttribute('data-cur'));
+        var qNow = state.params.q;
+        SRXCommunity.vote(wid, vVal, vCur).then(function () {
+          if (state.view === 'community') go('community', { q: qNow });
+        }).catch(function (err) { toast('Не получилось проголосовать: ' + (err && err.message || 'ошибка')); });
+        break;
+      }
+
+      case 'commImport': {
+        var iid = el.getAttribute('data-id');
+        SRXCommunity.fetchOne(iid).then(function (w) {
+          var p = profileData();
+          if (!p) throw new Error('Профиль не загружен');
+          var listItems = (w.items || []).map(function (it) {
+            var exId = 'c_' + uid();
+            p[K.ex].push({
+              id: exId, name: it.name, group: 'Свои', met: 0, icon: it.icon || '⭐',
+              photo: it.photo || null, video: it.video || null, note: '',
+              mode: it.mode, timeSec: it.timeSec, reps: it.reps,
+              createdAt: new Date().toISOString(), custom: true
+            });
+            return { exId: exId, name: it.name, mode: it.mode, sets: it.sets, timeSec: it.timeSec,
+              reps: it.reps, restSec: it.restSec, prepSec: it.prepSec };
+          });
+          p[K.lists].push({ id: uid(), name: w.title + ' (из сообщества)', items: listItems, createdAt: new Date().toISOString() });
+          persist();
+          toast('Тренировка добавлена в «Мои списки»');
+          go('lists');
+        }).catch(function (err) { toast('Не получилось добавить: ' + (err && err.message || 'ошибка')); });
+        break;
+      }
+
+      case 'publishList': {
+        var pid = el.getAttribute('data-id');
+        var pl = workoutLists().filter(function (l) { return l.id === pid; })[0];
+        if (!pl) break;
+        var ptitle = (pl.name || '').trim();
+        if (!ptitle) { toast('Сначала дай тренировке название'); break; }
+        if (!(pl.items || []).length) { toast('Добавь хотя бы одно упражнение'); break; }
+        toast('Публикую тренировку…');
+        SRXCommunity.publish(ptitle.slice(0, 80), trainerItems(pl)).then(function () {
+          toast('Опубликовано в сообществе');
+        }).catch(function (err) { toast('Не удалось опубликовать: ' + (err && err.message || 'ошибка')); });
+        break;
+      }
 
       case 'editList':
         go('listEdit', { id: el.getAttribute('data-id') });

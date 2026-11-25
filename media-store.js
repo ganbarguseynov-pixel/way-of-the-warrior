@@ -51,15 +51,21 @@
     }
   }
 
+  /* Файл из IndexedDB (для публикации в облако). */
+  function blob(ref) {
+    return run('readonly', function (st) { return st.get(ref.slice(PREFIX.length)); });
+  }
+
   window.SRXMedia = {
     prefix: PREFIX,
     isRef: isRef,
-    put: function (key, blob) {
-      return run('readwrite', function (st) { return st.put(blob, key); }).then(function () {
+    put: function (key, blobValue) {
+      return run('readwrite', function (st) { return st.put(blobValue, key); }).then(function () {
         return PREFIX + key;
       });
     },
     url: url,
+    blob: blob,
     hydrate: hydrate
   };
 })();

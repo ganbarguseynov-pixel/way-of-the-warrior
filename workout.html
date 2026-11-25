@@ -355,20 +355,6 @@
 <button class="back-btn" onclick="goBackToMain()">← Назад в приложение</button>
 <h1>Тренировка</h1>
 
-<div class="tabs">
-  <button id="tabCardio" class="tab" onclick="setTab('cardio')">Кардио</button>
-  <button id="tabTimer" class="tab on" onclick="setTab('timer')">Таймер</button>
-  <button id="tabCustom" class="tab" onclick="setTab('custom')">Свои</button>
-</div>
-
-<div id="paneCardio" class="pane">
-  <div class="empty">
-    <div class="empty-icon">🏃</div>
-    <div class="empty-title">Кардио</div>
-    <div class="empty-text">Раздел пустой. Скажите, какое кардио нужно, и я сделаю.</div>
-  </div>
-</div>
-
 <div id="paneTimer" class="pane on">
   <div class="wk-sec">
     <div class="wk-sec-title">Настройка тренировки</div>
@@ -786,15 +772,6 @@ function fireRestEnd(){
   if (!running || phase !== 'rest') return;
   restEndFired = true;
   cue('workAfterRest');
-}
-
-function setTab(which){
-  $('tabCardio').classList.toggle('on', which === 'cardio');
-  $('tabTimer').classList.toggle('on', which === 'timer');
-  $('tabCustom').classList.toggle('on', which === 'custom');
-  $('paneCardio').classList.toggle('on', which === 'cardio');
-  $('paneTimer').classList.toggle('on', which === 'timer');
-  $('paneCustom').classList.toggle('on', which === 'custom');
 }
 
 function fmtSec(sec){
