@@ -573,6 +573,7 @@
 </div>
 
 <script src="quotes.js"></script>
+<script src="media-store.js"></script>
 <script>
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
@@ -1200,11 +1201,15 @@ function renderExercise(){
   if (!EXERCISE){ b.classList.remove('show'); return; }
   b.classList.add('show');
   $('exName').textContent = EXERCISE.name;
-  $('exImg').innerHTML = EXERCISE.video
-    ? '<video src="' + EXERCISE.video + '" autoplay muted loop playsinline style="max-width:100%;max-height:100%;border-radius:12px"></video>'
+  var v = EXERCISE.video;
+  $('exImg').innerHTML = v
+    ? (SRXMedia.isRef(v)
+      ? '<video data-idb="' + v + '" autoplay muted loop playsinline style="max-width:100%;max-height:100%;border-radius:12px"></video>'
+      : '<video src="' + v + '" autoplay muted loop playsinline style="max-width:100%;max-height:100%;border-radius:12px"></video>')
     : EXERCISE.photo
       ? '<img src="' + EXERCISE.photo + '" alt="" onerror="this.parentNode.innerHTML=\'\'">'
       : (EXERCISE.icon ? '<div style="font-size:72px;line-height:1">' + EXERCISE.icon + '</div>' : '');
+  SRXMedia.hydrate($('exImg'));
 }
 
 function startSession(ex){
