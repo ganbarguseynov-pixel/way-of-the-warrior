@@ -84,15 +84,6 @@
     return null;
   }
 
-  /* Функции сохранения, которые может экспортировать app.js.
-     Вызываем только те, что не требуют аргументов — чтобы не сломать подпись. */
-  /* app.js saveProfile() не трогаем: она читает поля формы профиля и показывает алерт. */
-  var SAVE_FNS = [
-    'saveProfileData', 'persistProfile', 'persistProfileData',
-    'syncProfile', 'pushProfile', 'saveCurrentProfile', 'updateProfileData',
-    'saveUserProfile', 'syncToSupabase', 'saveProfileToSupabase', 'pushToCloud'
-  ];
-
   function persist(silent) {
     var p = getProfile();
     if (!p) return false;
@@ -106,43 +97,11 @@
 
     try { localStorage.setItem('cachedProfile', JSON.stringify(p)); } catch (e) { /* quota */ }
 
-    var called = [];
-    if (typeof window.saveProgressToCloud === 'function') {
-      try {
-        var xp = Number(localStorage.getItem('cachedXP') || 0);
-        var burned = Number(localStorage.getItem('cachedBurned') || 0);
-        var sr = window.saveProgressToCloud(null, null, null, p, xp, burned);
-        if (sr && typeof sr.catch === 'function') {
-          sr.catch(function (err) { console.warn('[SRX] cloud save rejected:', err && err.message); });
-        }
-        called.push('saveProgressToCloud');
-      } catch (e) {
-        console.warn('[SRX] cloud save failed:', e && e.message);
-      }
-    }
-    for (var i = 0; i < SAVE_FNS.length; i++) {
-      var name = SAVE_FNS[i];
-      var fn = window[name];
-      if (typeof fn !== 'function') continue;
-      if (fn.length > 0) continue;            // требует аргументов — не трогаем
-      try {
-        var r = fn();
-        if (r && typeof r.catch === 'function') {
-          r.catch(function (err) { console.warn('[SRX] cloud save rejected:', err && err.message); });
-        }
-        called.push(name);
-      } catch (e) {
-        console.warn('[SRX] save fn "' + name + '" failed:', e && e.message);
-      }
-    }
-
+    /* Облако: app.js слушает srx:profile-changed и сохраняет профиль с дебаунсом.
+       Прямой вызов saveProgressToCloud здесь не нужен: он давал гонку запросов. */
     try {
-      window.dispatchEvent(new CustomEvent('srx:profile-changed', { detail: { fns: called } }));
+      window.dispatchEvent(new CustomEvent('srx:profile-changed', { detail: { source: 'trainer' } }));
     } catch (e) {}
-
-    if (!silent && !called.length) {
-      toast('Локально сохранено. Облачная синхронизация — при следующем сохранении профиля.');
-    }
     return true;
   }
 
@@ -660,9 +619,6 @@
       '<button class="srx-btn primary srx-grow" data-act="newList">＋ Создать свою тренировку</button>' +
       '</div>' +
       '<div class="srx-row" style="margin-bottom:12px">' +
-      '<button class="srx-btn ghost srx-grow" data-act="listFromPick">🧩 Тренировка из упражнения</button>' +
-      '</div>' +
-      '<div class="srx-row" style="margin-bottom:12px">' +
       '<button class="srx-btn ghost srx-grow" data-act="openCommunity">🌍 Тренировки сообщества</button>' +
       '</div>';
     if (lists.length) {
@@ -867,24 +823,44 @@
 
   function basketToList() {
     var pr = profileData();
-    var ids = getBasket();
-    if (!pr || !ids.length) return;
-    var items = [];
-    ids.forEach(function (id) {
-      var ex = findExercise(id);
-      if (!ex) return;
-      var d = exDefaults(ex);
-      items.push({
-        exId: ex.id, name: ex.name, mode: d.mode, sets: 3, prepSec: 5,
-        timeSec: d.timeSec, reps: d.reps, restSec: ex.group === 'Кардио' ? 0 : 60
-      });
-    });
+    var items = basketItems(getBasket());
+    if (!pr || !items.length) return;
     var list = { id: uid(), name: '', items: items, createdAt: new Date().toISOString() };
     pr[K.lists].push(list);
     persist(true);
     setBasket([]);
     toast('Комплекс собран — дай ему название');
     go('listEdit', { id: list.id });
+  }
+
+  function basketItems(ids) {
+    var out = [];
+    ids.forEach(function (id) {
+      var ex = findExercise(id);
+      if (!ex) return;
+      var d = exDefaults(ex);
+      out.push({
+        exId: ex.id, name: ex.name, mode: d.mode, sets: d.sets, prepSec: d.prepSec,
+        timeSec: d.timeSec, reps: d.reps, restSec: d.restSec
+      });
+    });
+    return out;
+  }
+
+  function basketToExisting(listId) {
+    var pr = profileData();
+    var items = basketItems(getBasket());
+    if (!pr || !items.length) return;
+    pr[K.lists].forEach(function (l) {
+      if (l.id !== listId) return;
+      if (!Array.isArray(l.items)) l.items = [];
+      items.forEach(function (it) { l.items.push(it); });
+    });
+    persist(true);
+    setBasket([]);
+    closeSheet();
+    toast('Упражнения добавлены в тренировку');
+    go('listEdit', { id: listId });
   }
 
   function renderLibrary() {
@@ -907,8 +883,10 @@
     var basket = getBasket();
     if (basket.length) {
       html += '<div class="srx-card" style="margin-bottom:12px"><div class="srx-name">🧺 В корзине: ' + basket.length + '</div>' +
-        '<div class="srx-sub" style="margin:4px 0 10px">Собери из выбранных упражнений один комплекс</div>' +
-        '<div class="srx-row"><button class="srx-btn primary srx-grow" data-act="basketMake">Собрать комплекс</button>' +
+        '<div class="srx-sub" style="margin:4px 0 10px">Собери из них комплекс, добавь в существующую тренировку или начни сразу</div>' +
+        '<div class="srx-row" style="margin-bottom:8px"><button class="srx-btn primary srx-grow" data-act="basketMake">Собрать комплекс</button>' +
+        '<button class="srx-btn ghost srx-grow" data-act="basketToExisting">В существующую</button></div>' +
+        '<div class="srx-row"><button class="srx-btn green srx-grow" data-act="basketStart">▶ Начать сразу</button>' +
         '<button class="srx-btn ghost" data-act="basketClear">Очистить</button></div></div>';
     }
 
@@ -930,7 +908,7 @@
           '<div class="srx-sub">' + esc(e.group) + ' · MET ' + e.met +
             (e.custom ? ' · своё' : '') + '</div>' +
         '<div class="srx-row" style="margin-top:6px;gap:6px">' +
-          '<button class="srx-btn sm" data-act="chooseListForEx" data-ex="' + esc(e.id) + '">＋ в комплекс</button>' +
+          '<button class="srx-btn sm" data-act="basketAdd" data-id="' + esc(e.id) + '">🧺 ＋ в корзину</button>' +
           '<button class="srx-btn sm green" data-act="startSingle" data-id="' + esc(e.id) + '">▶ Начать</button>' +
         '</div>' +
         '</div></div>';
@@ -1602,10 +1580,14 @@
   var pendingMedia = null;
 
   function exDefaults(ex) {
+    var isCardio = ex.group === 'Кардио';
     return {
       mode: ex.mode === 'reps' || ex.mode === 'both' ? ex.mode : 'time',
-      timeSec: num(ex.timeSec) || (ex.group === 'Кардио' ? 300 : 40),
-      reps: num(ex.reps) || 10
+      timeSec: num(ex.timeSec) || (isCardio ? 300 : 40),
+      reps: num(ex.reps) || 10,
+      sets: num(ex.sets) || 3,
+      prepSec: ex.prepSec !== undefined ? num(ex.prepSec) : 5,
+      restSec: ex.restSec !== undefined ? num(ex.restSec) : (isCardio ? 0 : 60)
     };
   }
 
@@ -1643,6 +1625,15 @@
       '<input class="srx-input" data-ref="exReps" type="number" min="1" max="500" value="10"></div>' +
       '<div><label class="srx-label">MET</label>' +
       '<input class="srx-input" data-ref="exMet" type="number" min="1" max="20" step="0.1" value="5"></div>' +
+      '</div>';
+
+    html += '<div class="srx-grid3" style="margin-top:8px">' +
+      '<div><label class="srx-label">Подходы</label>' +
+      '<input class="srx-input" data-ref="exSets" type="number" min="1" max="20" value="3"></div>' +
+      '<div><label class="srx-label">Подготовка, сек</label>' +
+      '<input class="srx-input" data-ref="exPrep" type="number" min="0" max="600" value="5"></div>' +
+      '<div><label class="srx-label">Отдых, сек</label>' +
+      '<input class="srx-input" data-ref="exRest" type="number" min="0" max="3600" value="60"></div>' +
       '</div>';
 
     html += '<label class="srx-label">Иконка</label>' +
@@ -1742,11 +1733,11 @@
       l.items.push({
         exId: ex.id, name: ex.name,
         mode: d.mode,
-        sets: 3,
-        prepSec: 5,
+        sets: d.sets,
+        prepSec: d.prepSec,
         timeSec: d.timeSec,
         reps: d.reps,
-        restSec: ex.group === 'Кардио' ? 0 : 60
+        restSec: d.restSec
       });
     });
     persist(true);
@@ -1878,21 +1869,9 @@
         var sd = exDefaults(sx);
         closeSheet();
         runItems(sx.name, [{
-          exId: sx.id, name: sx.name, mode: sd.mode, sets: 3, prepSec: 5,
-          timeSec: sd.timeSec, reps: sd.reps, restSec: 0
+          exId: sx.id, name: sx.name, mode: sd.mode, sets: sd.sets, prepSec: sd.prepSec,
+          timeSec: sd.timeSec, reps: sd.reps, restSec: sd.restSec
         }]);
-        break;
-      }
-
-      case 'listFromPick': {
-        var pick = allExercises();
-        var ph = pick.length ? '' : '<div class="srx-muted">Упражнений пока нет.</div>';
-        pick.forEach(function (pe) {
-          ph += '<div class="srx-list-item" data-act="pickAddNew" data-ex="' + esc(pe.id) + '">' +
-            '<div class="srx-grow"><div class="srx-name">' + esc(pe.name) + '</div>' +
-            '<div class="srx-sub">' + esc(pe.group) + '</div></div><div class="srx-sub">＋</div></div>';
-        });
-        openSheet('Тренировка из упражнения', '<div class="srx-muted" style="margin-bottom:10px">Выбери упражнение — оно станет первым в новой тренировке.</div>' + ph);
         break;
       }
 
@@ -1950,6 +1929,29 @@
         basketToList();
         break;
 
+      case 'basketStart': {
+        var startItems = basketItems(getBasket());
+        if (!startItems.length) { toast('Корзина пуста'); break; }
+        runItems('Тренировка из корзины', startItems);
+        break;
+      }
+
+      case 'basketToExisting': {
+        var bls = workoutLists();
+        var bh = bls.length ? '' : '<div class="srx-muted" style="margin-bottom:10px">Тренировок пока нет. Соберите комплекс.</div>';
+        bls.forEach(function (l) {
+          bh += '<div class="srx-list-item" data-act="basketPickList" data-list="' + esc(l.id) + '">' +
+            '<div class="srx-grow"><div class="srx-name">' + esc(l.name || 'Без названия') + '</div>' +
+            '<div class="srx-sub">' + (l.items || []).length + ' упр.</div></div><div class="srx-sub">＋</div></div>';
+        });
+        openSheet('Добавить в тренировку', bh);
+        break;
+      }
+
+      case 'basketPickList':
+        basketToExisting(el.getAttribute('data-list'));
+        break;
+
       case 'pickIcon': {
         pendingIcon = el.getAttribute('data-icon');
         var grid = $('[data-ref="emojiGrid"]', modalEl);
@@ -1973,6 +1975,9 @@
         var exMode = ($('[data-ref="exMode"]', modalEl) || {}).value || 'time';
         var exTime = clamp(num(($('[data-ref="exTime"]', modalEl) || {}).value) || 40, 5, 3600);
         var exReps = clamp(num(($('[data-ref="exReps"]', modalEl) || {}).value) || 10, 1, 500);
+        var exSets = clamp(num(($('[data-ref="exSets"]', modalEl) || {}).value) || 3, 1, 20);
+        var exPrep = clamp(num(($('[data-ref="exPrep"]', modalEl) || {}).value), 0, 600);
+        var exRest = clamp(num(($('[data-ref="exRest"]', modalEl) || {}).value), 0, 3600);
 
         var prof = profileData();
         if (!prof) { toast('Профиль не загружен'); break; }
@@ -1987,6 +1992,9 @@
           mode: exMode,
           timeSec: exTime,
           reps: exReps,
+          sets: exSets,
+          prepSec: exPrep,
+          restSec: exRest,
           createdAt: new Date().toISOString()
         };
         if (pendingMedia && pendingMedia.photo) newEx.photo = pendingMedia.photo;

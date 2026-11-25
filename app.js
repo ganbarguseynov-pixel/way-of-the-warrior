@@ -333,13 +333,21 @@ function keepExtras(prof){
 }
 
 var extrasSaveTimer=null;
+function flushProfileSave(){
+  if(!extrasSaveTimer)return;
+  clearTimeout(extrasSaveTimer);
+  extrasSaveTimer=null;
+  if(!currentProfileData)return;
+  localStorage.setItem('cachedProfile',JSON.stringify(currentProfileData));
+  saveProgressToCloud(localStorage.getItem('tgId'),localStorage.getItem('linkedEmail')||localStorage.getItem('currentEmail'),localStorage.getItem('userName'),currentProfileData,currentXP,totalBurnedCalories);
+}
 window.addEventListener('srx:profile-changed',function(){
   clearTimeout(extrasSaveTimer);
-  extrasSaveTimer=setTimeout(function(){
-    if(!currentProfileData)return;
-    localStorage.setItem('cachedProfile',JSON.stringify(currentProfileData));
-    saveProgressToCloud(localStorage.getItem('tgId'),localStorage.getItem('linkedEmail')||localStorage.getItem('currentEmail'),localStorage.getItem('userName'),currentProfileData,currentXP,totalBurnedCalories);
-  },800);
+  extrasSaveTimer=setTimeout(flushProfileSave,800);
+});
+window.addEventListener('pagehide',flushProfileSave);
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='hidden')flushProfileSave();
 });
 
 function calculateNutrition(p){
