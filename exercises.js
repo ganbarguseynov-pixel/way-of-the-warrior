@@ -200,7 +200,8 @@
       return {
         id: e.id, name: e.name, group: e.group || 'Всё тело',
         met: num(e.met) || 5, icon: e.icon || '⭐',
-        photo: e.photo || null, note: e.note || '', custom: true
+        photo: e.photo || null, video: e.video || null, note: e.note || '',
+        mode: e.mode, timeSec: num(e.timeSec) || 0, reps: num(e.reps) || 0, custom: true
       };
     });
     return BUILTIN.map(function (e) {
@@ -830,29 +831,27 @@
     if (!list) { toast('Список не найден'); return; }
     if (!(list.items || []).length) { toast('В списке нет упражнений'); return; }
 
-    T.items = list.items.map(function (it) {
+    var items = list.items.map(function (it) {
       var ex = findExercise(it.exId);
       return {
-        exId: it.exId, name: it.name || (ex && ex.name) || 'Упражнение',
-        met: ex ? ex.met : 5, icon: ex ? ex.icon : '⭐', photo: ex ? ex.photo : null,
+        name: it.name || (ex && ex.name) || 'Упражнение',
+        icon: ex ? ex.icon : '⭐',
+        photo: ex ? ex.photo : null,
+        video: ex ? ex.video : null,
         mode: it.mode === 'reps' || it.mode === 'both' ? it.mode : 'time',
         sets: Math.max(1, num(it.sets) || 1),
         timeSec: Math.max(5, num(it.timeSec) || 40),
         reps: Math.max(1, num(it.reps) || 10),
-        restSec: Math.max(0, num(it.restSec) || 20)
+        restSec: Math.max(0, num(it.restSec))
       };
     });
-    T.listId = list.id;
-    T.listName = list.name || 'Тренировка';
-    T.idx = 0; T.set = 1;
-    T.startedAt = new Date().toISOString();
-    T.active = true;
-    T.phase = 'prep';
-    T.total = 10;
-    T.left = 10;
-    go('run');
-    startTick();
-    beep(660, 120);
+    try {
+      localStorage.setItem('wkTrainerRun', JSON.stringify({ name: list.name || 'Тренировка', items: items }));
+    } catch (e) {
+      toast('Не хватает места: удали большие фото или видео');
+      return;
+    }
+    window.location.href = 'workout.html?trainer=1';
   }
 
   function startTick() {
@@ -1467,8 +1466,25 @@
     '🥋', '🤺', '🧗', '🚣', '🏇', '⛹️', '🤼', '🏌️', '🛹', '🏹', '💪', '🦵', '🔥', '⚡', '🥇', '🎯'];
   var pendingIcon = SPORT_ICONS[0];
 
+  var pendingMedia = null;
+
+  function exDefaults(ex) {
+    return {
+      mode: ex.mode === 'reps' || ex.mode === 'both' ? ex.mode : 'time',
+      timeSec: num(ex.timeSec) || (ex.group === 'Кардио' ? 300 : 40),
+      reps: num(ex.reps) || 10
+    };
+  }
+
+  var MODE_HINTS = {
+    time: 'Упражнение идёт, пока не выйдет время таймера.',
+    reps: 'Таймер показывает ∞. Ты сам жмёшь «+1 повтор», пока не сделаешь нужное количество.',
+    both: 'Таймер идёт и считается количество повторов. Упражнение заканчивается, когда выйдет время или сделано нужное количество — что наступит раньше.'
+  };
+
   function openExerciseForm() {
     pendingIcon = SPORT_ICONS[0];
+    pendingMedia = null;
     var html = '';
 
     html += '<label class="srx-label">Название</label>' +
@@ -1479,10 +1495,22 @@
       MUSCLES.map(function (m) { return '<option>' + m + '</option>'; }).join('') +
       '</select>';
 
-    html += '<label class="srx-label">Интенсивность (MET)</label>' +
-      '<input class="srx-input" data-ref="exMet" type="number" min="1" max="20" step="0.1" value="5">' +
-      '<div class="srx-muted" style="margin-top:4px;font-size:11.5px">' +
-      '3–4 — лёгкое · 5–6 — среднее · 7–9 — тяжёлое · 10+ — очень тяжёлое</div>';
+    html += '<label class="srx-label">Как выполняем</label>' +
+      '<select class="srx-select" data-ref="exMode">' +
+      '<option value="time">⏱ По таймеру</option>' +
+      '<option value="reps">🔢 По количеству</option>' +
+      '<option value="both">⏱🔢 Таймер и количество</option>' +
+      '</select>' +
+      '<div class="srx-muted" data-ref="exModeHint" style="margin-top:4px;font-size:11.5px"></div>';
+
+    html += '<div class="srx-grid3" style="margin-top:8px">' +
+      '<div data-ref="exTimeBlock"><label class="srx-label">Таймер, сек</label>' +
+      '<input class="srx-input" data-ref="exTime" type="number" min="5" max="3600" step="5" value="40"></div>' +
+      '<div data-ref="exRepsBlock"><label class="srx-label">Повторы</label>' +
+      '<input class="srx-input" data-ref="exReps" type="number" min="1" max="500" value="10"></div>' +
+      '<div><label class="srx-label">MET</label>' +
+      '<input class="srx-input" data-ref="exMet" type="number" min="1" max="20" step="0.1" value="5"></div>' +
+      '</div>';
 
     html += '<label class="srx-label">Иконка</label>' +
       '<div class="srx-emoji-grid" data-ref="emojiGrid">' +
@@ -1492,6 +1520,11 @@
       }).join('') +
       '</div>';
 
+    html += '<label class="srx-label">Фото или видео (необязательно)</label>' +
+      '<input class="srx-input" data-ref="exMedia" type="file" accept="image/*,video/*" style="padding:8px">' +
+      '<div class="srx-muted" style="margin-top:4px;font-size:11.5px">Фото сжимается автоматически. Видео — до 2 МБ.</div>' +
+      '<div data-ref="mediaPreview" style="margin-top:8px"></div>';
+
     html += '<label class="srx-label">Заметка (необязательно)</label>' +
       '<textarea class="srx-textarea" data-ref="exNote" rows="2" placeholder="Техника, нюансы…"></textarea>';
 
@@ -1499,6 +1532,86 @@
       'Сохранить упражнение</button>';
 
     openSheet('Своё упражнение', html);
+
+    var modeEl = $('[data-ref="exMode"]', modalEl);
+    var syncMode = function () {
+      var m = modeEl.value;
+      $('[data-ref="exTimeBlock"]', modalEl).style.display = m === 'reps' ? 'none' : '';
+      $('[data-ref="exRepsBlock"]', modalEl).style.display = m === 'time' ? 'none' : '';
+      $('[data-ref="exModeHint"]', modalEl).textContent = MODE_HINTS[m];
+    };
+    modeEl.addEventListener('change', syncMode);
+    syncMode();
+
+    $('[data-ref="exMedia"]', modalEl).addEventListener('change', function (e) {
+      var file = e.target.files && e.target.files[0];
+      var preview = $('[data-ref="mediaPreview"]', modalEl);
+      pendingMedia = null;
+      preview.innerHTML = '';
+      if (!file) return;
+      readMedia(file, function (err, media) {
+        if (err) { toast(err); e.target.value = ''; return; }
+        pendingMedia = media;
+        preview.innerHTML = media.photo
+          ? '<img src="' + media.photo + '" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px">'
+          : '<video src="' + media.video + '" controls muted style="width:100%;max-height:180px;border-radius:12px"></video>';
+      });
+    });
+  }
+
+  function readMedia(file, cb) {
+    if (file.type.indexOf('video/') === 0) {
+      if (file.size > 2 * 1024 * 1024) { cb('Видео больше 2 МБ — выбери короче'); return; }
+      var fr = new FileReader();
+      fr.onload = function () { cb(null, { video: fr.result }); };
+      fr.onerror = function () { cb('Не удалось прочитать видео'); };
+      fr.readAsDataURL(file);
+      return;
+    }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function () {
+      var k = Math.min(1, 720 / Math.max(img.width, img.height));
+      var c = document.createElement('canvas');
+      c.width = Math.round(img.width * k);
+      c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      cb(null, { photo: c.toDataURL('image/jpeg', 0.8) });
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); cb('Не удалось открыть фото'); };
+    img.src = url;
+  }
+
+  function showExerciseDone(ex) {
+    openSheet('Упражнение создано', '<div class="srx-muted" style="margin-bottom:14px">' + esc(ex.name) +
+      ' сохранено в библиотеку. Что дальше?</div>' +
+      '<button class="srx-btn primary" style="width:100%;margin-bottom:8px" data-act="chooseListForEx" data-ex="' + esc(ex.id) + '">📋 Добавить в комплекс</button>' +
+      '<button class="srx-btn" style="width:100%;margin-bottom:8px" data-act="newExercise">＋ Создать ещё одно упражнение</button>' +
+      '<button class="srx-btn" style="width:100%" data-act="sheetClose">Готово</button>');
+  }
+
+  function addExerciseToList(listId, exId) {
+    var ex = findExercise(exId);
+    var pr = profileData();
+    if (!ex || !pr) return;
+    var d = exDefaults(ex);
+    pr[K.lists].forEach(function (l) {
+      if (l.id !== listId) return;
+      if (!Array.isArray(l.items)) l.items = [];
+      l.items.push({
+        exId: ex.id, name: ex.name,
+        mode: d.mode,
+        sets: 3,
+        timeSec: d.timeSec,
+        reps: d.reps,
+        restSec: ex.group === 'Кардио' ? 0 : 60
+      });
+    });
+    persist(true);
+    toast(ex.name + ' добавлено');
+    closeSheet();
+    go('listEdit', { id: listId });
   }
 
   /* ==========================================================================
@@ -1599,54 +1712,66 @@
         var grp = ($('[data-ref="exGroup"]', modalEl) || {}).value || 'Всё тело';
         var met = clamp(num(($('[data-ref="exMet"]', modalEl) || {}).value) || 5, 1, 20);
         var note = ($('[data-ref="exNote"]', modalEl) || {}).value || '';
+        var exMode = ($('[data-ref="exMode"]', modalEl) || {}).value || 'time';
+        var exTime = clamp(num(($('[data-ref="exTime"]', modalEl) || {}).value) || 40, 5, 3600);
+        var exReps = clamp(num(($('[data-ref="exReps"]', modalEl) || {}).value) || 10, 1, 500);
 
         var prof = profileData();
         if (!prof) { toast('Профиль не загружен'); break; }
 
-        prof[K.ex].push({
+        var newEx = {
           id: 'c_' + uid(),
           name: nm,
           group: grp,
           met: met,
           icon: pendingIcon,
           note: note,
+          mode: exMode,
+          timeSec: exTime,
+          reps: exReps,
           createdAt: new Date().toISOString()
-        });
+        };
+        if (pendingMedia && pendingMedia.photo) newEx.photo = pendingMedia.photo;
+        if (pendingMedia && pendingMedia.video) newEx.video = pendingMedia.video;
+        pendingMedia = null;
+        prof[K.ex].push(newEx);
         persist();
-        closeSheet();
-        toast('Упражнение добавлено');
+        toast('Упражнение сохранено');
         if (state.view === 'library') renderLibrary();
+        showExerciseDone(newEx);
         break;
       }
 
-      case 'pickAdd': {
-        var listId = el.getAttribute('data-list');
-        var exId = el.getAttribute('data-ex');
-        var ex = findExercise(exId);
-        var pr = profileData();
-        if (!ex || !pr) break;
-        var done = false;
-        pr[K.lists].forEach(function (l) {
-          if (l.id !== listId) return;
-          if (!Array.isArray(l.items)) l.items = [];
-          l.items.push({
-            exId: ex.id, name: ex.name,
-            mode: 'time',
-            sets: 3,
-            timeSec: ex.group === 'Кардио' ? 300 : 40,
-            reps: 10,
-            restSec: ex.group === 'Кардио' ? 0 : 60
-          });
-          done = true;
+      case 'chooseListForEx': {
+        var cex = el.getAttribute('data-ex');
+        var cls = workoutLists();
+        var ch = '';
+        if (!cls.length) ch += '<div class="srx-muted" style="margin-bottom:10px">Комплексов пока нет.</div>';
+        cls.forEach(function (l) {
+          ch += '<div class="srx-list-item" data-act="pickAdd" data-list="' + esc(l.id) + '" data-ex="' + esc(cex) + '">' +
+            '<div class="srx-grow"><div class="srx-name">' + esc(l.name || 'Без названия') + '</div>' +
+            '<div class="srx-sub">' + (l.items || []).length + ' упр.</div></div><div class="srx-sub">＋</div></div>';
         });
-        if (done) {
-          persist(true);
-          toast(ex.name + ' добавлено');
-          closeSheet();
-          renderListEdit(listId);
-        }
+        ch += '<button class="srx-btn primary" style="width:100%;margin-top:10px" data-act="pickAddNew" data-ex="' +
+          esc(cex) + '">＋ Новый комплекс с этим упражнением</button>';
+        openSheet('Добавить в комплекс', ch);
         break;
       }
+
+      case 'pickAddNew': {
+        var pn = profileData();
+        if (!pn) break;
+        var newList = { id: uid(), name: 'Мой комплекс', items: [], createdAt: new Date().toISOString() };
+        pn[K.lists].push(newList);
+        persist(true);
+        addExerciseToList(newList.id, el.getAttribute('data-ex'));
+        break;
+      }
+
+      case 'pickAdd':
+        addExerciseToList(el.getAttribute('data-list'), el.getAttribute('data-ex'));
+        break;
+
 
       case 'exInfo': {
         var eid = el.getAttribute('data-id');
@@ -1654,6 +1779,7 @@
         if (!exx) break;
         var body = '';
         if (exx.photo) body += '<img src="' + exx.photo + '" style="width:100%;border-radius:13px;margin-bottom:12px">';
+        if (exx.video) body += '<video src="' + exx.video + '" controls style="width:100%;border-radius:13px;margin-bottom:12px"></video>';
         body += '<div class="srx-kpi">' +
           '<div><span>Группа</span><b style="font-size:15px">' + esc(exx.group) + '</b></div>' +
           '<div><span>MET</span><b>' + exx.met + '</b></div></div>';

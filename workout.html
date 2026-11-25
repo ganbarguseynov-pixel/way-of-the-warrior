@@ -500,6 +500,8 @@
       <div class="eximg" id="exImg"></div>
       <div class="exname" id="exName"></div>
     </div>
+    <div id="trainerLine" style="display:none;font-size:18px;font-weight:600;margin-top:6px"></div>
+    <button class="wk-start" id="trainerRepBtn" style="display:none;max-width:260px;margin:8px auto 0" onclick="trainerRep()">+1 повтор</button>
 
     <button class="lap" onclick="restartPhase()" aria-label="Начать заново">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
@@ -1184,6 +1186,8 @@ function exitSession(){
   locked = false;
   queue = [];
   queueIndex = 0;
+  trainerRun = null;
+  trainerSteps = null;
   $('lockOverlay').classList.remove('show');
   updateLockIcon();
   $('run').classList.remove('show');
@@ -1196,12 +1200,15 @@ function renderExercise(){
   if (!EXERCISE){ b.classList.remove('show'); return; }
   b.classList.add('show');
   $('exName').textContent = EXERCISE.name;
-  $('exImg').innerHTML = EXERCISE.photo
-    ? '<img src="' + EXERCISE.photo + '" alt="" onerror="this.parentNode.innerHTML=\'\'">'
-    : '';
+  $('exImg').innerHTML = EXERCISE.video
+    ? '<video src="' + EXERCISE.video + '" autoplay muted loop playsinline style="max-width:100%;max-height:100%;border-radius:12px"></video>'
+    : EXERCISE.photo
+      ? '<img src="' + EXERCISE.photo + '" alt="" onerror="this.parentNode.innerHTML=\'\'">'
+      : (EXERCISE.icon ? '<div style="font-size:72px;line-height:1">' + EXERCISE.icon + '</div>' : '');
 }
 
 function startSession(ex){
+  trainerSteps = null;
   EXERCISE = ex || null;
   ac();
   finished = false;
@@ -1274,9 +1281,16 @@ function tick(){
 
 function render(){
   const s = Math.ceil(Math.max(0, remainingMs) / 1000);
-  $('clock').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+  const st = trainerSteps ? trainerSteps[stepIdx] : null;
+  const repsStep = isRepsStep(st);
+  $('clock').textContent = isRepsOnlyStep(st) ? '∞' : pad(Math.floor(s / 60)) + ':' + pad(s % 60);
   $('totalLeft').textContent = fmtTotal(totalLeftMs());
-  $('setsVal').textContent = (phase === 'prep' ? 0 : round) + '/' + cfg.rounds;
+  $('setsVal').textContent = trainerSteps
+    ? (stepIdx + 1) + '/' + trainerSteps.length
+    : (phase === 'prep' ? 0 : round) + '/' + cfg.rounds;
+  $('trainerLine').style.display = repsStep ? '' : 'none';
+  $('trainerRepBtn').style.display = repsStep ? '' : 'none';
+  if (repsStep) $('trainerLine').textContent = 'Повторы: ' + repsCount + ' из ' + st.reps;
 }
 
 function fmtTotal(ms){
@@ -1289,6 +1303,11 @@ function fmtTotal(ms){
 }
 
 function totalLeftMs(){
+  if (trainerSteps){
+    let ms = remainingMs;
+    for (let i = stepIdx + 1; i < trainerSteps.length; i++) ms += trainerSteps[i].sec * 1000;
+    return ms;
+  }
   const W = cfg.work * 1000;
   const R = cfg.rest * 1000;
   let ms = remainingMs;
@@ -1306,6 +1325,7 @@ function totalLeftMs(){
 
 function phaseDone(){
   clearInterval(iv);
+  if (trainerSteps){ trainerStepDone(); return; }
 
   if (phase === 'prep'){ enterPhase('work'); return; }
 
@@ -1332,7 +1352,7 @@ function setPauseIcon(paused){
 }
 
 function togglePause(){
-  if (finished) return;
+  if (finished || isRepsOnlyStep(trainerSteps && trainerSteps[stepIdx])) return;
   if (!running){
     endAt = Date.now() + remainingMs;
     running = true;
@@ -1351,12 +1371,14 @@ function togglePause(){
 function restartPhase(){
   if (finished) return;
   clearInterval(iv);
+  if (trainerSteps){ enterTrainerStep(); return; }
   enterPhase(phase);
 }
 
 function nextPhase(){
   if (finished) return;
   clearInterval(iv);
+  if (trainerSteps){ trainerStepDone(); return; }
 
   if (phase === 'prep'){ enterPhase('work'); return; }
 
@@ -1373,6 +1395,7 @@ function nextPhase(){
 function prevPhase(){
   if (finished) return;
   clearInterval(iv);
+  if (trainerSteps){ stepIdx = Math.max(0, stepIdx - 1); enterTrainerStep(); return; }
 
   if (phase === 'prep'){ enterPhase('prep'); return; }
 
@@ -1424,10 +1447,14 @@ function finishSession(){
   } catch (e) {}
 
   const total = cfg.prep + cfg.rounds * cfg.work + (cfg.rounds - 1) * cfg.rest;
-  $('finStats').innerHTML =
-    (EXERCISE ? EXERCISE.name + '<br>' : '') +
-    cfg.rounds + ' ' + word(cfg.rounds) + ' · ≈ ' + Math.round(total / 60) + ' мин' +
-    (isQueueDone ? '<br>Список выполнен' : '');
+  if (trainerRun){
+    $('finStats').textContent = trainerRun.name + ' · упражнений: ' + trainerRun.items.length;
+  } else {
+    $('finStats').innerHTML =
+      (EXERCISE ? EXERCISE.name + '<br>' : '') +
+      cfg.rounds + ' ' + word(cfg.rounds) + ' · ≈ ' + Math.round(total / 60) + ' мин' +
+      (isQueueDone ? '<br>Список выполнен' : '');
+  }
   $('finXp').textContent = '+' + queueTotalXP + ' XP';
 
   let q = { text: 'Ты не проиграл, пока не остановился.', author: 'Майк Тайсон' };
@@ -1439,6 +1466,90 @@ function finishSession(){
 
   $('run').classList.remove('show');
   $('finish').classList.add('show');
+}
+
+/* ================= РЕЖИМ ТРЕНЕРА: список из вкладки «Тренер» ================= */
+let trainerRun = null, trainerSteps = null, stepIdx = 0, repsCount = 0;
+
+function buildTrainerSteps(run){
+  const steps = [];
+  (run.items || []).forEach(function(it){
+    for (let s = 1; s <= it.sets; s++){
+      steps.push({
+        kind: 'work', name: it.name, icon: it.icon, photo: it.photo, video: it.video,
+        mode: it.mode, sec: it.mode === 'reps' ? 0 : it.timeSec, reps: it.reps,
+        set: s, sets: it.sets
+      });
+      if (it.restSec > 0) steps.push({ kind: 'rest', sec: it.restSec });
+    }
+  });
+  if (steps.length && steps[steps.length - 1].kind === 'rest') steps.pop();
+  return steps;
+}
+
+function isRepsOnlyStep(st){ return !!st && st.kind === 'work' && st.mode === 'reps'; }
+function isRepsStep(st){ return !!st && st.kind === 'work' && st.mode !== 'time'; }
+
+function nextWorkStep(from){
+  for (let i = from + 1; i < trainerSteps.length; i++){
+    if (trainerSteps[i].kind === 'work') return trainerSteps[i];
+  }
+  return null;
+}
+
+function startTrainer(){
+  finished = false;
+  locked = false;
+  xpEarned = 0;
+  round = 1;
+  $('setup').style.display = 'none';
+  $('finish').classList.remove('show');
+  $('run').classList.add('show');
+  stepIdx = 0;
+  enterTrainerStep();
+}
+
+function enterTrainerStep(){
+  clearInterval(iv);
+  clearCueTimers();
+  stopAllClips();
+  const st = trainerSteps[stepIdx];
+  if (!st){ finishSession(); return; }
+
+  repsCount = 0;
+  phase = st.kind === 'rest' ? 'rest' : 'work';
+  const run = $('run');
+  run.classList.remove('prep', 'work', 'rest');
+  run.classList.add(phase);
+  $('phaseLabel').textContent = st.kind === 'rest' ? 'Отдых' : 'Тренировка';
+  EXERCISE = st.kind === 'rest' ? nextWorkStep(stepIdx) : st;
+  renderExercise();
+
+  const timed = st.kind === 'rest' || st.mode !== 'reps';
+  totalMs = timed ? st.sec * 1000 : 0;
+  remainingMs = totalMs;
+  running = timed;
+  setPauseIcon(false);
+  if (timed){
+    endAt = Date.now() + remainingMs;
+    iv = setInterval(tick, 100);
+  }
+  render();
+}
+
+function trainerStepDone(){
+  clearInterval(iv);
+  stepIdx++;
+  if (stepIdx >= trainerSteps.length){ finishSession(); return; }
+  enterTrainerStep();
+}
+
+function trainerRep(){
+  const st = trainerSteps && trainerSteps[stepIdx];
+  if (finished || !isRepsStep(st)) return;
+  repsCount++;
+  if (repsCount >= st.reps){ trainerStepDone(); return; }
+  render();
 }
 
 function toggleSound(){
@@ -1466,6 +1577,16 @@ renderChips();
 updateSummary();
 updateSoundIcon();
 updateLockIcon();
+
+(function startFromTrainer(){
+  if (new URLSearchParams(location.search).get('trainer') !== '1') return;
+  let run = null;
+  try { run = JSON.parse(localStorage.getItem('wkTrainerRun') || 'null'); } catch (e) {}
+  if (!run || !run.items || !run.items.length) return;
+  trainerRun = run;
+  trainerSteps = buildTrainerSteps(run);
+  startTrainer();
+})();
 </script>
 </body>
 </html>
