@@ -705,9 +705,49 @@ function routePlayer(k){
   } catch (e) { return null; }
 }
 
+const buffers = {};
+let bufferSources = [];
+let buffersPromise = null;
+
+/* Декодируем клипы один раз в AudioBuffer: точный старт без seek/таймаутов <audio> */
+function loadBuffers(){
+  if (buffersPromise) return buffersPromise;
+  const c = ac();
+  if (!c || !window.fetch) return Promise.resolve();
+  buffersPromise = Promise.all(Object.keys(FILES).map(function(k){
+    return fetch(FILES[k])
+      .then(function(r){ return r.arrayBuffer(); })
+      .then(function(b){ return c.decodeAudioData(b); })
+      .then(function(buf){ buffers[k] = buf; })
+      .catch(function(){});
+  }));
+  return buffersPromise;
+}
+
+function playBuf(key, from, to, gain){
+  const c = ac();
+  const buf = buffers[key];
+  const m = masterChain();
+  if (!c || !buf || !m) return false;
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  const g = c.createGain();
+  g.gain.value = Math.max(0.01, gain || 1);
+  src.connect(g);
+  g.connect(m);
+  src.onended = function(){
+    bufferSources = bufferSources.filter(function(s){ return s !== src; });
+  };
+  bufferSources.push(src);
+  src.start(0, from, Math.max(0.05, to - from));
+  return true;
+}
+
 function stopAllClips(){
   stopTimers.forEach(clearTimeout);
   stopTimers = [];
+  bufferSources.forEach(function(s){ try { s.stop(); } catch (e) {} });
+  bufferSources = [];
   Object.keys(players).forEach(function(k){
     try { players[k].pause(); } catch (e) {}
   });
@@ -746,15 +786,24 @@ function playSeg(key, from, to, gain){
 function cue(name){
   if (!soundOn) return;
   const s = SOUND[name];
-  if (!s || !players[s.f]) return;
+  if (!s) return;
   stopAllClips();
+  if (playBuf(s.f, s.from, s.to, s.gain)) return;
+  if (!players[s.f]) return;
   playSeg(s.f, s.from, s.to, s.gain);
 }
 
 function testCue(name){
   ac();
+  loadBuffers();
   cue(name);
 }
+
+loadBuffers();
+/* Первый жест пользователя разблокирует аудио */
+document.addEventListener('pointerdown', function unlockAudio(){
+  ac();
+}, { once: true });
 
 function scheduleEndingAt(name, msBeforeEnd, shiftSec, phaseName){
   const s = SOUND[name];
@@ -1498,9 +1547,10 @@ function startTrainer(){
 function enterTrainerStep(){
   clearInterval(iv);
   clearCueTimers();
-  stopAllClips();
   const st = trainerSteps[stepIdx];
-  if (!st){ finishSession(); return; }
+  if (!st){ stopAllClips(); finishSession(); return; }
+  /* Клип «отдых → работа» должен доиграть на границе шагов. */
+  if (st.kind !== 'work') stopAllClips();
 
   repsCount = 0;
   prepCued = false;
@@ -1575,7 +1625,7 @@ function updateSoundIcon(){
 }
 
 function goBackToMain(){
-  if (trainerRun) { try { localStorage.setItem('srx_open_trainer', '1'); } catch (e) {} }
+  try { localStorage.setItem('srx_open_trainer', '1'); } catch (e) {}
   setTimeout(function(){ window.location.href = 'index.html'; }, 100);
 }
 

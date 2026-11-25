@@ -104,11 +104,22 @@
       return false;
     }
 
-    if (typeof currentProfileData === 'undefined' || p !== currentProfileData) {
-      try { localStorage.setItem('cachedProfile', JSON.stringify(p)); } catch (e) { /* quota */ }
-    }
+    try { localStorage.setItem('cachedProfile', JSON.stringify(p)); } catch (e) { /* quota */ }
 
     var called = [];
+    if (typeof window.saveProgressToCloud === 'function') {
+      try {
+        var xp = Number(localStorage.getItem('cachedXP') || 0);
+        var burned = Number(localStorage.getItem('cachedBurned') || 0);
+        var sr = window.saveProgressToCloud(null, null, null, p, xp, burned);
+        if (sr && typeof sr.catch === 'function') {
+          sr.catch(function (err) { console.warn('[SRX] cloud save rejected:', err && err.message); });
+        }
+        called.push('saveProgressToCloud');
+      } catch (e) {
+        console.warn('[SRX] cloud save failed:', e && e.message);
+      }
+    }
     for (var i = 0; i < SAVE_FNS.length; i++) {
       var name = SAVE_FNS[i];
       var fn = window[name];
@@ -574,6 +585,7 @@
     bodyEl = $('[data-ref="body"]', root);
 
     root.addEventListener('click', onClick);
+    root.addEventListener('input', onInput);
   }
 
   function openRoot(view, params) {
@@ -650,12 +662,21 @@
       '<div class="srx-row" style="margin-bottom:12px">' +
       '<button class="srx-btn ghost srx-grow" data-act="openCommunity">🌍 Тренировки сообщества</button>' +
       '</div>';
+    if (lists.length) {
+      html += '<input class="srx-input" data-ref="listsQ" placeholder="Поиск по моим тренировкам" value="' +
+        esc(listsQuery) + '" style="margin-bottom:12px">';
+    }
 
     if (!lists.length) {
       html += '<div class="srx-empty">Списков пока нет.<br>Создай первый — и добавь в него упражнения из библиотеки.</div>';
     } else {
       html += '<div class="srx-card"><h3>Мои списки</h3>';
-      lists.forEach(function (l) {
+      var lq = listsQuery.trim().toLowerCase();
+      var shown = lists.filter(function (l) {
+        return !lq || String(l.name || '').toLowerCase().indexOf(lq) !== -1;
+      });
+      if (!shown.length) html += '<div class="srx-muted" style="padding:8px 0">Ничего не найдено.</div>';
+      shown.forEach(function (l) {
         var count = (l.items || []).length;
         var totalMin = (l.items || []).reduce(function (a, it) {
           var sets = num(it.sets) || 1;
@@ -827,12 +848,49 @@
      14. ЭКРАН: БИБЛИОТЕКА УПРАЖНЕНИЙ
      ========================================================================== */
   var libFilter = 'Все';
+  var libQuery = '';
+  var listsQuery = '';
+
+  function getBasket() {
+    try {
+      var b = JSON.parse(localStorage.getItem('srx_basket') || '[]');
+      return Array.isArray(b) ? b : [];
+    } catch (e) { return []; }
+  }
+
+  function setBasket(b) {
+    try { localStorage.setItem('srx_basket', JSON.stringify(b)); } catch (e) {}
+  }
+
+  function basketToList() {
+    var pr = profileData();
+    var ids = getBasket();
+    if (!pr || !ids.length) return;
+    var items = [];
+    ids.forEach(function (id) {
+      var ex = findExercise(id);
+      if (!ex) return;
+      var d = exDefaults(ex);
+      items.push({
+        exId: ex.id, name: ex.name, mode: d.mode, sets: 3, prepSec: 5,
+        timeSec: d.timeSec, reps: d.reps, restSec: ex.group === 'Кардио' ? 0 : 60
+      });
+    });
+    var list = { id: uid(), name: '', items: items, createdAt: new Date().toISOString() };
+    pr[K.lists].push(list);
+    persist(true);
+    setBasket([]);
+    toast('Комплекс собран — дай ему название');
+    go('listEdit', { id: list.id });
+  }
 
   function renderLibrary() {
     setTitle('Упражнения');
     var all = allExercises();
     var groups = ['Все'].concat(MUSCLES);
-    var filtered = libFilter === 'Все' ? all : all.filter(function (e) { return e.group === libFilter; });
+    var qq = libQuery.trim().toLowerCase();
+    var filtered = (libFilter === 'Все' ? all : all.filter(function (e) { return e.group === libFilter; }))
+      .filter(function (e) { return !qq || String(e.name).toLowerCase().indexOf(qq) !== -1; });
 
     var html = '<div class="srx-chips">';
     groups.forEach(function (g) {
@@ -842,6 +900,17 @@
         esc(g) + '">' + esc(g) + '</button>';
     });
     html += '</div>';
+
+    var basket = getBasket();
+    if (basket.length) {
+      html += '<div class="srx-card" style="margin-bottom:12px"><div class="srx-name">🧺 В корзине: ' + basket.length + '</div>' +
+        '<div class="srx-sub" style="margin:4px 0 10px">Собери из выбранных упражнений один комплекс</div>' +
+        '<div class="srx-row"><button class="srx-btn primary srx-grow" data-act="basketMake">Собрать комплекс</button>' +
+        '<button class="srx-btn ghost" data-act="basketClear">Очистить</button></div></div>';
+    }
+
+    html += '<input class="srx-input" data-ref="libQ" placeholder="Поиск упражнения" value="' + esc(libQuery) +
+      '" style="margin-bottom:10px">';
 
     html += '<button class="srx-btn primary" style="width:100%;margin:4px 0 14px" data-act="newExercise">' +
       '＋ Своё упражнение с фото</button>';
@@ -857,6 +926,7 @@
           '<div class="srx-name" style="font-size:13.5px">' + esc(e.name) + '</div>' +
           '<div class="srx-sub">' + esc(e.group) + ' · MET ' + e.met +
             (e.custom ? ' · своё' : '') + '</div>' +
+        '<button class="srx-btn sm" style="margin-top:6px" data-act="basketAdd" data-id="' + esc(e.id) + '">＋ в корзину</button>' +
         '</div></div>';
     });
     html += '</div>';
@@ -1576,7 +1646,7 @@
 
     html += '<label class="srx-label">Фото или видео (необязательно)</label>' +
       '<input class="srx-input" data-ref="exMedia" type="file" accept="image/*,video/*" style="padding:8px">' +
-      '<div class="srx-muted" style="margin-top:4px;font-size:11.5px">Фото сжимается автоматически. Видео — до 2 МБ.</div>' +
+      '<div class="srx-muted" style="margin-top:4px;font-size:11.5px">Фото сжимается автоматически. Видео — до 10 секунд.</div>' +
       '<div data-ref="mediaPreview" style="margin-top:8px"></div>';
 
     html += '<label class="srx-label">Заметка (необязательно)</label>' +
@@ -1664,6 +1734,7 @@
         mode: d.mode,
         sets: 3,
         prepSec: 5,
+        timeSec: d.timeSec,
         reps: d.reps,
         restSec: ex.group === 'Кардио' ? 0 : 60
       });
@@ -1677,6 +1748,21 @@
   /* ==========================================================================
      19. ДЕЙСТВИЯ
      ========================================================================== */
+  /* Поиск: перерисовываем экран и возвращаем фокус и курсор в поле. */
+  function onInput(e) {
+    var t = e.target;
+    var ref = t && t.getAttribute && t.getAttribute('data-ref');
+    if (ref !== 'libQ' && ref !== 'listsQ') return;
+    var caret = t.selectionStart;
+    if (ref === 'libQ') { libQuery = t.value; renderLibrary(); }
+    else { listsQuery = t.value; renderLists(); }
+    var again = $('[data-ref="' + ref + '"]', bodyEl);
+    if (again) {
+      again.focus();
+      try { again.setSelectionRange(caret, caret); } catch (err) {}
+    }
+  }
+
   function onClick(e) {
     var el = e.target.closest ? e.target.closest('[data-act]') : null;
     if (!el) return;
@@ -1809,6 +1895,25 @@
 
       case 'newExercise':
         openExerciseForm();
+        break;
+
+      case 'basketAdd': {
+        var bid = el.getAttribute('data-id');
+        var bl = getBasket();
+        if (bl.indexOf(bid) === -1) bl.push(bid);
+        setBasket(bl);
+        toast('Добавлено в корзину');
+        renderLibrary();
+        break;
+      }
+
+      case 'basketClear':
+        setBasket([]);
+        renderLibrary();
+        break;
+
+      case 'basketMake':
+        basketToList();
         break;
 
       case 'pickIcon': {
