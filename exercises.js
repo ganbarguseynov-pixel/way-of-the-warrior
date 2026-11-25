@@ -68,10 +68,19 @@
   var PROFILE_GETTERS = ['currentProfileData', 'cachedProfile', 'profileData', 'currentProfile'];
 
   function getProfile() {
+    try {
+      if (typeof currentProfileData !== 'undefined' && currentProfileData && typeof currentProfileData === 'object') {
+        return currentProfileData;
+      }
+    } catch (e) { /* app.js ещё не инициализировал переменную */ }
     for (var i = 0; i < PROFILE_GETTERS.length; i++) {
       var p = window[PROFILE_GETTERS[i]];
       if (p && typeof p === 'object' && !Array.isArray(p)) return p;
     }
+    try {
+      var c = JSON.parse(localStorage.getItem('cachedProfile') || 'null');
+      if (c && typeof c === 'object' && !Array.isArray(c)) return c;
+    } catch (e) { /* повреждённый JSON */ }
     return null;
   }
 
@@ -90,6 +99,10 @@
     try { localStorage.setItem(LS.draft, JSON.stringify({
       ts: Date.now(), profile: p
     })); } catch (e) { /* quota */ }
+
+    if (typeof currentProfileData === 'undefined' || p !== currentProfileData) {
+      try { localStorage.setItem('cachedProfile', JSON.stringify(p)); } catch (e) { /* quota */ }
+    }
 
     var called = [];
     for (var i = 0; i < SAVE_FNS.length; i++) {
@@ -1384,7 +1397,8 @@
       modalEl.innerHTML = '<div class="srx-sheet" data-ref="sheet"></div>';
       document.body.appendChild(modalEl);
       modalEl.addEventListener('click', function (e) {
-        if (e.target === modalEl) closeSheet();
+        if (e.target === modalEl) { closeSheet(); return; }
+        onClick(e);
       });
     }
     var sheet = $('[data-ref="sheet"]', modalEl);
