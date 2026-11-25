@@ -219,6 +219,10 @@ async function saveOnboardingData(){
   if(!age||!weight||!height){tg.showAlert('Пожалуйста, заполни возраст, вес и рост!');return;}
   var water=weight?Math.round(parseFloat(weight)*30):2000;
   var prof={age:age,gender:gender,weight:weight,height:height,goal:goal,custom_calories:'',custom_protein:'',custom_fat:'',custom_carbs:'',custom_water_goal:water,food_preference:pref};
+  currentProfileData=null;
+  localStorage.setItem('cachedProfile',JSON.stringify(prof));
+  saveWeightToHistory(weight);
+  prof.weightHistory=weightHistory();
   localStorage.setItem('cachedProfile',JSON.stringify(prof));
   var t=localStorage.getItem('tgId');
   var e=localStorage.getItem('currentEmail')||localStorage.getItem('linkedEmail');
@@ -281,15 +285,22 @@ async function saveProgressToCloud(tgId,email,name,profile,xp,burned){
     var t=tgId||localStorage.getItem('tgId');
     var e=email||localStorage.getItem('linkedEmail')||localStorage.getItem('currentEmail');
     var n=name||localStorage.getItem('userName')||'Атлет';
-    if(!t&&!e)return;
+    if(!t&&!e)return false;
     var rec=await resolveUserRecord(t,e);
     if(rec){
-      await supabaseClient.from('user_links').update({profile:profile,burned:burned,name:n,telegram_id:t||null,email:e||null}).eq('id',rec.id);
+      if(profile&&typeof profile==='object'&&rec.profile&&Array.isArray(rec.profile.weightHistory)){
+        profile.weightHistory=mergeWeightHistory(rec.profile.weightHistory,profile.weightHistory);
+      }
+      var update=await supabaseClient.from('user_links').update({profile:profile,burned:burned,name:n,telegram_id:t||null,email:e||null}).eq('id',rec.id);
+      if(update.error)throw update.error;
     }else{
-      await supabaseClient.from('user_links').insert([{telegram_id:t,email:e,profile:profile,xp:xp,burned:burned,name:n}]);
+      var insert=await supabaseClient.from('user_links').insert([{telegram_id:t,email:e,profile:profile,xp:xp,burned:burned,name:n}]);
+      if(insert.error)throw insert.error;
     }
+    return true;
   }catch(err){
-    console.log('Ошибка сохранения:',err);
+    console.error('Ошибка сохранения:',err);
+    return false;
   }
 }
 
@@ -338,7 +349,8 @@ function flushProfileSave(){
   clearTimeout(extrasSaveTimer);
   extrasSaveTimer=null;
   if(!currentProfileData)return;
-  localStorage.setItem('cachedProfile',JSON.stringify(currentProfileData));
+  try{localStorage.setItem('cachedProfile',JSON.stringify(currentProfileData));}
+  catch(err){console.warn('Не удалось сохранить профиль локально:',err);}
   saveProgressToCloud(localStorage.getItem('tgId'),localStorage.getItem('linkedEmail')||localStorage.getItem('currentEmail'),localStorage.getItem('userName'),currentProfileData,currentXP,totalBurnedCalories);
 }
 window.addEventListener('srx:profile-changed',function(){
@@ -376,18 +388,76 @@ function checkDayReset(){
   }
 }
 
+function mergeWeightHistory(profileHistory,localHistory){
+  var byDate={};
+  [profileHistory,localHistory].forEach(function(source){
+    if(!Array.isArray(source))return;
+    source.forEach(function(entry){
+      if(!entry||!entry.dateRaw||!isFinite(parseFloat(entry.weight)))return;
+      var previous=byDate[entry.dateRaw];
+      if(!previous||String(entry.updatedAt||'')>=String(previous.updatedAt||''))byDate[entry.dateRaw]=entry;
+    });
+  });
+  return Object.keys(byDate).sort().reverse().map(function(key){return byDate[key];});
+}
+
+function weightHistoryStorageKey(){
+  var t=localStorage.getItem('tgId');
+  if(t)return 'weightHistory:tg:'+t;
+  var e=localStorage.getItem('linkedEmail')||localStorage.getItem('currentEmail');
+  return e?'weightHistory:email:'+e.toLowerCase():'weightHistory:local';
+}
+
+function writeWeightHistoryLocally(list){
+  try{localStorage.setItem(weightHistoryStorageKey(),JSON.stringify(list));}
+  catch(err){console.warn('История веса не поместилась в локальное хранилище:',err);}
+}
+
+function readStoredWeightHistory(){
+  var local=[];
+  var key=weightHistoryStorageKey();
+  var stored=null;
+  try{
+    stored=localStorage.getItem(key);
+    if(stored)local=JSON.parse(stored);
+    else local=JSON.parse(localStorage.getItem('weightHistory')||'[]');
+  }catch(err){console.warn('Не удалось прочитать локальную историю веса:',err);return [];}
+  if(!stored&&local.length){
+    try{
+      localStorage.setItem(key,JSON.stringify(local));
+      localStorage.removeItem('weightHistory');
+    }catch(err){console.warn('Не удалось перенести локальную историю веса:',err);}
+  }
+  return local;
+}
+
+function weightHistory(){
+  var local=readStoredWeightHistory();
+  var profile=currentProfileData&&Array.isArray(currentProfileData.weightHistory)?currentProfileData.weightHistory:[];
+  var list=mergeWeightHistory(profile,local);
+  writeWeightHistoryLocally(list);
+  if(currentProfileData)currentProfileData.weightHistory=list;
+  return list;
+}
+
 function saveWeightToHistory(w){
-  var list=[];
-  try{list=JSON.parse(localStorage.getItem('weightHistory')||'[]');}catch(err){list=[];}
+  var list=weightHistory();
   var d=new Date();
   var raw=todayStr();
-  if(list.length>0&&list[0].dateRaw===raw){
-    list[0].weight=parseFloat(w);
-  }else{
-    list.unshift({dateRaw:raw,dateDisplay:d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}),weight:parseFloat(w)});
+  var entry={dateRaw:raw,dateDisplay:d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}),weight:parseFloat(w),updatedAt:d.toISOString()};
+  var existing=list.findIndex(function(x){return x.dateRaw===raw;});
+  if(existing>=0)list[existing]=entry;
+  else list.unshift(entry);
+  list.sort(function(a,b){return String(b.dateRaw).localeCompare(String(a.dateRaw));});
+  if(currentProfileData)currentProfileData.weightHistory=list;
+  else{
+    try{
+      var profile=JSON.parse(localStorage.getItem('cachedProfile')||'{}');
+      profile.weightHistory=list;
+      localStorage.setItem('cachedProfile',JSON.stringify(profile));
+    }catch(err){console.warn('Не удалось обновить локальный профиль с историей веса:',err);}
   }
-  if(list.length>50)list.pop();
-  localStorage.setItem('weightHistory',JSON.stringify(list));
+  writeWeightHistoryLocally(list);
 }
 
 /* ===== СЕРИЯ: одна, из базы (challenge_streak) ===== */
@@ -441,6 +511,13 @@ function openWeightDiary(){
   if(currentProfileData){
     var i=document.getElementById('modal-weight-input');
     if(i)i.value=currentProfileData.weight||'';
+    if(!weightHistory().length&&parseFloat(currentProfileData.weight)>0){
+      saveWeightToHistory(currentProfileData.weight);
+      try{localStorage.setItem('cachedProfile',JSON.stringify(currentProfileData));}
+      catch(err){console.warn('Не удалось сохранить профиль локально:',err);}
+      saveProgressToCloud(localStorage.getItem('tgId'),localStorage.getItem('linkedEmail')||localStorage.getItem('currentEmail'),localStorage.getItem('userName'),currentProfileData,currentXP,totalBurnedCalories)
+        .then(function(ok){if(!ok)console.warn('Начальный вес сохранён локально, но не синхронизирован.');});
+    }
   }
   setPeriod('weight','7days');
   openScreen('weight-diary-screen');
@@ -451,22 +528,22 @@ async function saveWeightFromDiary(){
   if(!w||w<=0){tg.showAlert('Введите корректный вес!');return;}
   if(!currentProfileData)return;
   currentProfileData.weight=w;
-  localStorage.setItem('cachedProfile',JSON.stringify(currentProfileData));
   saveWeightToHistory(w);
-  await saveProgressToCloud(localStorage.getItem('tgId'),localStorage.getItem('currentEmail'),localStorage.getItem('userName'),currentProfileData,currentXP,totalBurnedCalories);
+  try{localStorage.setItem('cachedProfile',JSON.stringify(currentProfileData));}
+  catch(err){console.warn('Не удалось сохранить профиль локально:',err);}
+  var saved=await saveProgressToCloud(localStorage.getItem('tgId'),localStorage.getItem('currentEmail'),localStorage.getItem('userName'),currentProfileData,currentXP,totalBurnedCalories);
   updateDashboard();
   renderWeightDiary();
-  tg.showAlert('Вес обновлен!');
+  tg.showAlert(saved?'Вес и история сохранены.':'Вес сохранён на этом устройстве, но не синхронизирован. Проверь подключение и войди в аккаунт.');
 }
 
 function renderWeightDiary(){
   var from=document.getElementById('weight-start-date').value;
   var to=document.getElementById('weight-end-date').value;
   if(!from||!to)return;
-  var hist=[];
-  try{hist=JSON.parse(localStorage.getItem('weightHistory')||'[]');}catch(err){hist=[];}
+  var hist=weightHistory();
   var labels=[],data=[];
-  for(var d=new Date(from);d<=new Date(to);d.setDate(d.getDate()+1)){
+  for(var d=new Date(from+'T00:00:00Z');d<=new Date(to+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+1)){
     var key=d.toISOString().split('T')[0];
     labels.push(key.split('-').slice(1).reverse().join('.'));
     var found=hist.find(function(x){return x.dateRaw===key||(x.date&&x.date.split('.').reverse().join('-')===key);});
@@ -583,7 +660,7 @@ function renderWaterDiary(){
   var hist={};
   try{hist=JSON.parse(localStorage.getItem('waterHistory')||'{}');}catch(err){hist={};}
   var labels=[],data=[],total=0;
-  for(var d=new Date(from);d<=new Date(to);d.setDate(d.getDate()+1)){
+  for(var d=new Date(from+'T00:00:00Z');d<=new Date(to+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+1)){
     var key=d.toISOString().split('T')[0];
     labels.push(key.split('-').slice(1).reverse().join('.'));
     var sum=0;
@@ -709,7 +786,7 @@ function renderAllCharts(){
   var foodHist={},waterHist={},weights=[];
   try{foodHist=JSON.parse(localStorage.getItem('foodHistory')||'{}');}catch(err){foodHist={};}
   try{waterHist=JSON.parse(localStorage.getItem('waterHistory')||'{}');}catch(err){waterHist={};}
-  try{weights=JSON.parse(localStorage.getItem('weightHistory')||'[]');}catch(err){weights=[];}
+  weights=weightHistory();
   var labels=[],wData=[],cal=[],prot=[],fat=[],carb=[],water=[];
   for(var d=new Date(from);d<=new Date(to);d.setDate(d.getDate()+1)){
     var key=d.toISOString().split('T')[0];
@@ -912,6 +989,11 @@ function saveCustomNormFromModal(){
 
 function renderProfile(profile){
   keepExtras(profile);
+  var localWeights=readStoredWeightHistory();
+  profile.weightHistory=mergeWeightHistory(profile.weightHistory,localWeights);
+  writeWeightHistoryLocally(profile.weightHistory);
+  try{localStorage.setItem('cachedProfile',JSON.stringify(profile));}
+  catch(err){console.warn('Не удалось сохранить профиль локально:',err);}
   currentProfileData=profile;
   window.currentProfileData=profile;
   userGender=profile.gender||'male';
@@ -1110,10 +1192,12 @@ async function saveProfile(){
   if(oldW&&oldW!==newW)saveWeightToHistory(newW);
   var prof={age:age,gender:gender,weight:weight,height:height,goal:goal,custom_calories:cc,custom_protein:cp,custom_fat:cf,custom_carbs:ccar,custom_water_goal:parseInt(cw)||2000,food_preference:pref};
   keepExtras(prof);
-  localStorage.setItem('cachedProfile',JSON.stringify(prof));
-  await saveProgressToCloud(localStorage.getItem('tgId'),localStorage.getItem('currentEmail'),localStorage.getItem('userName'),prof,currentXP,totalBurnedCalories);
+  prof.weightHistory=weightHistory();
+  try{localStorage.setItem('cachedProfile',JSON.stringify(prof));}
+  catch(err){console.warn('Не удалось сохранить профиль локально:',err);}
+  var cloudSaved=await saveProgressToCloud(localStorage.getItem('tgId'),localStorage.getItem('currentEmail'),localStorage.getItem('userName'),prof,currentXP,totalBurnedCalories);
   renderProfile(prof);
-  tg.showAlert('Данные сохранены!');
+  tg.showAlert(cloudSaved?'Данные и история веса сохранены.':'Данные сохранены на устройстве, но не синхронизированы с облаком.');
 }
 
 async function logout(){

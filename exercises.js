@@ -698,16 +698,31 @@
       if (!res.rows.length) { box.innerHTML = '<div class="srx-empty">Ничего не найдено. Попробуй другое название.</div>'; return; }
       box.innerHTML = res.rows.map(function (w) {
         var mine = res.mine[w.id] || 0;
+        var myReview = res.myReviews[w.id] || null;
+        var reviews = res.reviews[w.id] || [];
         var n = (w.items || []).length;
         var id = esc(w.id);
         return '<div class="srx-card"><h3>' + esc(w.title) + '</h3>' +
-          '<div class="srx-sub">Автор: ' + esc(w.author_name) + ' · ' + n + ' упр. · рейтинг ' + w.score + '</div>' +
+          '<div class="srx-sub">Автор: ' + esc(w.author_name) + ' · ' + n + ' упр. · ' +
+            '★ ' + Number(w.avg_rating || 0).toFixed(1) + ' (' + (w.review_count || 0) + ') · ' +
+            '👍 ' + w.likes + ' / 👎 ' + w.dislikes + ' · до ' + (w.reward_xp_max || 50) + ' XP</div>' +
+          (reviews.length ? '<div class="srx-sub" style="margin-top:7px">' + reviews.map(function (r) {
+            return '<div style="padding:4px 0">★ ' + r.stars + ' · <b>' + esc(r.reviewer_name) +
+              '</b>' + (r.comment ? ': ' + esc(r.comment) : '') + '</div>';
+          }).join('') + '</div>' : '') +
           '<div class="srx-row" style="margin-top:10px">' +
             '<button class="srx-btn sm ' + (mine === 1 ? 'green' : 'ghost') + '" data-act="commVote" data-id="' + id +
               '" data-v="1" data-cur="' + mine + '">👍 ' + w.likes + '</button>' +
             '<button class="srx-btn sm ' + (mine === -1 ? 'danger' : 'ghost') + '" data-act="commVote" data-id="' + id +
               '" data-v="-1" data-cur="' + mine + '">👎 ' + w.dislikes + '</button>' +
             '<button class="srx-btn sm primary srx-grow" data-act="commImport" data-id="' + id + '">＋ В мои</button>' +
+          '</div><div class="srx-row" style="margin-top:8px">' +
+            '<select class="srx-select" data-review-stars="' + id + '" style="width:92px">' +
+              [1,2,3,4,5].map(function (n) { return '<option value="' + n + '"' +
+                ((myReview && myReview.stars === n) || (!myReview && n === 5) ? ' selected' : '') + '>' + n + ' ★</option>'; }).join('') +
+            '</select><input class="srx-input srx-grow" data-review-comment="' + id + '" maxlength="500" ' +
+              'value="' + esc(myReview ? myReview.comment : '') + '" placeholder="Ваш отзыв (необязательно)">' +
+            '<button class="srx-btn sm" data-act="commReview" data-id="' + id + '">Оценить</button>' +
           '</div></div>';
       }).join('');
     }).catch(function (err) {
@@ -732,6 +747,10 @@
     var html = '<div class="srx-card">' +
       '<label class="srx-label">Название</label>' +
       '<input class="srx-input" data-ref="listName" value="' + esc(list.name) + '" placeholder="Например: День ног">' +
+      '<label class="srx-label">XP за эту тренировку по рейтингу (1–50)</label>' +
+      '<input class="srx-input" data-ref="listReward" type="number" min="1" max="50" value="' +
+        clamp(num(list.rewardXpMax) || 50, 1, 50) + '">' +
+      '<div class="srx-muted">Бонус = лимит × средняя оценка / 5; пока нет отзывов — бонус 0 XP.</div>' +
       '</div>';
 
     html += '<div class="srx-card"><h3>Упражнения (' + (list.items || []).length + ')</h3>';
@@ -854,6 +873,8 @@
     pr[K.lists].forEach(function (l) {
       if (l.id !== listId) return;
       if (!Array.isArray(l.items)) l.items = [];
+      l.communityWorkoutId = null;
+      l.rewardXpMax = 0;
       items.forEach(function (it) { l.items.push(it); });
     });
     persist(true);
@@ -951,13 +972,18 @@
     for (var i = 0; i < lists.length; i++) if (lists[i].id === listId) list = lists[i];
     if (!list) { toast('Список не найден'); return; }
     if (!(list.items || []).length) { toast('В списке нет упражнений'); return; }
-    runItems(list.name, list.items);
+    runItems(list.name, list.items, {
+      communityWorkoutId: list.communityWorkoutId || null,
+      rewardXpMax: list.rewardXpMax || 0
+    });
   }
 
-  function runItems(name, rawItems) {
+  function runItems(name, rawItems, metadata) {
     var items = trainerItems({ items: rawItems });
     try {
-      localStorage.setItem('wkTrainerRun', JSON.stringify({ name: name || 'Тренировка', items: items }));
+      localStorage.setItem('wkTrainerRun', JSON.stringify(Object.assign({
+        name: name || 'Тренировка', items: items
+      }, metadata || {})));
     } catch (e) {
       toast('Не хватает места: удали большие фото или видео');
       return;
@@ -1730,6 +1756,8 @@
     pr[K.lists].forEach(function (l) {
       if (l.id !== listId) return;
       if (!Array.isArray(l.items)) l.items = [];
+      l.communityWorkoutId = null;
+      l.rewardXpMax = 0;
       l.items.push({
         exId: ex.id, name: ex.name,
         mode: d.mode,
@@ -1812,6 +1840,21 @@
         break;
       }
 
+      case 'commReview': {
+        var reviewId = el.getAttribute('data-id');
+        var starsEl = $('[data-review-stars="' + reviewId + '"]', bodyEl);
+        var commentEl = $('[data-review-comment="' + reviewId + '"]', bodyEl);
+        if (starsEl && commentEl) {
+          SRXCommunity.review(reviewId, starsEl.value, commentEl.value).then(function () {
+            toast('Отзыв сохранён');
+            if (state.view === 'community') go('community', { q: state.params.q });
+          }).catch(function (err) {
+            toast('Не удалось сохранить отзыв: ' + (err && err.message || 'ошибка'));
+          });
+        }
+        break;
+      }
+
       case 'commImport': {
         var iid = el.getAttribute('data-id');
         SRXCommunity.fetchOne(iid).then(function (w) {
@@ -1828,7 +1871,11 @@
             return { exId: exId, name: it.name, mode: it.mode, sets: it.sets, timeSec: it.timeSec,
               reps: it.reps, restSec: it.restSec, prepSec: it.prepSec };
           });
-          p[K.lists].push({ id: uid(), name: w.title + ' (из сообщества)', items: listItems, createdAt: new Date().toISOString() });
+          p[K.lists].push({
+            id: uid(), name: w.title + ' (из сообщества)', items: listItems,
+            communityWorkoutId: w.id, communityAuthorKey: w.author_key,
+            rewardXpMax: w.reward_xp_max || 50, createdAt: new Date().toISOString()
+          });
           persist();
           toast('Тренировка добавлена в «Мои списки»');
           go('lists');
@@ -1844,7 +1891,7 @@
         if (!ptitle) { toast('Сначала дай тренировке название'); break; }
         if (!(pl.items || []).length) { toast('Добавь хотя бы одно упражнение'); break; }
         toast('Публикую тренировку…');
-        SRXCommunity.publish(ptitle.slice(0, 80), trainerItems(pl)).then(function () {
+        SRXCommunity.publish(ptitle.slice(0, 80), trainerItems(pl), clamp(num(pl.rewardXpMax) || 50, 1, 50)).then(function () {
           toast('Опубликовано в сообществе');
         }).catch(function (err) { toast('Не удалось опубликовать: ' + (err && err.message || 'ошибка')); });
         break;
@@ -1894,7 +1941,11 @@
         var pp = profileData();
         if (pp) {
           pp[K.lists].forEach(function (l) {
-            if (l.id === lid && l.items) l.items.splice(idx, 1);
+            if (l.id === lid && l.items) {
+              l.items.splice(idx, 1);
+              l.communityWorkoutId = null;
+              l.rewardXpMax = 0;
+            }
           });
           persist(true);
         }
@@ -2146,6 +2197,8 @@
       p[K.lists].forEach(function (l) {
         if (l.id !== lid) return;
         if (!l.items || !l.items[idx]) return;
+        l.communityWorkoutId = null;
+        l.rewardXpMax = 0;
         if (modeField) {
           l.items[idx].mode = t.value === 'reps' || t.value === 'both' ? t.value : 'time';
         } else {
@@ -2162,6 +2215,16 @@
       var pp = profileData();
       if (!pp) return;
       pp[K.lists].forEach(function (l) { if (l.id === id) l.name = t.value; });
+      persist(true);
+    }
+
+    if (t.getAttribute('data-ref') === 'listReward' && e.type === 'change') {
+      var id = state.params.id;
+      var pp = profileData();
+      if (!pp) return;
+      var reward = clamp(num(t.value) || 50, 1, 50);
+      t.value = String(reward);
+      pp[K.lists].forEach(function (l) { if (l.id === id) l.rewardXpMax = reward; });
       persist(true);
     }
   }

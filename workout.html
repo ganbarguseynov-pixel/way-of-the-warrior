@@ -1168,6 +1168,27 @@ function awardXP(delta){
   addXP(delta);
 }
 
+async function getCommunityWorkoutReward(run){
+  if(!run||!run.communityWorkoutId)return {xp:0,rating:0,reviews:0};
+  const {data,error}=await sb.from('shared_workouts_rated')
+    .select('avg_rating,review_count,reward_xp_max')
+    .eq('id',run.communityWorkoutId)
+    .single();
+  if(error)throw error;
+  const reviews=Number(data&&data.review_count)||0;
+  const rating=Number(data&&data.avg_rating)||0;
+  if(!reviews)return {xp:0,rating:0,reviews:0};
+  const limit=Math.max(1,Math.min(50,Number(data&&data.reward_xp_max)||50));
+  return {xp:communityRewardXP(limit,rating,reviews),rating:rating,reviews:reviews};
+}
+
+function communityRewardXP(limit,rating,reviews){
+  if(!reviews)return 0;
+  const max=Math.max(1,Math.min(50,Number(limit)||50));
+  const stars=Math.max(0,Math.min(5,Number(rating)||0));
+  return Math.round(max*stars/5);
+}
+
 async function requestWake(){
   try {
     if ('wakeLock' in navigator && !wakeLock){
@@ -1454,8 +1475,11 @@ function finishSession(){
   $('lockOverlay').classList.remove('show');
   updateLockIcon();
 
-  xpEarned += XP_BONUS;
-  awardXP(XP_BONUS);
+  const hasCommunityReward = !!(trainerRun && trainerRun.communityWorkoutId);
+  if (!hasCommunityReward){
+    xpEarned += XP_BONUS;
+    awardXP(XP_BONUS);
+  }
   queueTotalXP += xpEarned;
 
   /* Вариант Б: если есть очередь — идём к следующему упражнению */
@@ -1487,6 +1511,26 @@ function finishSession(){
       (isQueueDone ? '<br>Список выполнен' : '');
   }
   $('finXp').textContent = '+' + queueTotalXP + ' XP';
+  if (trainerRun && trainerRun.communityWorkoutId){
+    const finishedRun=trainerRun;
+    $('finStats').textContent+=' · рейтинг тренировок учитывается отдельно';
+    getCommunityWorkoutReward(finishedRun).then(function(reward){
+      if(reward.xp){
+        awardXP(reward.xp);
+        queueTotalXP+=reward.xp;
+        $('finXp').textContent='+'+queueTotalXP+' XP';
+        $('finStats').textContent=finishedRun.name+' · упражнений: '+finishedRun.items.length+
+          ' · бонус по рейтингу '+reward.rating.toFixed(1)+'/5: +'+reward.xp+' XP';
+      }else{
+        $('finStats').textContent=finishedRun.name+' · упражнений: '+finishedRun.items.length+
+          ' · бонус по рейтингу появится после первого отзыва';
+      }
+    }).catch(function(err){
+      console.error('[workout] community XP reward failed:',err);
+      $('finStats').textContent=finishedRun.name+' · упражнений: '+finishedRun.items.length+
+        ' · не удалось загрузить рейтинг для бонуса XP';
+    });
+  }
 
   let q = { text: 'Ты не проиграл, пока не остановился.', author: 'Майк Тайсон' };
   if (typeof allQuotes !== 'undefined' && allQuotes.length){

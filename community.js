@@ -5,6 +5,7 @@
   var TABLE = 'shared_workouts';
   var RATED = 'shared_workouts_rated';
   var VOTES = 'workout_votes';
+  var REVIEWS = 'workout_reviews';
 
   function client() {
     return typeof supabaseClient !== 'undefined' ? supabaseClient : null;
@@ -65,7 +66,7 @@
   }
 
   /* Публикует тренировку. items — формат trainerItems() из exercises.js. */
-  function publish(title, items, onProgress) {
+  function publish(title, items, rewardXpMax, onProgress) {
     var c = client();
     if (!c) return Promise.reject(new Error('Нет подключения к серверу'));
     var folder = myKey().replace(/[^a-zA-Z0-9_-]/g, '_') + '/' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -83,7 +84,8 @@
     });
     return Promise.all(uploads).then(function (clean) {
       return c.from(TABLE).insert({
-        author_key: myKey(), author_name: myName(), title: title, items: clean
+        author_key: myKey(), author_name: myName(), title: title, items: clean,
+        reward_xp_max: Math.max(1, Math.min(50, Number(rewardXpMax) || 50))
       }).select('id').single();
     }).then(function (res) {
       if (res.error) throw res.error;
@@ -96,19 +98,33 @@
     var c = client();
     if (!c) return Promise.reject(new Error('Нет подключения к серверу'));
     var q = String(query || '').replace(/[%_,()*]/g, ' ').trim();
-    var req = c.from(RATED).select('id,title,author_name,items,score,likes,dislikes,created_at');
+    var req = c.from(RATED).select('id,title,author_key,author_name,items,score,likes,dislikes,avg_rating,review_count,reward_xp_max,created_at');
     if (q) req = req.or('title.ilike.%' + q + '%,author_name.ilike.%' + q + '%');
-    return req.order('score', { ascending: false }).order('created_at', { ascending: false }).limit(50)
+    return req.order('avg_rating', { ascending: false }).order('review_count', { ascending: false })
+      .order('score', { ascending: false }).order('created_at', { ascending: false }).limit(50)
       .then(function (res) {
         if (res.error) throw res.error;
         var rows = res.data || [];
         if (!rows.length) return { rows: [], mine: {} };
-        return c.from(VOTES).select('workout_id,value').eq('voter_key', myKey())
-          .in('workout_id', rows.map(function (r) { return r.id; }))
-          .then(function (vr) {
-            var mine = {};
-            (vr.data || []).forEach(function (v) { mine[v.workout_id] = v.value; });
-            return { rows: rows, mine: mine };
+        var ids = rows.map(function (r) { return r.id; });
+        return Promise.all([
+          c.from(VOTES).select('workout_id,value').eq('voter_key', myKey()).in('workout_id', ids),
+          c.from(REVIEWS).select('id,workout_id,reviewer_key,reviewer_name,stars,comment,created_at')
+            .in('workout_id', ids).order('created_at', { ascending: false }).limit(200),
+          c.from(REVIEWS).select('id,workout_id,reviewer_key,reviewer_name,stars,comment,created_at')
+            .eq('reviewer_key', myKey()).in('workout_id', ids)
+        ]).then(function (results) {
+            if (results[0].error) throw results[0].error;
+            if (results[1].error) throw results[1].error;
+            if (results[2].error) throw results[2].error;
+            var mine = {}, myReviews = {}, reviews = {};
+            (results[0].data || []).forEach(function (v) { mine[v.workout_id] = v.value; });
+            (results[1].data || []).forEach(function (r) {
+              if (!reviews[r.workout_id]) reviews[r.workout_id] = [];
+              if (reviews[r.workout_id].length < 3) reviews[r.workout_id].push(r);
+            });
+            (results[2].data || []).forEach(function (r) { myReviews[r.workout_id] = r; });
+            return { rows: rows, mine: mine, reviews: reviews, myReviews: myReviews };
           });
       });
   }
@@ -127,10 +143,24 @@
       .then(function (r) { if (r.error) throw r.error; });
   }
 
+  function review(workoutId, stars, comment) {
+    var c = client();
+    if (!c) return Promise.reject(new Error('Нет подключения к серверу'));
+    var value = Math.round(Number(stars) || 0);
+    if (value < 1 || value > 5) return Promise.reject(new Error('Выберите оценку от 1 до 5 звёзд'));
+    var text = String(comment || '').trim().slice(0, 500);
+    return c.from(REVIEWS).upsert({
+      workout_id: workoutId, reviewer_key: myKey(), reviewer_name: myName(),
+      stars: value, comment: text, updated_at: new Date().toISOString()
+    }, { onConflict: 'workout_id,reviewer_key' }).then(function (r) {
+      if (r.error) throw r.error;
+    });
+  }
+
   function fetchOne(id) {
     var c = client();
     if (!c) return Promise.reject(new Error('Нет подключения к серверу'));
-    return c.from(TABLE).select('id,title,author_name,items').eq('id', id).single().then(function (res) {
+    return c.from(TABLE).select('id,title,author_key,author_name,items,reward_xp_max').eq('id', id).single().then(function (res) {
       if (res.error) throw res.error;
       return res.data;
     });
@@ -140,6 +170,7 @@
     publish: publish,
     search: search,
     vote: vote,
+    review: review,
     fetchOne: fetchOne
   };
 })();

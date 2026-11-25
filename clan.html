@@ -1,139 +1,285 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Клан</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Кланы</title>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-body { margin: 0; background: #000; color: #fff; padding: 14px 12px 30px; }
-h1 { font-size: 22px; text-align: center; margin: 6px 0 12px; }
-h3 { font-size: 15px; margin: 0 0 10px; }
-.back { background: none; border: none; color: #5ac8fa; font-size: 14px; padding: 0 0 10px; cursor: pointer; }
-.box { background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
-.muted { color: #8e8e93; font-size: 13px; line-height: 1.5; }
-input, select { width: 100%; padding: 10px; border-radius: 8px; background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; font-size: 14px; margin-bottom: 8px; }
-.btn { width: 100%; padding: 11px; border-radius: 10px; border: none; background: #ffcc00; color: #000; font-weight: 800; font-size: 14px; cursor: pointer; }
-.btn.alt { background: #ff3b30; color: #fff; }
-.clan-name { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
-.clan-line { font-size: 14px; margin: 4px 0; }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{margin:0;background:#08090b;color:#f5f5f7;padding:14px 12px 36px}
+main{max-width:680px;margin:0 auto}
+h1{font-size:23px;text-align:center;margin:8px 0 16px}
+h2{font-size:17px;margin:0 0 10px}
+h3{font-size:14px;margin:0 0 8px}
+.back{background:none;border:0;color:#ffcc00;font-size:15px;padding:4px 0 14px;cursor:pointer}
+.box{background:#17191d;border:1px solid #2a2d32;border-radius:16px;padding:14px;margin-bottom:12px}
+.muted{color:#969ba4;font-size:12px;line-height:1.5}
+.row{display:flex;align-items:center;gap:10px}
+.grow{flex:1;min-width:0}
+input,textarea{width:100%;padding:11px;border-radius:10px;background:#24272c;color:#fff;border:1px solid #393d44;font-size:14px;margin:0 0 9px}
+textarea{resize:vertical;min-height:74px}
+label{display:block;color:#b8bdc6;font-size:12px;margin:9px 0 5px}
+.btn{border:0;border-radius:10px;background:#ffcc00;color:#111;font-weight:800;font-size:14px;padding:11px 13px;cursor:pointer}
+.btn.secondary{background:#2b3038;color:#f5f5f7;border:1px solid #424852}
+.btn.danger{background:#c93c40;color:#fff}
+.btn.small{font-size:12px;padding:8px 10px}
+.search-row{display:flex;gap:8px}.search-row input{flex:1;min-width:0}
+.clan-card{display:flex;gap:11px;align-items:center}
+.avatar{width:58px;height:58px;object-fit:cover;border-radius:14px;background:#252a32;flex:0 0 auto}
+.avatar.initial{display:flex;align-items:center;justify-content:center;color:#ffcc00;font-size:24px;font-weight:800}
+.clan-title{font-size:16px;font-weight:800;overflow-wrap:anywhere}
+.meta{font-size:12px;color:#a1a6af;margin-top:4px;line-height:1.45}
+.actions{display:flex;gap:7px;margin-top:10px}.actions .btn{flex:1}
+.tabs{display:flex;gap:7px;margin:12px 0}
+.tab{flex:1;border:1px solid #373b42;background:#24272c;color:#d9dce1;padding:9px 5px;border-radius:9px;font-weight:700;font-size:12px}
+.tab.on{background:#ffcc00;color:#111;border-color:#ffcc00}
+.entry{padding:10px 0;border-bottom:1px solid #2a2d32}
+.entry:last-child{border-bottom:0}
+.message-list{max-height:360px;overflow:auto;background:#101215;border:1px solid #2a2d32;border-radius:11px;padding:10px;margin-bottom:10px}
+.message{padding:7px 0;border-bottom:1px solid #25282d;overflow-wrap:anywhere}
+.message:last-child{border:0}
+.message-head{font-size:11px;color:#a1a6af;margin-bottom:3px}
+.chat-compose{display:flex;gap:7px}.chat-compose input{margin:0}
+.qr{background:#fff;border-radius:10px;padding:10px;display:inline-block;min-height:180px;min-width:180px}
+.overlay{position:fixed;inset:0;background:#000b;z-index:5;display:none;align-items:center;justify-content:center;padding:16px}
+.overlay.on{display:flex}.dialog{width:min(100%,520px);max-height:85vh;overflow:auto;background:#17191d;border:1px solid #383d45;border-radius:16px;padding:16px}
+.status{padding:9px 0;color:#ffcc00;font-size:12px;min-height:20px}
 </style>
 </head>
 <body>
+<main>
 <button class="back" onclick="location.href='index.html'">← Назад в приложение</button>
-<h1>🛡️ Клан</h1>
-<div id="box"><p class="muted" style="text-align: center;">Загрузка…</p></div>
-
+<h1>Кланы</h1>
+<div id="status" class="status" role="status"></div>
+<div id="box"><div class="box muted">Загрузка кланов…</div></div>
+</main>
+<div id="overlay" class="overlay" onclick="if(event.target===this)closeDialog()"><div id="dialog" class="dialog"></div></div>
 <script>
-const sb = supabase.createClient('https://qnpriwfxzuoymoumdtrl.supabase.co', 'sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF');
-const $ = id => document.getElementById(id);
-
-const KEY = (function(){
-  const t = localStorage.getItem('tgId');
-  if (t) return 'tg:' + t;
-  const e = localStorage.getItem('currentEmail') || localStorage.getItem('linkedEmail');
-  if (e) return 'email:' + e.toLowerCase();
-  return null;
+const sb=supabase.createClient('https://qnpriwfxzuoymoumdtrl.supabase.co','sb_publishable_1jTWcnb3WvNMi79DXYU7Tw_RWKIVcsF');
+const $=id=>document.getElementById(id);
+const KEY=(function(){
+  const t=localStorage.getItem('tgId');
+  if(t)return 'tg:'+t;
+  const e=localStorage.getItem('currentEmail')||localStorage.getItem('linkedEmail');
+  return e?'email:'+e.toLowerCase():null;
 })();
+const NAME=localStorage.getItem('userName')||'Атлет';
+let currentClan=null,currentMembership=null,clanTab='members',chatPoll=null,searchTimer=null;
 
-function esc(s){
-  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function setStatus(s){$('status').textContent=s||'';}
+function safeUrl(s){return /^https:\/\//i.test(String(s||''))?String(s):'';}
+function avatar(c,size){const url=safeUrl(c.avatar_url);return url?'<img class="avatar" src="'+esc(url)+'" alt="">':'<div class="avatar initial">'+esc((c.name||'К').slice(0,1).toUpperCase())+'</div>';}
+function openDialog(html){$('dialog').innerHTML=html;$('overlay').classList.add('on');}
+function closeDialog(){$('overlay').classList.remove('on');}
+function clanUrl(id){const u=new URL('clan.html',location.href);u.searchParams.set('clan',id);return u.href;}
 
 async function load(){
-  if (!KEY) {
-    $('box').innerHTML = '<div class="box muted">Войдите в аккаунт на главной, чтобы вступать в клан.</div>';
-    return;
-  }
-  const mine = await sb.from('sport_clan_members').select('clan_id,role').eq('player_key', KEY).limit(1);
-  if (mine.error) { $('box').innerHTML = '<div class="box muted">Ошибка: ' + esc(mine.error.message) + '</div>'; return; }
-  if (mine.data && mine.data.length) return showClan(mine.data[0]);
-  showJoin();
+  if(!KEY){showExplore();setStatus('Войдите в аккаунт на главной странице, чтобы создавать кланы и вступать в них.');return;}
+  const {data,error}=await sb.from('sport_clan_members').select('clan_id,role').eq('player_key',KEY).limit(1);
+  if(error){$('box').innerHTML='<div class="box muted">Не удалось загрузить клан: '+esc(error.message)+'</div>';return;}
+  if(data&&data.length){currentMembership=data[0];await showClan(data[0]);return;}
+  showExplore();
+  const invite=new URLSearchParams(location.search).get('clan');
+  if(invite)viewClan(invite);
 }
 
-async function showClan(membership){
-  const clanId = membership.clan_id;
-  const [clanRes, membersRes] = await Promise.all([
-    sb.from('sport_clans').select('*').eq('id', clanId).limit(1),
-    sb.from('sport_clan_members').select('player_key,role').eq('clan_id', clanId)
-  ]);
-  const c = clanRes.data && clanRes.data[0];
-  const members = membersRes.data || [];
-  if (!c) { showJoin(); return; }
-  const isOwner = membership.role === 'owner';
-  $('box').innerHTML =
-    '<div class="box">' +
-      '<div class="clan-name">' + esc(c.emblem) + ' ' + esc(c.name) + (c.tag ? ' #' + esc(c.tag) : '') + '</div>' +
-      '<div class="clan-line muted">Участников: ' + members.length + '</div>' +
-      '<div class="clan-line muted">Ваша роль: ' + (isOwner ? 'владелец' : 'участник') + '</div>' +
-      '<button class="btn alt" style="margin-top: 10px;" onclick="leaveClan()">Покинуть клан</button>' +
-    '</div>';
+function showExplore(){
+  if(chatPoll){clearInterval(chatPoll);chatPoll=null;}
+  $('box').innerHTML=
+    '<div class="box"><h2>Найти клан</h2><div class="search-row"><input id="clan-query" maxlength="60" placeholder="Название или тег"><button class="btn" onclick="searchClans()">Найти</button></div><div id="clan-results" class="muted">Введите название или тег, чтобы найти клан.</div></div>'+
+    '<div class="box"><h2>Создать клан</h2><label>Название</label><input id="c-name" maxlength="32" placeholder="Например, Сила и выносливость"><label>Тег</label><input id="c-tag" maxlength="8" placeholder="до 8 символов"><label>Описание</label><textarea id="c-description" maxlength="500" placeholder="Расскажите о клане"></textarea><label>Фото клана</label><input id="c-avatar" type="file" accept="image/*"><label>Минимум XP для вступления (0 — без ограничения)</label><input id="c-min-xp" type="number" min="0" max="1000000" value="0"><button class="btn" style="width:100%" onclick="createClan()">Создать клан</button></div>';
+  const q=$('clan-query');
+  if(q)q.addEventListener('keydown',e=>{if(e.key==='Enter')searchClans();});
 }
 
-function showJoin(){
-  $('box').innerHTML =
-    '<div class="box">' +
-      '<h3>Создать клан</h3>' +
-      '<input id="c-name" placeholder="Название клана" maxlength="24">' +
-      '<input id="c-tag" placeholder="Тег, до 4 символов" maxlength="4">' +
-      '<select id="c-emb"><option>🛡️</option><option>🔥</option><option>⚡</option><option>🐺</option><option>🦁</option><option>💪</option></select>' +
-      '<button class="btn" onclick="createClan()">Создать</button>' +
-    '</div>' +
-    '<div class="box">' +
-      '<h3>Вступить по тегу</h3>' +
-      '<input id="j-tag" placeholder="Тег клана" maxlength="4">' +
-      '<button class="btn" onclick="joinClan()">Вступить</button>' +
-    '</div>';
+async function searchClans(){
+  const input=$('clan-query'),box=$('clan-results');
+  if(!box)return;
+  const q=String(input&&input.value||'').trim().replace(/[%_,()*]/g,' ');
+  box.textContent='Ищем…';
+  let req=sb.from('sport_clans').select('id,name,tag,emblem,description,avatar_url,min_xp,owner_key');
+  if(q)req=req.or('name.ilike.%'+q+'%,tag.ilike.%'+q+'%,description.ilike.%'+q+'%');
+  const {data,error}=await req.limit(40);
+  if(error){box.innerHTML='Не удалось найти кланы: '+esc(error.message);return;}
+  if(!data||!data.length){box.innerHTML='Кланы не найдены.';return;}
+  const {data:members}=await sb.from('sport_clan_members').select('clan_id').in('clan_id',data.map(c=>c.id));
+  const counts={};(members||[]).forEach(m=>counts[m.clan_id]=(counts[m.clan_id]||0)+1);
+  box.innerHTML=data.map(c=>'<div class="entry"><div class="clan-card">'+avatar(c)+'<div class="grow"><div class="clan-title">'+esc(c.name)+(c.tag?' · #'+esc(c.tag):'')+'</div><div class="meta">'+(counts[c.id]||0)+'/30 участников · минимум '+(c.min_xp||0)+' XP</div><div class="meta">'+esc(c.description||'Описание не добавлено')+'</div></div></div><div class="actions"><button class="btn secondary small" onclick="viewClan(\''+esc(c.id)+'\')">Подробнее</button><button class="btn small" onclick="joinClan(\''+esc(c.id)+'\')">Вступить</button></div></div>').join('');
+}
+
+async function compressAvatar(file){
+  if(!file||!file.type.startsWith('image/'))throw new Error('Выберите файл изображения.');
+  if(file.size>15*1024*1024)throw new Error('Изображение больше 15 МБ.');
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=()=>reject(new Error('Не удалось открыть изображение.'));i.src=url;});
+    const scale=Math.min(1,512/Math.max(img.width,img.height)),canvas=document.createElement('canvas');
+    canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
+    canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+    return await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.82));
+  }finally{URL.revokeObjectURL(url);}
+}
+
+async function uploadAvatar(file,id){
+  if(!file)return null;
+  const blob=await compressAvatar(file),path=id+'/avatar.jpg';
+  const {error}=await sb.storage.from('clan-avatars').upload(path,blob,{contentType:'image/jpeg',upsert:true});
+  if(error)throw error;
+  return sb.storage.from('clan-avatars').getPublicUrl(path).data.publicUrl;
 }
 
 async function createClan(){
-  const name = ($('c-name').value || '').trim();
-  const tag = ($('c-tag').value || '').trim().toUpperCase();
-  const emblem = $('c-emb').value;
-  if (name.length < 2) { alert('Введите название клана'); return; }
-  if (!KEY) { alert('Войдите в аккаунт'); return; }
-  const check = await sb.from('sport_clans').select('id').eq('name', name).limit(1);
-  if (check.data && check.data.length) { alert('Клан с таким названием уже есть'); return; }
-  if (tag) {
-    const tagCheck = await sb.from('sport_clans').select('id').eq('tag', tag).limit(1);
-    if (tagCheck.data && tagCheck.data.length) { alert('Такой тег уже занят'); return; }
-  }
-  const ins = await sb.from('sport_clans').insert([{ name: name, tag: tag || null, emblem: emblem, owner_key: KEY }]).select('id');
-  if (ins.error || !ins.data || !ins.data.length) {
-    alert('Не удалось создать клан: ' + (ins.error ? ins.error.message : 'нет ответа'));
-    return;
-  }
-  const mem = await sb.from('sport_clan_members').insert([{ clan_id: ins.data[0].id, player_key: KEY, role: 'owner' }]);
-  if (mem.error) { alert('Клан создан, но вступление не сохранилось: ' + mem.error.message); return; }
-  load();
+  if(!KEY){alert('Войдите в аккаунт.');return;}
+  const name=($('c-name').value||'').trim(),tag=($('c-tag').value||'').trim().toUpperCase();
+  const description=($('c-description').value||'').trim(),file=$('c-avatar').files[0];
+  const minXp=Math.max(0,Math.min(1000000,parseInt($('c-min-xp').value,10)||0));
+  if(name.length<2){alert('Название должно содержать хотя бы 2 символа.');return;}
+  setStatus('Создаём клан…');
+  const {data,error}=await sb.from('sport_clans').insert([{name,tag:tag||null,emblem:'',owner_key:KEY,description,min_xp:0}]).select('id').single();
+  if(error){setStatus('');alert('Не удалось создать клан: '+error.message);return;}
+  const member=await sb.from('sport_clan_members').insert([{clan_id:data.id,player_key:KEY,role:'owner'}]);
+  if(member.error){setStatus('');alert('Клан создан, но владелец не добавлен: '+member.error.message);return;}
+  let avatarUrl=null,avatarError=null;
+  try{avatarUrl=await uploadAvatar(file,data.id);}catch(e){avatarError=e.message||'ошибка загрузки фото';}
+  const update=await sb.from('sport_clans').update({description,min_xp:minXp,avatar_url:avatarUrl}).eq('id',data.id).eq('owner_key',KEY);
+  if(update.error){setStatus('');alert('Клан создан, но настройки не сохранились: '+update.error.message);return;}
+  setStatus(avatarError?'Клан создан; фото не загрузилось: '+avatarError:'Клан создан.');
+  await load();
 }
 
-async function joinClan(){
-  const tag = ($('j-tag').value || '').trim().toUpperCase();
-  if (!tag) { alert('Введите тег'); return; }
-  if (!KEY) { alert('Войдите в аккаунт'); return; }
-  const find = await sb.from('sport_clans').select('id,name').eq('tag', tag).limit(1);
-  if (!find.data || !find.data.length) { alert('Клан с таким тегом не найден'); return; }
-  const mem = await sb.from('sport_clan_members').insert([{ clan_id: find.data[0].id, player_key: KEY, role: 'member' }]);
-  if (mem.error) { alert('Не удалось вступить: ' + mem.error.message); return; }
-  alert('Вы вступили в клан «' + find.data[0].name + '»');
-  load();
+async function viewClan(id){
+  const {data,error}=await sb.from('sport_clans').select('*').eq('id',id).single();
+  if(error){alert('Не удалось открыть клан: '+error.message);return;}
+  const {data:members}=await sb.from('sport_clan_members').select('player_key').eq('clan_id',id);
+  const url=clanUrl(id);
+  openDialog('<div class="row">'+avatar(data)+'<div class="grow"><div class="clan-title">'+esc(data.name)+'</div><div class="meta">'+esc(data.tag?'#'+data.tag:'')+'</div></div><button class="btn secondary small" onclick="closeDialog()">Закрыть</button></div><p class="muted">'+esc(data.description||'Описание не добавлено')+'</p><p class="muted">'+((members||[]).length)+'/30 участников · вступление: '+(data.min_xp||0)+' XP</p><div style="text-align:center"><div id="invite-qr" class="qr"></div><div class="actions"><button class="btn secondary" onclick="shareClan(\''+esc(data.id)+'\')">Поделиться</button><button class="btn" onclick="joinClan(\''+esc(data.id)+'\')">Вступить</button></div></div>');
+  const qr=$('invite-qr');
+  if(window.QRCode&&qr)new QRCode(qr,{text:url,width:160,height:160,correctLevel:QRCode.CorrectLevel.M});
+  else if(qr)qr.textContent='QR-код недоступен. Используйте «Поделиться».';
+}
+
+async function shareClan(id){
+  const url=clanUrl(id);
+  try{
+    if(navigator.share)await navigator.share({title:'Клан',text:'Присоединяйся к нашему клану',url});
+    else if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(url);alert('Ссылка на клан скопирована.');}
+    else prompt('Скопируйте ссылку на клан:',url);
+  }catch(e){if(e.name!=='AbortError')alert('Не удалось поделиться ссылкой.');}
+}
+
+async function joinClan(id){
+  if(!KEY){alert('Войдите в аккаунт.');return;}
+  const {data:existing,error:checkError}=await sb.from('sport_clan_members').select('clan_id').eq('player_key',KEY).limit(1);
+  if(checkError){alert('Не удалось проверить участие: '+checkError.message);return;}
+  if(existing&&existing.length){
+    if(String(existing[0].clan_id)===String(id)){closeDialog();await load();return;}
+    alert('Сначала выйдите из текущего клана.');return;
+  }
+  const {error}=await sb.from('sport_clan_members').insert([{clan_id:id,player_key:KEY,role:'member'}]);
+  if(error){alert('Не удалось вступить: '+error.message);return;}
+  closeDialog();setStatus('Вы вступили в клан.');await load();
+}
+
+async function showClan(membership){
+  if(chatPoll){clearInterval(chatPoll);chatPoll=null;}
+  const [clanRes,membersRes]=await Promise.all([
+    sb.from('sport_clans').select('*').eq('id',membership.clan_id).single(),
+    sb.from('sport_clan_members').select('player_key,role').eq('clan_id',membership.clan_id)
+  ]);
+  if(clanRes.error||membersRes.error){$('box').innerHTML='<div class="box muted">Не удалось загрузить клан: '+esc((clanRes.error||membersRes.error).message)+'</div>';return;}
+  currentClan=clanRes.data;currentMembership=membership;
+  const c=currentClan,owner=membership.role==='owner';
+  $('box').innerHTML='<div class="box"><div class="clan-card">'+avatar(c)+'<div class="grow"><div class="clan-title">'+esc(c.name)+(c.tag?' · #'+esc(c.tag):'')+'</div><div class="meta">'+membersRes.data.length+'/30 участников · '+(c.min_xp||0)+' XP для вступления</div></div></div><p class="muted">'+esc(c.description||'Описание не добавлено')+'</p><div class="actions"><button class="btn secondary" onclick="shareClan(\''+esc(c.id)+'\')">Поделиться</button><button class="btn secondary" onclick="showInvite()">QR-код</button><button class="btn danger" onclick="leaveClan()">Покинуть</button></div>'+(owner?'<button class="btn secondary" style="width:100%;margin-top:8px" onclick="editClan()">Настроить клан</button>':'')+'</div><div class="box"><div class="tabs"><button class="tab '+(clanTab==='members'?'on':'')+'" onclick="setClanTab(\'members\')">XP участников</button><button class="tab '+(clanTab==='creators'?'on':'')+'" onclick="setClanTab(\'creators\')">Создатели</button><button class="tab '+(clanTab==='chat'?'on':'')+'" onclick="setClanTab(\'chat\')">Чат</button></div><div id="clan-panel" class="muted">Загрузка…</div></div>';
+  await renderClanPanel(membersRes.data);
+  if(clanTab==='chat')chatPoll=setInterval(loadMessages,7000);
+}
+
+function setClanTab(tab){clanTab=tab;if(currentMembership)showClan(currentMembership);}
+
+async function renderClanPanel(members){
+  const panel=$('clan-panel');if(!panel)return;
+  if(clanTab==='chat'){
+    panel.innerHTML='<div id="messages" class="message-list">Загружаем сообщения…</div><div class="chat-compose"><input id="message-input" maxlength="1000" placeholder="Напишите сообщение" onkeydown="if(event.key===\'Enter\')sendMessage()"><button class="btn" onclick="sendMessage()">Отправить</button></div>';
+    await loadMessages();return;
+  }
+  if(clanTab==='members'){await renderMembers(panel,members);return;}
+  await renderCreators(panel,members);
+}
+
+async function renderMembers(panel,members){
+  const keys=(members||[]).map(m=>m.player_key),tg=[],emails=[];
+  keys.forEach(k=>{if(k.startsWith('tg:'))tg.push(k.slice(3));else if(k.startsWith('email:'))emails.push(k.slice(6));});
+  const rows=[];
+  if(tg.length){const r=await sb.from('user_links').select('telegram_id,email,name,xp').in('telegram_id',tg);if(r.error){panel.textContent='Не удалось загрузить XP участников: '+r.error.message;return;}rows.push(...(r.data||[]));}
+  if(emails.length){const r=await sb.from('user_links').select('telegram_id,email,name,xp').in('email',emails);if(r.error){panel.textContent='Не удалось загрузить XP участников: '+r.error.message;return;}rows.push(...(r.data||[]));}
+  const map={};rows.forEach(r=>{if(r.telegram_id)map['tg:'+r.telegram_id]=r;if(r.email)map['email:'+r.email.toLowerCase()]=r;});
+  const ranked=(members||[]).map(m=>({key:m.player_key,role:m.role,profile:map[m.player_key]||{}})).sort((a,b)=>(b.profile.xp||0)-(a.profile.xp||0));
+  panel.innerHTML=ranked.length?ranked.map((m,i)=>'<div class="entry"><strong>'+(i+1)+'. '+esc(m.profile.name||m.key.slice(-8))+'</strong><div class="meta">'+(m.profile.xp||0)+' XP · '+(m.role==='owner'?'владелец':'участник')+'</div></div>').join(''):'Участников пока нет.';
+}
+
+async function renderCreators(panel,members){
+  const {data,error}=await sb.from('shared_workout_author_ratings').select('author_key,author_name,avg_rating,review_count,likes,workout_count').order('avg_rating',{ascending:false}).order('review_count',{ascending:false}).limit(100);
+  if(error){panel.textContent='Не удалось загрузить рейтинги создателей: '+error.message;return;}
+  const wanted=new Set((members||[]).map(m=>m.player_key.replace(/^tg:/,'').replace(/^email:/,'')));
+  const ranked=(data||[]).filter(r=>wanted.has(r.author_key)||wanted.has(String(r.author_key).toLowerCase()));
+  panel.innerHTML=ranked.length?ranked.map((r,i)=>'<div class="entry"><strong>'+(i+1)+'. '+esc(r.author_name)+'</strong><div class="meta">★ '+Number(r.avg_rating||0).toFixed(2)+' · '+(r.review_count||0)+' отзывов · '+(r.likes||0)+' лайков · '+(r.workout_count||0)+' тренировок</div></div>').join(''):'В этом клане пока нет оценённых авторов тренировок.';
+}
+
+async function loadMessages(){
+  const list=$('messages');if(!list||!currentClan)return;
+  const {data,error}=await sb.from('sport_clan_messages').select('id,player_key,author_name,message,created_at').eq('clan_id',currentClan.id).order('created_at',{ascending:false}).limit(60);
+  if(error){list.textContent='Не удалось загрузить чат: '+error.message;return;}
+  const messages=(data||[]).reverse();
+  const previous=list.scrollTop+list.clientHeight>=list.scrollHeight-20;
+  list.innerHTML=messages.length?messages.map(m=>'<div class="message"><div class="message-head">'+esc(m.author_name)+' · '+esc(new Date(m.created_at).toLocaleString('ru-RU',{dateStyle:'short',timeStyle:'short'}))+'</div>'+esc(m.message)+'</div>').join(''):'Сообщений пока нет. Напишите первым.';
+  if(previous)list.scrollTop=list.scrollHeight;
+}
+
+async function sendMessage(){
+  const input=$('message-input'),message=String(input&&input.value||'').trim();
+  if(!message||!currentClan||!KEY)return;
+  const {error}=await sb.from('sport_clan_messages').insert([{clan_id:currentClan.id,player_key:KEY,author_name:NAME,message:message.slice(0,1000)}]);
+  if(error){alert('Не удалось отправить сообщение: '+error.message);return;}
+  input.value='';await loadMessages();
+}
+
+function showInvite(){
+  if(!currentClan)return;
+  openDialog('<h2>Приглашение в клан</h2><p class="muted">'+esc(currentClan.name)+'</p><div style="text-align:center"><div id="invite-qr" class="qr"></div></div><div class="actions"><button class="btn secondary" onclick="shareClan(\''+esc(currentClan.id)+'\')">Поделиться ссылкой</button><button class="btn" onclick="closeDialog()">Готово</button></div>');
+  const qr=$('invite-qr');if(window.QRCode&&qr)new QRCode(qr,{text:clanUrl(currentClan.id),width:180,height:180,correctLevel:QRCode.CorrectLevel.M});
+}
+
+function editClan(){
+  if(!currentClan||!currentMembership||currentMembership.role!=='owner')return;
+  openDialog('<h2>Настройки клана</h2><label>Название</label><input id="edit-name" maxlength="32" value="'+esc(currentClan.name)+'"><label>Описание</label><textarea id="edit-description" maxlength="500">'+esc(currentClan.description||'')+'</textarea><label>Минимум XP для вступления</label><input id="edit-min-xp" type="number" min="0" max="1000000" value="'+(currentClan.min_xp||0)+'"><label>Новое фото (необязательно)</label><input id="edit-avatar" type="file" accept="image/*"><div class="actions"><button class="btn secondary" onclick="closeDialog()">Отмена</button><button class="btn" onclick="saveClanSettings()">Сохранить</button></div>');
+}
+
+async function saveClanSettings(){
+  const name=($('edit-name').value||'').trim(),description=($('edit-description').value||'').trim();
+  const minXp=Math.max(0,Math.min(1000000,parseInt($('edit-min-xp').value,10)||0));
+  if(name.length<2){alert('Название должно содержать хотя бы 2 символа.');return;}
+  let avatarUrl=currentClan.avatar_url;
+  try{if($('edit-avatar').files[0])avatarUrl=await uploadAvatar($('edit-avatar').files[0],currentClan.id);}catch(e){alert('Фото не загружено: '+(e.message||'ошибка'));return;}
+  const {error}=await sb.from('sport_clans').update({name,description,min_xp:minXp,avatar_url:avatarUrl}).eq('id',currentClan.id).eq('owner_key',KEY);
+  if(error){alert('Не удалось сохранить настройки: '+error.message);return;}
+  closeDialog();setStatus('Настройки клана сохранены.');await showClan(currentMembership);
 }
 
 async function leaveClan(){
-  if (!KEY) return;
-  if (!confirm('Покинуть клан?')) return;
-  const mine = await sb.from('sport_clan_members').select('clan_id,role').eq('player_key', KEY).limit(1);
-  if (!mine.data || !mine.data.length) { load(); return; }
-  const clanId = mine.data[0].clan_id;
-  const isOwner = mine.data[0].role === 'owner';
-  const del = await sb.from('sport_clan_members').delete().eq('clan_id', clanId).eq('player_key', KEY);
-  if (del.error) { alert('Не удалось выйти: ' + del.error.message); return; }
-  if (isOwner && confirm('Вы владелец. Удалить клан целиком?')) {
-    await sb.from('sport_clans').delete().eq('id', clanId);
+  if(!KEY||!currentClan)return;
+  if(currentMembership.role==='owner'){
+    if(!confirm('Вы владелец. Удалить клан и его чат целиком?'))return;
+    const {error}=await sb.from('sport_clans').delete().eq('id',currentClan.id).eq('owner_key',KEY);
+    if(error){alert('Не удалось удалить клан: '+error.message);return;}
+  }else{
+    if(!confirm('Покинуть клан?'))return;
+    const {error}=await sb.from('sport_clan_members').delete().eq('clan_id',currentClan.id).eq('player_key',KEY);
+    if(error){alert('Не удалось выйти из клана: '+error.message);return;}
   }
-  load();
+  currentClan=null;currentMembership=null;showExplore();setStatus('Вы вышли из клана.');
 }
 
 load();
