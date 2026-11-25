@@ -562,7 +562,6 @@
         '<button class="srx-chip" data-act="tab" data-tab="lists">🏋️ Тренировки</button>' +
         '<button class="srx-chip" data-act="tab" data-tab="analysis">📊 Анализ</button>' +
         '<button class="srx-chip" data-act="tab" data-tab="library">📚 Упражнения</button>' +
-        '<button class="srx-chip" data-act="timerPage">⏱ Таймер</button>' +
       '</div>' +
       '<div class="srx-body" data-ref="body"></div>';
     document.body.appendChild(root);
@@ -1627,7 +1626,6 @@
 
       case 'library': go('library'); break;
       case 'analysis': go('analysis'); break;
-      case 'timerPage': window.location.href = 'workout.html'; break;
       case 'tab': go(el.getAttribute('data-tab')); break;
 
       case 'libFilter':
