@@ -721,30 +721,36 @@
           ? '<img class="srx-thumb" src="' + ex.photo + '" alt="">'
           : '<div class="srx-thumb">' + (ex ? ex.icon : '⭐') + '</div>';
 
-        var isReps = it.mode === 'reps';
+        var mode = it.mode === 'reps' || it.mode === 'both' ? it.mode : 'time';
+        var hasTimer = mode !== 'reps';
+        var hasReps = mode !== 'time';
         html += '<div class="srx-list-item" style="align-items:flex-start;flex-wrap:wrap">' +
           thumb +
           '<div class="srx-grow">' +
             '<div class="srx-name">' + esc(it.name || (ex && ex.name) || 'Упражнение') + '</div>' +
             '<select class="srx-select" style="margin-top:8px;padding:7px 8px" data-act="itemField" data-id="' +
               esc(list.id) + '" data-idx="' + idx + '" data-field="mode">' +
-              '<option value="time"' + (isReps ? '' : ' selected') + '>⏱ По таймеру</option>' +
-              '<option value="reps"' + (isReps ? ' selected' : '') + '>🔢 По количеству</option>' +
+              '<option value="time"' + (mode === 'time' ? ' selected' : '') + '>⏱ По таймеру</option>' +
+              '<option value="reps"' + (mode === 'reps' ? ' selected' : '') + '>🔢 По количеству</option>' +
+              '<option value="both"' + (mode === 'both' ? ' selected' : '') + '>⏱🔢 Таймер и количество</option>' +
             '</select>' +
             '<div class="srx-grid3" style="margin-top:8px">' +
               '<div><div class="srx-muted" style="font-size:10.5px">ПОДХОДЫ</div>' +
                 '<input class="srx-input" style="padding:7px 8px" type="number" min="1" max="20" ' +
                 'data-act="itemField" data-id="' + esc(list.id) + '" data-idx="' + idx + '" data-field="sets" ' +
                 'value="' + (num(it.sets) || 3) + '"></div>' +
-              (isReps
+              (hasTimer
+                ? '<div><div class="srx-muted" style="font-size:10.5px">ТАЙМЕР, с</div>' +
+                  '<input class="srx-input" style="padding:7px 8px" type="number" min="5" max="1200" step="5" ' +
+                  'data-act="itemField" data-id="' + esc(list.id) + '" data-idx="' + idx + '" data-field="timeSec" ' +
+                  'value="' + (num(it.timeSec) || 40) + '"></div>'
+                : '') +
+              (hasReps
                 ? '<div><div class="srx-muted" style="font-size:10.5px">ПОВТОРЫ</div>' +
                   '<input class="srx-input" style="padding:7px 8px" type="number" min="1" max="500" ' +
                   'data-act="itemField" data-id="' + esc(list.id) + '" data-idx="' + idx + '" data-field="reps" ' +
                   'value="' + (num(it.reps) || 10) + '"></div>'
-                : '<div><div class="srx-muted" style="font-size:10.5px">РАБОТА, с</div>' +
-                  '<input class="srx-input" style="padding:7px 8px" type="number" min="5" max="1200" step="5" ' +
-                  'data-act="itemField" data-id="' + esc(list.id) + '" data-idx="' + idx + '" data-field="timeSec" ' +
-                  'value="' + (num(it.timeSec) || 40) + '"></div>') +
+                : '') +
               '<div><div class="srx-muted" style="font-size:10.5px">ОТДЫХ, с</div>' +
                 '<input class="srx-input" style="padding:7px 8px" type="number" min="0" max="600" step="5" ' +
                 'data-act="itemField" data-id="' + esc(list.id) + '" data-idx="' + idx + '" data-field="restSec" ' +
@@ -829,7 +835,7 @@
       return {
         exId: it.exId, name: it.name || (ex && ex.name) || 'Упражнение',
         met: ex ? ex.met : 5, icon: ex ? ex.icon : '⭐', photo: ex ? ex.photo : null,
-        mode: it.mode === 'reps' ? 'reps' : 'time',
+        mode: it.mode === 'reps' || it.mode === 'both' ? it.mode : 'time',
         sets: Math.max(1, num(it.sets) || 1),
         timeSec: Math.max(5, num(it.timeSec) || 40),
         reps: Math.max(1, num(it.reps) || 10),
@@ -864,6 +870,8 @@
   }
 
   function isRepsItem(it) { return !!it && it.mode === 'reps'; }
+  function hasTimerItem(it) { return !!it && it.mode !== 'reps'; }
+  function hasRepsItem(it) { return !!it && it.mode !== 'time'; }
   function workSecOf(it) { return isRepsItem(it) ? it.reps * 3 : it.timeSec; }
 
   function advancePhase() {
@@ -901,6 +909,7 @@
   function enterWork() {
     var cur = T.items[T.idx];
     T.phase = 'work';
+    T.count = 0;
     T.total = isRepsItem(cur) ? 0 : cur.timeSec;
     T.left = cur.timeSec;
     beep(980, 200);
@@ -918,7 +927,7 @@
       var k = kcalFor(it.met, sec / 60, kg);
       kcal += k;
       return { exId: it.exId, name: it.name, mode: it.mode, sets: it.sets,
-        timeSec: isRepsItem(it) ? 0 : it.timeSec, reps: isRepsItem(it) ? it.reps : 0, kcal: round1(k) };
+        timeSec: hasTimerItem(it) ? it.timeSec : 0, reps: hasRepsItem(it) ? it.reps : 0, kcal: round1(k) };
     });
 
     var durSec = T.startedAt ? Math.round((Date.now() - new Date(T.startedAt).getTime()) / 1000) : workSeconds;
@@ -987,7 +996,7 @@
       '</div>';
 
     html += '<div class="srx-row" style="margin-bottom:12px">' +
-      (isRepsItem(cur) && T.phase === 'work'
+      (hasRepsItem(cur) && T.phase === 'work'
         ? '<button class="srx-btn primary srx-grow" data-ref="act" data-act="repsDone">Готово ✓</button>'
         : '<button class="srx-btn srx-grow" data-ref="act" data-act="skipPhase">Пропустить →</button>') +
       '<button class="srx-btn danger" data-act="abortRun">Стоп</button>' +
@@ -1002,7 +1011,7 @@
         '<div class="srx-grow">' +
           '<div class="srx-name"' + (active ? ' style="color:#f97316"' : '') + '>' +
             esc(it.name) + '</div>' +
-          '<div class="srx-sub">' + it.sets + ' × ' + (isRepsItem(it) ? it.reps + ' повт.' : it.timeSec + ' с') +
+          '<div class="srx-sub">' + it.sets + ' × ' + (it.mode === 'both' ? it.timeSec + ' с или ' + it.reps + ' повт.' : isRepsItem(it) ? it.reps + ' повт.' : it.timeSec + ' с') +
             ' · отдых ' + it.restSec + ' с</div>' +
         '</div>' +
         (done ? '<div class="srx-sub">✓</div>' : '') +
@@ -1029,7 +1038,8 @@
       var nxt = (T.set < cur.sets) ? cur : (T.items[T.idx + 1] || null);
       return nxt ? 'Далее: ' + esc(nxt.name) : '';
     }
-    return 'Подход ' + T.set + ' из ' + cur.sets + ' · ' + (T.idx + 1) + '/' + T.items.length;
+    var countTxt = cur.mode === 'both' && T.phase === 'work' ? ' · повторы ' + (T.count || 0) + '/' + cur.reps : '';
+    return 'Подход ' + T.set + ' из ' + cur.sets + ' · ' + (T.idx + 1) + '/' + T.items.length + countTxt;
   }
 
   function paintTimer() {
@@ -1047,10 +1057,12 @@
     var curItem = T.items[T.idx];
     var act = $('[data-ref="act"]', bodyEl);
     if (act) {
-      var repsNow = T.phase === 'work' && isRepsItem(curItem);
+      var repsNow = T.phase === 'work' && hasRepsItem(curItem);
       act.setAttribute('data-act', repsNow ? 'repsDone' : 'skipPhase');
       act.className = 'srx-btn srx-grow' + (repsNow ? ' primary' : '');
-      act.textContent = repsNow ? 'Готово ✓' : 'Пропустить →';
+      act.textContent = !repsNow ? 'Пропустить →'
+        : hasTimerItem(curItem) ? '+1 повтор (' + (T.count || 0) + '/' + curItem.reps + ')'
+        : 'Готово ✓';
     }
     if (cl) {
       if (T.phase === 'done') cl.textContent = 'ГОТОВО';
@@ -1687,9 +1699,15 @@
         if (T.active) { advancePhase(); paintTimer(); }
         break;
 
-      case 'repsDone':
-        if (T.active && T.phase === 'work' && isRepsItem(T.items[T.idx])) { advancePhase(); paintTimer(); }
+      case 'repsDone': {
+        var rc = T.items[T.idx];
+        if (T.active && T.phase === 'work' && hasRepsItem(rc)) {
+          T.count = (T.count || 0) + 1;
+          if (!hasTimerItem(rc) || T.count >= rc.reps) advancePhase();
+          paintTimer();
+        }
         break;
+      }
 
       case 'abortRun':
         if (T.active) {
@@ -1721,7 +1739,7 @@
         if (l.id !== lid) return;
         if (!l.items || !l.items[idx]) return;
         if (modeField) {
-          l.items[idx].mode = t.value === 'reps' ? 'reps' : 'time';
+          l.items[idx].mode = t.value === 'reps' || t.value === 'both' ? t.value : 'time';
         } else {
           l.items[idx][field] = Math.max(0, num(t.value));
         }
