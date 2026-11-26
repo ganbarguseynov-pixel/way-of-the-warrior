@@ -346,6 +346,7 @@
 .wk-quote p:last-child{
   text-align:right; font-weight:700; font-size:12px; color:#8e8e93; margin:0;
 }
+.wk-start:disabled{opacity:.65;cursor:wait}
 </style>
 </head>
 <body>
@@ -555,7 +556,7 @@
     <p id="qText"></p>
     <p id="qAuthor"></p>
   </div>
-  <button class="wk-start" style="max-width:320px;" onclick="goBackToMain()">Принять</button>
+  <button class="wk-start" id="finishAccept" style="max-width:320px;" onclick="goBackToMain()">Принять</button>
 </div>
 
 <script src="quotes.js"></script>
@@ -571,7 +572,7 @@ const sb = supabase.createClient(
 
 let EXERCISE = null;
 const XP_PER_ROUND = 15;
-const XP_BONUS = 20;
+const XP_BONUS = 10;
 const PREP_OPTIONS = [3, 5, 6, 10, 15];
 const WORK_OPTIONS = [60, 120, 180, 300, 600, 900];
 const REST_OPTIONS = [15, 30, 45, 60, 90, 120];
@@ -1168,25 +1169,23 @@ function awardXP(delta){
   addXP(delta);
 }
 
-async function getCommunityWorkoutReward(run){
-  if(!run||!run.communityWorkoutId)return {xp:0,rating:0,reviews:0};
+async function getTrainerCompletionReward(run){
+  if(!run||!run.communityWorkoutId)return {xp:10,rating:0,reviews:0};
   const {data,error}=await sb.from('shared_workouts_rated')
-    .select('avg_rating,review_count,reward_xp_max')
+    .select('avg_rating,review_count')
     .eq('id',run.communityWorkoutId)
     .single();
   if(error)throw error;
   const reviews=Number(data&&data.review_count)||0;
   const rating=Number(data&&data.avg_rating)||0;
-  if(!reviews)return {xp:0,rating:0,reviews:0};
-  const limit=Math.max(1,Math.min(50,Number(data&&data.reward_xp_max)||50));
-  return {xp:communityRewardXP(limit,rating,reviews),rating:rating,reviews:reviews};
+  return {xp:workoutCompletionXP(reviews?rating:0),rating:rating,reviews:reviews};
 }
 
-function communityRewardXP(limit,rating,reviews){
-  if(!reviews)return 0;
-  const max=Math.max(1,Math.min(50,Number(limit)||50));
-  const stars=Math.max(0,Math.min(5,Number(rating)||0));
-  return Math.round(max*stars/5);
+function workoutCompletionXP(rating){
+  const stars=Number.isFinite(Number(rating))
+    ? Math.max(0,Math.min(5,Number(rating)))
+    : 0;
+  return Math.max(10,Math.round(stars*10));
 }
 
 async function requestWake(){
@@ -1475,8 +1474,7 @@ function finishSession(){
   $('lockOverlay').classList.remove('show');
   updateLockIcon();
 
-  const hasCommunityReward = !!(trainerRun && trainerRun.communityWorkoutId);
-  if (!hasCommunityReward){
+  if (!trainerRun){
     xpEarned += XP_BONUS;
     awardXP(XP_BONUS);
   }
@@ -1511,24 +1509,33 @@ function finishSession(){
       (isQueueDone ? '<br>Список выполнен' : '');
   }
   $('finXp').textContent = '+' + queueTotalXP + ' XP';
-  if (trainerRun && trainerRun.communityWorkoutId){
+  if (trainerRun){
     const finishedRun=trainerRun;
-    $('finStats').textContent+=' · рейтинг тренировок учитывается отдельно';
-    getCommunityWorkoutReward(finishedRun).then(function(reward){
-      if(reward.xp){
-        awardXP(reward.xp);
-        queueTotalXP+=reward.xp;
-        $('finXp').textContent='+'+queueTotalXP+' XP';
-        $('finStats').textContent=finishedRun.name+' · упражнений: '+finishedRun.items.length+
-          ' · бонус по рейтингу '+reward.rating.toFixed(1)+'/5: +'+reward.xp+' XP';
-      }else{
-        $('finStats').textContent=finishedRun.name+' · упражнений: '+finishedRun.items.length+
-          ' · бонус по рейтингу появится после первого отзыва';
-      }
-    }).catch(function(err){
-      console.error('[workout] community XP reward failed:',err);
+    const finishButton=$('finishAccept');
+    let rewardTimeout;
+    if(finishButton){finishButton.disabled=true;finishButton.textContent='Начисляем XP…';}
+    const timeout=new Promise(function(_,reject){
+      rewardTimeout=setTimeout(function(){reject(new Error('Истекло время ожидания рейтинга'));},8000);
+    });
+    Promise.race([getTrainerCompletionReward(finishedRun),timeout]).then(function(reward){
+      awardXP(reward.xp);
+      queueTotalXP+=reward.xp;
+      $('finXp').textContent='+'+queueTotalXP+' XP';
+      const bonusText=reward.reviews
+        ? 'рейтинг '+reward.rating.toFixed(1)+' × 10 = +'+reward.xp+' XP'
+        : 'без рейтинга: минимальный бонус +'+reward.xp+' XP';
       $('finStats').textContent=finishedRun.name+' · упражнений: '+finishedRun.items.length+
-        ' · не удалось загрузить рейтинг для бонуса XP';
+        ' · '+bonusText;
+    }).catch(function(err){
+      console.error('[workout] workout XP reward failed:',err);
+      awardXP(10);
+      queueTotalXP+=10;
+      $('finXp').textContent='+'+queueTotalXP+' XP';
+      $('finStats').textContent=finishedRun.name+' · упражнений: '+finishedRun.items.length+
+        ' · рейтинг не загрузился: начислен минимум +10 XP';
+    }).finally(function(){
+      clearTimeout(rewardTimeout);
+      if(finishButton){finishButton.disabled=false;finishButton.textContent='Принять';}
     });
   }
 

@@ -611,15 +611,15 @@
     var html = '';
 
     html += '<div class="srx-kpi" style="margin-bottom:14px">' +
-      '<div><span>Тренировок</span><b>' + sessions().length + '</b></div>' +
-      '<div><span>Списков</span><b>' + lists.length + '</b></div>' +
+      '<div><span>Выполнено тренировок</span><b>' + sessions().length + '</b></div>' +
+      '<div><span>Мои тренировки</span><b>' + lists.length + '</b></div>' +
       '</div>';
 
     html += '<div class="srx-row" style="margin-bottom:8px">' +
-      '<button class="srx-btn primary srx-grow" data-act="newList">＋ Создать свою тренировку</button>' +
+      '<button class="srx-btn primary srx-grow" data-act="newList">＋ Создать тренировку</button>' +
       '</div>' +
       '<div class="srx-row" style="margin-bottom:12px">' +
-      '<button class="srx-btn ghost srx-grow" data-act="openCommunity">🌍 Тренировки сообщества</button>' +
+      '<button class="srx-btn ghost srx-grow" data-act="openCommunity">🌍 Найти тренировку в сообществе</button>' +
       '</div>';
     if (lists.length) {
       html += '<input class="srx-input" data-ref="listsQ" placeholder="Поиск по моим тренировкам" value="' +
@@ -627,9 +627,9 @@
     }
 
     if (!lists.length) {
-      html += '<div class="srx-empty">Списков пока нет.<br>Создай первый — и добавь в него упражнения из библиотеки.</div>';
+      html += '<div class="srx-empty">Сохранённых тренировок пока нет.<br>Создай тренировку и добавь упражнения из вкладки «Упражнения».</div>';
     } else {
-      html += '<div class="srx-card"><h3>Мои списки</h3>';
+      html += '<div class="srx-card"><h3>Мои тренировки</h3>';
       var lq = listsQuery.trim().toLowerCase();
       var shown = lists.filter(function (l) {
         return !lq || String(l.name || '').toLowerCase().indexOf(lq) !== -1;
@@ -637,21 +637,26 @@
       if (!shown.length) html += '<div class="srx-muted" style="padding:8px 0">Ничего не найдено.</div>';
       shown.forEach(function (l) {
         var count = (l.items || []).length;
-        var totalMin = (l.items || []).reduce(function (a, it) {
+        var timerOnly = (l.items || []).every(function (it) { return !it.mode || it.mode === 'time'; });
+        var totalMin = (l.items || []).reduce(function (a, it, idx) {
           var sets = num(it.sets) || 1;
-          var work = (num(it.timeSec) || 40) * sets;
-          var rest = (num(it.restSec) || 20) * Math.max(0, sets - 1);
-          return a + work + rest;
+          var work = it.mode === 'reps' ? 0 : (num(it.timeSec) || 40) * sets;
+          var prep = it.prepSec === undefined ? 5 : num(it.prepSec);
+          var restSec = it.restSec === undefined ? 20 : num(it.restSec);
+          var restCount = Math.max(0, sets - 1) + (idx < l.items.length - 1 ? 1 : 0);
+          return a + prep + work + restSec * restCount;
         }, 0) / 60;
 
-        html += '<div class="srx-list-item">' +
+        html += '<div class="srx-list-item" style="flex-wrap:wrap">' +
           '<div class="srx-thumb">🏋️</div>' +
           '<div class="srx-grow">' +
             '<div class="srx-name">' + esc(l.name || 'Без названия') + '</div>' +
-            '<div class="srx-sub">' + count + ' упр. · ~' + Math.round(totalMin) + ' мин</div>' +
+            '<div class="srx-sub">' + count + ' упр.' + (timerOnly ? ' · ~' + Math.round(totalMin) + ' мин' : '') + '</div>' +
           '</div>' +
-          '<button class="srx-btn sm green" data-act="startList" data-id="' + esc(l.id) + '">▶</button>' +
-          '<button class="srx-btn sm" data-act="editList" data-id="' + esc(l.id) + '">✎</button>' +
+          '<div class="srx-row" style="width:calc(100% - 54px);margin-left:54px">' +
+            '<button class="srx-btn sm green srx-grow" data-act="startList" data-id="' + esc(l.id) + '">▶ Начать</button>' +
+            '<button class="srx-btn sm srx-grow" data-act="editList" data-id="' + esc(l.id) + '">✎ Изменить</button>' +
+          '</div>' +
           '</div>';
       });
       html += '</div>';
@@ -690,6 +695,7 @@
         '<input class="srx-input srx-grow" data-ref="commQ" value="' + esc(q) + '" placeholder="Например: Ноги">' +
         '<button class="srx-btn primary" data-act="commSearch">Найти</button>' +
       '</div></div>' +
+      '<div class="srx-muted" style="padding:0 4px 10px">За выполнение: рейтинг × 10 XP, минимум 10 XP. Если оценок нет — 10 XP.</div>' +
       '<div id="commResults" class="srx-muted" style="padding:12px 0">Загрузка…</div>';
 
     var box = $('#commResults', bodyEl);
@@ -702,10 +708,13 @@
         var reviews = res.reviews[w.id] || [];
         var n = (w.items || []).length;
         var id = esc(w.id);
+        var rating = Number(w.avg_rating) || 0;
+        var reviewCount = Number(w.review_count) || 0;
+        var completionXP = Math.max(10, Math.round(rating * 10));
         return '<div class="srx-card"><h3>' + esc(w.title) + '</h3>' +
           '<div class="srx-sub">Автор: ' + esc(w.author_name) + ' · ' + n + ' упр. · ' +
-            '★ ' + Number(w.avg_rating || 0).toFixed(1) + ' (' + (w.review_count || 0) + ') · ' +
-            '👍 ' + w.likes + ' / 👎 ' + w.dislikes + ' · до ' + (w.reward_xp_max || 50) + ' XP</div>' +
+            (reviewCount ? '★ ' + rating.toFixed(1) + ' (' + reviewCount + ')' : '★ пока нет оценок') + ' · ' +
+            '👍 ' + w.likes + ' / 👎 ' + w.dislikes + ' · за выполнение: ' + completionXP + ' XP</div>' +
           (reviews.length ? '<div class="srx-sub" style="margin-top:7px">' + reviews.map(function (r) {
             return '<div style="padding:4px 0">★ ' + r.stars + ' · <b>' + esc(r.reviewer_name) +
               '</b>' + (r.comment ? ': ' + esc(r.comment) : '') + '</div>';
@@ -736,21 +745,19 @@
     for (var i = 0; i < lists.length; i++) if (lists[i].id === id) list = lists[i];
 
     if (!list) {
-      if (id) { toast('Список не найден'); go('lists'); return; }
+      if (id) { toast('Тренировка не найдена'); go('lists'); return; }
       list = { id: uid(), name: '', items: [], createdAt: new Date().toISOString() };
       lists.push(list);
+      state.params.id = list.id;
       persist(true);
     }
 
-    setTitle('Список');
+    setTitle(id ? 'Редактор тренировки' : 'Новая тренировка');
 
     var html = '<div class="srx-card">' +
-      '<label class="srx-label">Название</label>' +
+      '<label class="srx-label">Название тренировки</label>' +
       '<input class="srx-input" data-ref="listName" value="' + esc(list.name) + '" placeholder="Например: День ног">' +
-      '<label class="srx-label">XP за эту тренировку по рейтингу (1–50)</label>' +
-      '<input class="srx-input" data-ref="listReward" type="number" min="1" max="50" value="' +
-        clamp(num(list.rewardXpMax) || 50, 1, 50) + '">' +
-      '<div class="srx-muted">Бонус = лимит × средняя оценка / 5; пока нет отзывов — бонус 0 XP.</div>' +
+      '<div class="srx-muted">Изменения сохраняются автоматически. За выполнение: рейтинг × 10 XP, минимум 10 XP.</div>' +
       '</div>';
 
     html += '<div class="srx-card"><h3>Упражнения (' + (list.items || []).length + ')</h3>';
@@ -801,7 +808,7 @@
               '<div><div class="srx-muted" style="font-size:10.5px">ОТДЫХ, с</div>' +
                 '<input class="srx-input" style="padding:7px 8px" type="number" min="0" max="600" step="5" ' +
                 'data-act="itemField" data-id="' + esc(list.id) + '" data-idx="' + idx + '" data-field="restSec" ' +
-                'value="' + (num(it.restSec) || 20) + '"></div>' +
+                'value="' + (it.restSec === undefined ? 20 : num(it.restSec)) + '"></div>' +
             '</div>' +
           '</div>' +
           '<button class="srx-btn sm danger" data-act="delItem" data-id="' + esc(list.id) + '" data-idx="' + idx + '">✕</button>' +
@@ -848,7 +855,7 @@
     pr[K.lists].push(list);
     persist(true);
     setBasket([]);
-    toast('Комплекс собран — дай ему название');
+    toast('Тренировка создана — укажи её название');
     go('listEdit', { id: list.id });
   }
 
@@ -874,7 +881,6 @@
       if (l.id !== listId) return;
       if (!Array.isArray(l.items)) l.items = [];
       l.communityWorkoutId = null;
-      l.rewardXpMax = 0;
       items.forEach(function (it) { l.items.push(it); });
     });
     persist(true);
@@ -904,9 +910,9 @@
     var basket = getBasket();
     if (basket.length) {
       html += '<div class="srx-card" style="margin-bottom:12px"><div class="srx-name">🧺 В корзине: ' + basket.length + '</div>' +
-        '<div class="srx-sub" style="margin:4px 0 10px">Собери из них комплекс, добавь в существующую тренировку или начни сразу</div>' +
-        '<div class="srx-row" style="margin-bottom:8px"><button class="srx-btn primary srx-grow" data-act="basketMake">Собрать комплекс</button>' +
-        '<button class="srx-btn ghost srx-grow" data-act="basketToExisting">В существующую</button></div>' +
+        '<div class="srx-sub" style="margin:4px 0 10px">Создай из упражнений тренировку, добавь их в уже сохранённую или начни сразу.</div>' +
+        '<div class="srx-row" style="margin-bottom:8px"><button class="srx-btn primary srx-grow" data-act="basketMake">Создать тренировку</button>' +
+        '<button class="srx-btn ghost srx-grow" data-act="basketToExisting">Добавить в существующую</button></div>' +
         '<div class="srx-row"><button class="srx-btn green srx-grow" data-act="basketStart">▶ Начать сразу</button>' +
         '<button class="srx-btn ghost" data-act="basketClear">Очистить</button></div></div>';
     }
@@ -961,7 +967,7 @@
         prepSec: it.prepSec === undefined ? 5 : Math.max(0, num(it.prepSec)),
         timeSec: Math.max(5, num(it.timeSec) || 40),
         reps: Math.max(1, num(it.reps) || 10),
-        restSec: Math.max(0, num(it.restSec))
+        restSec: it.restSec === undefined ? 20 : Math.max(0, num(it.restSec))
       };
     });
   }
@@ -970,11 +976,10 @@
     var lists = workoutLists();
     var list = null;
     for (var i = 0; i < lists.length; i++) if (lists[i].id === listId) list = lists[i];
-    if (!list) { toast('Список не найден'); return; }
-    if (!(list.items || []).length) { toast('В списке нет упражнений'); return; }
+    if (!list) { toast('Тренировка не найдена'); return; }
+    if (!(list.items || []).length) { toast('В тренировке пока нет упражнений'); return; }
     runItems(list.name, list.items, {
-      communityWorkoutId: list.communityWorkoutId || null,
-      rewardXpMax: list.rewardXpMax || 0
+      communityWorkoutId: list.communityWorkoutId || null
     });
   }
 
@@ -1114,7 +1119,7 @@
 
     if (!T.active && T.phase !== 'done') {
       bodyEl.innerHTML = '<div class="srx-empty">Тренировка не запущена.</div>' +
-        '<button class="srx-btn primary" style="width:100%" data-act="backToList">← К спискам</button>';
+        '<button class="srx-btn primary" style="width:100%" data-act="backToList">← К тренировкам</button>';
       return;
     }
 
@@ -1743,7 +1748,7 @@
     openSheet('Упражнение создано', '<div class="srx-muted" style="margin-bottom:14px">' + esc(ex.name) +
       ' сохранено в библиотеку. Что дальше?</div>' +
       '<button class="srx-btn primary" style="width:100%;margin-bottom:8px" data-act="startSingle" data-id="' + esc(ex.id) + '">▶ Начать тренировку</button>' +
-      '<button class="srx-btn" style="width:100%;margin-bottom:8px" data-act="chooseListForEx" data-ex="' + esc(ex.id) + '">📋 Добавить в комплекс</button>' +
+      '<button class="srx-btn" style="width:100%;margin-bottom:8px" data-act="chooseListForEx" data-ex="' + esc(ex.id) + '">📋 Добавить в тренировку</button>' +
       '<button class="srx-btn" style="width:100%;margin-bottom:8px" data-act="newExercise">＋ Создать ещё одно упражнение</button>' +
       '<button class="srx-btn" style="width:100%" data-act="sheetClose">Готово</button>');
   }
@@ -1757,7 +1762,6 @@
       if (l.id !== listId) return;
       if (!Array.isArray(l.items)) l.items = [];
       l.communityWorkoutId = null;
-      l.rewardXpMax = 0;
       l.items.push({
         exId: ex.id, name: ex.name,
         mode: d.mode,
@@ -1874,10 +1878,10 @@
           p[K.lists].push({
             id: uid(), name: w.title + ' (из сообщества)', items: listItems,
             communityWorkoutId: w.id, communityAuthorKey: w.author_key,
-            rewardXpMax: w.reward_xp_max || 50, createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString()
           });
           persist();
-          toast('Тренировка добавлена в «Мои списки»');
+          toast('Тренировка добавлена в «Мои тренировки»');
           go('lists');
         }).catch(function (err) { toast('Не получилось добавить: ' + (err && err.message || 'ошибка')); });
         break;
@@ -1891,7 +1895,7 @@
         if (!ptitle) { toast('Сначала дай тренировке название'); break; }
         if (!(pl.items || []).length) { toast('Добавь хотя бы одно упражнение'); break; }
         toast('Публикую тренировку…');
-        SRXCommunity.publish(ptitle.slice(0, 80), trainerItems(pl), clamp(num(pl.rewardXpMax) || 50, 1, 50)).then(function () {
+        SRXCommunity.publish(ptitle.slice(0, 80), trainerItems(pl)).then(function () {
           toast('Опубликовано в сообществе');
         }).catch(function (err) { toast('Не удалось опубликовать: ' + (err && err.message || 'ошибка')); });
         break;
@@ -1924,13 +1928,13 @@
 
       case 'delList': {
         var id = el.getAttribute('data-id');
-        if (!confirm('Удалить список?')) break;
+        if (!confirm('Удалить тренировку?')) break;
         var p = profileData();
         if (p) {
           p[K.lists] = p[K.lists].filter(function (l) { return l.id !== id; });
           persist();
         }
-        toast('Список удалён');
+        toast('Тренировка удалена');
         go('lists');
         break;
       }
@@ -1944,7 +1948,6 @@
             if (l.id === lid && l.items) {
               l.items.splice(idx, 1);
               l.communityWorkoutId = null;
-              l.rewardXpMax = 0;
             }
           });
           persist(true);
@@ -1989,7 +1992,7 @@
 
       case 'basketToExisting': {
         var bls = workoutLists();
-        var bh = bls.length ? '' : '<div class="srx-muted" style="margin-bottom:10px">Тренировок пока нет. Соберите комплекс.</div>';
+        var bh = bls.length ? '' : '<div class="srx-muted" style="margin-bottom:10px">Тренировок пока нет. Создайте первую тренировку.</div>';
         bls.forEach(function (l) {
           bh += '<div class="srx-list-item" data-act="basketPickList" data-list="' + esc(l.id) + '">' +
             '<div class="srx-grow"><div class="srx-name">' + esc(l.name || 'Без названия') + '</div>' +
@@ -2080,15 +2083,15 @@
             '<div class="srx-sub">' + (l.items || []).length + ' упр.</div></div><div class="srx-sub">＋</div></div>';
         });
         ch += '<button class="srx-btn primary" style="width:100%;margin-top:10px" data-act="pickAddNew" data-ex="' +
-          esc(cex) + '">＋ Новый комплекс с этим упражнением</button>';
-        openSheet('Добавить в комплекс', ch);
+          esc(cex) + '">＋ Новая тренировка с этим упражнением</button>';
+        openSheet('Добавить в тренировку', ch);
         break;
       }
 
       case 'pickAddNew': {
         var pn = profileData();
         if (!pn) break;
-        var newList = { id: uid(), name: 'Мой комплекс', items: [], createdAt: new Date().toISOString() };
+        var newList = { id: uid(), name: 'Моя тренировка', items: [], createdAt: new Date().toISOString() };
         pn[K.lists].push(newList);
         persist(true);
         addExerciseToList(newList.id, el.getAttribute('data-ex'));
@@ -2177,7 +2180,7 @@
     }
   }
 
-  /* поля ввода внутри редактора списка */
+  /* поля ввода внутри редактора тренировки */
   function onItemField(e) {
     var t = e.target;
     if (!t || !t.getAttribute) return;
@@ -2198,7 +2201,6 @@
         if (l.id !== lid) return;
         if (!l.items || !l.items[idx]) return;
         l.communityWorkoutId = null;
-        l.rewardXpMax = 0;
         if (modeField) {
           l.items[idx].mode = t.value === 'reps' || t.value === 'both' ? t.value : 'time';
         } else {
@@ -2218,15 +2220,6 @@
       persist(true);
     }
 
-    if (t.getAttribute('data-ref') === 'listReward' && e.type === 'change') {
-      var id = state.params.id;
-      var pp = profileData();
-      if (!pp) return;
-      var reward = clamp(num(t.value) || 50, 1, 50);
-      t.value = String(reward);
-      pp[K.lists].forEach(function (l) { if (l.id === id) l.rewardXpMax = reward; });
-      persist(true);
-    }
   }
   document.addEventListener('input', onItemField);
   document.addEventListener('change', onItemField);

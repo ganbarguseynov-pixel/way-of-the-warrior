@@ -66,7 +66,7 @@
   }
 
   /* Публикует тренировку. items — формат trainerItems() из exercises.js. */
-  function publish(title, items, rewardXpMax, onProgress) {
+  function publish(title, items, onProgress) {
     var c = client();
     if (!c) return Promise.reject(new Error('Нет подключения к серверу'));
     var folder = myKey().replace(/[^a-zA-Z0-9_-]/g, '_') + '/' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -84,8 +84,7 @@
     });
     return Promise.all(uploads).then(function (clean) {
       return c.from(TABLE).insert({
-        author_key: myKey(), author_name: myName(), title: title, items: clean,
-        reward_xp_max: Math.max(1, Math.min(50, Number(rewardXpMax) || 50))
+        author_key: myKey(), author_name: myName(), title: title, items: clean
       }).select('id').single();
     }).then(function (res) {
       if (res.error) throw res.error;
@@ -98,7 +97,7 @@
     var c = client();
     if (!c) return Promise.reject(new Error('Нет подключения к серверу'));
     var q = String(query || '').replace(/[%_,()*]/g, ' ').trim();
-    var req = c.from(RATED).select('id,title,author_key,author_name,items,score,likes,dislikes,avg_rating,review_count,reward_xp_max,created_at');
+    var req = c.from(RATED).select('id,title,author_key,author_name,items,score,likes,dislikes,avg_rating,review_count,created_at');
     if (q) req = req.or('title.ilike.%' + q + '%,author_name.ilike.%' + q + '%');
     return req.order('avg_rating', { ascending: false }).order('review_count', { ascending: false })
       .order('score', { ascending: false }).order('created_at', { ascending: false }).limit(50)
@@ -160,7 +159,7 @@
   function fetchOne(id) {
     var c = client();
     if (!c) return Promise.reject(new Error('Нет подключения к серверу'));
-    return c.from(TABLE).select('id,title,author_key,author_name,items,reward_xp_max').eq('id', id).single().then(function (res) {
+    return c.from(TABLE).select('id,title,author_key,author_name,items').eq('id', id).single().then(function (res) {
       if (res.error) throw res.error;
       return res.data;
     });
